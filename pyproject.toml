@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "soundkit"
+version = "0.1.0"
+description = "SoundKit CLI tool"
+authors = ["Your Name <you@example.com>"]
+packages = [{ include = "soundkit" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Core dependencies
+tensorflow = {version = "2.15.1", extras = ["and-cuda"]}
+tensorboard = "*"
+numpy = "*"
+scipy = "*"
+pyyaml = "*"
+argparse = "*"
+pydantic = "*"
+argdantic = "*"
+tqdm = "*"
+
+# Audio & DSP
+librosa = "*"
+soundfile = "*"
+sounddevice = "*"
+pyaudio = "*"
+pesq = "*"
+pystoi = "*"
+
+# Visualization & GUI
+matplotlib = "*"
+pyqt5 = "*"
+
+# Serial communication
+pyserial = "*"
+
+# Git-based dependency
+erpc = { git = "https://github.com/ambiqai/erpc.git", subdirectory = "erpc_python", optional = false }
+
+[tool.poetry.scripts]
+soundkit = "soundkit.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
