@@ -42,6 +42,16 @@ class SKTaskParams(BaseModel, extra="allow"):
     train: dict[str, Any] = Field(
         default_factory=dict, description="training parameters")
 
+    # Evaluating arguments
+    evaluate: dict[str, Any] = Field(
+        default_factory=dict, description="evaluating parameters")
+    
+    # export arguments
+    export: dict[str, Any] = Field(
+        default_factory=dict, description="exporting parameters")
+
+    debug: bool= Field(
+        default=False, description="Debug mode. If True, will not run training or evaluation.")
 
 class SKMode(StrEnum):
     """SoundKit task mode"""

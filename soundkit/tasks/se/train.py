@@ -1,22 +1,18 @@
 
 import os
-import yaml
-import re
 import datetime
 from pathlib import Path
 from typing import Any
-import numpy as np
 import tensorflow as tf
 from .datasets import create_dataset
 from ...defines import SKTaskParams
-from ...utils.checkpoint_utils import load_model_checkpoint
-from ...utils.checkpoint_utils import save_train_log, load_train_log
+from ...utils.download_tf_model import save_train_log, load_train_log
+from ...utils.download_tf_model import build_model, load_model_checkpoint
 from ...utils.feature_utils import FeatureExtractor
-from ...utils.loss_utils import LossFactory
+from ...utils.losses import LossFactory
 from ...utils.calculate_feat_stats import feat_stats_estimator
 from ...utils.lookaheadBuffer import LookaheadBuffer
 from ...utils.WarmUpCosineDecay import WarmUpCosineDecay
-from ...models import ModelFactory
 
 @tf.function
 def train_step(
@@ -153,7 +149,7 @@ def run_epoch(
                         'learning_rate',
                         optimizer.learning_rate,
                         step=total_steps)
-            
+
         total_steps += 1
         # Print inline batch progress
         print(
@@ -162,16 +158,16 @@ def run_epoch(
             end="\r",
             flush=True
         )
-        
-        if params.data['debug']:
+
+        if params.debug:
             from ...utils.plot_api import draw_spectrogram
             import matplotlib.pyplot as plt
             from ...utils.tf_basic_math import tf_log10_eps
             mask = logits[0].numpy()
             pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
             pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
-            
-            if params.data['signal']['feature']['type'] == 'mel':
+
+            if params.train['feature']['type'] in ('mel', 'logpspec_mel'):
                 feat_sn = 20* feat_sn[0].numpy()
 
             plt.subplot(4, 1, 1)
@@ -189,7 +185,7 @@ def run_epoch(
                 vmin=-80,
                 vmax=10,
                 show_colorbar=True)
-            
+
             plt.subplot(4, 1, 3)
             draw_spectrogram(
                 pspec_s.T,
@@ -205,10 +201,8 @@ def run_epoch(
                 vmin=0,
                 vmax=1,
                 show_colorbar=True)
-            
-            
+
             plt.show()
-        
     # Final summary for the epoch
     print(
         f"  [{train_tag}] |\n"
@@ -223,39 +217,25 @@ def train(params: SKTaskParams):
         params (HKTaskParams): Task parameters
     """
     print(f"Training SE model with params: {params} and more")
-    
+
     params_train = params.train
     model_dir = f'{params.job_dir}/models_trained/{params.name}'
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tfboard_dir = f'{params.job_dir}/tensorboard/{params.name}/logs/{current_time}'
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
-    dim_feat = params.data['signal']['feature']['bins']
-    params_signal = params.data['signal']
+    dim_feat = params.train['feature']['bins']
+
 
     # 1.1. Build the model
-    model_name= params.train['model']['name']
-    config_path = params.train['model']['config_path']
 
-    
-    with open(config_path, "r") as f:
-        config_model = yaml.safe_load(f)
-    
-    config_model['shape_input'] = (
-        params.data['target_length_in_secs'] * 100,
-        dim_feat,
-        )
-    config_model['batchsize'] = batchsize
+    # Load from YAML file
+    model = build_model(
+        params, batchsize, dim_feat)
 
-    model = ModelFactory.get(
-        model_name,
-        **config_model
-    )
-
-    # 1.2. Load model weights from checkpoint
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], model_dir)
-
+    
     # 2. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
@@ -275,7 +255,7 @@ def train(params: SKTaskParams):
 
     # 3. Define feature extractor
     feat_extractor = FeatureExtractor(
-        signal_config=params_signal,
+        params=params,
     )
 
     # 4. Compute feature statistics for standardization
@@ -287,9 +267,10 @@ def train(params: SKTaskParams):
         feat_extractor=feat_extractor,)
 
     # 5. Define loss function
-    loss_fn = LossFactory(
+    
+    loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
-        exp = params.train["loss_function"]["params"])
+        **params.train["loss_function"]["params"])
 
     lr_schedule = WarmUpCosineDecay(
         initial_lr = float(params_train['initial_lr']),
@@ -324,16 +305,17 @@ def train(params: SKTaskParams):
         print(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
-        loss = run_epoch(
-            train_config,
-            ds_train,
-            training=True,
-            epoch=epoch,
-        )
-        log_epoch["train_loss"] = float(loss.result().numpy())
-        if train_summary_writer is not None:
-            with train_summary_writer.as_default():
-                tf.summary.scalar(f"train/loss", loss.result(), step=epoch)
+        if not params.debug:
+            loss = run_epoch(
+                train_config,
+                ds_train,
+                training=True,
+                epoch=epoch,
+            )
+            log_epoch["train_loss"] = float(loss.result().numpy())
+            if train_summary_writer is not None:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar(f"train/loss", loss.result(), step=epoch)
 
         # Validation phase
         loss = run_epoch(

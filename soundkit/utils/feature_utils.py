@@ -4,7 +4,8 @@ from .tf_stft import tf_stft
 from .tf_basic_math import tf_log10_eps
 from .mel import gen_mel_bank
 from .converter_fix_point import fakefix_tf
-
+from .mel_spec_gen import melspec_gen
+from ..defines import SKTaskParams
 class FeatureExtractor:
     """
     Feature extractor for audio signals using a dispatch map.
@@ -12,16 +13,17 @@ class FeatureExtractor:
 
     def __init__(
             self,
-            signal_config: dict):
+            params: SKTaskParams):
 
-        self.signal_config = signal_config
-        feat_type = signal_config['feature']["type"]
-        num_bins = signal_config['feature']["bins"]
+        self.signal_config = params.data['signal']
+        feat_type = params.train['feature']["type"]
+        num_bins =  params.train['feature']["bins"]
         self._extractors = {
             "spec": self._extract_spec,
             "pspec": self._extract_pspec,
             "logpspec": self._extract_logpspec,
             "mel": self._extract_mel,
+            "logpspec_mel": self._extract_logpspec_mel,
         }
 
         if feat_type not in self._extractors:
@@ -36,12 +38,19 @@ class FeatureExtractor:
             states=states,
         )
 
-        fbanks = gen_mel_bank(  fftsize     = self.signal_config["fft_size"],
+        if feat_type == "mel":
+            fbanks = gen_mel_bank(  fftsize     = self.signal_config["fft_size"],
                                 nfilt           = num_bins,
                                 sample_rate     = self.signal_config["sampling_rate"],
                                 make_c_table    = False)
-        self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
-
+            self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
+        elif feat_type == "logpspec_mel":
+            fbanks = melspec_gen(
+                samplingRate=self.signal_config["sampling_rate"],
+                n_fft=self.signal_config["fft_size"],
+                n_mels=32,
+                thresh_mel=50)
+            self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
     def __call__(
             self,
             audio_sn: tf.Tensor,
@@ -107,4 +116,21 @@ class FeatureExtractor:
         mel_spec = tf_log10_eps(mel_spec)
 
         return mel_spec, spec
-    
+
+    def _extract_logpspec_mel(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+
+        pspec, spec = self._extract_pspec(
+            audio_sn,
+            states=states,
+        )
+
+        mel_spec = tf.matmul(
+            pspec**2,
+            self.mel_filter,
+        )
+        mel_spec = tf_log10_eps(mel_spec)
+
+        return mel_spec, spec

@@ -256,8 +256,7 @@ def data(params: SKTaskParams) -> None:
     if params_data['reverb_prob'] > 0:
         for corpus in params_data['corpora']:
             if corpus['type'] == 'reverb':
-                reverb_list= get_noise_file_list(corpus['name'] )
-                
+                reverb_list= get_noise_file_list(corpus['name'])
     else:
         reverb_list = None
 
@@ -291,10 +290,10 @@ def data(params: SKTaskParams) -> None:
                         success_dict,
                         params_data,
                         info=noise_type,
-                        debug=params_data['debug'])
+                        debug=params.debug)
                 processes.append(proc)
 
-            if params_data['debug']:
+            if params.debug:
                 for proc in processes:
                     proc.run()
             else:

@@ -30,17 +30,16 @@ def feat_stats_estimator(
                         dtype = tf.float64, trainable = False)
     tot = tf.Variable(0, dtype = tf.float64, trainable=False)
 
-    
     # mean calculation
     for i, batch in enumerate(dataset):
         if i % 5 == 0:
             tf.print(f"\rMean estimating (batch) {i}/{num_batches}, ",
                         end = '')
         audio_sn = batch[0]
-        
+
         feat_sn, _, _ = feat_extractor(
             audio_sn)
-        
+
         if tf.as_dtype(feat_sn.dtype).is_complex:
             feat_sn = tf.math.abs(feat_sn)
         shape = tf.shape(feat_sn)

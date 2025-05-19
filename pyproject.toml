@@ -34,11 +34,29 @@ pyqt5 = "*"
 # Serial communication
 pyserial = "*"
 
+# Torch and related packages
+torch = { version = "*", source = "pytorch-cu118" }
+torchvision = { version = "*", source = "pytorch-cu118" }
+torchaudio = { version = "*", source = "pytorch-cu118" }
+torchmetrics = "*"
+
+# ONNX Runtime
+onnxruntime-gpu = "*"
+
+# Misc
+requests = "*"
+
 # Git-based dependency
 erpc = { git = "https://github.com/ambiqai/erpc.git", subdirectory = "erpc_python", optional = false }
 
 [tool.poetry.scripts]
 soundkit = "soundkit.cli:main"
+
+[tool.poetry.source]
+# Add PyTorch custom index for CUDA 11.8 builds
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+default = false  # use only for torch packages
 
 [build-system]
 requires = ["poetry-core"]
