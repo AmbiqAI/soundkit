@@ -8,7 +8,13 @@ import numpy as np
 from .converter_fix_point import fakefix_tf
 from .feature_utils import FeatureExtractor
 
+def load_feat_stats(dir: str,stats_name: str = 'stats.pkl'):
 
+    if os.path.exists(os.path.join(dir, stats_name)):
+        with open(os.path.join(dir, stats_name), "rb") as file:
+            stats = pickle.load(file)
+        return stats
+    
 def feat_stats_estimator(
         dataset: tf.data.Dataset,
         num_batches: int,
@@ -20,9 +26,7 @@ def feat_stats_estimator(
     """
     stats_name = 'stats.pkl'
     if os.path.exists(os.path.join(folder_nn, stats_name)):
-        with open(os.path.join(folder_nn, stats_name), "rb") as file:
-            stats = pickle.load(file)
-        return stats
+        return load_feat_stats(folder_nn, stats_name)
 
     mean_stats = tf.Variable( tf.zeros((dim_feat,), dtype = tf.float64),
                     dtype = tf.float64, trainable = False)

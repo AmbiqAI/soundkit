@@ -39,10 +39,11 @@ class FeatureExtractor:
         )
 
         if feat_type == "mel":
-            fbanks = gen_mel_bank(  fftsize     = self.signal_config["fft_size"],
-                                nfilt           = num_bins,
-                                sample_rate     = self.signal_config["sampling_rate"],
-                                make_c_table    = False)
+            fbanks = gen_mel_bank(
+                    fftsize         = self.signal_config["fft_size"],
+                    nfilt           = num_bins,
+                    sample_rate     = self.signal_config["sampling_rate"],
+                    make_c_table    = False)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
         elif feat_type == "logpspec_mel":
             fbanks = melspec_gen(
@@ -51,6 +52,7 @@ class FeatureExtractor:
                 n_mels=32,
                 thresh_mel=50)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
+
     def __call__(
             self,
             audio_sn: tf.Tensor,
@@ -72,7 +74,7 @@ class FeatureExtractor:
             audio_sn,
             states=states,
         )
-        
+
         return spec, spec
 
     def _extract_logpspec(

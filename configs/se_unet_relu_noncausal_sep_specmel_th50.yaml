@@ -1,0 +1,75 @@
+name: unet_relu_noncausal_sep_specmel_th50
+project: se
+job_dir: ./soundkit/tasks/se
+
+debug: false
+data:
+  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  tfrecord_datalist_name: # list of saved tfrecords
+    train: train_tfrecord.csv 
+    test: test_tfrecord.csv
+  num_samples_per_noise:
+    train: 10000
+    test: 2500
+  force_download: false
+  reverb_prob: 0.2
+  num_processes: 8
+  corpora:
+    - {name: train-clean-360, type: train, path: wavs/LibriSpeech/train-clean-360}
+    - {name: train-clean-100, type: train, path: wavs/LibriSpeech/train-clean-100}
+    - {name: dev-clean, type: dev, path: wavs/LibriSpeech/dev-clean}
+    - {name: test-clean, type: test, path: wavs/LibriSpeech/test-clean}
+    - {name: thchs30, type: train-dev, path: {train: wavs/data_thchs30/train, dev: wavs/data_thchs30/dev}}
+    - {name: ESC-50-master, type: noise}
+    - {name: FSD50K, type: noise}
+    - {name: musan, type: noise}
+    - {name: wham_noise, type: noise}
+    - {name: rirs_noises, type: reverb}
+  snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
+  target_length_in_secs: 5
+  min_amp: 0.01
+  max_amp: 0.95
+
+  signal:
+    sampling_rate: 16000
+    frame_size: 480
+    hop_size: 160
+    fft_size: 512
+    dc_removal: true
+
+train:
+  initial_lr: 4e-4
+  batchsize: 32
+  epochs: 150
+  warmup_epochs: 5
+  epoch_loaded: latest
+  loss_function: {
+    type: compressed_mse,
+    params: {exp: 0.6, eps: 1e-8}
+    }
+  path:
+    models_trained: ./soundkit/tasks/se/models_trained
+    tensorboard: ./soundkit/tasks/se/tensorboard
+  num_lookahead: 1
+  feature: {type: logpspec_mel, bins: 69}
+  standardization: true
+  
+  model:
+    config_dir: ./soundkit/models/configs
+    config_file: config_unet_relu_noncausal_sep_specmel_th50.yaml
+
+evaluate:
+  epoch_loaded: 7
+
+  data: {from: raw,
+         dir: "./wavs/se/test_wavs",
+         files: [keyboard_steak.wav, i_like_steak.wav],}
+
+export:
+  epoch_loaded: 149
+  tflite_dir: ./soundkit/tasks/se/tflite
+
+demo:
+  epoch_loaded: 151
+  tflite_dir: ./soundkit/tasks/se/tflite
+  evb_dir: ./soundkit/tasks/se/evb

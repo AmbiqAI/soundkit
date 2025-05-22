@@ -51,7 +51,7 @@ def load_model_checkpoint(
         epoch_loaded = int(epoch_loaded)
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
         model.load_weights(checkpoint_path)
-
+        
     return epoch_loaded, epoch_loaded + 1
 
 
@@ -97,14 +97,13 @@ def build_model(
         params (SKTaskParams): Task parameters
     """
     print(f"Downloading model weights for {params.name} to {params.job_dir}")
-    params_train = params.train
-    model_dir = f'{params.job_dir}/models_trained/{params.name}'
+
 
     # 1.1. Build the model
 
     # Load from YAML file
 
-    config_path = params.train['model']['config_path']
+    config_path = f"{params.train['model']['config_dir']}/{params.train['model']['config_file']}"
     with open(config_path, "r") as f:
         config_dict = yaml.safe_load(f)
     model_name=config_dict['name']

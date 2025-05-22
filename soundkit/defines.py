@@ -50,6 +50,10 @@ class SKTaskParams(BaseModel, extra="allow"):
     export: dict[str, Any] = Field(
         default_factory=dict, description="exporting parameters")
 
+    # demo arguments
+    demo: dict[str, Any] = Field(
+        default_factory=dict, description="demo parameters")
+
     debug: bool= Field(
         default=False, description="Debug mode. If True, will not run training or evaluation.")
 

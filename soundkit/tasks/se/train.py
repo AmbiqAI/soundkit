@@ -167,8 +167,10 @@ def run_epoch(
             pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
             pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
 
-            if params.train['feature']['type'] in ('mel', 'logpspec_mel'):
+            if params.train['feature']['type'] in ('mel', 'logpspec', 'logpspec_mel'):
                 feat_sn = 20* feat_sn[0].numpy()
+            elif params.train['feature']['type'] in ('pspec', 'spec'):
+                feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
 
             plt.subplot(4, 1, 1)
             draw_spectrogram(
@@ -219,15 +221,15 @@ def train(params: SKTaskParams):
     print(f"Training SE model with params: {params} and more")
 
     params_train = params.train
-    model_dir = f'{params.job_dir}/models_trained/{params.name}'
+    model_dir = f"{params.train['path']['models_trained']}/{params.name}"
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    tfboard_dir = f'{params.job_dir}/tensorboard/{params.name}/logs/{current_time}'
+    tfboard_dir = f"{params.train['path']['tensorboard']}/{params.name}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     dim_feat = params.train['feature']['bins']
 
 
-    # 1.1. Build the model
+    # 1. Build the model
 
     # Load from YAML file
     model = build_model(
@@ -235,7 +237,7 @@ def train(params: SKTaskParams):
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], model_dir)
-    
+
     # 2. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
@@ -267,7 +269,7 @@ def train(params: SKTaskParams):
         feat_extractor=feat_extractor,)
 
     # 5. Define loss function
-    
+
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
         **params.train["loss_function"]["params"])
@@ -279,12 +281,13 @@ def train(params: SKTaskParams):
         alpha=1e-5,
         initial_step=epoch_loaded_1 * batches_train,)
 
+    # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
         weight_decay=0.1
         )
 
-    # 6. Training loop
+    # 7. Training loop
     # Load previous log if it exists
 
     log_path = f"{model_dir}/train_log.json"

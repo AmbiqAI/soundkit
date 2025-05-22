@@ -42,7 +42,7 @@ def parse_content(cls: Type[B], content: str) -> B:
 def run(
         mode: str = ArgField("-m", default=SKMode.train),
         task: str = ArgField("-t", default="se"),
-        config: str = ArgField("-c", default="./soundkit/tasks/se/configs/se.yaml"),
+        config: str = ArgField("-c", default="./configs/se.yaml"),
     ):
     """SoundKit CLI entry point.
 

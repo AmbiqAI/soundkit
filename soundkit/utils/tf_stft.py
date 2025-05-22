@@ -76,39 +76,70 @@ def tf_istft(
     overlap=frame_length-frame_step
     return signals_recons[:,overlap:-overlap]
 
-if __name__ == '__main__':
-    frame_length = 480
-    frame_step = 160
-    fft_length = 512
-    signals = tf.random.normal([2, 160000])  # Batch of 2 signals, each with 16000 samples
-    signals_stft = tf_stft(
-        signals,
-        frame_length,
-        frame_step,
-        fft_length)
+class StreamingSTFT(tf.Module):
+    def __init__(
+            self,
+            frame_length=480,
+            frame_step=160,
+            fft_length=512,
+            window_fn=window_fn):
+        super().__init__()
+        self.frame_length = frame_length
+        self.frame_step = frame_step
+        self.fft_length = fft_length
+        self.buffer_size = frame_length - frame_step
+        self.window = window_fn(frame_length, frame_step)
+        self.reset()
 
-    print(signals_stft.shape)
-    print(signals_stft)
+    def reset(self):
+        self.buffer = tf.zeros([self.buffer_size], dtype=tf.float32)
 
-    signals_recons = tf_istft(
-        signals_stft,
-        frame_length,
-        frame_step,
-        fft_length)
-    print(signals_recons.shape)
-    print(signals_recons)
-    print('reconstruction error:')
+    def process_frame(self, audio_chunk):
+        """
+        Input: audio_chunk [frame_step]
+        Output: stft_frame [frame_length//2 + 1] (complex)
+        """
 
-    overlap=frame_length-frame_step
-    error = signals[:,:-overlap] - signals_recons
-    print(tf.reduce_max(tf.abs(error)))
+        full_frame = tf.concat([self.buffer, audio_chunk], axis=0)
 
-    import matplotlib.pyplot as plt
-    plt.subplot(3,1,1)
-    plt.plot(signals[0,:-overlap])
-    plt.subplot(3,1,2)
-    plt.plot(signals_recons[0])
-    plt.subplot(3,1,3)
-    plt.plot(signals[0,:-overlap] - signals_recons[0])
-    plt.ylim([-1, 1])
-    plt.show()
+        self.buffer = full_frame[self.frame_step:]
+        windowed = full_frame * self.window
+        return tf.signal.rfft(windowed, [self.fft_length])
+
+
+class StreamingISTFT(tf.Module):
+    def __init__(
+            self,
+            frame_length=480,
+            frame_step=160,
+            fft_length=512,
+            window_fn=window_fn):
+        super().__init__()
+        self.frame_length = frame_length
+        self.fft_length = fft_length
+        self.frame_step = frame_step
+        self.window = window_fn(frame_length, frame_step)
+        self.reset()
+
+    def reset(self):
+        self.overlap_buffer = tf.zeros([self.frame_length - self.frame_step], dtype=tf.float32)
+
+    def process_frame(self, stft_frame):
+        """
+        Input: stft_frame [frame_length//2 + 1] (complex)
+        Output: waveform_chunk [frame_step]
+        """
+        time_frame = tf.signal.irfft(stft_frame, [self.fft_length])
+        
+        windowed = time_frame * self.window
+
+        # Apply overlap-add
+        full = tf.concat([self.overlap_buffer, tf.zeros([self.frame_step], dtype=tf.float32)], axis=0)
+        full += windowed
+
+        # Output the first hop-size samples
+        out = full[:self.frame_step]
+
+        # Update overlap buffer
+        self.overlap_buffer = full[self.frame_step:self.frame_length]
+        return out
