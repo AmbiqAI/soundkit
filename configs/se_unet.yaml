@@ -1,4 +1,4 @@
-name: unet_relu_noncausal_sep_specmel_th50
+name: unet_lookahead0
 project: se
 job_dir: ./soundkit/tasks/se
 
@@ -9,8 +9,8 @@ data:
     train: train_tfrecord.csv 
     test: test_tfrecord.csv
   num_samples_per_noise:
-    train: 10000
-    test: 2500
+    train: 1000
+    test: 250
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
@@ -40,9 +40,9 @@ data:
 train:
   initial_lr: 4e-4
   batchsize: 32
-  epochs: 160
+  epochs: 150
   warmup_epochs: 5
-  epoch_loaded: 151
+  epoch_loaded: latest
   loss_function: {
     type: compressed_mse,
     params: {exp: 0.6, eps: 1e-8}
@@ -50,16 +50,16 @@ train:
   path:
     models_trained: ./soundkit/tasks/se/models_trained
     tensorboard: ./soundkit/tasks/se/tensorboard
-  num_lookahead: 1
-  feature: {type: logpspec_mel, bins: 69}
+  num_lookahead: 0
+  feature: {type: logpspec, bins: 257}
   standardization: true
   
   model:
     config_dir: ./soundkit/models/arch_configs
-    config_file: config_unet_relu_noncausal_sep_specmel_th50.yaml
+    config_file: config_unet.yaml
 
 evaluate:
-  epoch_loaded: 151
+  epoch_loaded: latest
 
   data: {from: raw,
          dir: "./wavs/se/test_wavs",

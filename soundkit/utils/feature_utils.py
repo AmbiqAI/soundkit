@@ -30,6 +30,13 @@ class FeatureExtractor:
             raise ValueError(f"Unsupported feature type: {feat_type}")
 
         self._extract_fn = self._extractors[feat_type]
+
+        if self.signal_config["frame_size"] % self.signal_config["hop_size"] != 0:
+            raise ValueError(
+                f"Frame size and hop size must be non-zero and equal to each other. "
+                f"Got frame_size={self.signal_config['frame_size']} and hop_size={self.signal_config['hop_size']}"
+            )
+
         self.stft_exec = lambda x, states: tf_stft(
             x,
             frame_length=self.signal_config["frame_size"],
@@ -44,6 +51,7 @@ class FeatureExtractor:
                     nfilt           = num_bins,
                     sample_rate     = self.signal_config["sampling_rate"],)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
+
         elif feat_type == "logpspec_mel":
             fbanks = melspec_gen(
                 samplingRate=self.signal_config["sampling_rate"],

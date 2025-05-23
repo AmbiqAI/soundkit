@@ -51,7 +51,7 @@ def load_model_checkpoint(
         epoch_loaded = int(epoch_loaded)
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
         model.load_weights(checkpoint_path)
-        
+
     return epoch_loaded, epoch_loaded + 1
 
 
@@ -115,8 +115,9 @@ def build_model(
     
     if export:
         config_dict['unroll_rnn'] = True
-    
+
     Params_Cls = ModelParamFactory.get(model_name)
+
     params_net = Params_Cls(
         dim_feat=dim_feat,
         batchsize=batchsize,
@@ -126,23 +127,8 @@ def build_model(
     model = ModelFactory.get(
         model_name,
         params=params_net)
-    
-    uv = tf.ones(shape=(batchsize, time_steps, dim_feat), dtype=tf.float32)
-    model(uv)
-    
-    # for v in model.trainable_variables:
-    #     print(f"{v.name}: {v.numpy().shape}")
-    
-    
-    # import pickle
-    # with open("soundkit/tasks/se/arrays.pkl", "rb") as f:
-    #     arr_list_loaded = pickle.load(f)
-    # for i, v in enumerate(  model.trainable_variables):
-    #     print(f"{i}: {v.name}: {v.numpy().shape}")
-    #     v.assign(arr_list_loaded[i])
-    # import pdb; pdb.set_trace()    
-    # import pdb; pdb.set_trace()
-    # 1.2. Load model weights from checkpoint
-    # _, epoch_loaded_1 = load_model_checkpoint(
-    #     model, params_train['epoch_loaded'], model_dir)
+
+    model.build(
+        input_shape=(None, time_steps, dim_feat))
+    model.summary()
     return model

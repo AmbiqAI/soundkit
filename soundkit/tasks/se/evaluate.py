@@ -38,6 +38,7 @@ def evaluate(params: SKTaskParams):
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat)
+
     load_model_checkpoint(
         model_train, params_evaluate['epoch_loaded'], model_dir)
 

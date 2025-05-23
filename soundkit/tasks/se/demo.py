@@ -48,7 +48,6 @@ def demo(params: SKTaskParams):
     log.info("🧪 Generating feature C files")
 
     model_dir = f"{params.train['path']['models_trained']}/{params.name}"
-    
 
     # === Generate C Code STFT Window ===
     from ...utils.converter_fix_point import fakefix_tf, int2str_array
@@ -69,7 +68,7 @@ def demo(params: SKTaskParams):
     import tensorflow as tf
     from ...utils.feature_utils import FeatureExtractor
     from ...utils.mel import gen_mel_c
-    
+
     filterbank_name='filter_banks'
 
     feat_extractor = FeatureExtractor(

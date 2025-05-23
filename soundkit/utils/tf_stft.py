@@ -2,7 +2,6 @@
     Those function support batch processing
 """
 import tensorflow as tf
-import numpy as np
 import math as m
 pi = tf.constant(m.pi)
 
@@ -12,10 +11,13 @@ def gen_stft_win(
     """
     STFT window generator
     """
+
+    # if win_size % hop != 0:
+    #     raise ValueError("Window size must be a multiple of hop size")
     win_size = tf.cast(win_size, tf.float32)
     hop_div_fr = tf.cast(hop,tf.float32) / win_size
     indices = tf.range(win_size, dtype=tf.float32)
-    # import pdb; pdb.set_trace()
+
     win_square = hop_div_fr * (1.0 - tf.math.cos(2.0 * pi / win_size * indices ))
     win = tf.sqrt(win_square)
 
@@ -26,6 +28,7 @@ def window_fn(
         frame_step: int,
         dtype=tf.float32):
     """ Create a window function"""
+
     win = gen_stft_win(
             win_size        = frame_length,
             hop             = frame_step)
@@ -39,10 +42,12 @@ def tf_stft(
         frame_step: int,
         fft_length: int,
         states=None,):
+    
     """ Calculate the STFT of a batch of signals"""
     def my_win(frame_length, dtype=tf.float32):
-        return window_fn(frame_length, frame_step,dtype=dtype)
+        return window_fn(frame_length, tf.constant(frame_step),dtype=dtype)
     shape = tf.shape(signals)
+
     if states is None:
         states = tf.zeros([shape[0], frame_length-frame_step])
     signals = tf.concat([states, signals], axis=-1)
@@ -63,8 +68,8 @@ def tf_istft(
         fft_length: int):
     """ Calculate the inverse STFT of a batch of signals"""
     def my_win(frame_length, dtype=tf.float32):
-        return window_fn(frame_length, frame_step,dtype=dtype)
-
+        return window_fn(frame_length, tf.constant(frame_step),dtype=dtype)
+    
     signals_recons = tf.signal.inverse_stft(
         signals_stft,
         frame_length = frame_length,

@@ -1,0 +1,29 @@
+site_name: SoundKit
+repo_url: https://github.com/AmbiqAI/soundkit
+theme:
+  name: material
+  logo: assets/logo.png  # optional
+  favicon: assets/favicon.ico  # optional
+  features:
+    - content.code.copy
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Tasks:
+      - SE: tasks/se.md
+      - VAD: tasks/vad.md
+      - KWS: tasks/kws.md
+  - models:
+      - CRNN: models/crnn.md
+      - UNet: models/unet.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

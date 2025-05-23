@@ -1,4 +1,4 @@
-name: se_nn_arch72_mel
+name: crnn100_lookahead0
 project: se
 job_dir: ./soundkit/tasks/se
 
@@ -9,8 +9,8 @@ data:
     train: train_tfrecord.csv 
     test: test_tfrecord.csv
   num_samples_per_noise:
-    train: 10000
-    test: 2500
+    train: 1000
+    test: 250
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
@@ -42,7 +42,7 @@ train:
   batchsize: 32
   epochs: 150
   warmup_epochs: 5
-  epoch_loaded: latest
+  epoch_loaded: random
   loss_function: {
     type: compressed_mse,
     params: {exp: 0.6, eps: 1e-8}
@@ -55,11 +55,11 @@ train:
   standardization: true
   
   model:
-    config_dir: ./soundkit/models/configs
-    config_file: config_se_nn_arch72_mel.yaml
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_crnn.yaml
 
 evaluate:
-  epoch_loaded: 7
+  epoch_loaded: 129
 
   data: {from: raw,
          dir: "./wavs/se/test_wavs",

@@ -55,7 +55,7 @@ train:
   standardization: true
   
   model:
-    config_dir: ./soundkit/models/configs
+    config_dir: ./soundkit/models/arch_configs
     config_file: config_se_nn_arch72_mel.yaml
 
 evaluate:
