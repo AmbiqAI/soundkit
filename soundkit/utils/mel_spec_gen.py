@@ -30,9 +30,18 @@ def melspec_gen(
         axis=0)
 
     return mel_filters
+def float2fix(data_in, nfrac, bitwidth):
+    """
+    Floating point to int
+    """
+    max_val = 2**(bitwidth-1) - 1
+    min_val = -2**(bitwidth-1)
 
+    out = np.minimum(np.maximum(np.floor(data_in * 2**nfrac), min_val), max_val).astype(int)
+
+    return out
 if __name__ == "__main__":
-    from c_code_table_converter import float2fix
+
     fs = 16000  # Sampling rate in Hz
     n_fft = 512  # FFT size
     n_mels = 32  # Number of Mel bands
@@ -40,7 +49,7 @@ if __name__ == "__main__":
     mel_filters = melspec_gen(
         fs, n_fft, n_mels, thresh_mel=thresh_mel)
     print(mel_filters.shape)
-    
+    import pdb; pdb.set_trace()
     with open(f"melcomb_coeff_nfilt{len(mel_filters)}_fftsize{n_fft}.c", "w") as file:
         file.write("#include <stdint.h>\n")
         file.write(f"const int16_t melcomb_coeff_nfilt{len(mel_filters)} = {len(mel_filters)};\n")

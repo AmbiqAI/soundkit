@@ -42,8 +42,7 @@ class FeatureExtractor:
             fbanks = gen_mel_bank(
                     fftsize         = self.signal_config["fft_size"],
                     nfilt           = num_bins,
-                    sample_rate     = self.signal_config["sampling_rate"],
-                    make_c_table    = False)
+                    sample_rate     = self.signal_config["sampling_rate"],)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
         elif feat_type == "logpspec_mel":
             fbanks = melspec_gen(

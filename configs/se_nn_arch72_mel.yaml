@@ -59,7 +59,7 @@ train:
     config_file: config_se_nn_arch72_mel.yaml
 
 evaluate:
-  epoch_loaded: 7
+  epoch_loaded: 50
 
   data: {from: raw,
          dir: "./wavs/se/test_wavs",
@@ -73,3 +73,4 @@ demo:
   epoch_loaded: 50
   tflite_dir: ./soundkit/tasks/se/tflite
   evb_dir: ./soundkit/tasks/se/evb
+  pre_gain: 1

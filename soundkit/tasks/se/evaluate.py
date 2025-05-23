@@ -28,7 +28,7 @@ def evaluate(params: SKTaskParams):
     model_dir = f"{params.train['path']['models_trained']}/{params.name}"
 
     batchsize_train = params.train['batchsize']
-    batchsize = 1
+    batchsize = 32
     dim_feat = params.train['feature']['bins']
 
     # 1.1. Build the model

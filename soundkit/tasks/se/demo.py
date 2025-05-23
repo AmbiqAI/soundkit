@@ -31,8 +31,8 @@ def demo(params: SKTaskParams):
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
-    evb = "evb"
-    dst_dir = "tflm"
+
+    evb_src_tflm_dir = Path(params.demo['evb_dir']) / 'src' # "tflm"
 
     # === Download neuralSPOT ===
     repo_url = "https://github.com/AmbiqAI/neuralSPOT.git"
@@ -48,6 +48,42 @@ def demo(params: SKTaskParams):
     log.info("🧪 Generating feature C files")
 
     model_dir = f"{params.train['path']['models_trained']}/{params.name}"
+    
+
+    # === Generate C Code STFT Window ===
+    from ...utils.converter_fix_point import fakefix_tf, int2str_array
+    from ...utils.tf_stft import gen_stft_win
+    
+    stft_win_name='stft_win_coeff'
+    win_coeff = gen_stft_win(
+        win_size=params.data['signal']['frame_size'],
+        hop=params.data['signal']['hop_size'])
+    win_coeff = fakefix_tf(win_coeff, 16, 15)
+    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
+    c_code = f"// stft window_coeff (framesize={params.data['signal']['frame_size']}, hopsize={params.data['signal']['hop_size']})\n" + c_code
+    c_code = '#include <stdint.h>\n\n' + c_code
+    Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
+
+
+    # === Generate C Code Filter Banks ===
+    import tensorflow as tf
+    from ...utils.feature_utils import FeatureExtractor
+    from ...utils.mel import gen_mel_c
+    
+    filterbank_name='filter_banks'
+
+    feat_extractor = FeatureExtractor(
+        params=params,
+    )
+    fbanks = tf.identity(feat_extractor.mel_filter)
+    fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
+    gen_mel_c(
+        f"{evb_src_tflm_dir}/{filterbank_name}.c",
+        filterbank_name,
+        mel_filters=fbanks,
+        bank_type=params.train['feature']['type'])
+
+    # === Generate feature statstics ===
     stats_name = 'stats.pkl'
     stats = load_feat_stats(
         dir=model_dir,
@@ -56,7 +92,7 @@ def demo(params: SKTaskParams):
     generate_feature_c_files(
         file_name="def_nn3_se",
         param_struct_name="params_nn3_se",
-        dir=f"{params.demo['evb_dir']}/src/tflm",
+        dir=evb_src_tflm_dir,
         feature_mean=stats['nMean_feat'],
         feature_std=stats['nInvStd'],
         sampling_rate=params.data['signal']['sampling_rate'],
@@ -65,8 +101,10 @@ def demo(params: SKTaskParams):
         hopsize_stft=params.data['signal']['hop_size'],
         num_mfltrBank=params.train['feature']['bins'],
         is_dcrm=int(params.data['signal']['dc_removal']),
+        pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
-        stft_win_coeff_name="stft_win_coeff_w480_h160",
+        stft_win_coeff_name=stft_win_name,
+        filterbank_name=filterbank_name,
     )
 
     # === Define Key Paths ===
@@ -123,7 +161,7 @@ def demo(params: SKTaskParams):
     # === Copy output files ===
     log.info("📤 Copying validator output files:")
     validator_src = neuralspot_root / "projects/autodeploy" / Path(tflite_filename).stem / "tflm_validator" / "src"
-    target_dst_dir = Path(f"{current_dir}/soundkit/tasks/se") / evb / "src" / dst_dir
+    target_dst_dir = Path(current_dir) / evb_src_tflm_dir
     target_dst_dir.mkdir(parents=True, exist_ok=True)
 
     files_to_copy = [
@@ -149,6 +187,7 @@ def demo(params: SKTaskParams):
 
     subprocess.run(["make"], check=True)
     subprocess.run(["make", "deploy"], check=True)
+
     subprocess.run(["make", "view"], check=True)
 
     log.info("✅ TFLite deployment and file transfer complete.")

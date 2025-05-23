@@ -47,3 +47,22 @@ def float2hex(val_in):
     else:
         out = int(val_in*2**15)
     return out
+
+def int2str_array(name, values, nbits=32):
+    items_per_line = 8
+    values = values.flatten()  # 👈 flatten to 1D     
+    lines = []
+    for i in range(0, len(values), items_per_line):
+        
+        if nbits == 32:
+            line = ", ".join(f"0x{int(val) & 0xFFFFFFFF:08X}" for val in values[i:i + items_per_line])
+        
+        elif nbits == 16:
+            line = ", ".join(f"0x{int(val) & 0xFFFF:04X}" for val in values[i:i + items_per_line])
+        elif nbits == 8:
+            line = ", ".join(f"0x{int(val) & 0xFF:02X}" for val in values[i:i + items_per_line])
+        else:
+            raise ValueError(f"Unsupported nbits: {nbits}")
+        lines.append(line)
+    array_body = ",\n    ".join(lines)
+    return f"const int{nbits}_t {name}[] = {{\n    {array_body}\n}};"
