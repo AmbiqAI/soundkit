@@ -10,20 +10,32 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Tasks:
-      - SE: tasks/se.md
+      - SE:
+        - Overview: tasks/se.md
+        - Data: tasks/se_docs/data.md
+        - Train: tasks/se_docs/train.md
+        - Evaluate: tasks/se_docs/evaluate.md
+        - Export: tasks/se_docs/export.md
+        - Demo: tasks/se_docs/demo.md
+
       - VAD: tasks/vad.md
       - KWS: tasks/kws.md
   - models:
       - CRNN: models/crnn.md
       - UNet: models/unet.md
+  - Loss Functions: loss.md
 
 markdown_extensions:
   - admonition
+  - pymdownx.details  # needed for ??? collapsible
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.superfences
+  - pymdownx.highlight
+  - codehilite
+
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

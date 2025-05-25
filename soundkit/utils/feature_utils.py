@@ -15,49 +15,48 @@ class FeatureExtractor:
             self,
             params: SKTaskParams):
 
-        self.signal_config = params.data['signal']
-        feat_type = params.train['feature']["type"]
-        num_bins =  params.train['feature']["bins"]
+        self.params = params
+        feat_params = self.params.train['feature']
         self._extractors = {
             "spec": self._extract_spec,
             "pspec": self._extract_pspec,
             "logpspec": self._extract_logpspec,
             "mel": self._extract_mel,
-            "logpspec_mel": self._extract_logpspec_mel,
+            "hybrid": self._extract_logpspec_mel,
         }
 
-        if feat_type not in self._extractors:
-            raise ValueError(f"Unsupported feature type: {feat_type}")
+        if feat_params['type'] not in self._extractors:
+            raise ValueError(f"Unsupported feature type: {feat_params['type']}")
 
-        self._extract_fn = self._extractors[feat_type]
+        self._extract_fn = self._extractors[feat_params['type']]
 
-        if self.signal_config["frame_size"] % self.signal_config["hop_size"] != 0:
+        if feat_params["frame_size"] % feat_params["hop_size"] != 0:
             raise ValueError(
                 f"Frame size and hop size must be non-zero and equal to each other. "
-                f"Got frame_size={self.signal_config['frame_size']} and hop_size={self.signal_config['hop_size']}"
+                f"Got frame_size={feat_params['frame_size']} and hop_size={feat_params['hop_size']}"
             )
 
         self.stft_exec = lambda x, states: tf_stft(
             x,
-            frame_length=self.signal_config["frame_size"],
-            frame_step=self.signal_config["hop_size"],
-            fft_length=self.signal_config["fft_size"],
+            frame_length=feat_params["frame_size"],
+            frame_step=feat_params["hop_size"],
+            fft_length=feat_params["fft_size"],
             states=states,
         )
 
-        if feat_type == "mel":
+        if feat_params['type'] == "mel":
             fbanks = gen_mel_bank(
-                    fftsize         = self.signal_config["fft_size"],
-                    nfilt           = num_bins,
-                    sample_rate     = self.signal_config["sampling_rate"],)
+                    fftsize         = feat_params["fft_size"],
+                    nfilt           = feat_params['bins'],
+                    sample_rate     = params.data['signal']["sampling_rate"],)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
 
-        elif feat_type == "logpspec_mel":
+        elif feat_params['type'] == "hybrid":
             fbanks = melspec_gen(
-                samplingRate=self.signal_config["sampling_rate"],
-                n_fft=self.signal_config["fft_size"],
-                n_mels=32,
-                thresh_mel=50)
+                samplingRate=params.data['signal']["sampling_rate"],
+                n_fft=feat_params["fft_size"],
+                n_mels=72,
+                thresh_mel=100)
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
 
     def __call__(
@@ -65,7 +64,9 @@ class FeatureExtractor:
             audio_sn: tf.Tensor,
             states : Union[tf.Tensor, None] = None) -> tf.Tensor:
         """Extract features from audio using configured extractor."""
-        overlap=self.signal_config["frame_size"] - self.signal_config["hop_size"]
+        
+        feat_params = self.params.train['feature']
+        overlap=feat_params["frame_size"] - feat_params["hop_size"]
         states_udpate = tf.identity(audio_sn[:, -overlap:])
 
         feat, spec = self._extract_fn(audio_sn, states)

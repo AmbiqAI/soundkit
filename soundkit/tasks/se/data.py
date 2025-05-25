@@ -16,7 +16,7 @@ from ...defines import SKTaskParams
 from ...utils.basic_dsp import dc_remove
 from ...utils.download_api import corpus_download
 from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
-from ...utils.plot_api import draw_spectrogram
+from ...utils.plot_api import plot_spectrograms
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -28,7 +28,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
             proc_pid: int, # process id
             audio_type_list: dict[str, list],
             success_dict: dict,
-            config: dict,
+            params: SKTaskParams,
             info: str = None,
             debug: bool = False,
             ):
@@ -39,7 +39,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         self.noise_list = audio_type_list['noise']
         self.reverb_list = audio_type_list['reverb']
         self.success_dict = success_dict
-        self.config = config  # includes noise_files, snr_dbs, reverb_prob, output_dir, etc.
+        self.params = params  # includes noise_files, snr_dbs, reverb_prob, output_dir, etc.
         self.info = info
         self.debug= debug
 
@@ -48,11 +48,12 @@ class FeatMultiProcsClass(multiprocessing.Process):
         Run the process to generate noisy and 
         clean audio files.
         """
-        target_sample_rate = self.config['signal']["sampling_rate"]
-        is_dc_removal = self.config['signal']["dc_removal"]
-        revert_prob = self.config["reverb_prob"]
-        path_tfrecord=self.config['path_tfrecord']
-        target_length = self.config['target_length_in_secs'] * target_sample_rate
+
+        target_sample_rate = self.params.data['signal']["sampling_rate"]
+        is_dc_removal = self.params.data['signal']["dc_removal"]
+        revert_prob = self.params.data["reverb_prob"]
+        path_tfrecord=self.params.data['path_tfrecord']
+        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
 
         for wavname in tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False):
@@ -76,7 +77,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
                         self.reverb_list,
                         sample_rate=target_sample_rate)
 
-            snr_dbs = self.config['snr_dbs']
+            snr_dbs = self.params.data['snr_dbs']
             snr_db = snr_dbs[np.random.randint(0,len(snr_dbs))]
 
             # repeat or crop clean and noise to target length
@@ -85,8 +86,8 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 noise,
                 rir,
                 snr_db,
-                min_amp=self.config['min_amp'],
-                max_amp=self.config['max_amp'],
+                min_amp=self.params.data['min_amp'],
+                max_amp=self.params.data['max_amp'],
                 target_length=target_length,
                 sample_rate=target_sample_rate)
 
@@ -114,43 +115,36 @@ class FeatMultiProcsClass(multiprocessing.Process):
         Plot the audio signals and 
         their spectrograms for debugging.
         """
-        frame_size = self.config['signal']['frame_size']
-        hop_size = self.config['signal']['hop_size']
-        fft_size = self.config['signal']['fft_size']
-        spec_sn = tf_stft([audio_sn], frame_size, hop_size, fft_size)
-        spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
+        
+        from ...utils.feature_utils import FeatureExtractor
+        feat_extractor = FeatureExtractor(
+            params=self.params,
+        )
+        
+        frame_size = self.params.train['feature']['frame_size']
+        hop_size = self.params.train['feature']['hop_size']
+        fft_size = self.params.train['feature']['fft_size']
+        feat_sn, spec_sn, states_audio_sn = feat_extractor(
+            tf.constant([audio_sn], dtype=tf.float32))
+        feat_s, spec_s, states_audio_s = feat_extractor(
+            tf.constant([audio_s], dtype=tf.float32))
+        
+        
+        # spec_sn = tf_stft([audio_sn], frame_size, hop_size, fft_size)
+        # spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
         logspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn[0])).numpy()
         logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
-
-        plt.figure(1)
-        plt.subplot(4, 1, 1)
-        draw_spectrogram(
-            logspec_sn.T,
-            title=f"noisy logspec {snr_db}dB",
-            vmin=vmin,
-            vmax=vmax,
-            show_colorbar=True)
-
-        plt.subplot(4, 1, 2)
-        draw_spectrogram(
-            logspec_s.T,
-            title=f"clean logspec",
-            vmin=vmin,
-            vmax=vmax,
-            show_colorbar=True)
-
-        plt.subplot(4, 1, 3)
-        plt.plot(audio_sn)
-        plt.title(f"audio_sn {snr_db}dB")
-        plt.ylim(-1, 1)
-
-        plt.subplot(4, 1, 4)
-        plt.plot(audio_s)
-        plt.title("audio_s")
-        plt.ylim(-1, 1)
-
-        plt.tight_layout()
-        plt.show()
+        logmel_sn = 20 * feat_sn[0].numpy()
+        
+  
+        plot_spectrograms(
+            images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
+            titles=[f"noisy logspec {snr_db}dB", "clean logspec", "noisy feat"],
+            vmin_vmax=[(vmin, vmax), (vmin, vmax), (vmin, vmax)],
+            show_colorbar=True,
+            cmap="pink_r",  # or your preferred colormap
+            show_fig=True   # set to False if you just want to save
+            )
 
 def get_wavefiles(path_folder):
     """Fetch all of noise files"""
@@ -169,12 +163,12 @@ def get_noise_file_list(
 
     Args:
         ntype (str): Noise type (e.g., 'musan', 'FSD50K', etc.)
-        set_name (str): 'train' or 'test'
+        set_name (str): 'train' or 'val'
 
     Returns:
         List[str]: File paths for noise
     """
-    set_names = ['train', 'test']
+    set_names = ['train', 'val']
     files = {}
     match ntype:
 
@@ -192,7 +186,7 @@ def get_noise_file_list(
             random.shuffle(lines)
             split = len(lines) // 5
             files['train'] = lines[split:]
-            files['test'] = lines[:split]
+            files['val'] = lines[:split]
 
             return files
 
@@ -203,7 +197,7 @@ def get_noise_file_list(
             random.shuffle(lines)
             split = len(lines) // 5
             files['train'] = lines[split:]
-            files['test'] = lines[:split]
+            files['val'] = lines[:split]
 
             return files
 
@@ -212,7 +206,7 @@ def get_noise_file_list(
             split = len(all_files) // 5
             random.shuffle(all_files)
             files['train'] = all_files[split:]
-            files['test'] = all_files[:split]
+            files['val'] = all_files[:split]
             return files
 
         case _:
@@ -242,15 +236,15 @@ def data(params: SKTaskParams) -> None:
             noise_type2list[corpus['name']] = get_noise_file_list(corpus['name'])
 
     # retrieve clean speech files
-    speech_list = {'train': [], 'test': []}
+    speech_list = {'train': [], 'val': []}
     for corpus in params_data['corpora']:
         if corpus['type'] == 'train':
             speech_list['train'].extend(get_wavefiles(corpus['path']))
-        elif corpus['type'] == 'dev':
-            speech_list['test'].extend(get_wavefiles(corpus['path']))
-        elif corpus['type'] == 'train-dev':
+        elif corpus['type'] == 'val':
+            speech_list['val'].extend(get_wavefiles(corpus['path']))
+        elif corpus['type'] == 'train-val':
             speech_list['train'].extend(get_wavefiles(corpus['path']['train']))
-            speech_list['test'].extend(get_wavefiles(corpus['path']['dev']))
+            speech_list['val'].extend(get_wavefiles(corpus['path']['dev']))
 
     # retrieve reverb files
     if params_data['reverb_prob'] > 0:
@@ -260,8 +254,8 @@ def data(params: SKTaskParams) -> None:
     else:
         reverb_list = None
 
-    sets = ['train','test']
-    tot_success_dict = {'train': [], 'test': []}
+    sets = ['train','val']
+    tot_success_dict = {'train': [], 'val': []}
     for train_set in sets:
         random.shuffle(speech_list[train_set])
         num_samples = np.minimum(
@@ -288,12 +282,12 @@ def data(params: SKTaskParams) -> None:
                         i, # process id
                         audio_type_lists,
                         success_dict,
-                        params_data,
+                        params,
                         info=noise_type,
-                        debug=params.debug)
+                        debug=params.data['debug'])
                 processes.append(proc)
 
-            if params.debug:
+            if params.data['debug']:
                 for proc in processes:
                     proc.run()
             else:

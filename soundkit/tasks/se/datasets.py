@@ -5,6 +5,7 @@
 
 '''
 import os
+from pathlib import Path
 from typing import List, Tuple, Iterator
 import tensorflow as tf
 import numpy as np
@@ -108,30 +109,39 @@ def create_tfrecords_pipeline(
     return iterator, dataset
 
 def create_dataset(
-        tfrecord_list_path: str,
+        tfrecords: str | list,
         batchsize: int = 2,
         is_shuffle: bool = False) -> Tuple[tf.data.Dataset, int]:
     """
     Create dataset from tfrecord list
     """
+    
+    if isinstance(tfrecords, (str, Path)):
+        with open(tfrecords, 'r') as file: # pylint: disable=unspecified-encoding
+            try:
+                lines = file.readlines()
 
-    with open(tfrecord_list_path, 'r') as file: # pylint: disable=unspecified-encoding
-        try:
-            lines = file.readlines()
-        except:# pylint: disable=bare-except
-            print(f'Can not find the list {tfrecord_list_path}')
-        else:
-            total_batches = len(lines) // batchsize
-            len0 = total_batches * batchsize
-            fnames = [line.strip() for line in lines[:len0]]
-            # if num_samples > 0:
-            #     import random
-            #     random.seed(42)
-            #     random.shuffle(fnames[tr_set])
-            #     if tr_set=='train':
-            #         fnames[tr_set] = fnames[tr_set][:num_samples]
-            #     else:
-            #         fnames[tr_set] = fnames[tr_set][:num_samples >> 2]
+            except:# pylint: disable=bare-except
+                print(f'Can not find the list {tfrecords}')
+            else:
+                
+                total_batches = len(lines) // batchsize
+                len0 = total_batches * batchsize
+                fnames = [line.strip() for line in lines[:len0]]
+                # if num_samples > 0:
+                #     import random
+                #     random.seed(42)
+                #     random.shuffle(fnames[tr_set])
+                #     if tr_set=='train':
+                #         fnames[tr_set] = fnames[tr_set][:num_samples]
+                #     else:
+                #         fnames[tr_set] = fnames[tr_set][:num_samples >> 2]
+    elif isinstance(tfrecords, list):
+        fnames = tfrecords
+        total_batches = len(fnames) // batchsize
+    else:
+        raise ValueError("tfrecords should be a string or a list of strings.")
+
     _, dataset = create_tfrecords_pipeline(
             fnames,
             batchsize = batchsize,

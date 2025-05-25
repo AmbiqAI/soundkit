@@ -37,15 +37,30 @@ def load_model_checkpoint(
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
         if latest_checkpoint is None:
             raise FileNotFoundError(f"No checkpoint found in {checkpoint_dir}")
-        
+
         model.load_weights(latest_checkpoint)
 
         match = re.search(r'_ep(\d+)', latest_checkpoint)
         if not match:
             raise ValueError(f"Cannot extract epoch number from checkpoint name: {latest_checkpoint}")
-        
+
         epoch_loaded = int(match.group(1))
 
+    elif epoch_loaded == 'best':
+        # Load your JSON log
+        with open(f"{model_dir}/train_log.json", "r") as f:
+            logs = json.load(f)
+        # Find the entry with the lowest test_loss
+        # ✅ Remove None entries
+        logs = [entry for entry in logs if entry is not None]
+
+        # ✅ Find entry with lowest val_loss
+        best_epoch_entry = min(logs, key=lambda x: x["val_loss"])
+        epoch_loaded = best_epoch_entry['epoch']
+        checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
+        
+        model.load_weights(checkpoint_path)
+        print(f"Loaded best model from epoch {epoch_loaded} amoung val_loss")
     else:
         # Load a specific epoch number
         epoch_loaded = int(epoch_loaded)
@@ -68,7 +83,9 @@ def save_train_log(train_log: List[Dict[str, Any]], filepath: str) -> None:
         json.dump(train_log, f, indent=2)
 
 
-def load_train_log(filepath: str) -> List[Dict[str, Any]]:
+def load_train_log(
+        filepath: str,
+        epochs: int) -> List[Dict[str, Any]]:
     """
     Load training log from a JSON file.
 
@@ -79,7 +96,7 @@ def load_train_log(filepath: str) -> List[Dict[str, Any]]:
         train_log: List of logged metrics per epoch.
     """
     if not os.path.exists(filepath):
-        return []
+        return [None] * epochs  # Return empty log for all epochs if file does not exist
 
     with open(filepath, "r") as f:
         train_log = json.load(f)
@@ -90,7 +107,8 @@ def build_model(
         params: SKTaskParams,
         batchsize: int = 32,
         dim_feat: int = 72,
-        export: bool=False) -> Tuple[tf.keras.Model, int]:
+        time_steps: int = 1,
+        export: bool = False) -> Tuple[tf.keras.Model, int]:
     """Download model weights from a remote server.
 
     Args:
@@ -107,17 +125,12 @@ def build_model(
     with open(config_path, "r") as f:
         config_dict = yaml.safe_load(f)
     model_name=config_dict['name']
-    if export:
-        time_steps = 1
-    else:
-        time_steps = params.data['target_length_in_secs'] * 100    
-    
-    
+   
     if export:
         config_dict['unroll_rnn'] = True
 
     Params_Cls = ModelParamFactory.get(model_name)
-
+    
     params_net = Params_Cls(
         dim_feat=dim_feat,
         batchsize=batchsize,

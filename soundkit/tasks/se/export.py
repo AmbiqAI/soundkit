@@ -13,7 +13,7 @@ def export(params: SKTaskParams):
     """
     params_export = params.export
 
-    model_dir = f"{params.train['path']['models_trained']}/{params.name}"
+    model_dir = f"{params.train['path']['model_dir']}"
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
@@ -22,17 +22,24 @@ def export(params: SKTaskParams):
     # 1.1. Build the model
     # Load from YAML file
     model_train = build_model(
-        params, batchsize=batchsize_train, dim_feat=dim_feat)
+        params,
+        batchsize=batchsize_train,
+        dim_feat=dim_feat,
+        time_steps = params.data['target_length_in_secs'] * 100)
+
     load_model_checkpoint(
         model_train, params_export['epoch_loaded'], model_dir)
 
     for v in model_train.trainable_variables:
         z = v.numpy().flatten()
         print(v.name, v.shape, z[1:5])
-    
 
     model = build_model(
-        params, batchsize=batchsize, dim_feat=dim_feat, export=True)
+        params,
+        batchsize=batchsize,
+        dim_feat=dim_feat,
+        time_steps=1,
+        export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
 
     model_wrap = warp_tf_model(
@@ -43,3 +50,5 @@ def export(params: SKTaskParams):
         model_wrap,
         dtype='int16',
         path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+
+    print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")

@@ -17,6 +17,7 @@ pyyaml = "*"
 argparse = "*"
 pydantic = "*"
 argdantic = "*"
+omegaconf = "*"
 tqdm = "*"
 
 # Audio & DSP

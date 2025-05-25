@@ -47,19 +47,19 @@ def demo(params: SKTaskParams):
     # === Generate Feature C Files ===
     log.info("🧪 Generating feature C files")
 
-    model_dir = f"{params.train['path']['models_trained']}/{params.name}"
+    model_dir = f"{params.train['path']['model_dir']}"
 
     # === Generate C Code STFT Window ===
     from ...utils.converter_fix_point import fakefix_tf, int2str_array
     from ...utils.tf_stft import gen_stft_win
-    
+    feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=params.data['signal']['frame_size'],
-        hop=params.data['signal']['hop_size'])
+        win_size=feat_params['frame_size'],
+        hop=feat_params['hop_size'])
     win_coeff = fakefix_tf(win_coeff, 16, 15)
     c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={params.data['signal']['frame_size']}, hopsize={params.data['signal']['hop_size']})\n" + c_code
+    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
@@ -95,10 +95,10 @@ def demo(params: SKTaskParams):
         feature_mean=stats['nMean_feat'],
         feature_std=stats['nInvStd'],
         sampling_rate=params.data['signal']['sampling_rate'],
-        fftsize=params.data['signal']['fft_size'],
-        winsize_stft=params.data['signal']['frame_size'],
-        hopsize_stft=params.data['signal']['hop_size'],
-        num_mfltrBank=params.train['feature']['bins'],
+        fftsize=feat_params['fft_size'],
+        winsize_stft=feat_params['frame_size'],
+        hopsize_stft=feat_params['hop_size'],
+        num_mfltrBank=feat_params['bins'],
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],

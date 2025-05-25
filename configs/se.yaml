@@ -1,25 +1,23 @@
-name: crnn100_lookahead0
+name: crnn_experiment
 project: se
 job_dir: ./soundkit/tasks/se
 
-debug: false
 data:
-  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.csv 
-    test: test_tfrecord.csv
+    val: val_tfrecord.csv
   num_samples_per_noise:
     train: 1000
-    test: 250
+    val: 250
   force_download: false
-  reverb_prob: 0.2
+  reverb_prob: 0.5
   num_processes: 8
   corpora:
     - {name: train-clean-360, type: train, path: wavs/LibriSpeech/train-clean-360}
     - {name: train-clean-100, type: train, path: wavs/LibriSpeech/train-clean-100}
-    - {name: dev-clean, type: dev, path: wavs/LibriSpeech/dev-clean}
-    - {name: test-clean, type: test, path: wavs/LibriSpeech/test-clean}
-    - {name: thchs30, type: train-dev, path: {train: wavs/data_thchs30/train, dev: wavs/data_thchs30/dev}}
+    - {name: dev-clean, type: val, path: wavs/LibriSpeech/dev-clean}
+    - {name: thchs30, type: train-val, path: {train: wavs/data_thchs30/train, dev: wavs/data_thchs30/dev}}
     - {name: ESC-50-master, type: noise}
     - {name: FSD50K, type: noise}
     - {name: musan, type: noise}
@@ -27,15 +25,13 @@ data:
     - {name: rirs_noises, type: reverb}
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
   target_length_in_secs: 5
-  min_amp: 0.01
+  min_amp: 0.03
   max_amp: 0.95
 
   signal:
     sampling_rate: 16000
-    frame_size: 480
-    hop_size: 160
-    fft_size: 512
     dc_removal: true
+  debug: false
 
 train:
   initial_lr: 4e-4
@@ -48,28 +44,41 @@ train:
     params: {exp: 0.6, eps: 1e-8}
     }
   path:
-    models_trained: ./soundkit/tasks/se/models_trained
-    tensorboard: ./soundkit/tasks/se/tensorboard
+    model_dir: ${job_dir}/models_trained/${name}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}
   num_lookahead: 0
-  feature: {type: mel, bins: 72}
+  
+  feature:
+    frame_size: 480
+    hop_size: 160
+    fft_size: 512
+    type: mel
+    bins: 72
+
   standardization: true
   
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn.yaml
+  
+  debug: false
 
 evaluate:
-  epoch_loaded: 129
+  epoch_loaded: best
 
-  data: {from: raw,
-         dir: "./wavs/se/test_wavs",
-         files: [keyboard_steak.wav, i_like_steak.wav],}
+  data: 
+    dir: "./wavs/se/test_wavs"
+    files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    # # dir: ./wavs/LibriSpeech/test-clean
+    # # files:
+    result_folder: ${job_dir}/test_results/${name}
 
 export:
-  epoch_loaded: 149
-  tflite_dir: ./soundkit/tasks/se/tflite
+  epoch_loaded: best
+  tflite_dir: ${job_dir}/tflite
 
 demo:
-  epoch_loaded: 50
-  tflite_dir: ./soundkit/tasks/se/tflite
-  evb_dir: ./soundkit/tasks/se/evb
+  epoch_loaded: best
+  tflite_dir: ${job_dir}/tflite
+  evb_dir: ${job_dir}/evb
+  pre_gain: 1
