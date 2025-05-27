@@ -4,7 +4,7 @@ from ...utils.tflite_convert import tflite_convert, warp_tf_model
 from ...defines import SKTaskParams
 from ...utils.download_tf_model import build_model, load_model_checkpoint
 from ...utils.tf_copy_model import copy_model_weights
-
+from ...utils.feature_utils import FeatureExtractor
 def export(params: SKTaskParams):
     """Export SE task model with given parameters.
 
@@ -17,7 +17,10 @@ def export(params: SKTaskParams):
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    dim_feat = params.train['feature']['bins']
+    feat_extractor = FeatureExtractor(
+        params=params,
+        )
+    dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
     # Load from YAML file

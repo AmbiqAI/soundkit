@@ -14,16 +14,16 @@ def load_feat_stats(dir: str,stats_name: str = 'stats.pkl'):
         with open(os.path.join(dir, stats_name), "rb") as file:
             stats = pickle.load(file)
         return stats
-    
+
 def feat_stats_estimator(
         dataset: tf.data.Dataset,
         num_batches: int,
-        dim_feat: int,
         folder_nn: str,
         feat_extractor: FeatureExtractor,)->None:
     """
     Estimate statistics of training data
     """
+    dim_feat = feat_extractor.dim_feat
     stats_name = 'stats.pkl'
     if os.path.exists(os.path.join(folder_nn, stats_name)):
         return load_feat_stats(folder_nn, stats_name)
@@ -76,7 +76,7 @@ def feat_stats_estimator(
 
     # save mean and std
     stats = {'nMean_feat': mean_stats.numpy(), 'nInvStd': inv_std_stats.numpy()}
-    
+
     os.makedirs(folder_nn, exist_ok=True)
     with open(os.path.join(folder_nn, stats_name), "wb") as file:
         pickle.dump(stats, file)

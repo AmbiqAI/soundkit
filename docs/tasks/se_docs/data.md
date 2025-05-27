@@ -1,4 +1,4 @@
-# 📁 Data Preparation
+# 📁 **Data Preparation**
 
 This page explains how to prepare training, validation, and test datasets for **Speech Enhancement (SE)** using the `soundkit` CLI.
 
@@ -6,7 +6,7 @@ The dataset preparation process mixes clean speech with noise (and optional reve
 
 ---
 
-## 🔧 Run `data` Mode
+## 🔧 **Run `data` Mode**
 
 ```bash
 soundkit -t se -m data -c your_config.yaml
@@ -14,7 +14,7 @@ soundkit -t se -m data -c your_config.yaml
 
 ---
 
-## 🧾 Data Parameters
+## 🧾 **Data Parameters**
 
 | Parameter | Description |
 |-----------|-------------|
@@ -31,33 +31,40 @@ soundkit -t se -m data -c your_config.yaml
 
 ---
 
-## 📦 Corpora Definition
+📦 **How Corpora Are Defined**
 
-Corpora include clean speech, noise, and reverb impulse responses.
+SoundKit uses the corpora field in YAML config files to specify the datasets to be used during training and evaluation. Each dataset is defined by:
+
+- name: The registered name of the dataset (must match a loader function)
+
+- type: One of speech, noise, or reverb
+
+- split: Defines which parts of the dataset to use (train, val, or train-val)
+
+🔧 **Default Corpora**
+
+Below is a list of default corpora supported by SoundKit. You can find detailed descriptions in the Corpora documentation [Corpora](../../datasets/corpora.md):
 
 ```yaml
 corpora:
-  - {name: train-clean-360, type: train, path: wavs/LibriSpeech/train-clean-360}
-  - {name: dev-clean, type: val, path: wavs/LibriSpeech/dev-clean}
-  - {name: ESC-50-master, type: noise}
-  - {name: rirs_noises, type: reverb}
+    - {name: train-clean-360, type: speech, split: train}
+    - {name: train-clean-100, type: speech, split: train}
+    - {name: dev-clean, type: speech, split: val,}
+    - {name: thchs30, type: speech, split: train-val}
+    - {name: ESC-50-master, type: noise, split: train-val}
+    - {name: FSD50K, type: noise, split: train-val}
+    - {name: musan, type: noise, split: train-val}
+    - {name: wham_noise, type: noise, split: train-val}
+    - {name: rirs_noises, type: reverb, split: train-val}
 ```
 
-| `type` Value | Meaning |
-|--------------|---------|
-| `train`, `val`, `test` | Clean speech data |
-| `train-val` | One corpus used for both train and val (e.g., THCHS-30) |
-| `noise` | Noise-only datasets |
-| `reverb` | Room impulse responses for reverb simulation |
+🧩 **Custom Datasets**
 
-> 🧠 Nested paths for `train-val` (e.g. THCHS-30) can include a structure like:
-> ```yaml
-> - {name: thchs30, type: train-val, path: {train: path/to/train, dev: path/to/dev}}
-> ```
+Want to use your own data? SoundKit makes it easy to register your own speech, noise, or reverb datasets. See the [BYOD](../../datasets/byod.md) guide for details.
 
 ---
 
-## 🎚 Signal Preprocessing
+## 🎚 **Signal Preprocessing**
 
 The `signal` field defines how raw waveforms are prepared before feature extraction:
 
@@ -74,7 +81,7 @@ signal:
 
 ---
 
-## 🧪 Output
+## 🧪 **Output**
 
 Running the `data` mode will generate:
 

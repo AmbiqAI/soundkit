@@ -12,6 +12,7 @@ nav:
   - Tasks:
       - SE:
         - Overview: tasks/se.md
+        - Introduction: tasks/se_docs/introduction.md
         - Data: tasks/se_docs/data.md
         - Train: tasks/se_docs/train.md
         - Evaluate: tasks/se_docs/evaluate.md
@@ -20,9 +21,13 @@ nav:
 
       - VAD: tasks/vad.md
       - KWS: tasks/kws.md
+  - Datasets:
+      - Corpora: datasets/corpora.md
+      - BYOD: datasets/byod.md
   - models:
       - CRNN: models/crnn.md
       - UNet: models/unet.md
+      - BYOM: models/byom.md
   - Loss Functions: loss.md
 
 markdown_extensions:

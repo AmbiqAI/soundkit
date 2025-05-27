@@ -1,6 +1,7 @@
 import os
 import re
 import yaml
+from omegaconf import OmegaConf
 from typing import Tuple, Union,  List, Dict, Any
 import tensorflow as tf
 import json
@@ -122,10 +123,13 @@ def build_model(
     # Load from YAML file
 
     config_path = f"{params.train['model']['config_dir']}/{params.train['model']['config_file']}"
-    with open(config_path, "r") as f:
-        config_dict = yaml.safe_load(f)
+
+    config_dict = OmegaConf.load(config_path)
+
+    OmegaConf.resolve(config_dict)  # force interpolation
+
     model_name=config_dict['name']
-   
+
     if export:
         config_dict['unroll_rnn'] = True
 

@@ -54,7 +54,7 @@ def evaluate(params: SKTaskParams):
     else:
         wavs = params.evaluate['data']['files']
         wavs_path = [os.path.join(dir, f) for f in params.evaluate['data']['files']]
-    
+
     tfrecords=[]
 
     for wav_path in tqdm(wavs_path, desc="Generating TFRecords", unit="file"):
@@ -81,11 +81,16 @@ def evaluate(params: SKTaskParams):
 
     batchsize_train = params.train['batchsize']
 
-    dim_feat = params.train['feature']['bins']
 
-    # 1.1. Build the model
+    # 1. Define feature extractor
+    feat_extractor = FeatureExtractor(
+        params=params,
+    )
+    dim_feat = feat_extractor.dim_feat
 
+    # 2. Build model architecture
     # Load Model architecture from YAML file
+
     model_train = build_model(
         params,
         batchsize=batchsize_train,
@@ -95,28 +100,22 @@ def evaluate(params: SKTaskParams):
     # load weights from the checkpoint
     load_model_checkpoint(
         model_train, params_evaluate['epoch_loaded'], model_dir)
-    
-    # 3. Define feature extractor
-    feat_extractor = FeatureExtractor(
-        params=params,
-    )
 
-    # 4. Compute feature statistics for standardization
+    # 3. Compute feature statistics for standardization
     stats = feat_stats_estimator(
         dataset,
         batches,
-        dim_feat,
         folder_nn=model_dir,
         feat_extractor=feat_extractor,)
-    
+
     num_fft_bins = feat_params["fft_size"] // 2 + 1
     buffer_sn = LookaheadBuffer(
         num_lookahead=num_lookahead,
         feature_dim=num_fft_bins,
         batchsize=batchsize)
 
-    np_scores = np.zeros( (1, 4), dtype=np.float64)
-    
+    np_scores = {'sn': np.zeros( (1, 4), dtype=np.float64),
+                 'en': np.zeros( (1, 4), dtype=np.float64),}
 
     for step, batch in enumerate(dataset):
         print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
@@ -162,7 +161,7 @@ def evaluate(params: SKTaskParams):
             copy_model_weights(
                 model_dst=model,
                 model_src=model_train)
-            
+
             tfmask = model(feat_sn_norm, training=False)
         pspec_sn_delay = tf.abs(spec_sn_delay)
         phase_sn_delay = tf.math.angle(spec_sn_delay)
@@ -213,13 +212,23 @@ def evaluate(params: SKTaskParams):
                 params.data['signal']['sampling_rate'])
             print(f"Saved enhanced audio to {save_path}")
         
-        torch_tensor = torch.from_numpy(audio_en.numpy())
-        scores = deep_noise_suppression_mean_opinion_score(
-            torch_tensor,
-            params.data['signal']['sampling_rate'],
-            False)
+        for type_s in ['sn', 'en']:
+            if type_s == 'sn':
+                audio = audio_sn
+            else:
+                audio = audio_en
 
-        np_scores += tf.reduce_sum(scores, axis=0, keepdims=True).numpy()
-    np_scores /= (batches * batchsize)
-    print(f"DNSMOS Score: {np_scores}[p808_mos, mos_sig, mos_bak, mos_ovr]")
+            # Calculate DNSMOS score
+            torch_tensor = torch.from_numpy(audio.numpy())
+            scores = deep_noise_suppression_mean_opinion_score(
+                torch_tensor,
+                params.data['signal']['sampling_rate'],
+                False)
+
+            np_scores[type_s] += tf.reduce_sum(scores, axis=0, keepdims=True).numpy()
+
+    for type_s in ['sn', 'en']:
+        np_scores[type_s] /= (batches * batchsize)
+        title = "noisy" if type_s == 'sn' else "enhanced"
+        print(f"DNSMOS Score: {title}: {np_scores[type_s]}[p808_mos, mos_sig, mos_bak, mos_ovr]")
   

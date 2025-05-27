@@ -1,8 +1,8 @@
 import sys
 import tempfile
-from pydantic import BaseModel, Field
 from typing import Any
 from pathlib import Path
+from dataclasses import dataclass, field
 from enum import Enum
 
 # Backport StrEnum for Python < 3.11
@@ -12,51 +12,30 @@ else:
     class StrEnum(str, Enum):
         pass
 
-class NamedParams(BaseModel, extra="allow"):
-    """
-    Named parameters is used to store parameters for a specific model, preprocessing, or augmentation.
-    Typically name refers to class/method name and params is provided as kwargs.
+@dataclass
+class NamedParams:
+    """Used to describe a named object and its parameters."""
+    name: str
+    params: dict[str, Any] = field(default_factory=dict)
 
-    Attributes:
-        name: Name
-        params: Parameters
-    """
+@dataclass
+class SKTaskParams:
+    """SoundKit Task configuration parameters"""
 
-    name: str = Field(..., description="Name")
-    params: dict[str, Any] = Field(default_factory=dict, description="Parameters")
-
-class SKTaskParams(BaseModel, extra="allow"):
-    """SoundKit Task configuration params"""
     # Common arguments
-    name: str = Field("experiment", description="Experiment name")
-    project: str = Field("soundkit", description="Project name")
-    job_dir: Path = Field(
-        default_factory=lambda: Path(tempfile.gettempdir()),
-        description="Job output directory",
-    )
+    name: str = "experiment"
+    project: str = "soundkit"
+    job_dir: Path = field(default_factory=tempfile.gettempdir)
 
-    data: dict[str, Any] = Field(
-        default_factory=dict, description="Data parameters")
-
-    # Training arguments
-    train: dict[str, Any] = Field(
-        default_factory=dict, description="training parameters")
-
-    # Evaluating arguments
-    evaluate: dict[str, Any] = Field(
-        default_factory=dict, description="evaluating parameters")
-    
-    # export arguments
-    export: dict[str, Any] = Field(
-        default_factory=dict, description="exporting parameters")
-
-    # demo arguments
-    demo: dict[str, Any] = Field(
-        default_factory=dict, description="demo parameters")
+    # Task-specific arguments
+    data: dict[str, Any] = field(default_factory=dict)
+    train: dict[str, Any] = field(default_factory=dict)
+    evaluate: dict[str, Any] = field(default_factory=dict)
+    export: dict[str, Any] = field(default_factory=dict)
+    demo: dict[str, Any] = field(default_factory=dict)
 
 class SKMode(StrEnum):
     """SoundKit task mode"""
-
     data = "data"
     train = "train"
     evaluate = "evaluate"

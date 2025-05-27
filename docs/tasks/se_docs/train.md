@@ -1,14 +1,16 @@
-# 🏋️‍♀️ Training
+
+# Training
 
 This page describes how to train a Speech Enhancement (SE) model using the `soundkit` CLI. You can customize the architecture, feature extraction, loss functions, and learning rate schedule via the configuration YAML file.
 
 ---
 
-## 🔧 Run `train` Mode
+## Run `train` Mode
 
 ```bash
 soundkit -t se -m train -c your_config.yaml
 ```
+
 This command starts training using the provided configuration, including TFRecord input, feature extraction settings, and model architecture.
 
 To monitor training progress in real-time, open a new terminal and launch TensorBoard:
@@ -21,7 +23,7 @@ This will open TensorBoard with logs from the specified training run. Visit http
 
 ---
 
-## 🧾 Training Parameters
+## Training Parameters
 
 | Parameter | Description |
 |-----------|-------------|
@@ -29,18 +31,18 @@ This will open TensorBoard with logs from the specified training run. Visit http
 | `batchsize` | Mini-batch size used during training |
 | `epochs` | Total number of training epochs |
 | `warmup_epochs` | Number of warm-up epochs for linear learning rate ramp-up |
-| `epoch_loaded` | One of: <br>• `random`: start from scratch <br>• `latest`: resume from last checkpoint <br>• `best`: resume from best-performing checkpoint <br>• `<int>`: resume from a specific epoch |
-| `loss_function.type` | Loss function type: `mse` or `compressed_mse` |
-| `loss_function.params.exp` | Exponent for compressed MSE (e.g., 0.6) |
-| `loss_function.params.eps` | Epsilon to avoid division by zero in magnitude computation |
+| `epoch_loaded` | You can continue to train your model if your training procedure was interrupted for any reason. One of: <br>• `random`: start from scratch <br>• `latest`: resume from last checkpoint <br>• `best`: resume from best-performing checkpoint <br>• `<int>`: resume from a specific epoch |
+| `loss_function.type` | Loss function type: [mse](../../loss.md) or [compressed_mse](../../loss.md) |
+| `loss_function.params.exp` | Exponent for [compressed_mse](../../loss.md)  (e.g., 0.6) |
+| `loss_function.params.eps` | Epsilon to avoid division by zero in magnitude computation (see [compressed_mse](../../loss.md))  |
 | `path.model_dir` | Path to save model checkpoints |
 | `path.tensorboard_dir` | Path to save TensorBoard logs |
 | `num_lookahead` | Lookahead frames used during training (0 for causal models) |
-| `debug` | If `true`, enables verbose debugging during training |
+
 
 ---
 
-## 🎛 Feature Extraction Parameters
+## Feature Extraction Parameters
 
 ```yaml
 feature:
@@ -59,11 +61,11 @@ feature:
 | `hop_size` | Hop length in samples |
 | `fft_size` | FFT length used for STFT |
 
-> 🔁 These settings must match those used during TFRecord generation.
+These settings must match those used during TFRecord generation.
 
 ---
 
-## 🧼 Standardization
+## Standardization
 
 ```yaml
 standardization: true
@@ -73,7 +75,7 @@ If enabled, mean and variance normalization is applied to features during traini
 
 ---
 
-## 🧠 Model Configuration
+## Model Configuration
 
 Specify the architecture using a YAML file:
 
@@ -83,11 +85,11 @@ model:
   config_file: config_crnn.yaml
 ```
 
-This allows switching between CRNN, UNet, or other registered architectures by changing a single line.
+This allows switching between CRNN, UNet, or other registered architectures. To register your own NN architecture, see [Bring-Your-Own-Model (BYOM)](../../models/byom.md)
 
 ---
 
-## 📈 Output
+## Output
 
 After training:
 

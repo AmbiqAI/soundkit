@@ -17,6 +17,8 @@ from ...utils.basic_dsp import dc_remove
 from ...utils.download_api import corpus_download
 from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from ...utils.plot_api import plot_spectrograms
+from ...datasets.register_datasets import DatasetRegistry
+
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -146,71 +148,71 @@ class FeatMultiProcsClass(multiprocessing.Process):
             show_fig=True   # set to False if you just want to save
             )
 
-def get_wavefiles(path_folder):
-    """Fetch all of noise files"""
+# def get_wavefiles(path_folder):
+#     """Fetch all of noise files"""
 
-    lst = []
-    for root, _, files in os.walk(f'{path_folder}'):
-        for file in files:
-            if re.search(r'(wav$|flac$)', file):
-                lst += [os.path.join(root, file.strip())]
-    return lst
+#     lst = []
+#     for root, _, files in os.walk(f'{path_folder}'):
+#         for file in files:
+#             if re.search(r'(wav$|flac$)', file):
+#                 lst += [os.path.join(root, file.strip())]
+#     return lst
 
-def get_noise_file_list(
-        ntype: str,) -> dict[str, list[str]]:
-    """
-    Get the list of noise file paths for a given noise type and set.
+# def get_noise_file_list(
+#         ntype: str,) -> dict[str, list[str]]:
+#     """
+#     Get the list of noise file paths for a given noise type and set.
 
-    Args:
-        ntype (str): Noise type (e.g., 'musan', 'FSD50K', etc.)
-        set_name (str): 'train' or 'val'
+#     Args:
+#         ntype (str): Noise type (e.g., 'musan', 'FSD50K', etc.)
+#         set_name (str): 'train' or 'val'
 
-    Returns:
-        List[str]: File paths for noise
-    """
-    set_names = ['train', 'val']
-    files = {}
-    match ntype:
+#     Returns:
+#         List[str]: File paths for noise
+#     """
+#     set_names = ['train', 'val']
+#     files = {}
+#     match ntype:
 
-        case 'wham_noise':
-            for set_name in set_names:
-                folder = 'tr' if set_name == 'train' else 'cv'
-                files[set_name] = get_wavefiles(f'wavs/noise/wham_noise/{folder}')
+#         case 'wham_noise':
+#             for set_name in set_names:
+#                 folder = 'tr' if set_name == 'train' else 'cv'
+#                 files[set_name] = get_wavefiles(f'wavs/noise/wham_noise/{folder}')
 
-            return files
+#             return files
 
-        case 'FSD50K' | 'ESC-50-master':
-            with open(f'wavs/noise/{ntype}/non_speech.csv', 'r') as f:
-                lines = f.readlines()
-            lines = [line.strip() for line in lines]  # Skip header
-            random.shuffle(lines)
-            split = len(lines) // 5
-            files['train'] = lines[split:]
-            files['val'] = lines[:split]
+#         case 'FSD50K' | 'ESC-50-master':
+#             with open(f'wavs/noise/{ntype}/non_speech.csv', 'r') as f:
+#                 lines = f.readlines()
+#             lines = [line.strip() for line in lines]  # Skip header
+#             random.shuffle(lines)
+#             split = len(lines) // 5
+#             files['train'] = lines[split:]
+#             files['val'] = lines[:split]
 
-            return files
+#             return files
 
-        case 'musan':
-            music = get_wavefiles('wavs/noise/musan/music')
-            noise = get_wavefiles('wavs/noise/musan/noise')
-            lines = music + noise
-            random.shuffle(lines)
-            split = len(lines) // 5
-            files['train'] = lines[split:]
-            files['val'] = lines[:split]
+#         case 'musan':
+#             music = get_wavefiles('wavs/noise/musan/music')
+#             noise = get_wavefiles('wavs/noise/musan/noise')
+#             lines = music + noise
+#             random.shuffle(lines)
+#             split = len(lines) // 5
+#             files['train'] = lines[split:]
+#             files['val'] = lines[:split]
 
-            return files
+#             return files
 
-        case 'RIRS_NOISES' | 'rirs_noises':
-            all_files = get_wavefiles(f'wavs/noise/RIRS_NOISES')
-            split = len(all_files) // 5
-            random.shuffle(all_files)
-            files['train'] = all_files[split:]
-            files['val'] = all_files[:split]
-            return files
+#         case 'RIRS_NOISES' | 'rirs_noises':
+#             all_files = get_wavefiles(f'wavs/noise/RIRS_NOISES')
+#             split = len(all_files) // 5
+#             random.shuffle(all_files)
+#             files['train'] = all_files[split:]
+#             files['val'] = all_files[:split]
+#             return files
 
-        case _:
-            raise ValueError(f"Unknown noise type: {ntype}")
+#         case _:
+#             raise ValueError(f"Unknown noise type: {ntype}")
 
 def data(params: SKTaskParams) -> None:
     """Prepare tfrecords data for SE task
@@ -229,30 +231,48 @@ def data(params: SKTaskParams) -> None:
             type_cropus = d['type']
             corpus_download(corpus, type_cropus)
 
-    # retrieve noise files
-    noise_type2list = {}
-    for corpus in params_data['corpora']:
-        if corpus['type'] == 'noise':
-            noise_type2list[corpus['name']] = get_noise_file_list(corpus['name'])
-
-    # retrieve clean speech files
     speech_list = {'train': [], 'val': []}
-    for corpus in params_data['corpora']:
-        if corpus['type'] == 'train':
-            speech_list['train'].extend(get_wavefiles(corpus['path']))
-        elif corpus['type'] == 'val':
-            speech_list['val'].extend(get_wavefiles(corpus['path']))
-        elif corpus['type'] == 'train-val':
-            speech_list['train'].extend(get_wavefiles(corpus['path']['train']))
-            speech_list['val'].extend(get_wavefiles(corpus['path']['dev']))
+    noise_type2list = {}
+    reverb_list = {'train': [], 'val': []}
 
-    # retrieve reverb files
-    if params_data['reverb_prob'] > 0:
-        for corpus in params_data['corpora']:
-            if corpus['type'] == 'reverb':
-                reverb_list= get_noise_file_list(corpus['name'])
-    else:
-        reverb_list = None
+    for corpus in params_data['corpora']:
+        name = corpus['name']
+        ctype = corpus['type']
+        split = corpus['split']
+        loader = DatasetRegistry.get(name)
+        files = loader(corpus)
+
+        if ctype == 'speech':
+            if split=="train":
+                speech_list['train'].extend(files)
+            elif split=="val":
+                speech_list['val'].extend(files)
+            elif split=="train-val":
+                speech_list['train'].extend(files['train'])
+                speech_list['val'].extend(files['val'])
+            else:
+                raise ValueError(f"Unknown split type: {split} for corpus {name}")
+        elif ctype == 'noise':
+            if split == "train-val":
+                noise_type2list[name] = files
+            elif split == "train":
+                noise_type2list[name] = {'train': files}
+            elif split == "val":
+                noise_type2list[name] = {'val': files}
+            else:
+                raise ValueError(f"Unknown split type: {split} for corpus {name}")
+        elif ctype == 'reverb' and params_data['reverb_prob'] > 0:
+            if split == "train":
+                reverb_list['train'].extend(files)
+            elif split == "val":
+                reverb_list['val'].extend(files)
+            elif split == "train-val":
+                reverb_list['train'].extend(files['train'])
+                reverb_list['val'].extend(files['val'])
+            else:
+                raise ValueError(f"Unknown split type: {split} for corpus {name}")
+        else:
+            raise ValueError(f"Unknown corpus type: {ctype} for corpus {name}")
 
     sets = ['train','val']
     tot_success_dict = {'train': [], 'val': []}

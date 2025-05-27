@@ -172,8 +172,8 @@ def run_epoch(
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
 
                 fig = plot_spectrograms(
-                    images=[pspec_sn.T, feat_sn.T, pspec_s.T, mask.T],
-                    titles=["noisy logspec", "feat", "clean logspec", "mask"],
+                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, mask.T],
+                    titles=["clean logspec", "noisy logspec", "feat", "mask"],
                     vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (0, 1)],
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
@@ -208,10 +208,14 @@ def train(params: SKTaskParams):
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
-    dim_feat = params.train['feature']['bins']
 
-
-    # 1. Build the model
+    # 1. Define feature extractor
+    feat_extractor = FeatureExtractor(
+        params=params,
+    )
+    dim_feat = feat_extractor.dim_feat
+    
+    # 2. Build the model
 
     # Load from YAML file
     model = build_model(
@@ -223,7 +227,7 @@ def train(params: SKTaskParams):
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], model_dir)
 
-    # 2. Create the dataset
+    # 3. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
@@ -240,21 +244,14 @@ def train(params: SKTaskParams):
         is_shuffle=False,
     )
 
-    # 3. Define feature extractor
-    feat_extractor = FeatureExtractor(
-        params=params,
-    )
-
     # 4. Compute feature statistics for standardization
     stats = feat_stats_estimator(
         ds_train,
         batches_train,
-        dim_feat,
         folder_nn=model_dir,
         feat_extractor=feat_extractor,)
 
     # 5. Define loss function
-
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
         **params.train["loss_function"]["params"])

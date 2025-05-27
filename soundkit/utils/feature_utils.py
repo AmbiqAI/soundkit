@@ -43,7 +43,7 @@ class FeatureExtractor:
             fft_length=feat_params["fft_size"],
             states=states,
         )
-
+        self.dim_feat=feat_params['bins']
         if feat_params['type'] == "mel":
             fbanks = gen_mel_bank(
                     fftsize         = feat_params["fft_size"],
@@ -52,19 +52,26 @@ class FeatureExtractor:
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
 
         elif feat_params['type'] == "hybrid":
+
+            if feat_params['bins_fft'] is None:
+                raise ValueError("bins_fft must be specified for hybrid feature extraction")
+            if feat_params['n_mels'] is None:
+                raise ValueError("n_mels must be specified for hybrid feature extraction")
+
             fbanks = melspec_gen(
                 samplingRate=params.data['signal']["sampling_rate"],
-                n_fft=feat_params["fft_size"],
-                n_mels=72,
-                thresh_mel=100)
+                n_fft=feat_params['bins_fft'],
+                n_mels=feat_params['n_mels'],
+                thresh_mel=feat_params['bins'])
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
+            self.dim_feat = fbanks.shape[0]
 
     def __call__(
             self,
             audio_sn: tf.Tensor,
             states : Union[tf.Tensor, None] = None) -> tf.Tensor:
         """Extract features from audio using configured extractor."""
-        
+
         feat_params = self.params.train['feature']
         overlap=feat_params["frame_size"] - feat_params["hop_size"]
         states_udpate = tf.identity(audio_sn[:, -overlap:])
@@ -72,6 +79,11 @@ class FeatureExtractor:
         feat, spec = self._extract_fn(audio_sn, states)
 
         return feat, spec, states_udpate
+
+    @property
+    def dim(self) -> int:
+        """Return the number of feature dimensions."""
+        return self.dim_feat
 
     def _extract_spec(
             self,

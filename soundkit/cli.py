@@ -1,60 +1,37 @@
-''' Soundkit CLI '''
 import os
 from pathlib import Path
-from typing import Type, TypeVar
 from argdantic import ArgField, ArgParser
-from pydantic import BaseModel, ValidationError
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 from .defines import SKTaskParams, SKMode
-from .tasks import TaskFactory
-B = TypeVar("B", bound=BaseModel)
-parser=ArgParser()
+from .tasks import TaskFactory  # assume this exists
+import soundkit.datasets.register_datasets  # assume this exists
+parser = ArgParser()
 
-def parse_content(cls: Type[B], content: str) -> B:
+def parse_config(path: str) -> DictConfig:
     """
-    Parse YAML config file using OmegaConf and validate with a Pydantic model.
-
-    Args:
-        cls (B): Pydantic model subclass
-        content (str): File path to YAML file
-
-    Returns:
-        B: Validated instance of the Pydantic model
-
-    Raises:
-        FileNotFoundError: If file is not found
-        ValueError: For YAML parsing or validation errors
+    Load and resolve config file as OmegaConf DictConfig.
+    Uses SKTaskParams as the schema for validation.
     """
-    try:
-        cfg = OmegaConf.load(content)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Config file not found: {content}")
-    except Exception as e:
-        raise ValueError(f"YAML parsing failed: {e}")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Config file not found: {path}")
 
-    try:
-        return cls.model_validate(OmegaConf.to_container(cfg, resolve=True))
-    except ValidationError as e:
-        raise ValueError(f"Config validation failed for {cls.__name__}:\n{e}")
-
+    raw = OmegaConf.load(path)
+    schema = OmegaConf.structured(SKTaskParams)
+    cfg = OmegaConf.merge(schema, raw)
+    OmegaConf.resolve(cfg)
+    return cfg
 
 @parser.command()
 def run(
-        mode: str = ArgField("-m", default=SKMode.train),
-        task: str = ArgField("-t", default="se"),
-        config: str = ArgField("-c", default="./configs/se.yaml"),
-        tensorboard: bool = ArgField("--tensorboard", default=False),
-    ):
-    """SoundKit CLI entry point.
+    mode: str = ArgField("-m", default=SKMode.train),
+    task: str = ArgField("-t", default="se"),
+    config: str = ArgField("-c", default="./configs/se.yaml"),
+    tensorboard: bool = ArgField("--tensorboard", default=False),
+):
+    """SoundKit CLI entry point."""
+    print(f"🔧 Mode: {mode}, Task: {task}")
 
-    Args:
-        mode (SKMode, optional): Mode. Defaults to SKMode.train.
-        task (str, optional): Task. Defaults to "rhythm".
-        config (str, optional): File path or YAML content. Defaults to "{}".
-    """
-    print(f"Mode: {mode}, Task: {task}")
-
-    params = parse_content(SKTaskParams, config)
+    params = parse_config(config)
     task_handler = TaskFactory.get(task)
 
     match mode:
@@ -63,10 +40,8 @@ def run(
 
         case SKMode.train:
             if tensorboard:
-                tb_dir = params.train['path']['tensorboard_dir']
-
+                tb_dir = params.train["path"]["tensorboard_dir"]
                 parent_tb_dir = str(Path(tb_dir).parent)
-
                 print(f"🚀 Launching TensorBoard at: {parent_tb_dir}")
                 os.system(f"tensorboard --logdir={parent_tb_dir}")
             else:
@@ -82,7 +57,7 @@ def run(
             task_handler.demo(params)
 
 def main():
-    ''' Main function to run the CLI '''
+    """Main entry point for the SoundKit CLI."""
     parser()
 
 if __name__ == "__main__":
