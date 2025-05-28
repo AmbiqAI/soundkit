@@ -85,6 +85,44 @@ model:
   config_file: config_crnn.yaml
 ```
 
+**`config_crnn.yaml`** will configure your NN:
+??? example "`./soundkit/models/arch_configs/config_simple_crnn.yaml`"
+    ```yaml
+    name: crnn
+
+    units: 100
+
+    len_time: 6
+
+    layer_configs:
+
+    - type: dropout
+        rate: 0.1
+
+    - type: conv2d
+        filters: ${units}
+        kernel_size: ["${len_time}", 72]
+        strides: [1, 1]
+        activation: relu
+
+    - type: lstm
+        units: ${units}
+
+    - type: fc
+        units: ${units}
+        activation: relu
+
+    - type: fc
+        units: ${units}
+        activation: relu
+
+    - type: fc
+        units: 257
+        activation: sigmoid
+
+    ```
+
+
 This allows switching between CRNN, UNet, or other registered architectures. To register your own NN architecture, see [Bring-Your-Own-Model (BYOM)](../../models/byom.md)
 
 ---

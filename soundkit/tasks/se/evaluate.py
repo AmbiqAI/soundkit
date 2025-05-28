@@ -116,7 +116,15 @@ def evaluate(params: SKTaskParams):
 
     np_scores = {'sn': np.zeros( (1, 4), dtype=np.float64),
                  'en': np.zeros( (1, 4), dtype=np.float64),}
+    stoi_hyp = {'sn': np.zeros( (1, 1), dtype=np.float64),
+                 'en': np.zeros( (1, 1), dtype=np.float64),}
+    
+    pesq_hyp = {'sn': np.zeros( (1, ), dtype=np.float64),
+                 'en': np.zeros( (1,), dtype=np.float64),}
+    si_sdr_hyp = {'sn': np.zeros( (1,), dtype=np.float64),
+                 'en': np.zeros( (1,), dtype=np.float64),}
 
+    
     for step, batch in enumerate(dataset):
         print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
 
@@ -211,6 +219,11 @@ def evaluate(params: SKTaskParams):
                 audio_en_np,
                 params.data['signal']['sampling_rate'])
             print(f"Saved enhanced audio to {save_path}")
+        from torchaudio.pipelines import SQUIM_OBJECTIVE
+        objective_model = SQUIM_OBJECTIVE.get_model()
+        
+        # stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(torch.from_numpy(audio_sn.numpy()))
+        
         
         for type_s in ['sn', 'en']:
             if type_s == 'sn':
@@ -225,10 +238,34 @@ def evaluate(params: SKTaskParams):
                 params.data['signal']['sampling_rate'],
                 False)
 
+            tmp = objective_model(torch.from_numpy(audio.numpy()))
+            stoi_hyp[type_s] += tmp[0].detach().numpy()
+            pesq_hyp[type_s] += tmp[1].detach().numpy()
+            si_sdr_hyp[type_s] += tmp[2].detach().numpy()
+
             np_scores[type_s] += tf.reduce_sum(scores, axis=0, keepdims=True).numpy()
 
+    metrics = ['STOI', 'PESQ', 'SI-SDR', 'DNSMOS']
+    scores = {
+        'STOI': stoi_hyp,
+        'PESQ': pesq_hyp,
+        'SI-SDR': si_sdr_hyp,
+        'DNSMOS': np_scores
+    }
+
+    # Normalize scores
     for type_s in ['sn', 'en']:
-        np_scores[type_s] /= (batches * batchsize)
-        title = "noisy" if type_s == 'sn' else "enhanced"
-        print(f"DNSMOS Score: {title}: {np_scores[type_s]}[p808_mos, mos_sig, mos_bak, mos_ovr]")
+        for key in scores:
+            scores[key][type_s] /= (batches * batchsize)
+
+    # Print results
+    for metric in metrics:
+        val_sn = scores[metric]['sn']
+        val_en = scores[metric]['en']
+        
+        if metric == 'DNSMOS':
+            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
+        else:
+            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
+    
   

@@ -4,7 +4,8 @@ from argdantic import ArgField, ArgParser
 from omegaconf import OmegaConf, DictConfig
 from .defines import SKTaskParams, SKMode
 from .tasks import TaskFactory  # assume this exists
-import soundkit.datasets.register_datasets  # assume this exists
+# Register all datasets (built-in + user-contributed)
+
 parser = ArgParser()
 
 def parse_config(path: str) -> DictConfig:

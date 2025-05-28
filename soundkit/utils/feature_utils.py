@@ -6,6 +6,7 @@ from .mel import gen_mel_bank
 from .converter_fix_point import fakefix_tf
 from .mel_spec_gen import melspec_gen
 from ..defines import SKTaskParams
+from .tf_stft import gen_stft_win
 class FeatureExtractor:
     """
     Feature extractor for audio signals using a dispatch map.
@@ -23,6 +24,7 @@ class FeatureExtractor:
             "logpspec": self._extract_logpspec,
             "mel": self._extract_mel,
             "hybrid": self._extract_logpspec_mel,
+            "time": self._extract_time,
         }
 
         if feat_params['type'] not in self._extractors:
@@ -65,6 +67,10 @@ class FeatureExtractor:
                 thresh_mel=feat_params['bins'])
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
             self.dim_feat = fbanks.shape[0]
+        elif feat_params['type'] == "time":
+            self.window=gen_stft_win(
+                win_size=feat_params['frame_size'],
+                hop=feat_params['hop_size'])
 
     def __call__(
             self,
@@ -156,3 +162,26 @@ class FeatureExtractor:
         mel_spec = tf_log10_eps(mel_spec)
 
         return mel_spec, spec
+
+    def _extract_time(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+        feat_params = self.params.train['feature']
+        
+        __, spec = self._extract_spec(
+            audio_sn,
+            states=states,
+        )
+        
+        if states is None:
+            states = tf.zeros((audio_sn.shape[0], feat_params["frame_size"]-feat_params["hop_size"]), dtype=tf.float32)
+
+        audio_sn = tf.concat([states, audio_sn], axis=-1)
+        X = tf.signal.frame(
+            audio_sn,
+            frame_length=feat_params["frame_size"] ,
+            frame_step=feat_params["hop_size"], pad_end=False, axis=-1)
+
+        feat = X * self.window
+        return feat, spec

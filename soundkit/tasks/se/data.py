@@ -17,7 +17,7 @@ from ...utils.basic_dsp import dc_remove
 from ...utils.download_api import corpus_download
 from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from ...utils.plot_api import plot_spectrograms
-from ...datasets.register_datasets import DatasetRegistry
+from ...datasets import SKDatasetFactory
 
 
 class FeatMultiProcsClass(multiprocessing.Process):
@@ -239,7 +239,7 @@ def data(params: SKTaskParams) -> None:
         name = corpus['name']
         ctype = corpus['type']
         split = corpus['split']
-        loader = DatasetRegistry.get(name)
+        loader = SKDatasetFactory.get(name)
         files = loader(corpus)
 
         if ctype == 'speech':

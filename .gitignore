@@ -41,7 +41,6 @@ pytest_cache/
 *.ckpt
 *.pt
 *.pth
-models/
 checkpoints/
 runs/
 tensorboard/

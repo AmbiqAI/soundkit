@@ -23,7 +23,7 @@ data:
     - {name: musan, type: noise, split: train-val}
     - {name: wham_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
-  # snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
+  snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
   target_length_in_secs: 5
   min_amp: 0.03
   max_amp: 0.95
@@ -44,7 +44,7 @@ train:
     params: {exp: 0.6, eps: 1e-8}
     }
   path:
-    full_name: ${name}_unit64_la${train.num_lookahead}_dropout0.2_${train.feature.type}_feat
+    full_name: ${name}_la${train.num_lookahead}_dropout0.2_${train.feature.type}_feat
     model_dir:       ${job_dir}/models_trained/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 2
@@ -53,8 +53,8 @@ train:
     frame_size: 480
     hop_size: 160
     fft_size: 512
-    type: logpspec
-    bins: 257
+    type: mel
+    bins: 72
     # type: hybrid
     # bins_fft: 100
     # n_mels: 72
