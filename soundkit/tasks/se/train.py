@@ -203,7 +203,7 @@ def train(params: SKTaskParams):
     print(f"Training SE model with params: {params} and more")
 
     params_train = params.train
-    model_dir = f"{params.train['path']['model_dir']}"
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
@@ -225,7 +225,7 @@ def train(params: SKTaskParams):
         time_steps = params.data['target_length_in_secs'] * 100)
 
     _, epoch_loaded_1 = load_model_checkpoint(
-        model, params_train['epoch_loaded'], model_dir)
+        model, params_train['epoch_loaded'], checkpoint_dir)
 
     # 3. Create the dataset
     tfrecord_list = {
@@ -248,7 +248,7 @@ def train(params: SKTaskParams):
     stats = feat_stats_estimator(
         ds_train,
         batches_train,
-        folder_nn=model_dir,
+        folder_nn=checkpoint_dir,
         feat_extractor=feat_extractor,)
 
     # 5. Define loss function
@@ -272,7 +272,7 @@ def train(params: SKTaskParams):
     # 7. Training loop
     # Load previous log if it exists
 
-    log_path = f"{model_dir}/train_log.json"
+    log_path = f"{checkpoint_dir}/train_log.json"
     train_log = load_train_log(log_path, params_train['epochs'])
     # import pdb; pdb.set_trace()
     for epoch in range(epoch_loaded_1, params_train['epochs']):
@@ -320,4 +320,4 @@ def train(params: SKTaskParams):
 
         # 5. Save model weights
         os.makedirs("checkpoints", exist_ok=True)
-        model.save_weights(f"{model_dir}/checkpoints/model_checkpoint_ep{epoch}")
+        model.save_weights(f"{checkpoint_dir}/checkpoints/model_checkpoint_ep{epoch}")

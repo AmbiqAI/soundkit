@@ -1,17 +1,20 @@
+""" 
+Utility functions to download
+and manage TensorFlow model checkpoints.
+"""
 import os
 import re
-import yaml
-from omegaconf import OmegaConf
 from typing import Tuple, Union,  List, Dict, Any
-import tensorflow as tf
 import json
-from ..defines import SKTaskParams
-from ..models import ModelFactory, ModelParamFactory
+from omegaconf import OmegaConf
+import tensorflow as tf
+from soundkit.defines import SKTaskParams
+from soundkit.models import ModelFactory, ModelParamFactory
 
 def load_model_checkpoint(
     model: tf.keras.Model,
     epoch_loaded: Union[str, int],
-    model_dir: str
+    checkpoint_root: str
 ) -> Tuple[int, int]:
     """
     Load model weights from checkpoint based on the specified epoch.
@@ -22,7 +25,7 @@ def load_model_checkpoint(
             - "random": Skip loading, start from scratch.
             - "latest": Load the most recent checkpoint.
             - int: Load checkpoint from specific epoch number.
-        model_dir (str): Model folder containing the 'checkpoints/' directory.
+        checkpoint_root (str): Model folder containing the 'checkpoints/' directory.
 
     Returns:
         Tuple[int, int]: 
@@ -32,7 +35,7 @@ def load_model_checkpoint(
     if epoch_loaded == 'random':
         return -1, 0
 
-    checkpoint_dir = f'{model_dir}/checkpoints'
+    checkpoint_dir = f'{checkpoint_root}/checkpoints'
 
     if epoch_loaded == 'latest':
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
@@ -43,13 +46,15 @@ def load_model_checkpoint(
 
         match = re.search(r'_ep(\d+)', latest_checkpoint)
         if not match:
-            raise ValueError(f"Cannot extract epoch number from checkpoint name: {latest_checkpoint}")
+            raise ValueError(
+                f"Cannot extract epoch number from checkpoint name: {latest_checkpoint}")
 
         epoch_loaded = int(match.group(1))
 
     elif epoch_loaded == 'best':
+
         # Load your JSON log
-        with open(f"{model_dir}/train_log.json", "r") as f:
+        with open(f"{checkpoint_root}/train_log.json", "r") as f:
             logs = json.load(f)
         # Find the entry with the lowest test_loss
         # ✅ Remove None entries
@@ -59,7 +64,7 @@ def load_model_checkpoint(
         best_epoch_entry = min(logs, key=lambda x: x["val_loss"])
         epoch_loaded = best_epoch_entry['epoch']
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
-        
+
         model.load_weights(checkpoint_path)
         print(f"Loaded best model from epoch {epoch_loaded} amoung val_loss")
     else:
@@ -134,7 +139,7 @@ def build_model(
         config_dict['unroll_rnn'] = True
 
     Params_Cls = ModelParamFactory.get(model_name)
-    
+
     params_net = Params_Cls(
         dim_feat=dim_feat,
         batchsize=batchsize,

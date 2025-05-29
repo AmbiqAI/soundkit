@@ -35,7 +35,7 @@ This will open TensorBoard with logs from the specified training run. Visit http
 | `loss_function.type` | Loss function type: [mse](../../loss.md) or [compressed_mse](../../loss.md) |
 | `loss_function.params.exp` | Exponent for [compressed_mse](../../loss.md)  (e.g., 0.6) |
 | `loss_function.params.eps` | Epsilon to avoid division by zero in magnitude computation (see [compressed_mse](../../loss.md))  |
-| `path.model_dir` | Path to save model checkpoints |
+| `path.checkpoint_dir` | Path to save model checkpoints |
 | `path.tensorboard_dir` | Path to save TensorBoard logs |
 | `num_lookahead` | Lookahead frames used during training (0 for causal models) |
 
@@ -131,7 +131,7 @@ This allows switching between CRNN, UNet, or other registered architectures. To 
 
 After training:
 
-- Model checkpoints will be saved to `model_dir`
+- Model checkpoints will be saved to `checkpoint_root`
 - Training logs will be available in TensorBoard (`tensorboard_dir`)
 - You can evaluate or export the model using the same `name` and `epoch_loaded` settings
 

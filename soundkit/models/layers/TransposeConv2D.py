@@ -1,6 +1,7 @@
 import tensorflow as tf
 from .activation_factory import ActivationFactory
 from .normalization_layer_factory import NormalizationFactory
+
 class SeparableTransposeConv2D(tf.keras.layers.Layer):
     """ Transpose convolutional layer"""
     def __init__(
@@ -44,16 +45,16 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             padding='valid',
             use_bias=use_bias,
             kernel_initializer=kernel_initializer)
-        
+
         self.norm = NormalizationFactory(normalization_layer)
-        
+
         self.activation = ActivationFactory(activation)
 
         self.zeros=tf.zeros(
             (batch_size,
              time_steps + self.kernel_size_time - 1,
              len_filter_freq-1,
-             num_channels_in)) # x2 since channel is doubled after concatenation
+             num_channels_in))
 
     def call(self, inputs):
         """ Forward pass """
@@ -83,7 +84,9 @@ class TransposeConv2D(tf.keras.layers.Layer):
             time_steps=2,
             num_bathces=1,
             **kwargs):
+
         super(TransposeConv2D, self).__init__(**kwargs)
+
         kernel_initializer = "he_normal" if activation in ('relu', 'relu6') else "glorot_uniform"
 
         len_filter_freq = kernel_size[1]
@@ -91,16 +94,24 @@ class TransposeConv2D(tf.keras.layers.Layer):
             size=(1,2),
             interpolation='nearest'
         )
+
         self.padding = tf.keras.layers.ZeroPadding2D(
             padding=((0, 0),(len_filter_freq-1,len_filter_freq-1))
         )
+
         self.deconv = tf.keras.layers.Conv2D(
             filters=filters,
             kernel_size=kernel_size,
             padding='valid',
             kernel_initializer=kernel_initializer,
             activation=activation)
-        self.zeros=tf.zeros((num_bathces,time_steps,len_filter_freq-1,num_channels_in))
+
+        self.zeros=tf.zeros((
+            num_bathces,
+            time_steps,
+            len_filter_freq-1,
+            num_channels_in))
+
     def call(self, inputs):
         """ Forward pass """
         # input shape = (B, T, F, C)

@@ -1,7 +1,6 @@
 from pathlib import Path
 import numpy as np
-from .tf_stft import gen_stft_win
-from .converter_fix_point import int2str_array
+from soundkit.utils.converter_fix_point import int2str_array
 def generate_feature_c_files(
     file_name: str,
     param_struct_name: str,

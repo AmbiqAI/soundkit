@@ -47,7 +47,7 @@ def demo(params: SKTaskParams):
     # === Generate Feature C Files ===
     log.info("🧪 Generating feature C files")
 
-    model_dir = f"{params.train['path']['model_dir']}"
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
     from ...utils.converter_fix_point import fakefix_tf, int2str_array
@@ -85,7 +85,7 @@ def demo(params: SKTaskParams):
     # === Generate feature statstics ===
     stats_name = 'stats.pkl'
     stats = load_feat_stats(
-        dir=model_dir,
+        dir=checkpoint_dir,
         stats_name=stats_name)
 
     generate_feature_c_files(

@@ -1,6 +1,6 @@
 name: unet
 kernel_size_time: 2
-num_chs: [1, 64, 64, 64, 64]
+num_chs: [1, 48, 48, 48, 48]
 separable: true
 activation: relu
 unroll_rnn: false

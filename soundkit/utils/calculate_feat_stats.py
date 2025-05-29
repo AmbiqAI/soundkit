@@ -4,9 +4,8 @@ Calculating statistic mean and standard deviation
 import os
 import pickle
 import tensorflow as tf
-import numpy as np
-from .converter_fix_point import fakefix_tf
-from .feature_utils import FeatureExtractor
+from soundkit.utils.converter_fix_point import fakefix_tf
+from soundkit.utils.feature_utils import FeatureExtractor
 
 def load_feat_stats(dir: str,stats_name: str = 'stats.pkl'):
 

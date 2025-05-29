@@ -45,7 +45,7 @@ train:
     }
   path:
     full_name: ${name}_la${train.num_lookahead}_dropout0.2_${train.feature.type}_feat
-    model_dir:       ${job_dir}/models_trained/${train.path.full_name}
+    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 2
   

@@ -45,7 +45,7 @@ train:
     params: {exp: 0.6, eps: 1e-8}
     }
   path:
-    model_dir: ./soundkit/tasks/se/models_trained/${name}
+    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
     tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
 
   num_lookahead: 1

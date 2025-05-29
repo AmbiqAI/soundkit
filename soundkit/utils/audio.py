@@ -1,7 +1,10 @@
+'''Feature extraction utilities for audio signals.
+This module provides functions to read audio files, pad or crop audio signals,
+synthesize noisy audio, and handle various audio processing tasks.'''
+from typing import Tuple
 import soundfile as sf
 import librosa
 import numpy as np
-from typing import Tuple
 from scipy.signal import fftconvolve
 
 def audio_read(

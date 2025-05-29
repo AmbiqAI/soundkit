@@ -10,7 +10,7 @@ class encoder_unet(tf.keras.layers.Layer):
             params: UNetParams = UNetParams(),
             **kwargs):
         super(encoder_unet, self).__init__(**kwargs)
-        
+
         self.params = params
         self.convs=[]
 
@@ -30,7 +30,7 @@ class encoder_unet(tf.keras.layers.Layer):
                         rate=drop_rate,
                         name=f"dropout_{i}"
                         ))
-                
+
             if params.separable:
                 layer.add(
                     SeparableConv2D(
@@ -59,13 +59,13 @@ class encoder_unet(tf.keras.layers.Layer):
     def make_states(self):
         """ Make states"""
         states = []
-        
+
         len_pad = self.params.kernel_size_time - 1
 
         for i, da in enumerate(zip(self.params.num_chs[:-1], self.freq_bins[:-1])):
             num_ch, freq_bin = da
             shape = (self.params.batchsize, len_pad, freq_bin, num_ch)
-        
+
             state=tf.zeros(shape)
             state = tf.Variable(state, trainable=False) # for eager mode
             states += [state]
@@ -81,11 +81,11 @@ class encoder_unet(tf.keras.layers.Layer):
         for i, da in enumerate(zip(self.params.num_chs[:-1], self.freq_bins[:-1])):
             num_ch, freq_bin = da
             shape = (self.params.batchsize, len_pad, freq_bin, num_ch)
-            
+
             state=tf.zeros(shape)
             state = tf.Variable(state, trainable=False) # for eager mode
             self.states[i].assign(state)
-    
+
     def call(
             self,
             inputs,

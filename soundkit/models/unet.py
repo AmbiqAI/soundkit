@@ -54,7 +54,7 @@ class unet(tf.keras.Model):
             self.dropout = tf.keras.layers.Dropout(
                 rate=params.dropout,
                 name='dropout')
-    
+
     def reset_states(self, zero_state=False):
         """ Reset states"""
         h_states = tf.Variable(
@@ -81,10 +81,10 @@ class unet(tf.keras.Model):
 
         self.encoder.reset_states()
         self.decoder.reset_states()
-        
+
     def make_states(self, zero_state=False):
         """ Make states"""
-        
+
         h_states = tf.Variable(
                             tf.random.uniform(
                                 [self.params.batchsize, self.F * self.chs],
@@ -112,23 +112,23 @@ class unet(tf.keras.Model):
             # states=None,
             training=False):
         """ Forward pass"""
-        
+
         if not self.complex:
             inputs = tf.expand_dims(inputs, axis=-1)
-        
+
         x = inputs
-        
+
         # states_de = states
 
         # encoder
         outputs = self.encoder(x)
 
         # bottleneck rnn
-        T = tf.shape(outputs[-1])[1]
+        timesteps = tf.shape(outputs[-1])[1]
 
         out = tf.reshape(
             outputs[-1],
-            (self.params.batchsize, T, -1))
+            (self.params.batchsize, timesteps, -1))
         if self.params.dropout > 0:
             out = self.dropout(out, training=training)
 
@@ -138,18 +138,19 @@ class unet(tf.keras.Model):
         self.states[1].assign(c_state)
         input_dec = tf.reshape(
             out,
-            (self.params.batchsize, T, self.F, self.chs))
+            (self.params.batchsize, timesteps, self.F, self.chs))
 
         # decoder
         output = self.decoder(
             input_dec,
             outputs)
 
+        # final projection
         if not self.complex:
             output = self.fc_real(output[...,0])
         else:
             output_real = self.fc_real(output[...,0])
             output_imag = self.fc_imag(output[...,1])
             output = tf.complex(output_real, output_imag)
-        
+
         return output

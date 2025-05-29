@@ -13,7 +13,7 @@ def export(params: SKTaskParams):
     """
     params_export = params.export
 
-    model_dir = f"{params.train['path']['model_dir']}"
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
@@ -31,7 +31,7 @@ def export(params: SKTaskParams):
         time_steps = params.data['target_length_in_secs'] * 100)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], model_dir)
+        model_train, params_export['epoch_loaded'], checkpoint_dir)
 
     for v in model_train.trainable_variables:
         z = v.numpy().flatten()

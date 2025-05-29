@@ -33,7 +33,7 @@ def evaluate(params: SKTaskParams):
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']
-    model_dir = f"{params.train['path']['model_dir']}"
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
     result_folder = params.evaluate['data']['result_folder']
     batchsize=1
 
@@ -98,14 +98,15 @@ def evaluate(params: SKTaskParams):
         time_steps = params.data['target_length_in_secs'] * 100)
 
     # load weights from the checkpoint
+
     load_model_checkpoint(
-        model_train, params_evaluate['epoch_loaded'], model_dir)
+        model_train, params_evaluate['epoch_loaded'], checkpoint_dir)
 
     # 3. Compute feature statistics for standardization
     stats = feat_stats_estimator(
         dataset,
         batches,
-        folder_nn=model_dir,
+        folder_nn=checkpoint_dir,
         feat_extractor=feat_extractor,)
 
     num_fft_bins = feat_params["fft_size"] // 2 + 1
@@ -232,12 +233,15 @@ def evaluate(params: SKTaskParams):
                 audio = audio_en
 
             # Calculate DNSMOS score
+            
+          
+            
             torch_tensor = torch.from_numpy(audio.numpy())
             scores = deep_noise_suppression_mean_opinion_score(
                 torch_tensor,
                 params.data['signal']['sampling_rate'],
                 False)
-
+            print(scores)
             tmp = objective_model(torch.from_numpy(audio.numpy()))
             stoi_hyp[type_s] += tmp[0].detach().numpy()
             pesq_hyp[type_s] += tmp[1].detach().numpy()
