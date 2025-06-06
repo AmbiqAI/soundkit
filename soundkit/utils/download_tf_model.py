@@ -85,6 +85,8 @@ def save_train_log(train_log: List[Dict[str, Any]], filepath: str) -> None:
         train_log: A list of dictionaries (one per epoch).
         filepath: Where to save the JSON log.
     """
+    
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, "w") as f:
         json.dump(train_log, f, indent=2)
 
@@ -114,7 +116,8 @@ def build_model(
         batchsize: int = 32,
         dim_feat: int = 72,
         time_steps: int = 1,
-        export: bool = False) -> Tuple[tf.keras.Model, int]:
+        export: bool = False,
+        complex_input: bool=False) -> Tuple[tf.keras.Model, int]:
     """Download model weights from a remote server.
 
     Args:
@@ -131,7 +134,12 @@ def build_model(
 
     config_dict = OmegaConf.load(config_path)
 
-    OmegaConf.resolve(config_dict)  # force interpolation
+    # Apply model override from vad.yaml if present
+    if "override" in params.train["model"]:
+        override_cfg = OmegaConf.create(params.train["model"]["override"])
+        config_dict = OmegaConf.merge(config_dict, override_cfg)
+
+    OmegaConf.resolve(config_dict)
 
     model_name=config_dict['name']
 
@@ -150,7 +158,11 @@ def build_model(
         model_name,
         params=params_net)
 
+    if complex_input:
+        shape = (None, time_steps, dim_feat, 2)
+    else:
+        shape = (None, time_steps, dim_feat)
     model.build(
-        input_shape=(None, time_steps, dim_feat))
+        input_shape=shape)
     model.summary()
     return model

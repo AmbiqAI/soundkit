@@ -1,5 +1,5 @@
 name: crnn
-units: 100
+units: 130
 len_time: 6
 layer_configs:
   - type: dropout
@@ -7,7 +7,7 @@ layer_configs:
 
   - type: conv2d
     filters: ${units}
-    kernel_size: ["${len_time}", 72]
+    kernel_size: ["${len_time}", 65]
     strides: [1, 1]
     activation: relu
 
@@ -35,5 +35,5 @@ layer_configs:
     rate: 0.0
 
   - type: fc
-    units: 257
+    units: 65
     activation: sigmoid

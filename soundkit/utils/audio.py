@@ -59,11 +59,105 @@ def pad_or_crop(
         start = np.random.randint(0, len(audio) - target_length)
         end = start + target_length
         audio = audio[start:end]
+        start = 0
+        end = target_length
+        
+        
     else:
         start = 0
         end = target_length
 
     return audio, start, end
+
+
+def get_labels(vad: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    dx = np.diff(vad)
+    # Get indices where speech starts (0 → 1)
+    onsets = np.where(dx > 0)[0] + 1
+
+    # Get indices where speech ends (1 → 0)
+    offsets = np.where(dx < 0)[0] + 1
+
+    # Edge cases: if starts or ends with 1
+    if vad[0] == 1:
+        onsets = np.insert(onsets, 0, 0)
+    if vad[-1] == 1:
+        offsets = np.append(offsets, len(vad)-1)
+    return offsets, onsets
+
+def remove_short_segments(
+        starts: np.ndarray,
+        ends: np.ndarray,
+        audio: np.ndarray,
+        min_length: int = 160*10):
+    '''Remove segments shorter than min_length
+    Args:
+        starts (np.ndarray): start indices of segments
+        ends (np.ndarray): end indices of segments
+        min_length (int): minimum length of segments
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: filtered start and end indices
+    '''
+    valid_starts = []
+    valid_ends = []
+    vad = np.zeros_like(audio, dtype=np.float32)
+    for s, e in zip(starts, ends):
+        if e - s >= min_length:
+            vad[s:e] = 1
+            valid_starts.append(s)
+            valid_ends.append(e)
+
+    audio_update = audio * vad
+
+    valid_starts = np.array(valid_starts, dtype=np.int32)
+    valid_ends = np.array(valid_ends, dtype=np.int32)
+
+    return valid_starts, valid_ends, audio_update
+
+def pad_or_crop_with_labels(
+        audio: np.ndarray,
+        target_length: int,
+        starts: np.ndarray,
+        ends: np.ndarray,
+        ) -> Tuple[np.ndarray, int, int]:
+    """Pad audio to target length
+
+    Args:
+        audio (np.ndarray): audio data
+        target_length (int): target length
+
+    Returns:
+        np.ndarray: padded audio data
+    """
+    vad = np.zeros_like(audio, dtype=np.int32)
+    for s, e in zip(starts, ends):
+        if e-s > 160*10:
+            vad[s:e] = 1
+
+    if len(audio) < target_length:
+
+        sig = np.zeros(target_length, dtype=audio.dtype)
+        start = np.random.randint(0, target_length - len(audio))
+        end = start + len(audio)
+        sig[start:end] = audio
+        audio = sig
+
+        sig = np.zeros(target_length, dtype=audio.dtype)
+        sig[start:end] = vad
+        vad = sig
+
+    elif len(audio) > target_length:
+        start = np.random.randint(0, len(audio) - target_length)
+        end = start + target_length
+        audio = audio[start:end]
+        vad = vad[start:end]
+
+    offsets, onsets = get_labels(vad)
+
+    onsets, offsets, audio = remove_short_segments(
+        onsets, offsets, audio, min_length=160*10)
+
+    return audio, onsets, offsets
 
 def repeat_or_crop(x: np.ndarray, target_length: int) -> np.ndarray:
     """
@@ -136,6 +230,7 @@ def synthesize_audio(
     """
     signal_s, start_index, end_index = pad_or_crop(clean, target_length)
     noise = repeat_or_crop(noise, target_length)
+    # if 0:
     if rir is not None:
         samples_5ms = sample_rate * 0.005 # 5ms
 
@@ -156,17 +251,24 @@ def synthesize_audio(
         decay[:idx_late_reverb] = 1
 
         rir_target = decay * rir
-        y = fftconvolve(signal_s, rir,'same')
-        target = fftconvolve(signal_s, rir_target, 'same')
+        y = fftconvolve(signal_s, rir,'full')
+        y = y[:len(signal_s)]
+        target = fftconvolve(signal_s, rir_target, 'full')
+        target = target[:len(signal_s)]
+
         # import matplotlib.pyplot as plt
         # plt.subplot(4,1,1)
-        # plt.plot(rir)
+        # plt.plot(signal_s)
+        # plt.xlim([0, 16000 * 5])
         # plt.subplot(4,1,2)
-        # plt.plot(rir_target)
+        # plt.plot(y)
+        # plt.xlim([0, 16000 * 5])
         # plt.subplot(4,1,3)
-        # plt.plot(rir - rir_target)
+        # plt.plot(target)
+        # plt.xlim([0, 16000 * 5])
         # plt.subplot(4,1,4)
         # plt.plot(decay)
+        # plt.xlim([0, 16000 * 5])
         
         # plt.show()
     
@@ -175,13 +277,18 @@ def synthesize_audio(
         target = signal_s.copy()
 
     # Compute clean and noise powers
-    clean_power = np.mean(target**2) + 1e-9
-    noise_power = np.mean(noise**2) + 1e-9
+    clean_power = np.mean(target**2)
+    
+    
+    if clean_power == 0:
+        pass
+    else:
+        noise_power = np.mean(noise**2) + 1e-9
 
-    # Scale noise to match desired SNR
-    desired_noise_power = clean_power / (10**(snr_db / 10))
-    scale = np.sqrt(desired_noise_power / noise_power)
-    noise = noise * scale
+        # Scale noise to match desired SNR
+        desired_noise_power = clean_power / (10**(snr_db / 10))
+        scale = np.sqrt(desired_noise_power / noise_power)
+        noise = noise * scale
 
     # Mix
     signal_sn = y + noise
@@ -191,5 +298,126 @@ def synthesize_audio(
     gain = 1 / peak * np.random.uniform(min_amp, max_amp)
     target *= gain
     signal_sn *= gain
-
+    y *= gain
     return signal_sn, target, start_index, end_index
+
+
+def synthesize_audio_with_labels(
+        clean: np.ndarray,
+        noise: np.ndarray,
+        starts: np.ndarray,
+        ends: np.ndarray,
+        rir: np.ndarray,
+        snr_db: float,
+        min_amp: float = 0.01,
+        max_amp: float = 0.95,
+        target_length: int = 160*500,
+        sample_rate:int = 16000,) -> Tuple[np.ndarray, np.ndarray, int, int]:
+    """
+    Synthesize noisy audio from clean and noise with optional reverberation.
+
+    Args:
+        clean (np.ndarray): Clean speech audio
+        noise (np.ndarray): Noise audio
+        rir (np.ndarray): Room impulse response (can be None or empty)
+        snr_db (float): Target signal-to-noise ratio in dB
+        min_amp (float): Minimum peak amplitude
+        max_amp (float): Maximum peak amplitude
+        target_length (int): Target audio length
+        sample_rate (int): Sample rate of the audio
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, int, int]: 
+            (noisy_audio, clean_audio, start_index, end_index)
+    """
+    signal_s, onsets, offsets = pad_or_crop_with_labels(
+        clean, target_length,
+        starts, ends)
+    noise = repeat_or_crop(noise, target_length)
+    # if 0:
+    if rir is not None:
+        samples_5ms = sample_rate * 0.005 # 5ms
+
+        idx_late_reverb = np.minimum(
+            np.argmax(np.abs(rir)) + samples_5ms,
+            rir.size-1).astype(np.int64)
+
+        rt60 = 1
+        dt = 1 / sample_rate
+        rt60_level = 10.0**(-60.0 / 5.0)
+        tau = -rt60 / np.log10(rt60_level)
+        n = np.arange(rir.size)
+
+        exponent = -(n - idx_late_reverb) * dt / tau
+        exponent = np.clip(exponent, -700, 0)  # adjust bounds as needed
+        decay = 10 ** exponent
+
+        decay[:idx_late_reverb] = 1
+
+        rir_target = decay * rir
+        y = fftconvolve(signal_s, rir,'full')
+        y = y[:len(signal_s)]
+        target = fftconvolve(signal_s, rir_target, 'full')
+        target = target[:len(signal_s)]
+        vad = np.zeros_like(signal_s, dtype=np.int32)
+        for ss, ee in zip(onsets, offsets):
+            vad[ss:ee] = 1
+        
+        rir_amp = np.abs(rir)**2 / np.mean(np.abs(rir)**2)
+        vad_rir = fftconvolve(vad, rir_amp,'full')
+        vad_rir = vad_rir[:len(signal_s)]
+
+        vad_update = (vad_rir > 5000).astype(np.float32)
+        
+        # import pdb; pdb.set_trace()
+        
+        offsets, onsets = get_labels(vad_update)
+        onsets, offsets, y = remove_short_segments(
+            onsets, offsets, y, min_length=160*10)
+        # print(y)
+        # import pdb; pdb.set_trace()
+        # import matplotlib.pyplot as plt
+        # plt.subplot(5,1,1)
+        # plt.plot(signal_s)
+        # plt.xlim([0, 16000 * 5])
+        # plt.subplot(5,1,2)
+        # plt.plot(y)
+        # plt.xlim([0, 16000 * 5])
+        # plt.subplot(5,1,3)
+        # plt.plot(vad)
+        # plt.xlim([0, 16000 * 5])
+        # plt.subplot(5,1,4)
+        # plt.plot(vad_rir)
+        # plt.xlim([0, 16000 * 5])
+        # plt.subplot(5,1,5)
+        # plt.plot(vad_update)
+        # plt.xlim([0, 16000 * 5])
+        # plt.show()
+        
+    else:
+        y = signal_s.copy()
+        target = signal_s.copy()
+
+    # Compute clean and noise powers
+    clean_power = np.mean(target**2)
+
+    if clean_power == 0:
+        pass
+    else:
+        noise_power = np.mean(noise**2) + 1e-9
+
+        # Scale noise to match desired SNR
+        desired_noise_power = clean_power / (10**(snr_db / 10))
+        scale = np.sqrt(desired_noise_power / noise_power)
+        noise = noise * scale
+
+    # Mix
+    signal_sn = y + noise
+
+    # Normalize to avoid clipping
+    peak = max(np.max(np.abs(signal_sn)), 1e-8)
+    gain = 1 / peak * np.random.uniform(min_amp, max_amp)
+    target *= gain
+    signal_sn *= gain
+    y *= gain
+    return signal_sn, target, onsets, offsets

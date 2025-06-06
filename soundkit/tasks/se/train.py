@@ -21,20 +21,25 @@ def train_step(
         optimizer: tf.keras.optimizers.Optimizer,
         loss_fn: Any,
         batch: dict[str, tf.Tensor],
-        training: bool = True,):
+        training: bool = True,
+        loss_type: str = "mse",):
     """Perform a single training step."""
 
     feat_sn = batch["feat_sn"]
     pspec_sn_delay = tf.abs(batch["spec_sn_delay"])
     pspec_s_delay = tf.abs(batch["spec_s_delay"])
-
+    
     with tf.GradientTape() as tape:
         est = net(feat_sn, training=training)
+        if loss_type == "mrl_mse":
+            spec_en_delay = tf.complex(est, tf.zeros_like(est)) * batch["spec_sn_delay"]
 
-        pspec_en_delay = est * pspec_sn_delay
+            loss = loss_fn(spec_en_delay, batch["spec_s_delay"])
 
-        loss = loss_fn(pspec_en_delay, pspec_s_delay)
+        else:
+            pspec_en_delay = tf.abs(est) * pspec_sn_delay
 
+            loss = loss_fn(pspec_en_delay, pspec_s_delay)
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
         gradients_clips = [ grad
@@ -118,7 +123,7 @@ def run_epoch(
             audio_sn, states=states_audio_sn)
         feat_s, spec_s, states_audio_s = feat_extractor(
             audio_s, states=states_audio_s)
-
+ 
         # Apply lookahead
         spec_sn_delay = buffer_sn.apply(spec_sn)
         spec_s_delay = buffer_s.apply(spec_s)
@@ -129,6 +134,9 @@ def run_epoch(
             mean_stats = stats['nMean_feat']
             inv_std_stats = stats['nInvStd']
             feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
+        else:
+            # No standardization, use raw features
+            feat_sn_norm = feat_sn
 
         batch_data = {
             "spec_sn_delay": spec_sn_delay,
@@ -138,7 +146,13 @@ def run_epoch(
         }
 
         # Perform one training or val step
-        loss, logits = train_step(model, optimizer, loss_fn, batch_data, training=training)
+        loss, logits = train_step(
+            model,
+            optimizer,
+            loss_fn,
+            batch_data,
+            training=training,
+            loss_type=params.train['loss_function']['type'],)
         loss_metric.update_state(loss)
         # acc_metric.update_state(y_batch, logits)  # accuracy not computed yet
 
@@ -155,7 +169,7 @@ def run_epoch(
         # Print inline batch progress
         print(
             f"  [{train_tag}] | {step + 1}/{total_batches} | "
-            f"    Loss: {loss_metric.result():.4f} | ",
+            f"    Loss: {loss_metric.result()} | ",
             end="\r",
             flush=True
         )
@@ -167,7 +181,7 @@ def run_epoch(
                 pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
 
                 if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
-                    feat_sn = 20* feat_sn[0].numpy()
+                    feat_sn = 10* feat_sn[0].numpy()
                 elif params.train['feature']['type'] in ('pspec', 'spec'):
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
 
@@ -214,7 +228,7 @@ def train(params: SKTaskParams):
         params=params,
     )
     dim_feat = feat_extractor.dim_feat
-    
+
     # 2. Build the model
 
     # Load from YAML file
@@ -245,12 +259,17 @@ def train(params: SKTaskParams):
     )
 
     # 4. Compute feature statistics for standardization
-    stats = feat_stats_estimator(
-        ds_train,
-        batches_train,
-        folder_nn=checkpoint_dir,
-        feat_extractor=feat_extractor,)
-
+    if params_train['standardization']:
+        stats = feat_stats_estimator(
+            ds_train,
+            batches_train,
+            folder_nn=checkpoint_dir,
+            feat_extractor=feat_extractor,)
+    else:
+        stats = {
+            'nMean_feat': tf.zeros([dim_feat], dtype=tf.float32),
+            'nInvStd': tf.ones([dim_feat], dtype=tf.float32),
+        }
     # 5. Define loss function
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],

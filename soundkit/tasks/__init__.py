@@ -1,6 +1,7 @@
 from typing import Type
 from .task import SKTask
 from .se import SeTask
+from .vad import VadTask
 
 class TaskFactory:
     _registry = {}
@@ -18,3 +19,4 @@ class TaskFactory:
         return list(cls._registry.keys())
 
 TaskFactory.register("se", SeTask)
+TaskFactory.register("vad", VadTask)

@@ -26,6 +26,7 @@ class FeatureExtractor:
             "spec": self._extract_spec,
             "pspec": self._extract_pspec,
             "logpspec": self._extract_logpspec,
+            "logampspec": self._extract_logampspec,
             "mel": self._extract_mel,
             "hybrid": self._extract_logpspec_mel,
             "time": self._extract_time,
@@ -33,7 +34,8 @@ class FeatureExtractor:
 
         if feat_params['type'] not in self._extractors:
             raise ValueError(f"Unsupported feature type: {feat_params['type']}")
-
+        else:
+            self.feat_type = feat_params['type']
         self._extract_fn = self._extractors[feat_params['type']]
 
         if feat_params["frame_size"] % feat_params["hop_size"] != 0:
@@ -77,8 +79,12 @@ class FeatureExtractor:
                 win_size=feat_params['frame_size'],
                 hop=feat_params['hop_size'])
         else:
-            self.mel_filter = None
-            self.dim_feat = feat_params['bins']
+
+            dim_feat = (feat_params['fft_size'] // 2) + 1
+            
+            self.mel_filter = tf.eye(
+                dim_feat)
+            self.dim_feat = dim_feat
 
     def __call__(
             self,
@@ -111,18 +117,6 @@ class FeatureExtractor:
 
         return spec, tf.identity(spec)
 
-    def _extract_logpspec(
-            self,
-            audio_sn: tf.Tensor,
-            states: Union[tf.Tensor, None]) -> tf.Tensor:
-
-        feat, spec = self._extract_spec(
-            audio_sn,
-            states=states,
-        )
-
-        return tf_log10_eps(tf.abs(spec)), spec
-
     def _extract_pspec(
             self,
             audio_sn: tf.Tensor,
@@ -133,7 +127,31 @@ class FeatureExtractor:
             states=states,
         )
 
-        return tf.abs(feat), spec
+        return tf.abs(feat)**2, spec
+
+    def _extract_logampspec(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+
+        feat, spec = self._extract_spec(
+            audio_sn,
+            states=states,
+        )
+
+        return tf_log10_eps(tf.abs(feat)), spec
+
+    def _extract_logpspec(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+
+        pspec, spec = self._extract_pspec(
+            audio_sn,
+            states=states,
+        )
+
+        return tf_log10_eps(pspec), spec
 
     def _extract_mel(
             self,
@@ -146,7 +164,7 @@ class FeatureExtractor:
         )
 
         mel_spec = tf.matmul(
-            pspec**2,
+            pspec,
             self.mel_filter,
         )
         mel_spec = tf_log10_eps(mel_spec)
@@ -164,7 +182,7 @@ class FeatureExtractor:
         )
 
         mel_spec = tf.matmul(
-            pspec**2,
+            pspec,
             self.mel_filter,
         )
         mel_spec = tf_log10_eps(mel_spec)

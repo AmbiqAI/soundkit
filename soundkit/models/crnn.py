@@ -5,6 +5,7 @@ from ..utils.tf_basic_math import tf_log10_eps
 
 import numpy as np
 class CRNNParams(BaseModel):
+
     batchsize: int = 1
     time_steps: int = 1
     dim_feat: int = 257
@@ -30,19 +31,25 @@ class CRNN(tf.keras.Model):
         self.params = params
         self.layer_stack = []
         self.states = []
+        self.stride_time=1
 
-        for layer_def in params.layer_configs:
+
+        for i, layer_def in enumerate(params.layer_configs):
             if layer_def['type'] == 'conv2d':
+                units_in = self.get_former_neurons(params, i)
+
+                state = tf.Variable(tf.zeros(
+                        (params.batchsize,
+                        layer_def['kernel_size'][0] - 1,
+                        units_in,),
+                        dtype=tf.float32),
+                        trainable=False)  # type: ignore
+               
                 
                 self.states.append(
-                        tf.Variable(tf.zeros(
-                            (params.batchsize,
-                            layer_def['kernel_size'][0] - 1,
-                            params.dim_feat,),
-                            dtype=tf.float32),
-                            trainable=False)  # type: ignore
+                        state
                     )
-               
+                
                 self.layer_stack.append(tf.keras.layers.Conv2D(
                     filters=layer_def['filters'],
                     kernel_size=layer_def['kernel_size'],
@@ -51,6 +58,7 @@ class CRNN(tf.keras.Model):
                     padding='valid'
                 ))
 
+                self.stride_time = layer_def['strides'][0]
             elif layer_def['type'] == 'lstm':
 
                 h_states = tf.Variable(
@@ -77,6 +85,8 @@ class CRNN(tf.keras.Model):
                     activation='tanh',
                     recurrent_activation='sigmoid',
                 ))
+                
+                
             elif layer_def['type'] == 'fc':
                 self.states.append(tf.constant(0, dtype=tf.float32))
                 self.layer_stack.append(tf.keras.layers.Dense(
@@ -108,9 +118,13 @@ class CRNN(tf.keras.Model):
         """Forward pass through the CRNN model."""
         for layer, config, state in zip(self.layer_stack, self.params.layer_configs, self.states):
             if config['type'] == 'conv2d':
+                
                 x = tf.concat([state, x], axis=1)
                 state_update= tf.identity(x[:,-(config['kernel_size'][0]-1):,:])
+
                 x = tf.expand_dims(x, axis=-1)
+                
+                
                 x = layer(x, training=training)
                 x = x[:, :, 0, :]
                 state.assign(state_update)
@@ -125,3 +139,23 @@ class CRNN(tf.keras.Model):
             else:
                 x = layer(x, training=training)
         return x
+    def get_former_neurons(self, params, current_layer_index):
+        """Get the number of input features for the current layer."""
+
+        if current_layer_index == 0:
+            return params.dim_feat
+        else:
+            
+            for layer_config in reversed(params.layer_configs[:current_layer_index]):
+                if layer_config['type'] in ['lstm', 'fc']:
+                    num = layer_config['units']
+                    break
+                elif layer_config['type'] == 'conv2d':
+                    num = layer_config['filters']
+                    break
+                else:
+                    num=-1
+            if num == -1:
+                num = params.dim_feat
+            
+            return num

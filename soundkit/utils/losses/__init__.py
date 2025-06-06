@@ -1,7 +1,9 @@
 """Losses module for soundkit."""
 from typing import Type
+import tensorflow as tf
 from .loss_utils import FramewiseMSE, FramewiseMAE, CompressedMSE
 
+from .loss_mrl import MultiResolutionSTFTLossFromSTFT
 class LossFactory:
     """Factory class for creating loss functions."""
     _registry = {}
@@ -12,13 +14,17 @@ class LossFactory:
         cls._registry[name] = loss_cls
 
     @classmethod
-    def get(cls, name: str, **kwargs):
-        """Get a loss function by name."""
+    def get(cls, name: str, params: dict = None):
+        """Get a loss function by name, optionally with params."""
         if name not in cls._registry:
             raise ValueError(f"Loss '{name}' is not registered.")
-        return cls._registry[name](**kwargs)
+        params = params or {}
+        return cls._registry[name](**params)
+
 
 # Register classes directly
 LossFactory.register("mse", FramewiseMSE)
 LossFactory.register("mae", FramewiseMAE)
 LossFactory.register("compressed_mse", CompressedMSE)
+LossFactory.register("mrl_mse", MultiResolutionSTFTLossFromSTFT)
+LossFactory.register("cross_entropy", tf.keras.losses.SparseCategoricalCrossentropy)

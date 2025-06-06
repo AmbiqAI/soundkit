@@ -23139,7 +23139,7 @@ int32_t ns_power_platform_config(const ns_power_config_t *pCfg) {
     am_hal_cachectrl_dcache_enable(true);
   41e086:	2001      	movs	r0, #1
   41e088:	f006 fcb2 	bl	4249f0 <am_hal_cachectrl_dcache_enable>
-    am_hal_pwrctrl_pwrmodctl_cpdlp_config(sDefaultCpdlpConfig);
+    // am_hal_pwrctrl_pwrmodctl_cpdlp_config(sDefaultCpdlpConfig);
   41e08c:	9801      	ldr	r0, [sp, #4]
   41e08e:	f001 ffc7 	bl	420020 <am_hal_pwrctrl_pwrmodctl_cpdlp_config>
 
@@ -23182,15 +23182,15 @@ int32_t ns_power_platform_config(const ns_power_config_t *pCfg) {
   41e0c0:	f88d 500c 	strb.w	r5, [sp, #12]
     am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
   41e0c4:	f001 f9c6 	bl	41f454 <am_hal_pwrctrl_mcu_memory_config>
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0LPREN = 1;
+    // MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0LPREN = 1;
   41e0c8:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   41e0cc:	f043 0301 	orr.w	r3, r3, #1
   41e0d0:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0SLPEN = 0;
+    // MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0SLPEN = 0;
   41e0d4:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   41e0d8:	f365 0341 	bfi	r3, r5, #1, #1
   41e0dc:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0PWRCTRL = 1;
+    // MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0PWRCTRL = 1;
   41e0e0:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   41e0e4:	f043 0304 	orr.w	r3, r3, #4
   41e0e8:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
