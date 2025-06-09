@@ -10,8 +10,7 @@
 
 ---
 
-**SoundKit** is an AI Development Kit (ADK) designed to help developers build, train, and deploy real-time **audio classification** models onto [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). The kit includes task-specific datasets, energy-efficient model architectures, and built-in tools for optimization and deployment. Developers can use pre-trained models or create custom audio models tailored to their specific edge application.
-
+**SoundKit** is an AI Development Kit (ADK) designed to help developers build, train, and deploy real-time audio classification models onto [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). The kit includes task-specific datasets, energy-efficient model architectures, and built-in tools for optimization and deployment. It also integrates with [NeuralSPOT](https://github.com/AmbiqAI/neuralSPOT), Ambiq’s open-source AI SDK, to streamline the deployment of inference models onto embedded hardware. Developers can use pre-trained models or create custom audio models tailored to their specific edge application.
 **Key Features:**
 
 * **Real-time**: Run low-latency inference on embedded edge devices.
@@ -50,7 +49,9 @@ Or install from source:
 ```bash
 git clone https://github.com/AmbiqAI/soundkit.git
 cd soundkit
-pip install -e .
+pip install .
+# or
+pip install -e . # editable mode-Any changes you make to the codebase are immediately reflected without needing to re-install.
 ```
 
 ---
@@ -96,6 +97,8 @@ SoundKit includes a flexible dataset factory that supports both speech and non-s
 * [**LibriSpeech**](https://www.openslr.org/12) (train-clean-100, train-clean-360, dev-clean, test-clean): Large-scale read English speech corpus.
 * [**THCHS-30**](https://www.openslr.org/18): Mandarin speech corpus with train/dev splits.
 
+* [**Qualcomm Keyword Speech Dataset**](https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads): Maunally download required. See the license for full terms [here](https://www.qualcomm.com/developer/project/keyword-speech-dataset).
+
 ### Noise Datasets
 * [**WHAM! Noise**](https://wham.whisper.ai/): Background noise recordings with train/val splits.
 * [**MUSAN**](https://www.openslr.org/17): Contains music and noise clips suitable for data augmentation and robust training.
@@ -106,7 +109,6 @@ SoundKit includes a flexible dataset factory that supports both speech and non-s
 * [**RIRS_NOISES**](https://www.openslr.org/28): Room impulse responses for augmenting audio with realistic reverberation.
 
 Each dataset is loaded using a factory function and supports automatic file discovery or label mapping where applicable.
-
 
 ---
 
