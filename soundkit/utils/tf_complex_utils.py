@@ -27,4 +27,4 @@ def complex_to_realarray(complex_tensor: tf.Tensor) -> tf.Tensor:
     """
     real_part = tf.math.real(complex_tensor)
     imag_part = tf.math.imag(complex_tensor)
-    return tf.concat([real_part, imag_part], axis=-1)
+    return tf.stack([real_part, imag_part], axis=-1)

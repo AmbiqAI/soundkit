@@ -21,7 +21,7 @@ def add_noise(data, noise, snr_db, stime, etime,
               min_amp=0.01,
               max_amp=0.95):
     """Synthesize noise and speech"""
-
+    
     if rir is not None:
         samples_5ms = 16000 * 0.005
         idx_late_reverb = np.minimum(
@@ -37,6 +37,7 @@ def add_noise(data, noise, snr_db, stime, etime,
         rir_target = decay * rir
         speech_reverb = np.convolve(data, rir,'same')
         target = np.convolve(data, rir_target, 'same')
+        
         # p = np.random.randint(2)
         # if p == 0:
         #     noise = np.convolve(noise, rir,'same')

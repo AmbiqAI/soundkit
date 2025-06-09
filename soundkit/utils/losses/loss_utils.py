@@ -99,3 +99,4 @@ class CompressedMSE(tf.keras.losses.Loss):
         steps = tf.shape(x)[0] * tf.shape(x)[1]
         loss = tf.reduce_sum(tf.square(x_comp - y_comp)) / tf.cast(steps, tf.float32)
         return loss
+

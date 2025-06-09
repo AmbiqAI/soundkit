@@ -1,2 +1,15 @@
-soundkit --mode data -c configs/se.yaml
-soundkit --mode train -c configs/se.yaml
+# for prob in 0.2 0.4 0.6; do
+#     echo "=== Running with data.reverb_prob=${prob} ==="
+
+#     soundkit -m data  -c configs/se.yaml data.reverb_prob=${prob}
+#     soundkit -m train -c configs/se.yaml data.reverb_prob=${prob}
+
+#     # soundkit -m evaluate -c configs/se.yaml data.reverb_prob=${prob}
+
+# done
+
+soundkit -t kws -m data   -c configs/kws/galaxy.yaml
+soundkit -t kws -m train -c configs/kws/galaxy.yaml
+
+# soundkit -t vad -m data  -c configs/vad/vad_8k.yaml
+# soundkit -t vad -m train -c configs/vad/vad_8k.yaml

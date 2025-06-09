@@ -31,8 +31,9 @@ def draw_spectrogram(
         plt.colorbar()
 
 
-def plot_spectrograms(images, titles=None, vmin_vmax=None, figsize=(10, 2.5),
-                      show_colorbar=True, cmap="pink_r", save_path=None, show_fig=False):
+def plot_spectrograms(
+        images, titles=None, vmin_vmax=None, figsize=(10, 2.5),
+        show_colorbar=True, cmap="pink_r", save_path=None, show_fig=False):
     """
     Plot a list of spectrogram images vertically and optionally save to a file.
 

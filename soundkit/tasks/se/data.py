@@ -17,8 +17,7 @@ from ...utils.basic_dsp import dc_remove
 from ...utils.download_api import corpus_download
 from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from ...utils.plot_api import plot_spectrograms
-from ...datasets.register_datasets import DatasetRegistry
-
+from ...datasets import SKDatasetFactory
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -117,12 +116,12 @@ class FeatMultiProcsClass(multiprocessing.Process):
         Plot the audio signals and 
         their spectrograms for debugging.
         """
-        
+
         from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
-        
+
         frame_size = self.params.train['feature']['frame_size']
         hop_size = self.params.train['feature']['hop_size']
         fft_size = self.params.train['feature']['fft_size']
@@ -130,15 +129,13 @@ class FeatMultiProcsClass(multiprocessing.Process):
             tf.constant([audio_sn], dtype=tf.float32))
         feat_s, spec_s, states_audio_s = feat_extractor(
             tf.constant([audio_s], dtype=tf.float32))
-        
-        
+
         # spec_sn = tf_stft([audio_sn], frame_size, hop_size, fft_size)
         # spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
         logspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn[0])).numpy()
         logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
         logmel_sn = 20 * feat_sn[0].numpy()
-        
-  
+
         plot_spectrograms(
             images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
             titles=[f"noisy logspec {snr_db}dB", "clean logspec", "noisy feat"],
@@ -147,72 +144,6 @@ class FeatMultiProcsClass(multiprocessing.Process):
             cmap="pink_r",  # or your preferred colormap
             show_fig=True   # set to False if you just want to save
             )
-
-# def get_wavefiles(path_folder):
-#     """Fetch all of noise files"""
-
-#     lst = []
-#     for root, _, files in os.walk(f'{path_folder}'):
-#         for file in files:
-#             if re.search(r'(wav$|flac$)', file):
-#                 lst += [os.path.join(root, file.strip())]
-#     return lst
-
-# def get_noise_file_list(
-#         ntype: str,) -> dict[str, list[str]]:
-#     """
-#     Get the list of noise file paths for a given noise type and set.
-
-#     Args:
-#         ntype (str): Noise type (e.g., 'musan', 'FSD50K', etc.)
-#         set_name (str): 'train' or 'val'
-
-#     Returns:
-#         List[str]: File paths for noise
-#     """
-#     set_names = ['train', 'val']
-#     files = {}
-#     match ntype:
-
-#         case 'wham_noise':
-#             for set_name in set_names:
-#                 folder = 'tr' if set_name == 'train' else 'cv'
-#                 files[set_name] = get_wavefiles(f'wavs/noise/wham_noise/{folder}')
-
-#             return files
-
-#         case 'FSD50K' | 'ESC-50-master':
-#             with open(f'wavs/noise/{ntype}/non_speech.csv', 'r') as f:
-#                 lines = f.readlines()
-#             lines = [line.strip() for line in lines]  # Skip header
-#             random.shuffle(lines)
-#             split = len(lines) // 5
-#             files['train'] = lines[split:]
-#             files['val'] = lines[:split]
-
-#             return files
-
-#         case 'musan':
-#             music = get_wavefiles('wavs/noise/musan/music')
-#             noise = get_wavefiles('wavs/noise/musan/noise')
-#             lines = music + noise
-#             random.shuffle(lines)
-#             split = len(lines) // 5
-#             files['train'] = lines[split:]
-#             files['val'] = lines[:split]
-
-#             return files
-
-#         case 'RIRS_NOISES' | 'rirs_noises':
-#             all_files = get_wavefiles(f'wavs/noise/RIRS_NOISES')
-#             split = len(all_files) // 5
-#             random.shuffle(all_files)
-#             files['train'] = all_files[split:]
-#             files['val'] = all_files[:split]
-#             return files
-
-#         case _:
-#             raise ValueError(f"Unknown noise type: {ntype}")
 
 def data(params: SKTaskParams) -> None:
     """Prepare tfrecords data for SE task
@@ -239,7 +170,7 @@ def data(params: SKTaskParams) -> None:
         name = corpus['name']
         ctype = corpus['type']
         split = corpus['split']
-        loader = DatasetRegistry.get(name)
+        loader = SKDatasetFactory.get(name)
         files = loader(corpus)
 
         if ctype == 'speech':
@@ -278,9 +209,14 @@ def data(params: SKTaskParams) -> None:
     tot_success_dict = {'train': [], 'val': []}
     for train_set in sets:
         random.shuffle(speech_list[train_set])
-        num_samples = np.minimum(
-            len(speech_list[train_set]),
-            params_data['num_samples_per_noise'][train_set])
+        if params_data['num_samples_per_noise'][train_set] is None:
+            # If num_samples_per_noise is None, use all available samples
+            num_samples = len(speech_list[train_set])
+        else:
+            num_samples = np.minimum(
+                len(speech_list[train_set]),
+                params_data['num_samples_per_noise'][train_set])
+
         speech_list_split = np.array_split(
             speech_list[train_set][:num_samples],
             params_data['num_processes'])

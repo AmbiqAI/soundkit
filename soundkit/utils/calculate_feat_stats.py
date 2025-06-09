@@ -4,9 +4,8 @@ Calculating statistic mean and standard deviation
 import os
 import pickle
 import tensorflow as tf
-import numpy as np
-from .converter_fix_point import fakefix_tf
-from .feature_utils import FeatureExtractor
+from soundkit.utils.converter_fix_point import fakefix_tf
+from soundkit.utils.feature_utils import FeatureExtractor
 
 def load_feat_stats(dir: str,stats_name: str = 'stats.pkl'):
 
@@ -14,6 +13,25 @@ def load_feat_stats(dir: str,stats_name: str = 'stats.pkl'):
         with open(os.path.join(dir, stats_name), "rb") as file:
             stats = pickle.load(file)
         return stats
+
+@tf.function
+def calculate_mean(feat_sn):
+    if tf.as_dtype(feat_sn.dtype).is_complex:
+        feat_sn = tf.math.abs(feat_sn)
+    
+    sub_tot = tf.math.reduce_sum(feat_sn, axis = (0,1))
+    return sub_tot
+
+
+@tf.function
+def calculate_std(feat_sn, mean_stats):
+    """
+    Calculate the standard deviation
+    """
+    if tf.as_dtype(feat_sn.dtype).is_complex:
+        feat_sn = tf.math.abs(feat_sn)
+    sub_tot = tf.math.reduce_sum((feat_sn - mean_stats)**2, axis = (0,1))
+    return sub_tot
 
 def feat_stats_estimator(
         dataset: tf.data.Dataset,
@@ -39,16 +57,15 @@ def feat_stats_estimator(
         if i % 5 == 0:
             tf.print(f"\rMean estimating (batch) {i}/{num_batches}, ",
                         end = '')
+
         audio_sn = batch[0]
 
-        feat_sn, _, _ = feat_extractor(
+        feat_sn, *_ = feat_extractor(
             audio_sn)
 
-        if tf.as_dtype(feat_sn.dtype).is_complex:
-            feat_sn = tf.math.abs(feat_sn)
+        sub_tot = calculate_mean(feat_sn)
+        mean_stats = mean_stats + tf.cast(sub_tot, tf.float64)
         shape = tf.shape(feat_sn)
-        tmp = tf.math.reduce_sum(feat_sn, axis = (0,1))
-        mean_stats = mean_stats + tf.cast(tmp, tf.float64)
         tmp = shape[0] * shape[1]
         tot = tot + tf.cast(tmp, tf.float64)
 
@@ -62,12 +79,10 @@ def feat_stats_estimator(
             tf.print(f"\rSTD estimating (batch) {i}/{num_batches}, ",
                         end = '')
         audio_sn = batch[0]
-        feat_sn, _,_ = feat_extractor(
+        feat_sn, *_ = feat_extractor(
             audio_sn)
-        if tf.as_dtype(feat_sn.dtype).is_complex:
-            feat_sn = tf.math.abs(feat_sn)
-        shape = tf.shape(feat_sn)
-        tmp = tf.math.reduce_sum((feat_sn - mean_stats)**2, axis = (0,1))
+        sub_tot = calculate_std(feat_sn, mean_stats)
+
         inv_std_stats = inv_std_stats + tf.cast(tmp, tf.float64)
 
     inv_std_stats = 1.0 / (2**-15 + tf.math.sqrt(inv_std_stats / tot))
@@ -82,3 +97,21 @@ def feat_stats_estimator(
         pickle.dump(stats, file)
 
     return stats
+
+def mean_varinace_norm(
+        inputs: tf.Tensor,
+        mean_stats: tf.Tensor | None = None,
+        inv_std_stats: tf.Tensor | None = None) -> tf.Tensor:
+    """
+    Normalize the input features using the provided mean and inverse standard deviation.
+    """
+
+    if tf.as_dtype(inputs.dtype).is_complex:
+        mag = tf.abs(inputs)
+        phase = tf.math.angle(inputs)
+        norm_mag = (mag - mean_stats) * inv_std_stats
+        outputs = tf.cast(norm_mag, tf.complex64) * tf.exp(1j * tf.cast(phase, tf.complex64))
+    else:
+        outputs = (inputs - mean_stats) * inv_std_stats
+
+    return outputs

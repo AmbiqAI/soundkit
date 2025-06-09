@@ -94,12 +94,12 @@ resolver.AddReshape();
 resolver.AddStridedSlice();
 resolver.AddAssignVariable();
 resolver.AddConv2D();
-resolver.AddTanh();
 resolver.AddUnpack();
 resolver.AddFullyConnected();
 resolver.AddAdd();
 resolver.AddSplit();
 resolver.AddLogistic();
+resolver.AddTanh();
 resolver.AddMul();
 
 

@@ -41,15 +41,14 @@ pytest_cache/
 *.ckpt
 *.pt
 *.pth
-models/
 checkpoints/
 runs/
 tensorboard/
-
+test_resutls/
 # TFRecords, datasets
 *.tfrecord
 tfrecords/
-data/
+build/
 *.csv
 
 # System files
@@ -70,6 +69,10 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.lz
-
+*.pdf
+*.tflite
+*.pkl
+*.jsonsoundkit/tasks
+/kws/
 wavs/
 site/

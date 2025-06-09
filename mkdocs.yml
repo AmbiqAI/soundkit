@@ -19,8 +19,23 @@ nav:
         - Export: tasks/se_docs/export.md
         - Demo: tasks/se_docs/demo.md
 
-      - VAD: tasks/vad.md
-      - KWS: tasks/kws.md
+      - VAD:
+        - Overview: tasks/vad.md
+        - Introduction: tasks/vad_docs/introduction.md
+        - Data: tasks/vad_docs/data.md
+        - Train: tasks/vad_docs/train.md
+        - Evaluate: tasks/vad_docs/evaluate.md
+        - Export: tasks/vad_docs/export.md
+        - Demo: tasks/vad_docs/demo.md
+
+      - KWS:
+        - Overview: tasks/kws.md
+        - Introduction: tasks/kws_docs/introduction.md
+        - Data: tasks/kws_docs/data.md
+        - Train: tasks/kws_docs/train.md
+        - Evaluate: tasks/kws_docs/evaluate.md
+        - Export: tasks/kws_docs/export.md
+        - Demo: tasks/kws_docs/demo.md
   - Datasets:
       - Corpora: datasets/corpora.md
       - BYOD: datasets/byod.md

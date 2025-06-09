@@ -40,7 +40,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
     ```yaml
     name: unet_experiment
     project: se
-    job_dir: ./soundkit/tasks/se
+    job_dir: ./soundkit/tasks/s
 
     data:
       path_tfrecord: ${job_dir}/tfrecords
@@ -54,15 +54,15 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
       reverb_prob: 0.5
       num_processes: 8
       corpora:
-        - {name: train-clean-360, type: train, path: wavs/LibriSpeech/train-clean-360}
-        - {name: train-clean-100, type: train, path: wavs/LibriSpeech/train-clean-100}
-        - {name: dev-clean, type: val, path: wavs/LibriSpeech/dev-clean}
-        - {name: thchs30, type: train-val, path: {train: wavs/data_thchs30/train, dev: wavs/data_thchs30/dev}}
-        - {name: ESC-50-master, type: noise}
-        - {name: FSD50K, type: noise}
-        - {name: musan, type: noise}
-        - {name: wham_noise, type: noise}
-        - {name: rirs_noises, type: reverb}
+        - {name: train-clean-360, type: speech, split: train}
+        - {name: train-clean-100, type: speech, split: train}
+        - {name: dev-clean, type: speech, split: val,}
+        - {name: thchs30, type: speech, split: train-val}
+        - {name: ESC-50-master, type: noise, split: train-val}
+        - {name: FSD50K, type: noise, split: train-val}
+        - {name: musan, type: noise, split: train-val}
+        - {name: wham_noise, type: noise, split: train-val}
+        - {name: rirs_noises, type: reverb, split: train-val}
       snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
       target_length_in_secs: 5
       min_amp: 0.03
@@ -126,6 +126,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
       tflite_dir: ${job_dir}/tflite
       evb_dir: ${job_dir}/evb
       pre_gain: 1
+
 
     ```
 

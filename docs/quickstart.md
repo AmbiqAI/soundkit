@@ -1,6 +1,6 @@
 # Quickstart Guide
 
-## Install SoundKit
+## **Install SoundKit**
 
 !!! note "SE Mode Selection"
 
@@ -20,65 +20,49 @@
 
 ---
 
-## Requirements
+## **Requirements**
 
-- Python >= **3.10**
+- Python  **3.10**
 
 **Optional (for EVB demo support):**
 
-- [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm) >= **12.2**
-- [Segger J-Link](https://www.segger.com/downloads/jlink/) >= **7.92**
+- [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)  **12.2**
+- [Segger J-Link](https://www.segger.com/downloads/jlink/)  **7.92**
 
 ---
 
-## Setup Virtual Environment
+## **Setup Virtual Environment**
 
-To isolate your project dependencies, it's recommended to use a virtual environment:
+Its best to isolate your dependencies:
 
 ```bash
-python -m venv .venv         # Create a virtual environment
+python -m venv .venv         # Create virtual environment
 source .venv/bin/activate    # Activate it (use `.venv\Scripts\activate` on Windows)
 ```
 
 ---
 
-## Install Python Dependencies
+## **Use SoundKit with CLI**
 
-Install all necessary packages, including editable SoundKit installation:
-
-```bash
-pip install -e .
-```
-
-> This setup is ideal for development and enables instant updates to source code without reinstalling.
-
----
-
-## Use SoundKit with CLI
-
-SoundKit provides a unified command-line interface to manage tasks such as data preprocessing, model training, evaluation, exporting, and running demos.
+SoundKit provides a unified CLI for handling various ML tasks.
 
 !!! note "Syntax"
-
-    **Usage:**
 
     ```bash
     soundkit --task [TASK] --mode [MODE] --config [CONFIG]
     ```
 
-    **Arguments:**
+- **TASK**  One of: `se`, `vad`, `kws`  
+- **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`  
+- **CONFIG**  Path to your YAML config
 
-    - `TASK` – One of: `se`, `vad`, `kws`
+---
 
-    - `MODE` – One of: `data`, `train`, `evaluate`, `export`, `demo`
+## **Example: Speech Enhancement (SE) Workflow**
 
-    - `CONFIG` – Path to a YAML configuration file
-
-!!! note "Example of Speech Enhancement (SE) Task"
+!!! note "Common CLI Usage"
 
     === "Data"
-
-        Download and prepare training and validation data by generating TFRecords from raw audio corpora.
 
         ```bash
         soundkit -t se -m data -c configs/se.yaml
@@ -86,23 +70,19 @@ SoundKit provides a unified command-line interface to manage tasks such as data 
 
     === "Train"
 
-        Train a speech enhancement model using the specified configuration and dataset.
-
         ```bash
         soundkit -t se -m train -c configs/se.yaml
         ```
 
-        To monitor training progress in real-time, open a new terminal and launch TensorBoard:
+        Open TensorBoard in another terminal:
 
         ```bash
         soundkit -t se -m train --tensorboard -c configs/se.yaml
         ```
 
-        This will open TensorBoard with logs from the training run. Visit [http://localhost:6006](http://localhost:6006) in your browser to view metrics and visualizations.
+        Visit [http://localhost:6006](http://localhost:6006)
 
     === "Evaluate"
-
-        Evaluate the trained model on a test set and compute metrics such as SI-SDR, STOI, PESQ, or DNSMOS.
 
         ```bash
         soundkit -t se -m evaluate -c configs/se.yaml
@@ -110,15 +90,81 @@ SoundKit provides a unified command-line interface to manage tasks such as data 
 
     === "Export"
 
-        Convert the trained model into formats suitable for embedded or web deployment (e.g., TFLite, C arrays).
-
         ```bash
         soundkit -t se -m export -c configs/se.yaml
         ```
 
     === "Demo"
 
-         Deploy on [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) and Run real-time inference
         ```bash
-        soundkit -t se -m demo -c configs/se.yaml
+        soundkit -t se -m demo -c configs/se.yaml demo.platform=evb # for amibiq evb deployment
+        soundkit -t se -m demo -c configs/se.yaml demo.platform=pc # for pc deployment
+        
         ```
+
+---
+
+##  Configuration Parameters (Simplified)
+
+Understand key settings in your SoundKit YAML config for SE tasks:
+
+### **Top-Level**
+
+- `name`: Name of the experiment (used in folder names)
+- `project`: Task type, e.g., `se`, `kws`, `vad`
+- `job_dir`: Where outputs (models, logs) are saved
+
+### **Data (`data`)**
+
+- `path_tfrecord`: Where TFRecords are stored
+- `corpora`: List of datasets (type: `speech`, `noise`, `reverb`)
+- `snr_dbs`: List of SNR values for noise mixing (e.g., `[0, 5, 10]`)
+- `target_length_in_secs`: Length of each audio clip (e.g., `5`)
+- `reverb_prob`: Probability to apply reverb
+- `min_amp`/`max_amp`: Controls audio amplitude range
+- `signal.sampling_rate`: Sampling rate (e.g., `16000`)
+
+### **Training (`train`)**
+
+- `initial_lr`: Learning rate
+- `batchsize`: Batch size
+- `epochs`: Total number of epochs
+- `loss_function`: Type of loss and its parameters (e.g., `mrl_mse`)
+- `feature`: Feature extraction settings (e.g., `type`, `frame_size`)
+- `model.config_file`: Model architecture YAML (e.g., `config_crnn.yaml`)
+
+### **Evaluation (`evaluate`)**
+
+- `data.dir`: Path to evaluation audio samples
+- `data.files`: List of test audio files
+- `result_folder`: Where results are saved
+
+### **Export (`export`)**
+
+- `tflite_dir`: Exported model path (TFLite format)
+- `epoch_loaded`: Which model checkpoint to export
+
+### **Demo (`demo`)**
+
+- `platform`: `pc` or `evb` (Evaluation Board)
+- `evb_dir`: Output directory for EVB firmware
+- `filename`: Name of generated firmware
+- `param_struct_name`: Struct name for exported parameters
+
+---
+
+## **Overriding Config Values via OmegaConf**
+
+SoundKit uses [OmegaConf](https://omegaconf.readthedocs.io/) for configuration management. You can override any value in the config file **directly from the CLI** using `key=value` syntax (dot notation).
+
+**Example: Change platform to `evb` at runtime**
+
+```bash
+soundkit -t se -m demo -c configs/se.yaml demo.platform=evb
+```
+
+**Example: Override training batch size**
+
+```bash
+soundkit -t se -m train -c configs/se.yaml train.batchsize=64
+```

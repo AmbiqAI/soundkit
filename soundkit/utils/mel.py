@@ -5,7 +5,7 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from .converter_fix_point import fakefix
+from soundkit.utils.converter_fix_point import fakefix
 
 def gen_mel_bank(
                 fftsize         = 512,
@@ -71,11 +71,19 @@ def gen_mel_c(file_path, bank_name, mel_filters, bank_type='mel'):
     with open(f"{file_path}", "w") as file:
         file.write(f"// bank type: {bank_type}\n")
         file.write("#include <stdint.h>\n")
+
+        if mel_filters is None:
+            file.write(f"const int16_t mel_coeff_nfilt0 = 0;\n")
+            file.write(f"const int16_t {bank_name}[] = {{}};\n")
+            return
+
         file.write(f"const int16_t mel_coeff_nfilt{len(mel_filters)} = {len(mel_filters)};\n")
         file.write(f"const int16_t {bank_name}[] = {{\n")
+
         for i_m, vec in enumerate(mel_filters):
-            indices=np.array([],dtype=int)  # Initialize an empty array to store indices
-            values=np.array([], dtype=np.float32)  # Initialize an empty array to store values
+            indices = np.array([], dtype=int)
+            values = np.array([], dtype=np.float32)
+
             for i, v in enumerate(vec):
                 if v > 0:
                     indices = np.append(indices, i)
@@ -83,14 +91,14 @@ def gen_mel_c(file_path, bank_name, mel_filters, bank_type='mel'):
 
             M = indices.max()
             m = indices.min()
-            file.write(f"0x{m:04X}, 0x{M:04X}, ")  # Print min and max indices
+            file.write(f"0x{m:04X}, 0x{M:04X}, ")
             for v in values:
-                # Convert float value to fixed-point representation
                 val = float2fix(v, 15, 16)
-                file.write(f"0x{val:04X}, ")  # Print fixed-point value
-            file.write(f"// mel_{i_m}: start_bin, end_bin, values")
-            file.write("\n")
+                file.write(f"0x{val:04X}, ")
+            file.write(f"// mel_{i_m}: start_bin, end_bin, values\n")
+
         file.write(f"}};\n")
+
 
 if __name__ == '__main__':
     fbanks = gen_mel_bank(  fftsize         = 512,

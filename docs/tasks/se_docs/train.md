@@ -35,7 +35,7 @@ This will open TensorBoard with logs from the specified training run. Visit http
 | `loss_function.type` | Loss function type: [mse](../../loss.md) or [compressed_mse](../../loss.md) |
 | `loss_function.params.exp` | Exponent for [compressed_mse](../../loss.md)  (e.g., 0.6) |
 | `loss_function.params.eps` | Epsilon to avoid division by zero in magnitude computation (see [compressed_mse](../../loss.md))  |
-| `path.model_dir` | Path to save model checkpoints |
+| `path.checkpoint_dir` | Path to save model checkpoints |
 | `path.tensorboard_dir` | Path to save TensorBoard logs |
 | `num_lookahead` | Lookahead frames used during training (0 for causal models) |
 
@@ -85,6 +85,44 @@ model:
   config_file: config_crnn.yaml
 ```
 
+**`config_crnn.yaml`** will configure your NN:
+??? example "`./soundkit/models/arch_configs/config_simple_crnn.yaml`"
+    ```yaml
+    name: crnn
+
+    units: 100
+
+    len_time: 6
+
+    layer_configs:
+
+    - type: dropout
+        rate: 0.1
+
+    - type: conv2d
+        filters: ${units}
+        kernel_size: ["${len_time}", 72]
+        strides: [1, 1]
+        activation: relu
+
+    - type: lstm
+        units: ${units}
+
+    - type: fc
+        units: ${units}
+        activation: relu
+
+    - type: fc
+        units: ${units}
+        activation: relu
+
+    - type: fc
+        units: 257
+        activation: sigmoid
+
+    ```
+
+
 This allows switching between CRNN, UNet, or other registered architectures. To register your own NN architecture, see [Bring-Your-Own-Model (BYOM)](../../models/byom.md)
 
 ---
@@ -93,7 +131,7 @@ This allows switching between CRNN, UNet, or other registered architectures. To 
 
 After training:
 
-- Model checkpoints will be saved to `model_dir`
+- Model checkpoints will be saved to `checkpoint_root`
 - Training logs will be available in TensorBoard (`tensorboard_dir`)
 - You can evaluate or export the model using the same `name` and `epoch_loaded` settings
 
