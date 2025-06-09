@@ -44,11 +44,10 @@ pytest_cache/
 checkpoints/
 runs/
 tensorboard/
-
+test_resutls/
 # TFRecords, datasets
 *.tfrecord
 tfrecords/
-data/
 build/
 *.csv
 
@@ -71,6 +70,8 @@ Thumbs.db
 *.tar.xz
 *.tar.lz
 *.pdf
-
+*.tflite
+*.pkl
+*.json
 wavs/
 site/
