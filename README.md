@@ -67,9 +67,9 @@ Refer to the [Quickstart Guide](https://ambiqai.github.io/soundkit/quickstart/) 
 
 SoundKit supports three core **audio tasks**, each with reference pipelines for training, evaluation, export, and deployment:
 
-- **SE (Sound Event Detection)**: Classify and detect common environmental sounds.
+- **SE (Sound Enhancement)**: Speech enhancemnt.
 - **VAD (Voice Activity Detection)**: Detect presence or absence of human voice in audio streams.
-- **KWS (Keyword Spotting)**: Recognize short spoken keywords, such as wake words or command triggers.
+- **KWS (Keyword Spotting)**: Recognize short spoken keywords, such as wake words.
 
 Custom tasks can be implemented using the task registry.
 
