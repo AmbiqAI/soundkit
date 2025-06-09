@@ -108,18 +108,6 @@ SoundKit includes a flexible dataset factory that supports both speech and non-s
 Each dataset is loaded using a factory function and supports automatic file discovery or label mapping where applicable.
 
 
-## <span class="sk-h2-span">Models</span>
-
-SoundKit includes efficient model architectures optimized for edge audio tasks:
-
-- **TCResNet**: Lightweight residual networks for KWS and SE.
-- **TinyCNN**: Minimal convolutional networks for VAD.
-- **EfficientNet-lite**: Adapted for low-latency inference.
-- **MobileOne**: Compact CNN for fast inference.
-- **BYOM (Bring Your Own Model)**: Plug in custom architectures and register them to the model factory.
-
-Models are easily tunable using configuration files or CLI flags.
-
 ---
 
 ## <span class="sk-h2-span">Model Zoo</span>
