@@ -72,6 +72,7 @@ Thumbs.db
 *.pdf
 *.tflite
 *.pkl
-*.json
+*.jsonsoundkit/tasks
+/kws/
 wavs/
 site/
