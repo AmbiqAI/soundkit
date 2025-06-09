@@ -136,7 +136,6 @@ Explore the [Guides](https://ambiqai.github.io/soundkit/quickstart) section for:
 
 ## <span class="sk-h2-span">License</span>
 
-SoundKit is licensed under the MIT License © 2025 Ambiq AI  
 See [LICENSE](./LICENSE) for full terms.
 
 ---
