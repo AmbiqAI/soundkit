@@ -76,10 +76,10 @@ class FeatMultiProcsClass(multiprocessing.Process):
             else:
                 raise ValueError(f"Unsupported sample rate: {target_sample_rate}")
             rn = np.random.uniform(0, 1)
-            if rn < 0.05:
+            if rn < 0.25:
                 clean=clean*0
-                starts= np.array([0])
-                ends = np.array([0])
+                starts= np.array([])
+                ends = np.array([])
             
             # load noise
             noise = random_load_audio_from_list(
@@ -181,7 +181,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         # spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
         logspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn[0])).numpy()
         logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
-        logmel_sn = 20 * feat_sn[0].numpy()
+        logmel_sn = 10 * feat_sn[0].numpy()
 
         plot_spectrograms(
             images=[logspec_sn.T, logspec_s.T, logmel_sn.T],

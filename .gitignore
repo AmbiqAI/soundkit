@@ -49,6 +49,7 @@ tensorboard/
 *.tfrecord
 tfrecords/
 data/
+build/
 *.csv
 
 # System files

@@ -8,8 +8,8 @@
 
 # done
 
-soundkit -t vad -m data  -c configs/vad/vad_16k.yaml
-soundkit -t vad -m train -c configs/vad/vad_16k.yaml
+soundkit -t kws -m data   -c configs/kws/galaxy.yaml
+soundkit -t kws -m train -c configs/kws/galaxy.yaml
 
 # soundkit -t vad -m data  -c configs/vad/vad_8k.yaml
 # soundkit -t vad -m train -c configs/vad/vad_8k.yaml

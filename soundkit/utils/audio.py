@@ -119,6 +119,7 @@ def pad_or_crop_with_labels(
         target_length: int,
         starts: np.ndarray,
         ends: np.ndarray,
+        is_short_segments_remove: bool = True
         ) -> Tuple[np.ndarray, int, int]:
     """Pad audio to target length
 
@@ -130,9 +131,9 @@ def pad_or_crop_with_labels(
         np.ndarray: padded audio data
     """
     vad = np.zeros_like(audio, dtype=np.int32)
+    
     for s, e in zip(starts, ends):
-        if e-s > 160*10:
-            vad[s:e] = 1
+        vad[s:e] = 1
 
     if len(audio) < target_length:
 
@@ -154,8 +155,9 @@ def pad_or_crop_with_labels(
 
     offsets, onsets = get_labels(vad)
 
-    onsets, offsets, audio = remove_short_segments(
-        onsets, offsets, audio, min_length=160*10)
+    if is_short_segments_remove:
+        onsets, offsets, audio = remove_short_segments(
+            onsets, offsets, audio, min_length=160*10)
 
     return audio, onsets, offsets
 
@@ -312,7 +314,8 @@ def synthesize_audio_with_labels(
         min_amp: float = 0.01,
         max_amp: float = 0.95,
         target_length: int = 160*500,
-        sample_rate:int = 16000,) -> Tuple[np.ndarray, np.ndarray, int, int]:
+        sample_rate:int = 16000,
+        is_short_segments_remove=True) -> Tuple[np.ndarray, np.ndarray, int, int]:
     """
     Synthesize noisy audio from clean and noise with optional reverberation.
 
@@ -332,7 +335,8 @@ def synthesize_audio_with_labels(
     """
     signal_s, onsets, offsets = pad_or_crop_with_labels(
         clean, target_length,
-        starts, ends)
+        starts, ends,
+        is_short_segments_remove)
     noise = repeat_or_crop(noise, target_length)
     # if 0:
     if rir is not None:
@@ -372,8 +376,9 @@ def synthesize_audio_with_labels(
         # import pdb; pdb.set_trace()
         
         offsets, onsets = get_labels(vad_update)
-        onsets, offsets, y = remove_short_segments(
-            onsets, offsets, y, min_length=160*10)
+        if is_short_segments_remove:
+            onsets, offsets, y = remove_short_segments(
+                onsets, offsets, y, min_length=160*10)
         # print(y)
         # import pdb; pdb.set_trace()
         # import matplotlib.pyplot as plt

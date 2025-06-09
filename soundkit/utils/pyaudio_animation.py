@@ -22,7 +22,7 @@ def simple_trigger_processor_vad(frame_data, threshold=0.05):
 
 class AudioShowClass:
     def __init__(self, record_seconds=6, sample_rate=16000, frame_size=160,
-                 wave_output_filename="", non_stop=False, proc_st=None):
+                 wave_output_filename="", non_stop=False, proc_st=None, title="VAD"):
 
         self.record_seconds = record_seconds
         self.sample_rate = sample_rate
@@ -56,7 +56,7 @@ class AudioShowClass:
         self.line_data, = ax_wave.plot([], [], lw=0.2, color='blue')
         self.line_stop, = ax_wave.plot([], [], lw=0.2, color='k')
 
-        ax_vad.set_title("Processed / VAD Signal (Channel 1)")
+        ax_vad.set_title(f"{title} Signal (Channel 1)")
         ax_vad.set_ylabel("Processed")
         ax_vad.set_xlabel("Time (Seconds)")
         self.line_trig, = ax_vad.plot([], [], lw=0.5, color='red')

@@ -171,7 +171,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
         See [Export](./vad_docs/export.md) for format descriptions.
 
     === "Demo"
-        Test the model in real-time either using EVB hardware or WebUSB in browser:
+        Test the model in real-time either using EVB hardware via WebUSB in browser:
 
         ```bash
         soundkit -t vad -m demo -c configs/vad.yaml

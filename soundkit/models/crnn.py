@@ -113,7 +113,18 @@ class CRNN(tf.keras.Model):
                 self.layer_stack.append(tf.keras.layers.Dropout(rate=layer_def['rate']))
             else:
                 raise ValueError(f"Unsupported layer type: {layer_def['type']}")
-
+    def reset_state(self):
+        """Reset the states of the CRNN model."""
+        for state in self.states:
+            if isinstance(state, list):
+                state[0].assign(tf.random.uniform(
+                                state[0].shape,
+                                minval = -1.0,
+                                maxval = 1.0))
+                state[1].assign(tf.random.truncated_normal(
+                                state[1].shape))
+            else:
+                state.assign(tf.zeros_like(state))
     def call(self, x, mask = 1.0, training=False):
         """Forward pass through the CRNN model."""
         for layer, config, state in zip(self.layer_stack, self.params.layer_configs, self.states):

@@ -18,6 +18,7 @@ from ...utils.plot_api import plot_spectrograms
 from ...utils.tf_basic_math import tf_log10_eps
 from ...utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from ...utils.calculate_feat_stats import mean_varinace_norm
+
 @tf.function
 def train_step(
         net: tf.keras.Model,
@@ -92,11 +93,13 @@ def run_epoch(
     loss_metric = tf.keras.metrics.Mean()
     confused_metric = ConfusionMatrixMetric(num_classes=2)
     # Initialize left-over state buffers for streaming STFT
-    states_audio_sn = tf.zeros(
+    states_audio_sn = tf.random.uniform(
         [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
+        minval=-1.0,
+        maxval=1.0,
         dtype=tf.float32
     )
-
+    model.reset_states()
     for step, batch in enumerate(dataset):
 
         audio_sn, _, vad = batch
@@ -106,7 +109,15 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-
+        if params.train.reset_every_batch:
+            # Reset the state buffer for the next batch
+            states_audio_sn = tf.random.uniform(
+                [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
+                minval=-1.0,
+                maxval=1.0,
+                dtype=tf.float32
+            )
+            model.reset_states()
         if params.train['standardization']:
             # Standardize features
             feat_sn_norm = mean_varinace_norm(feat_sn, stats['nMean_feat'], stats['nInvStd'])
@@ -187,7 +198,6 @@ def run_epoch(
                     show_fig=False       # set False if only saving
                 )
 
-                
                 plt.plot(mask * 200)
                 plt.plot(vad[idx] * 200)
                 # plt.show()
@@ -230,7 +240,6 @@ def train(params: SKTaskParams):
     # 2. Build the model
 
     # Load from YAML file
-    
     is_complex = True if params_train['feature']['type'] =='spec' else False
 
     model = build_model(
@@ -242,14 +251,12 @@ def train(params: SKTaskParams):
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
-    
- 
+
     # import pickle
-    
+
     # with open('array_list.pkl', 'rb') as f:
     #         reloaded_list = pickle.load(f)
-            
-            
+
     # for u, v in zip(model.trainable_variables, reloaded_list):
     #     u.assign(v)
     #     print(u.shape, v.shape)

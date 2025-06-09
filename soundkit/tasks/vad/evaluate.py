@@ -188,14 +188,11 @@ def evaluate(params: SKTaskParams):
             prob = prob[0]
             prob = tf.tile(tf.expand_dims(prob, axis=0), [stride, 1])
             prob = tf.reshape(tf.transpose(prob), [-1])
-            
+
             plt.plot(vad*250)
             plt.plot(prob*250)
             plt.savefig(save_path, format="pdf", bbox_inches="tight")
             print(f"Saved figure to {save_path}")
-
-
-
 
             # Save noisy audio
             sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
@@ -219,6 +216,6 @@ def evaluate(params: SKTaskParams):
                 save_path,
                 audio_vad_np,
                 params.data['signal']['sampling_rate'])
-            
+
             print(f"Saved vad audio to {save_path}")
         

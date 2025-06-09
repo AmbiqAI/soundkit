@@ -31,6 +31,7 @@ class FeatureExtractor_np:
             "spec": self._extract_spec,
             "pspec": self._extract_pspec,
             "logpspec": self._extract_logpspec,
+            "logampspec": self._extract_logampspec,
             "mel": self._extract_mel,
             "hybrid": self._extract_logpspec_mel,
         }
@@ -86,6 +87,16 @@ class FeatureExtractor_np:
         )
 
         return np.abs(feat)**2, spec
+
+    def _extract_logampspec(
+            self,
+            audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+
+        spec, _ = self._extract_spec(
+            audio_sn
+        )
+
+        return log10_eps(np.abs(spec)), spec
 
     def _extract_logpspec(
             self,

@@ -7,7 +7,7 @@ from pathlib import Path
 import csv
 import json
 
-def load_vad_data(lst: str, filter=None) -> list:
+def load_wav_label_csv(lst: str, filter=None) -> list:
     """
     Load VAD data from a CSV file.
     The CSV file should have two columns: 'filename' and 'label'.
@@ -20,10 +20,10 @@ def load_vad_data(lst: str, filter=None) -> list:
             fname = row["filename"]
             label = json.loads(row["label"])  # Parse JSON string back to list
             data.append((fname, label))
-    import pdb; pdb.set_trace()
+
     if filter is not None:
         data = [item for item in data if re.search(filter, item[0])]
-    import pdb; pdb.set_trace()
+
     return data
 
 def get_wavefiles(path_folder):
@@ -54,23 +54,30 @@ def load_thchs30(corpus):
     train_list = get_wavefiles("wavs/data_thchs30/train")
     dev_list = get_wavefiles("wavs/data_thchs30/dev")
     return {"train": train_list, "val": dev_list}
+# for kws
+def load_train_galaxy(corpus):
+    return load_wav_label_csv('data/galaxy_train.csv')
+
+def load_val_galaxy(corpus):
+    return load_wav_label_csv('data/galaxy_val.csv')
 
 # for vad
 def load_vad_train_clean_100(corpus, filter='train-clean-100'):
-    return load_vad_data('data/vad_train_labels.csv', filter)
+    return load_wav_label_csv('data/vad_train_labels.csv', filter)
 
 def load_vad_train_clean_360(corpus, filter='train-clean-360'):
-    return load_vad_data('data/vad_train_labels.csv', filter)
+    return load_wav_label_csv('data/vad_train_labels.csv', filter)
 
 def load_vad_dev_clean(corpus, filter="dev-clean"):
-    return load_vad_data('data/vad_val_labels.csv', filter)
+    return load_wav_label_csv('data/vad_val_labels.csv', filter)
 
 def load_vad_thchs30(corpus):
 
-    train_list = load_vad_data('data/vad_train_labels.csv', "wavs/data_thchs30/train")
-    dev_list = load_vad_data('data/vad_val_labels.csv', "wavs/data_thchs30/dev")
+    train_list = load_wav_label_csv('data/vad_train_labels.csv', "wavs/data_thchs30/train")
+    dev_list = load_wav_label_csv('data/vad_val_labels.csv', "wavs/data_thchs30/dev")
 
     return {"train": train_list, "val": dev_list}
+
 # === Noise Corpora ===
 
 def load_wham_noise(corpus):

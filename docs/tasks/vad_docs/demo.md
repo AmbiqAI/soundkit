@@ -14,6 +14,7 @@ soundkit -t vad -m demo -c vad.yaml
 
 | Parameter | Description |
 |-----------|-------------|
+| `platform` | `pc` or `evb`: run the model on Ambiq |
 | `epoch_loaded` | Model checkpoint to use for inference (`best`, `latest`, or a specific integer) |
 | `tflite_dir` | Directory containing the exported `.tflite` model |
 | `evb_dir` | Path to embedded board (EVB) project directory (used for firmware build/deploy) |

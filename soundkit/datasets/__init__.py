@@ -7,6 +7,8 @@ from .sk_datasets import (
     load_vad_train_clean_360, # for vad
     load_vad_dev_clean,       # for vad
     load_vad_thchs30,           # for vad
+    load_train_galaxy, # for kws
+    load_val_galaxy,   # for kws
     load_train_clean_360,
     load_dev_clean,
     load_test_clean,
@@ -55,6 +57,8 @@ SKDatasetFactory.register("dev-clean", load_dev_clean)
 SKDatasetFactory.register("test-clean", load_test_clean)
 SKDatasetFactory.register("thchs30", load_thchs30)
 
+SKDatasetFactory.register("train-galaxy", load_train_galaxy)
+SKDatasetFactory.register("val-galaxy", load_val_galaxy)
 # Noise
 SKDatasetFactory.register("wham_noise", load_wham_noise)
 SKDatasetFactory.register("FSD50K", load_fsd50k)

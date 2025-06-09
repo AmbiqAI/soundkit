@@ -80,7 +80,7 @@ evaluate:
 
   data: 
     dir: "./wavs/se/test_wavs"
-    files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    files: [speech.wav, keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
     # # dir: ./wavs/LibriSpeech/test-clean
     # # files:
     result_folder: ${job_dir}/test_results/${train.path.full_name}
@@ -90,7 +90,10 @@ export:
   tflite_dir: ${job_dir}/tflite
 
 demo:
+  platform: pc # evb or pc
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1
+  filename: def_nn3_se
+  param_struct_name: params_nn3_se

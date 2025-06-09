@@ -3,19 +3,41 @@ import logging
 import subprocess
 import shutil
 from pathlib import Path
+import numpy as np
+import tensorflow as tf
+from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.np_feature_utils import FeatureExtractor_np
+from soundkit.utils.pyaudio_animation import AudioShowClass
+from soundkit.utils.calculate_feat_stats import load_feat_stats
+from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
+from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from .export import export
-from ...defines import SKTaskParams
-from ...utils.generate_feature_c_files import generate_feature_c_files
-from ...utils.calculate_feat_stats import load_feat_stats
-# === Configure Logging ===
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 log = logging.getLogger(__name__)
 
-
 def demo(params: SKTaskParams):
+    """
+    Deploy a TFLite model to neuralSPOT and install dependencies.
+
+    Args:
+        params (SKTaskParams): Task parameters
+    """
+    if params.demo.platform == 'evb':
+        demo_evb(params)
+    elif params.demo.platform == 'pc':
+        demo_pc(params)
+    else:
+        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+
+def demo_evb(params: SKTaskParams):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
@@ -83,11 +105,13 @@ def demo(params: SKTaskParams):
         bank_type=params.train['feature']['type'])
 
     # === Generate feature statstics ===
-    stats_name = 'stats.pkl'
-    stats = load_feat_stats(
-        dir=checkpoint_dir,
-        stats_name=stats_name)
-
+    if params.train.standardization:
+        stats_name = 'stats.pkl'
+        stats = load_feat_stats(
+            dir=checkpoint_dir,
+            stats_name=stats_name)
+    else:
+        stats = None
     generate_feature_c_files(
         file_name="def_nn3_se",
         param_struct_name="params_nn3_se",
@@ -190,3 +214,158 @@ def demo(params: SKTaskParams):
     subprocess.run(["make", "view"], check=True)
 
     log.info("✅ TFLite deployment and file transfer complete.")
+
+def demo_pc(params: SKTaskParams):
+    """Export se task model with given parameters.
+
+    Args:
+        params (HKTaskParams): Task parameters
+    """
+    params_export = params.export
+
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
+
+    batchsize_train = params.train['batchsize']
+    batchsize = 1
+    feat_extractor = FeatureExtractor(
+        params=params,
+        )
+    dim_feat = feat_extractor.dim_feat
+    hop_size = params.train.feature.hop_size
+    # 1.1. Build the model
+    # Load from YAML file
+    model_train = build_model(
+        params,
+        batchsize=batchsize_train,
+        dim_feat=dim_feat,
+        time_steps = params.data['target_length_in_secs'] * 100)
+
+    load_model_checkpoint(
+        model_train, params_export['epoch_loaded'], checkpoint_dir)
+
+    model = build_model(
+        params,
+        batchsize=batchsize,
+        dim_feat=dim_feat,
+        time_steps=1,
+        export=True)
+    copy_model_weights(model_dst=model, model_src=model_train)
+
+    model_wrap = warp_tf_model(
+        model,
+        time_steps=1,
+        dim_feat=dim_feat)
+
+    dtype='float32'
+
+    tflite_fp16_model = tflite_convert(
+        model_wrap,
+        dtype=dtype,
+        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+
+    interpreter = tf.lite.Interpreter(
+        model_content=tflite_fp16_model)
+    interpreter.allocate_tensors()  # Needed before execution!
+
+    if params.train.standardization:
+        stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
+    else:
+        stats = None
+
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+    )
+
+    model_tflite = TFLiteAudioModel(
+        interpreter=interpreter,
+        dtype=dtype,
+    )
+    from soundkit.utils.np_stft import StreamingISTFT
+    class SEModel:
+        """VAD model class in tflite for processing audio input and returning VAD output."""
+        def __init__(
+                self,
+                model_tflite: TFLiteAudioModel,
+                feat_extractor: FeatureExtractor_np,
+                stats: dict | None = None,
+                num_lookahead: int = 0):
+            self.model_tflite = model_tflite
+            self.stats = stats
+            self.feat_extractor = feat_extractor
+            self.specs = []
+            self.istft = StreamingISTFT(
+                frame_len=params.train.feature.frame_size,
+                hop_len=params.train.feature.hop_size,
+                fft_len=params.train.feature.fft_size,
+            )
+            if num_lookahead > 0:
+                _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+                for i in range(num_lookahead):
+                    self.specs.append(z_spec.copy())       
+            
+        def __call__(self,
+                     inputs: np.ndarray # input from microphone
+                    ) -> np.ndarray: # output to AudioShowClass
+            """Process input audio signal and return VAD output."""
+            shape=inputs.shape
+            inputs=inputs.flatten()
+            features,spec_update = self.feat_extractor(inputs)
+            self.specs.append(spec_update)
+            spec = self.specs.pop(0)
+            if self.stats is not None:
+                features = (features - self.stats['nMean_feat']) * self.stats['nInvStd']
+
+            # input to the tflite model
+            features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
+            tfmask = self.model_tflite(features)
+            tfmask = tfmask.flatten()
+            
+            pcm_out = self.istft.process(spec * tfmask)
+            # outputs = outputs.reshape(shape)
+
+            return pcm_out.reshape((-1,1))
+
+    se_model = SEModel(
+        model_tflite=model_tflite,
+        feat_extractor=feat_extractor,
+        stats=stats,
+        num_lookahead=params.train.num_lookahead
+    )
+    se_model(np.random.randn(64))
+    
+    from soundkit.utils.audio import audio_read
+    sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
+    
+    
+    # import time
+    
+    # inputs = []
+    # outputs = []
+    
+    # start = time.time()
+    # for i in range(len(sig)//hop_size):
+    #     x = sig[i*hop_size:(i+1)*hop_size]
+    #     inputs.append(x)
+    #     y = se_model(x)
+    #     y = y.flatten()
+    #     outputs.append(y)
+
+    # print(f"Time taken: {time.time() - start:.2f} seconds")
+    # print(f"average time per chunk: {(time.time() - start) / (len(sig)//hop_size):.8f} seconds")
+    # outputs = np.concatenate(outputs)
+    # inputs = np.concatenate(inputs)
+
+    # import pdb; pdb.set_trace()
+    
+    
+    aud_handle = AudioShowClass(
+        record_seconds=15,
+        non_stop=True,
+        proc_st=se_model,
+        frame_size=hop_size,
+    )
+    

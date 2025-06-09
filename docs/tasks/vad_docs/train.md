@@ -15,7 +15,7 @@ This starts training using settings from `vad.yaml`, including TFRecord input, f
 To monitor training live, open a second terminal and run:
 
 ```bash
-soundkit -t vad -m train --tensorboard -c vad.yaml
+soundkit -t vad -m train --tensorboard -c configs/vad/vad.yaml
 ```
 
 This starts TensorBoard. Visit http://localhost:6006 to view real-time metrics and logs.
