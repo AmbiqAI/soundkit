@@ -89,6 +89,62 @@ def tflite_convert(
     os.system(f"xxd -i {path_tflite_b} > {os.path.dirname(path_tflite)}/model_data_{dtype}.c")
     return net_tflite
 
+
+def tflite_convert_with_reset(model, dtype, path_tflite):
+    # Call function for inference
+    call_fn = model.call.get_concrete_function(
+        tf.TensorSpec(shape=[1, model.params.time_steps, model.params.dim_feat], dtype=tf.float32)
+    )
+
+    # Reset function — pass dummy input so TFLite doesn't break
+    reset_fn = model.base_model.reset_rv.get_concrete_function(tf.constant([0.0], dtype=tf.float32))
+
+
+    converter = tf.lite.TFLiteConverter.from_concrete_functions(
+        [call_fn, reset_fn], model
+    )
+    converter.experimental_enable_resource_variables = True
+
+    if dtype == "int16":
+        converter.target_spec.supported_types = [tf.int16]
+        converter.inference_input_type = tf.int16
+        converter.inference_output_type = tf.int16
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+    tflite_model = converter.convert()
+
+    # Save
+    from pathlib import Path
+    Path(path_tflite).write_bytes(tflite_model)
+    return tflite_model
+
+
+def warp_tf_model_with_reset(model, time_steps, dim_feat, batch_size=1):
+    """Wraps a tf.keras.Model to expose both inference and reset as TFLite subgraphs."""
+
+    class ResettableKerasWrapper(tf.keras.Model):
+        def __init__(self, base_model):
+            super().__init__()
+            self.base_model = base_model
+
+        @property
+        def params(self):
+            return self.base_model.params  # ✅ add this
+
+        @tf.function(input_signature=[
+            tf.TensorSpec(shape=(batch_size, time_steps, dim_feat), dtype=tf.float32)
+        ])
+        def call(self, x):
+            return self.base_model(x, training=False)
+
+        @tf.function(input_signature=[
+            tf.TensorSpec(shape=[1], dtype=tf.float32)
+        ])
+        def reset(self, reset_trigger):
+            self.base_model.reset_rv(reset_trigger)
+
+    return ResettableKerasWrapper(model)
+
 def warp_tf_model(
         model,
         dim_feat=257,

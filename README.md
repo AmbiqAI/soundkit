@@ -88,13 +88,12 @@ Each task supports the following operational **modes**:
 
 ---
 
-
 ## <span class="sk-h2-span">Datasets</span>
 
 SoundKit includes a flexible dataset factory that supports both speech and non-speech corpora, as well as labeled data for supervised tasks. The following datasets are supported for SE, VAD, and KWS tasks:
 
 ### Speech Corpora
-* [**LibriSpeech**](https://www.openslr.org/12) (train-clean-100, train-clean-360, dev-clean, test-clean): Large-scale read English speech corpus.
+* [**LibriSpeech**](https://www.openslr.org/12) (train-clean-100, train-clean-360, train-other-500, dev-clean, test-clean): Large-scale read English speech corpus.
 * [**THCHS-30**](https://www.openslr.org/18): Mandarin speech corpus with train/dev splits.
 
 * [**Qualcomm Keyword Speech Dataset**](https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads): Maunally download required. See the license for full terms [here](https://www.qualcomm.com/developer/project/keyword-speech-dataset).

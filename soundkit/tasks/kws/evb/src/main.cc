@@ -26,12 +26,12 @@
 #include "ns_peripherals_button.h"
 #include "ns_peripherals_power.h"
 #include "ns_rpc_generic_data.h"
-#include "def_nn1_nnvad.h"
+#include "def_nn_kws.h"
 #include "AudioPipe_wrapper.h"
 #include "def_AudioSystem.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 #include "downsample.h"
-#define RECORD_10S 1
+#define GUI_ON 1
 #define AUDIO_ON 1
 #define PERF_TEST 1
 
@@ -57,7 +57,11 @@ volatile bool static g_audioReady = false;
 volatile bool static g_audioRecording = false;
 
 #if NUM_CHANNELS == 1
+#if GUI_ON==0
 int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1]; // incoming PCM audio data
+#else
+int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // incoming PCM audio data
+#endif
 #else
 int32_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1];
 #endif
@@ -220,7 +224,7 @@ int main(void) {
     // -- Init the NNSE2 model
     AudioPipe_wrapper_init();
     AudioPipe_wrapper_reset();
-    if (params_nn1_nnvad.samplingRate == 8000)
+    if (params_nn_kws.samplingRate == 8000)
     {
         // Initialize the downsample instance
         DOWNSAMPLE_CLASS_init(&downsample_inst);
@@ -281,7 +285,7 @@ int main(void) {
     // interfaces. Any incoming RPC calls will result in calls to the
     // RPC handler functions defined above.
 
-#if RECORD_10S==0
+#if GUI_ON==1
     // -- Init the NNSE2 model
     ns_printf("Type $tools/python audioview_se.py\n");
 #if PERF_TEST==0
@@ -353,7 +357,7 @@ int main(void) {
                 g_audioRecording = true;
                 g_intButtonPressed=0;
                 AudioPipe_wrapper_reset();
-                if (params_nn1_nnvad.samplingRate == 8000)
+                if (params_nn_kws.samplingRate == 8000)
                     DOWNSAMPLE_CLASS_reset(&downsample_inst);
                 ns_printf("Recording...\n");
                 ns_printf("Press Button 0 to stop recording\n");
@@ -372,7 +376,7 @@ int main(void) {
                     count_frame=0;
                     ns_printf(".");
                 }
-                if (params_nn1_nnvad.samplingRate == 8000)
+                if (params_nn_kws.samplingRate == 8000)
                 {
                     DOWNSAMPLE_CLASS_exec(
                             &downsample_inst,

@@ -15,6 +15,7 @@ from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
+from soundkit.utils.basic_dsp import DCRemover
 from .export import export
 
 logging.basicConfig(
@@ -35,7 +36,8 @@ def demo(params: SKTaskParams):
     elif params.demo.platform == 'pc':
         demo_pc(params)
     else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
 
 def demo_evb(params: SKTaskParams):
     """
@@ -100,8 +102,8 @@ def demo_evb(params: SKTaskParams):
         fbanks=None
     else:
         fbanks = tf.identity(feat_extractor.mel_filter)
-    
         fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
+
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
         filterbank_name,
@@ -131,6 +133,7 @@ def demo_evb(params: SKTaskParams):
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        task=params.project,
     )
 
     # === Define Key Paths ===
@@ -147,7 +150,6 @@ def demo_evb(params: SKTaskParams):
     export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
-    
     log.info(f"📦 Copying TFLite to {dst_tflite_path}")
     tools_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(src_tflite_path, dst_tflite_path)
@@ -225,15 +227,20 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    params_export = params.export
-
+    hop_size = params.train['feature']['hop_size']
+    sample_rate = params.data['signal']['sampling_rate']
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+        mel_bins=params.train.feature.bins,
+    )
     dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
@@ -245,7 +252,7 @@ def demo_pc(params: SKTaskParams):
         time_steps = params.data['target_length_in_secs'] * 100)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train, params.demo['epoch_loaded'], checkpoint_dir)
 
     model = build_model(
         params,
@@ -253,6 +260,7 @@ def demo_pc(params: SKTaskParams):
         dim_feat=dim_feat,
         time_steps=1,
         export=True)
+
     copy_model_weights(model_dst=model, model_src=model_train)
 
     model_wrap = warp_tf_model(
@@ -276,14 +284,6 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
-
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
         dtype=dtype,
@@ -295,10 +295,14 @@ def demo_pc(params: SKTaskParams):
                 self,
                 model_tflite: TFLiteAudioModel,
                 feat_extractor: FeatureExtractor_np,
-                stats: dict | None = None):
+                stats: dict | None = None,
+                ):
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
+            self.is_inference = 1
+            if params.data.signal.dc_removal:
+                self.dc_remover = DCRemover()
 
         def __call__(self,
                      inputs: np.ndarray # input from microphone
@@ -306,6 +310,8 @@ def demo_pc(params: SKTaskParams):
             """Process input audio signal and return VAD output."""
             shape=inputs.shape
             inputs=inputs.flatten()
+            if params.data.signal.dc_removal:
+                inputs = self.dc_remover.process(inputs)
             features,_ = self.feat_extractor(inputs)
 
             if self.stats is not None:
@@ -315,10 +321,15 @@ def demo_pc(params: SKTaskParams):
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
             outputs = self.model_tflite(features)
             outputs = outputs.flatten()
-            if outputs[0] < outputs[1]:
-                outputs = np.ones(160, dtype=np.float32)*0.95
+            if 0:
+                if outputs[0] < outputs[1]:
+                    outputs = np.ones(hop_size, dtype=np.float32)*0.95
+                else:
+                    outputs = np.zeros(hop_size, dtype=np.float32)
             else:
-                outputs = np.zeros(160, dtype=np.float32)
+                tot = np.exp(outputs, out=outputs)  # Apply softmax
+                out = tot / np.sum(tot)  # Normalize
+                outputs = np.ones(hop_size, dtype=np.float32)*out[1]
             outputs = outputs.reshape(shape)
             return outputs
 
@@ -328,33 +339,9 @@ def demo_pc(params: SKTaskParams):
         stats=stats,
     )
     aud_handle = AudioShowClass(
+        frame_size=hop_size,
+        sample_rate=sample_rate,
         record_seconds=15,
         non_stop=True,
         proc_st=vad_model
     )
-    if 0:
-        outputs = []
-        inputs = []
-        from soundkit.utils.audio import audio_read
-        sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
-        import time
-        start = time.time()
-        for i in range(len(sig)//160):
-            x = sig[i*160:(i+1)*160]
-            inputs.append(x)
-            y = model(x)
-            y = y.flatten()
-            if y[0] < y[1]:
-                outputs.append(np.ones(160))
-            else:
-                outputs.append(np.zeros(160))
-        print(f"Time taken: {time.time() - start:.2f} seconds")
-        print(f"average time per chunk: {(time.time() - start) / (len(sig)//160):.8f} seconds")
-        outputs = np.concatenate(outputs)
-        inputs = np.concatenate(inputs)
-
-        import matplotlib.pyplot as plt
-        plt.plot(inputs, label='Input Signal')
-        plt.plot(outputs, label='VAD Output')
-        plt.legend()
-        plt.show()

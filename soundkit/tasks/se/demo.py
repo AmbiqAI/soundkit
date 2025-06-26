@@ -15,6 +15,7 @@ from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
+from soundkit.utils.basic_dsp import DCRemover
 from .export import export
 
 logging.basicConfig(
@@ -221,15 +222,20 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    params_export = params.export
+
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+        mel_bins=params.train.feature.bins,
+    )
     dim_feat = feat_extractor.dim_feat
     hop_size = params.train.feature.hop_size
     # 1.1. Build the model
@@ -241,7 +247,7 @@ def demo_pc(params: SKTaskParams):
         time_steps = params.data['target_length_in_secs'] * 100)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train, params.demo['epoch_loaded'], checkpoint_dir)
 
     model = build_model(
         params,
@@ -272,14 +278,6 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
-
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
         dtype=dtype,
@@ -305,7 +303,9 @@ def demo_pc(params: SKTaskParams):
             if num_lookahead > 0:
                 _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(num_lookahead):
-                    self.specs.append(z_spec.copy())       
+                    self.specs.append(z_spec.copy())
+            if params.data['signal']['dc_removal']:
+                self.dc_remover = DCRemover()
             
         def __call__(self,
                      inputs: np.ndarray # input from microphone
@@ -313,6 +313,8 @@ def demo_pc(params: SKTaskParams):
             """Process input audio signal and return VAD output."""
             shape=inputs.shape
             inputs=inputs.flatten()
+            if params.data['signal']['dc_removal']:
+                inputs = self.dc_remover.process(inputs)
             features,spec_update = self.feat_extractor(inputs)
             self.specs.append(spec_update)
             spec = self.specs.pop(0)
@@ -335,10 +337,10 @@ def demo_pc(params: SKTaskParams):
         stats=stats,
         num_lookahead=params.train.num_lookahead
     )
-    se_model(np.random.randn(64))
+    # se_model(np.random.randn(64))
     
-    from soundkit.utils.audio import audio_read
-    sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
+    # from soundkit.utils.audio import audio_read
+    # sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
     
     
     # import time
@@ -367,5 +369,6 @@ def demo_pc(params: SKTaskParams):
         non_stop=True,
         proc_st=se_model,
         frame_size=hop_size,
+        title="SoundKit SE Demo",
     )
-    
+     

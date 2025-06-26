@@ -5,6 +5,7 @@ import tensorflow as tf
 # === Import model classes ===
 from .SimpleFC import SimpleFC
 from .crnn import CRNN, CRNNParams
+from .crnn_new import ConvLSTMHybridModel, ConvLSTMHybridParams
 from .ccrnn import CCRNN, CCRNNParams
 
 from .unet import unet
@@ -53,11 +54,13 @@ class ModelParamFactory:
 
 # Register models
 ModelFactory.register("crnn", CRNN)
+ModelFactory.register("conv_lstm_hybrid", ConvLSTMHybridModel)
 ModelFactory.register("ccrnn", CCRNN)
 ModelFactory.register("unet", unet)
 
 # Register parameter schemas
 ModelParamFactory.register("crnn", CRNNParams)
+ModelParamFactory.register("conv_lstm_hybrid", ConvLSTMHybridParams)
 ModelParamFactory.register("ccrnn", CCRNNParams)
 
 ModelParamFactory.register("unet", UNetParams)

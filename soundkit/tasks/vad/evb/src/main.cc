@@ -31,7 +31,7 @@
 #include "def_AudioSystem.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 #include "downsample.h"
-#define RECORD_10S 1
+#define GUI_ON 1
 #define AUDIO_ON 1
 #define PERF_TEST 1
 
@@ -57,7 +57,11 @@ volatile bool static g_audioReady = false;
 volatile bool static g_audioRecording = false;
 
 #if NUM_CHANNELS == 1
+#if GUI_ON==0
 int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1]; // incoming PCM audio data
+#else
+int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // incoming PCM audio data
+#endif
 #else
 int32_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1];
 #endif
@@ -281,7 +285,7 @@ int main(void) {
     // interfaces. Any incoming RPC calls will result in calls to the
     // RPC handler functions defined above.
 
-#if RECORD_10S==0
+#if GUI_ON==1
     // -- Init the NNSE2 model
     ns_printf("Type $tools/python audioview_se.py\n");
 #if PERF_TEST==0

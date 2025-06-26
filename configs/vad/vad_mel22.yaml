@@ -8,17 +8,16 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 1000
-    val: 250
+    train: 30000
+    val: 3000
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
   corpora:
-    # - {name: train-clean-360, type: speech, split: train}
     - {name: vad_train-clean-100, type: speech, split: train}
-    - {name: vad_val-clean-100, type: speech, split: val}
-    # - {name: dev-clean, type: speech, split: val,}
-    # - {name: thchs30, type: speech, split: train-val}
+    - {name: vad_train-clean-360, type: speech, split: train}
+    - {name: vad_dev-clean, type: speech, split: val}
+    - {name: vad_thchs30, type: speech, split: train-val}
     - {name: ESC-50-master, type: noise, split: train-val}
     - {name: FSD50K, type: noise, split: train-val}
     - {name: musan, type: noise, split: train-val}
@@ -26,43 +25,43 @@ data:
     - {name: rirs_noises, type: reverb, split: train-val}
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
   # snr_dbs: [100]
-  target_length_in_secs: 5
+  target_length_in_secs: 15
   min_amp: 0.01
   max_amp: 0.95
 
   signal:
-    sampling_rate: 8000
-    dc_removal: false
+    sampling_rate: 16000
+    dc_removal: true
   debug: false
 
 train:
   initial_lr: 4e-4
   batchsize: 128
-  epochs: 150
+  epochs: 300
   warmup_epochs: 5
-  epoch_loaded: 0
+  epoch_loaded: random
   loss_function: 
     type: cross_entropy
     params: {}
 
   path:
-    full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
+    full_name: vad_nn_arch24_moredata
     checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 0
   
   feature:
-    frame_size: 240
-    hop_size: 80
-    fft_size: 256
+    frame_size: 480
+    hop_size: 160
+    fft_size: 512
     type: mel
-    bins: 22
+    bins: 40
     # type: hybrid
     # bins_fft: 100
     # n_mels: 72
-
+  spec_aug: false
   standardization: true
-  
+  reset_every_batch: true
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad_mel22.yaml
@@ -75,7 +74,7 @@ train:
   debug: false
 
 evaluate:
-  epoch_loaded: 0
+  epoch_loaded: best
 
   data: 
     dir: "./wavs/vad/test_wavs"
@@ -85,12 +84,12 @@ evaluate:
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:
-  epoch_loaded: 0
+  epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
 
 demo:
-  platform: evb # evb or pc
-  epoch_loaded: 0
+  platform: pc # evb or pc
+  epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1

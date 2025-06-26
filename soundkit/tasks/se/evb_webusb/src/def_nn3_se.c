@@ -26,6 +26,7 @@ PARAMS_NNSP params_nn3_se = {
     .pre_gain_q1 = 1 << 1, // q1
 };
 
+
 /*************stats***********/
 const int32_t feature_mean_se[] = {
     0xFFFEA3D8, 0xFFFEF7F1, 0xFFFF3087, 0xFFFF541A, 0xFFFF6BF2, 0xFFFF71BC, 0xFFFF7A3F, 0xFFFF7877,

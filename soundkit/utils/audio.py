@@ -21,6 +21,7 @@ def audio_read(
     """
     try:
         data, sample_rate_orig = sf.read(fname)
+        
         if data.ndim > 1:
             data=data[:,0]
 
@@ -37,7 +38,8 @@ def audio_read(
 
 def pad_or_crop(
         audio: np.ndarray,
-        target_length: int) -> Tuple[np.ndarray, int, int]:
+        target_length: int,
+        pad_crop_mode: str="random") -> Tuple[np.ndarray, int, int]:
     """Pad audio to target length
 
     Args:
@@ -47,27 +49,50 @@ def pad_or_crop(
     Returns:
         np.ndarray: padded audio data
     """
-    if len(audio) < target_length:
+    if pad_crop_mode == "random":
+        if len(audio) < target_length:
 
-        zeros = np.zeros(target_length, dtype=audio.dtype)
-        start = np.random.randint(0, target_length - len(audio))
-        end = start + len(audio)
-        zeros[start:end] = audio
-        audio = zeros
+            zeros = np.zeros(target_length, dtype=audio.dtype)
+            start = np.random.randint(0, target_length - len(audio))
+            end = start + len(audio)
+            zeros[start:end] = audio
+            audio = zeros
 
-    elif len(audio) > target_length:
-        start = np.random.randint(0, len(audio) - target_length)
-        end = start + target_length
-        audio = audio[start:end]
-        start = 0
-        end = target_length
+        elif len(audio) > target_length:
+            start = np.random.randint(0, len(audio) - target_length)
+            end = start + target_length
+            audio = audio[start:end]
+            start = 0
+            end = target_length
         
         
+        else:
+            start = 0
+            end = target_length
+
+        return audio, start, end
+
+    elif pad_crop_mode == "tail":
+        if len(audio) < target_length:
+            zeros = np.zeros(target_length, dtype=audio.dtype)
+            zeros[:len(audio)] = audio
+            audio = zeros
+            start = 0
+            end = target_length
+
+        elif len(audio) > target_length:
+            audio = audio[:target_length]
+            start = 0
+            end = target_length
+        
+        else:
+            start = 0
+            end = target_length
+
+        return audio, start, end
     else:
-        start = 0
-        end = target_length
-
-    return audio, start, end
+        raise ValueError(f"Unknown pad_crop_mode: {pad_crop_mode}. "
+                         "Use 'random' or 'tail'.")
 
 
 def get_labels(vad: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -366,15 +391,14 @@ def synthesize_audio_with_labels(
         vad = np.zeros_like(signal_s, dtype=np.int32)
         for ss, ee in zip(onsets, offsets):
             vad[ss:ee] = 1
-        
+
         rir_amp = np.abs(rir)**2 / np.mean(np.abs(rir)**2)
         vad_rir = fftconvolve(vad, rir_amp,'full')
         vad_rir = vad_rir[:len(signal_s)]
 
         vad_update = (vad_rir > 5000).astype(np.float32)
-        
+
         # import pdb; pdb.set_trace()
-        
         offsets, onsets = get_labels(vad_update)
         if is_short_segments_remove:
             onsets, offsets, y = remove_short_segments(
@@ -404,8 +428,14 @@ def synthesize_audio_with_labels(
         target = signal_s.copy()
 
     # Compute clean and noise powers
-    clean_power = np.mean(target**2)
 
+    clean_power=0
+    steps=0
+    for s,e in zip(onsets, offsets):
+        clean_power += np.sum(target[s:e]**2)
+        steps+=e-s+1
+    if steps > 0:
+        clean_power /= steps
     if clean_power == 0:
         pass
     else:

@@ -21,8 +21,15 @@ def simple_trigger_processor_vad(frame_data, threshold=0.05):
     return output
 
 class AudioShowClass:
-    def __init__(self, record_seconds=6, sample_rate=16000, frame_size=160,
-                 wave_output_filename="", non_stop=False, proc_st=None, title="VAD"):
+    def __init__(
+            self,
+            record_seconds=6,
+            sample_rate=16000,
+            frame_size=160,
+            wave_output_filename="",
+            non_stop=False,
+            proc_st=None,
+            title="VAD"):
 
         self.record_seconds = record_seconds
         self.sample_rate = sample_rate

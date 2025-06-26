@@ -75,12 +75,29 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 pass
             else:
                 raise ValueError(f"Unsupported sample rate: {target_sample_rate}")
-            rn = np.random.uniform(0, 1)
-            if rn < 0.25:
-                clean=clean*0
-                starts= np.array([])
-                ends = np.array([])
             
+            rn = np.random.uniform(0, 1)
+            if rn < 0.25: # create short segments
+                id = np.random.randint(0, len(starts))
+                start = starts[id]
+                end = ends[id]
+                # clean = clean[start:end]
+                zeros = np.zeros_like(clean)
+
+                sr = self.params.data.signal.sampling_rate
+
+                rn0 = np.random.uniform(0, 1)
+                if rn0 < 0.5: # create short segments
+                    len_s = np.random.randint(sr * 0.5, sr * 1.5)
+                    end = np.min([start + len_s, end])
+                zeros[start:end] = clean[start:end]
+                clean=zeros
+                starts= np.array([start])
+                ends = np.array([end])
+            elif rn < 0.35: # create no segments
+                clean*=0
+                starts = np.array([])
+                ends = np.array([])
             # load noise
             noise = random_load_audio_from_list(
                 self.noise_list,
@@ -109,7 +126,8 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 min_amp=self.params.data['min_amp'],
                 max_amp=self.params.data['max_amp'],
                 target_length=target_length,
-                sample_rate=target_sample_rate)
+                sample_rate=target_sample_rate,
+                is_short_segments_remove=False)
 
             # vad = np.zeros_like(audio_sn, dtype=np.float32)
             # vad[start:end] = 1.0  # Mark the valid region

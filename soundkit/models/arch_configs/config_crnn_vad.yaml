@@ -10,7 +10,7 @@ layer_configs:
 
   - type: fc
     units: ${units}
-    activation: relu
+    activation: tanh
 
   - type: dropout
     rate: ${dropout_rate}
@@ -19,7 +19,7 @@ layer_configs:
     filters: ${units}
     kernel_size: ["${len_time}", "${units}"]
     strides: ["${stride_time}", 1]
-    activation: relu
+    activation: tanh
 
   - type: dropout
     rate: ${dropout_rate}

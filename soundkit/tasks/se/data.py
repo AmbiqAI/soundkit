@@ -1,24 +1,20 @@
 ''' prepare tfrecords data for SE task '''
-import os
 import random
 import re
 import multiprocessing
 from tqdm import tqdm
 from pathlib import Path
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
-from ...utils.tf_stft import tf_stft
-from ...utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.defines import SKTaskParams
+from soundkit.utils.basic_dsp import dc_remove
+from soundkit.utils.download_api import corpus_download
+from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.datasets import SKDatasetFactory
 
 from .datasets import create_raw_tfrecord
-from ...defines import SKTaskParams
-from ...utils.basic_dsp import dc_remove
-from ...utils.download_api import corpus_download
-from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
-from ...utils.plot_api import plot_spectrograms
-from ...datasets import SKDatasetFactory
-
 class FeatMultiProcsClass(multiprocessing.Process):
     """
     A worker process for parallel feature extraction.

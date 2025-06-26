@@ -16,6 +16,20 @@ def dc_remove(inputs: np.float32)->np.float32:
     outputs = filter(b_hpf, a_hpf, inputs)
     return outputs
 
+class DCRemover:
+    def __init__(self):
+        self.b_hpf = np.array([1.0, -1.0])
+        self.a_hpf = np.array([1.0, -0.965267479])
+        self.zi = scipy.signal.lfilter_zi(self.b_hpf, self.a_hpf)
+        self.zf = self.zi * 0  # Initial state
+
+    def process(self, inputs: np.ndarray) -> np.ndarray:
+        outputs, self.zf = scipy.signal.lfilter(self.b_hpf, self.a_hpf, inputs, zi=self.zf)
+        return outputs
+    def reset(self):
+        """Reset the internal state of the DC remover."""
+        self.zf = self.zi * 0
+
 def pre_emphasis(inputs: np.float32)->np.float32:
     """pre-emphasis
 

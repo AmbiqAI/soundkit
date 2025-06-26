@@ -54,8 +54,8 @@ train:
     frame_size: 480
     hop_size: 160
     fft_size: 512
-    type: logpspec
-    bins: 257
+    type: mel
+    bins: 40
     # type: hybrid
     # bins_fft: 100
     # n_mels: 72
@@ -66,10 +66,10 @@ train:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
     override:
-      units: 22
+      units: 28
       dropout_rate_input: 0.1
       dropout_rate: 0.2
-      stride_time: 1
+      stride_time: 2
       len_time: 6
   debug: false
 
@@ -88,8 +88,8 @@ export:
   tflite_dir: ${job_dir}/tflite
 
 demo:
-  platform: evb # evb or pc
-  epoch_loaded: best
+  platform: pc # evb or pc
+  epoch_loaded: 131
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1

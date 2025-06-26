@@ -530,7 +530,7 @@ Disassembly of section .text:
   410904:	20005024 	.word	0x20005024
 
 00410908 <.text_22>:
-  410908:	20023350 	.word	0x20023350
+  410908:	20023360 	.word	0x20023360
 
 0041090c <.text_23>:
   41090c:	414d4251 	.word	0x414d4251
@@ -2544,7 +2544,7 @@ Disassembly of section .text:
   411d6c:	e8bd 8ff2 	ldmia.w	sp!, {r1, r4, r5, r6, r7, r8, r9, sl, fp, pc}
 
 00411d70 <.text_62>:
-  411d70:	20024280 	.word	0x20024280
+  411d70:	20024290 	.word	0x20024290
 
 00411d74 <stereo_analysis>:
   411d74:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -15079,7 +15079,7 @@ Disassembly of section .text:
 	...
 
 0041a0c0 <.text_9>:
-  41a0c0:	200259f0 	.word	0x200259f0
+  41a0c0:	20025a00 	.word	0x20025a00
 
 0041a0c4 <opus_fft_impl>:
   41a0c4:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -16021,10 +16021,10 @@ Disassembly of section .text:
   41aae8:	4622f987 	.word	0x4622f987
 
 0041aaec <.text_33>:
-  41aaec:	20025a68 	.word	0x20025a68
+  41aaec:	20025a78 	.word	0x20025a78
 
 0041aaf0 <.text_34>:
-  41aaf0:	20025d88 	.word	0x20025d88
+  41aaf0:	20025d98 	.word	0x20025d98
 
 0041aaf4 <.text_35>:
   41aaf4:	eef0 0a48 	vmov.f32	s1, s16
@@ -17688,13 +17688,13 @@ void *pvPortMalloc(size_t xWantedSize) { return prvPortMalloc(xWantedSize, 1); }
   41bb20:	680a      	ldr	r2, [r1, #0]
   41bb22:	f8c8 2000 	str.w	r2, [r8]
   41bb26:	e7ea      	b.n	41bafe <pvPortMalloc+0x12e>
-  41bb28:	20025f24 	.word	0x20025f24
-  41bb2c:	20025f18 	.word	0x20025f18
-  41bb30:	20025f28 	.word	0x20025f28
-  41bb34:	20025f1c 	.word	0x20025f1c
-  41bb38:	20022afc 	.word	0x20022afc
-  41bb3c:	20030798 	.word	0x20030798
-  41bb40:	20025f20 	.word	0x20025f20
+  41bb28:	20025f34 	.word	0x20025f34
+  41bb2c:	20025f28 	.word	0x20025f28
+  41bb30:	20025f38 	.word	0x20025f38
+  41bb34:	20025f2c 	.word	0x20025f2c
+  41bb38:	20022b04 	.word	0x20022b04
+  41bb3c:	200307a8 	.word	0x200307a8
+  41bb40:	20025f30 	.word	0x20025f30
 
 0041bb44 <vPortFree>:
     if (pv != NULL) {
@@ -17789,10 +17789,10 @@ void vPortFree(void *pv) { prvPortFree(pv, 1); }
   41bbd6:	4283      	cmp	r3, r0
   41bbd8:	d1f5      	bne.n	41bbc6 <vPortFree+0x82>
   41bbda:	e7e1      	b.n	41bba0 <vPortFree+0x5c>
-  41bbdc:	20025f18 	.word	0x20025f18
-  41bbe0:	20025f20 	.word	0x20025f20
-  41bbe4:	20025f28 	.word	0x20025f28
-  41bbe8:	20025f24 	.word	0x20025f24
+  41bbdc:	20025f28 	.word	0x20025f28
+  41bbe0:	20025f30 	.word	0x20025f30
+  41bbe4:	20025f38 	.word	0x20025f38
+  41bbe8:	20025f34 	.word	0x20025f34
 
 0041bbec <ns_core_check_api>:
  * param oldest
@@ -17958,7 +17958,7 @@ uint32_t ns_core_init(ns_core_config_t *cfg) {
         return NS_STATUS_INVALID_HANDLE;
   41bccc:	2001      	movs	r0, #1
   41bcce:	4770      	bx	lr
-  41bcd0:	20025f30 	.word	0x20025f30
+  41bcd0:	20025f40 	.word	0x20025f40
   41bcd4:	00010100 	.word	0x00010100
 
 0041bcd8 <ns_core_fail_loop>:
@@ -18154,15 +18154,15 @@ am_default_isr(void)
   41bd90:	e000ed88 	.word	0xe000ed88
   41bd94:	0048ac50 	.word	0x0048ac50
   41bd98:	20005000 	.word	0x20005000
-  41bd9c:	20023350 	.word	0x20023350
-  41bda0:	004a8fa0 	.word	0x004a8fa0
+  41bd9c:	20023358 	.word	0x20023358
+  41bda0:	004a8fa8 	.word	0x004a8fa8
   41bda4:	20080004 	.word	0x20080004
   41bda8:	20081b0c 	.word	0x20081b0c
   41bdac:	0048ac34 	.word	0x0048ac34
   41bdb0:	00000000 	.word	0x00000000
   41bdb4:	0000001c 	.word	0x0000001c
-  41bdb8:	20023350 	.word	0x20023350
-  41bdbc:	20045a14 	.word	0x20045a14
+  41bdb8:	20023360 	.word	0x20023360
+  41bdbc:	20045a24 	.word	0x20045a24
 
 0041bdc0 <_init>:
 extern void _init(void) { ; }
@@ -18359,13 +18359,13 @@ int AudioPipe_wrapper_init(void)
   41bee8:	2000502c 	.word	0x2000502c
   41beec:	0045c528 	.word	0x0045c528
   41bef0:	0045c648 	.word	0x0045c648
-  41bef4:	2002c660 	.word	0x2002c660
-  41bef8:	2002c654 	.word	0x2002c654
-  41befc:	2002c5c0 	.word	0x2002c5c0
+  41bef4:	2002c670 	.word	0x2002c670
+  41bef8:	2002c664 	.word	0x2002c664
+  41befc:	2002c5d0 	.word	0x2002c5d0
   41bf00:	20005050 	.word	0x20005050
-  41bf04:	200291c0 	.word	0x200291c0
-  41bf08:	200281c0 	.word	0x200281c0
-  41bf0c:	200281bc 	.word	0x200281bc
+  41bf04:	200291d0 	.word	0x200291d0
+  41bf08:	200281d0 	.word	0x200281d0
+  41bf0c:	200281cc 	.word	0x200281cc
   41bf10:	0045d020 	.word	0x0045d020
   41bf14:	0045d044 	.word	0x0045d044
   41bf18:	0045d064 	.word	0x0045d064
@@ -18409,10 +18409,10 @@ int AudioPipe_wrapper_reset(void)
   41bf5a:	2000      	movs	r0, #0
   41bf5c:	bd08      	pop	{r3, pc}
   41bf5e:	bf00      	nop
-  41bf60:	200281b8 	.word	0x200281b8
-  41bf64:	20026198 	.word	0x20026198
-  41bf68:	2002c660 	.word	0x2002c660
-  41bf6c:	2002c654 	.word	0x2002c654
+  41bf60:	200281c8 	.word	0x200281c8
+  41bf64:	200261a8 	.word	0x200261a8
+  41bf68:	2002c670 	.word	0x2002c670
+  41bf6c:	2002c664 	.word	0x2002c664
 
 0041bf70 <AudioPipe_wrapper_frameProc>:
 
@@ -18677,16 +18677,16 @@ __STATIC_FORCEINLINE void arm_memcpy_s8(int8_t *__RESTRICT dst, const int8_t *__
   41c12e:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
   41c132:	bf00      	nop
   41c134:	2000502c 	.word	0x2000502c
-  41c138:	2002c660 	.word	0x2002c660
+  41c138:	2002c670 	.word	0x2002c670
   41c13c:	ffff8000 	.word	0xffff8000
-  41c140:	20025f40 	.word	0x20025f40
-  41c144:	2002c654 	.word	0x2002c654
-  41c148:	200269a0 	.word	0x200269a0
-  41c14c:	2002c5c0 	.word	0x2002c5c0
+  41c140:	20025f50 	.word	0x20025f50
+  41c144:	2002c664 	.word	0x2002c664
+  41c148:	200269b0 	.word	0x200269b0
+  41c14c:	2002c5d0 	.word	0x2002c5d0
   41c150:	3b800000 	.word	0x3b800000
-  41c154:	200281bc 	.word	0x200281bc
+  41c154:	200281cc 	.word	0x200281cc
   41c158:	47000000 	.word	0x47000000
-  41c15c:	200281b8 	.word	0x200281b8
+  41c15c:	200281c8 	.word	0x200281c8
 
 0041c160 <_ZN6tflite22MicroMutableOpResolverILj15EED0Ev>:
 
@@ -18888,7 +18888,7 @@ class MicroMutableOpResolver : public MicroOpResolver {
   41c26c:	4801      	ldr	r0, [pc, #4]	@ (41c274 <__tcf_1+0x8>)
   41c26e:	f020 bdcb 	b.w	43ce08 <_ZN6tflite16MicroInterpreterD1Ev>
   41c272:	bf00      	nop
-  41c274:	2002d720 	.word	0x2002d720
+  41c274:	2002d730 	.word	0x2002d730
 
 0041c278 <_ZNK6tflite22MicroMutableOpResolverILj15EE15GetOpDataParserENS_15BuiltinOperatorE>:
       }
@@ -19648,8 +19648,8 @@ T ReadScalar(const void *p) {
   41c778:	0045d0f8 	.word	0x0045d0f8
   41c77c:	0045d110 	.word	0x0045d110
   41c780:	0045d128 	.word	0x0045d128
-  41c784:	2002d7e0 	.word	0x2002d7e0
-  41c788:	2002d7e8 	.word	0x2002d7e8
+  41c784:	2002d7f0 	.word	0x2002d7f0
+  41c788:	2002d7f8 	.word	0x2002d7f8
                       tflite::Register_READ_VARIABLE(), ParseReadVariable);
   41c78c:	a805      	add	r0, sp, #20
   41c78e:	f01b fa1b 	bl	437bc8 <_ZN6tflite22Register_READ_VARIABLEEv>
@@ -21419,14 +21419,14 @@ resolver.AddMul();
   41d46c:	f7ff b91a 	b.w	41c6a4 <_Z25tflm_validator_model_initP16ns_model_state_t+0x130>
   41d470:	0045d138 	.word	0x0045d138
   41d474:	0045d160 	.word	0x0045d160
-  41d478:	2002d71c 	.word	0x2002d71c
-  41d47c:	2002d720 	.word	0x2002d720
+  41d478:	2002d72c 	.word	0x2002d72c
+  41d47c:	2002d730 	.word	0x2002d730
   41d480:	0045d180 	.word	0x0045d180
   41d484:	0045d194 	.word	0x0045d194
   41d488:	0045d1e0 	.word	0x0045d1e0
   41d48c:	0045d1a8 	.word	0x0045d1a8
   41d490:	deadbeef 	.word	0xdeadbeef
-  41d494:	2002d7e8 	.word	0x2002d7e8
+  41d494:	2002d7f8 	.word	0x2002d7f8
   41d498:	0045e190 	.word	0x0045e190
   41d49c:	0041c165 	.word	0x0041c165
   41d4a0:	0041c26d 	.word	0x0041c26d
@@ -22050,9 +22050,9 @@ void setup_task(void *pvParameters) {
   41d96e:	f004 f8bd 	bl	421aec <vTaskSuspend>
     while (1)
   41d972:	e7fe      	b.n	41d972 <_Z10setup_taskPv+0x3a>
-  41d974:	2002da84 	.word	0x2002da84
+  41d974:	2002da94 	.word	0x2002da94
   41d978:	0045d214 	.word	0x0045d214
-  41d97c:	2002da80 	.word	0x2002da80
+  41d97c:	2002da90 	.word	0x2002da90
   41d980:	0045d234 	.word	0x0045d234
   41d984:	0041daf1 	.word	0x0041daf1
   41d988:	0045d240 	.word	0x0045d240
@@ -22076,9 +22076,9 @@ void audio_frame_callback(ns_audio_config_t *config, uint16_t bytesCollected) {
   41d9a4:	701a      	strb	r2, [r3, #0]
 }
   41d9a6:	bd08      	pop	{r3, pc}
-  41d9a8:	20030791 	.word	0x20030791
-  41d9ac:	20030510 	.word	0x20030510
-  41d9b0:	20030790 	.word	0x20030790
+  41d9a8:	200307a1 	.word	0x200307a1
+  41d9ac:	20030520 	.word	0x20030520
+  41d9b0:	200307a0 	.word	0x200307a0
 
 0041d9b4 <_Z17encodeAndXferTaskPv>:
 void encodeAndXferTask(void *pvParameters) {
@@ -22217,20 +22217,20 @@ void encodeAndXferTask(void *pvParameters) {
                 currentOpusSample = 0;
   41dab4:	2300      	movs	r3, #0
   41dab6:	e7a2      	b.n	41d9fe <_Z17encodeAndXferTaskPv+0x4a>
-  41dab8:	2002da88 	.word	0x2002da88
-  41dabc:	2002da10 	.word	0x2002da10
-  41dac0:	20022a60 	.word	0x20022a60
-  41dac4:	2002da8a 	.word	0x2002da8a
-  41dac8:	2003a7b0 	.word	0x2003a7b0
-  41dacc:	2002da2b 	.word	0x2002da2b
-  41dad0:	2002da28 	.word	0x2002da28
+  41dab8:	2002da98 	.word	0x2002da98
+  41dabc:	2002da20 	.word	0x2002da20
+  41dac0:	20022a68 	.word	0x20022a68
+  41dac4:	2002da9a 	.word	0x2002da9a
+  41dac8:	2003a7c0 	.word	0x2003a7c0
+  41dacc:	2002da3b 	.word	0x2002da3b
+  41dad0:	2002da38 	.word	0x2002da38
   41dad4:	cccccccd 	.word	0xcccccccd
   41dad8:	0045d254 	.word	0x0045d254
-  41dadc:	20022a68 	.word	0x20022a68
-  41dae0:	2002da18 	.word	0x2002da18
-  41dae4:	2003a798 	.word	0x2003a798
-  41dae8:	2002da1c 	.word	0x2002da1c
-  41daec:	2002da90 	.word	0x2002da90
+  41dadc:	20022a70 	.word	0x20022a70
+  41dae0:	2002da28 	.word	0x2002da28
+  41dae4:	2003a7a8 	.word	0x2003a7a8
+  41dae8:	2002da2c 	.word	0x2002da2c
+  41daec:	2002daa0 	.word	0x2002daa0
 
 0041daf0 <_Z9audioTaskPv>:
 void audioTask(void *pvParameters) {
@@ -22398,22 +22398,22 @@ void audioTask(void *pvParameters) {
                 currentSESample = 0;
   41dc24:	2300      	movs	r3, #0
   41dc26:	e78c      	b.n	41db42 <_Z9audioTaskPv+0x52>
-  41dc28:	20030790 	.word	0x20030790
-  41dc2c:	2002da14 	.word	0x2002da14
-  41dc30:	2002da8c 	.word	0x2002da8c
-  41dc34:	2002da88 	.word	0x2002da88
-  41dc38:	2002da90 	.word	0x2002da90
-  41dc3c:	20030510 	.word	0x20030510
+  41dc28:	200307a0 	.word	0x200307a0
+  41dc2c:	2002da24 	.word	0x2002da24
+  41dc30:	2002da9c 	.word	0x2002da9c
+  41dc34:	2002da98 	.word	0x2002da98
+  41dc38:	2002daa0 	.word	0x2002daa0
+  41dc3c:	20030520 	.word	0x20030520
   41dc40:	0045d270 	.word	0x0045d270
-  41dc44:	2002da28 	.word	0x2002da28
+  41dc44:	2002da38 	.word	0x2002da38
   41dc48:	0045d254 	.word	0x0045d254
-  41dc4c:	20022a68 	.word	0x20022a68
-  41dc50:	2002da24 	.word	0x2002da24
-  41dc54:	2002da20 	.word	0x2002da20
-  41dc58:	2003a79c 	.word	0x2003a79c
-  41dc5c:	20030794 	.word	0x20030794
-  41dc60:	2003a7a0 	.word	0x2003a7a0
-  41dc64:	20022a64 	.word	0x20022a64
+  41dc4c:	20022a70 	.word	0x20022a70
+  41dc50:	2002da34 	.word	0x2002da34
+  41dc54:	2002da30 	.word	0x2002da30
+  41dc58:	2003a7ac 	.word	0x2003a7ac
+  41dc5c:	200307a4 	.word	0x200307a4
+  41dc60:	2003a7b0 	.word	0x2003a7b0
+  41dc64:	20022a6c 	.word	0x20022a6c
 
 0041dc68 <main>:
 }
@@ -22608,20 +22608,20 @@ int main(void) {
   41dd86:	bf00      	nop
   41dd88:	0045cfa8 	.word	0x0045cfa8
   41dd8c:	0045e1a4 	.word	0x0045e1a4
-  41dd90:	20022a78 	.word	0x20022a78
-  41dd94:	20022ae8 	.word	0x20022ae8
-  41dd98:	2002df93 	.word	0x2002df93
-  41dd9c:	2002df90 	.word	0x2002df90
+  41dd90:	20022a80 	.word	0x20022a80
+  41dd94:	20022af0 	.word	0x20022af0
+  41dd98:	2002dfa3 	.word	0x2002dfa3
+  41dd9c:	2002dfa0 	.word	0x2002dfa0
   41dda0:	0041d92d 	.word	0x0041d92d
-  41dda4:	20022ac0 	.word	0x20022ac0
-  41dda8:	2002f000 	.word	0x2002f000
-  41ddac:	2002e000 	.word	0x2002e000
+  41dda4:	20022ac8 	.word	0x20022ac8
+  41dda8:	2002f010 	.word	0x2002f010
+  41ddac:	2002e010 	.word	0x2002e010
   41ddb0:	0045d2c0 	.word	0x0045d2c0
   41ddb4:	0045d2d4 	.word	0x0045d2d4
-  41ddb8:	20022a68 	.word	0x20022a68
-  41ddbc:	2002da28 	.word	0x2002da28
-  41ddc0:	2002da7c 	.word	0x2002da7c
-  41ddc4:	20030791 	.word	0x20030791
+  41ddb8:	20022a70 	.word	0x20022a70
+  41ddbc:	2002da38 	.word	0x2002da38
+  41ddc0:	2002da8c 	.word	0x2002da8c
+  41ddc4:	200307a1 	.word	0x200307a1
   41ddc8:	0045d2fc 	.word	0x0045d2fc
   41ddcc:	0041d939 	.word	0x0041d939
   41ddd0:	0045d2e8 	.word	0x0045d2e8
@@ -22642,7 +22642,7 @@ void ns_button_0_handler(void *pArg) { *g_ns_peripheral_button0 = 1; }
   41dde6:	601a      	str	r2, [r3, #0]
   41dde8:	4770      	bx	lr
   41ddea:	bf00      	nop
-  41ddec:	2003a808 	.word	0x2003a808
+  41ddec:	2003a818 	.word	0x2003a818
 
 0041ddf0 <ns_button_1_handler>:
 void ns_button_1_handler(void *pArg) { *g_ns_peripheral_button1 = 1; }
@@ -22652,7 +22652,7 @@ void ns_button_1_handler(void *pArg) { *g_ns_peripheral_button1 = 1; }
   41ddf6:	601a      	str	r2, [r3, #0]
   41ddf8:	4770      	bx	lr
   41ddfa:	bf00      	nop
-  41ddfc:	2003a804 	.word	0x2003a804
+  41ddfc:	2003a814 	.word	0x2003a814
 
 0041de00 <ns_joulescope_trigger_handler>:
 void ns_joulescope_trigger_handler(void *pArg) { *g_ns_peripheral_joulescope_trigger = 1; }
@@ -22662,7 +22662,7 @@ void ns_joulescope_trigger_handler(void *pArg) { *g_ns_peripheral_joulescope_tri
   41de06:	601a      	str	r2, [r3, #0]
   41de08:	4770      	bx	lr
   41de0a:	bf00      	nop
-  41de0c:	2003a800 	.word	0x2003a800
+  41de0c:	2003a810 	.word	0x2003a810
 
 0041de10 <ns_peripheral_button_init>:
 
@@ -23050,12 +23050,12 @@ __STATIC_INLINE void __NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
   41e006:	f002 ffb7 	bl	420f78 <am_util_stdio_printf>
   41e00a:	e79d      	b.n	41df48 <ns_button_platform_init+0x60>
   41e00c:	e000e100 	.word	0xe000e100
-  41e010:	20022c68 	.word	0x20022c68
-  41e014:	2003a808 	.word	0x2003a808
-  41e018:	20022c64 	.word	0x20022c64
-  41e01c:	2003a804 	.word	0x2003a804
+  41e010:	20022c70 	.word	0x20022c70
+  41e014:	2003a818 	.word	0x2003a818
+  41e018:	20022c6c 	.word	0x20022c6c
+  41e01c:	2003a814 	.word	0x2003a814
   41e020:	0045e87c 	.word	0x0045e87c
-  41e024:	2003a800 	.word	0x2003a800
+  41e024:	2003a810 	.word	0x2003a810
   41e028:	0041de01 	.word	0x0041de01
   41e02c:	0041ddf1 	.word	0x0041ddf1
   41e030:	0041dde1 	.word	0x0041dde1
@@ -23300,7 +23300,7 @@ int32_t ns_power_platform_config(const ns_power_config_t *pCfg) {
   41e180:	40020000 	.word	0x40020000
   41e184:	4000c000 	.word	0x4000c000
   41e188:	03000701 	.word	0x03000701
-  41e18c:	20025f30 	.word	0x20025f30
+  41e18c:	20025f40 	.word	0x20025f40
   41e190:	0045d390 	.word	0x0045d390
   41e194:	0045d374 	.word	0x0045d374
 
@@ -23526,12 +23526,12 @@ uint32_t ns_start_audio(ns_audio_config_t *cfg) {
   41e286:	bf00      	nop
   41e288:	0045e1fc 	.word	0x0045e1fc
   41e28c:	0045e208 	.word	0x0045e208
-  41e290:	2003a80c 	.word	0x2003a80c
+  41e290:	2003a81c 	.word	0x2003a81c
   41e294:	0045e214 	.word	0x0045e214
-  41e298:	2003a811 	.word	0x2003a811
-  41e29c:	2003a810 	.word	0x2003a810
+  41e298:	2003a821 	.word	0x2003a821
+  41e29c:	2003a820 	.word	0x2003a820
   41e2a0:	0045d3b0 	.word	0x0045d3b0
-  41e2a4:	20022b00 	.word	0x20022b00
+  41e2a4:	20022b08 	.word	0x20022b08
 
 0041e2a8 <ns_audio_getPCM_v2>:
         }
@@ -23675,8 +23675,8 @@ void am_pdm_isr_common(uint8_t pdmNumber) {
 }
   41e358:	b002      	add	sp, #8
   41e35a:	bd70      	pop	{r4, r5, r6, pc}
-  41e35c:	2003a814 	.word	0x2003a814
-  41e360:	2003a80c 	.word	0x2003a80c
+  41e35c:	2003a824 	.word	0x2003a824
+  41e360:	2003a81c 	.word	0x2003a81c
   41e364:	40201000 	.word	0x40201000
 
 0041e368 <pdm_init>:
@@ -23890,7 +23890,7 @@ uint32_t pdm_init(ns_audio_config_t *config) {
     else if (cfg->clock == NS_CLKSEL_HFRC)
   41e4c6:	e781      	b.n	41e3cc <pdm_init+0x64>
   41e4c8:	00bb8000 	.word	0x00bb8000
-  41e4cc:	2003a814 	.word	0x2003a814
+  41e4cc:	2003a824 	.word	0x2003a824
   41e4d0:	e000e100 	.word	0xe000e100
   41e4d4:	0045d3dc 	.word	0x0045d3dc
   41e4d8:	0bb80000 	.word	0x0bb80000
@@ -23906,7 +23906,7 @@ uint32_t pdm_init(ns_audio_config_t *config) {
 void am_pdm0_isr(void) { am_pdm_isr_common(0); }
   41e4e6:	4770      	bx	lr
   41e4e8:	f7ff bee0 	b.w	41e2ac <am_pdm_isr_common.part.0>
-  41e4ec:	2003a80c 	.word	0x2003a80c
+  41e4ec:	2003a81c 	.word	0x2003a81c
 
 0041e4f0 <ns_init_perf_profiler>:
 /**
@@ -23970,7 +23970,7 @@ extern bool ns_core_initialized(void) { return g_ns_state.initialized; }
   41e522:	7918      	ldrb	r0, [r3, #4]
   41e524:	4770      	bx	lr
   41e526:	bf00      	nop
-  41e528:	20025f30 	.word	0x20025f30
+  41e528:	20025f40 	.word	0x20025f40
 
 0041e52c <ns_timer_init>:
 
@@ -24038,7 +24038,7 @@ uint32_t ns_timer_init(ns_timer_config_t *cfg) {
   41e566:	bd10      	pop	{r4, pc}
   41e568:	0045e220 	.word	0x0045e220
   41e56c:	0045e22c 	.word	0x0045e22c
-  41e570:	2003a818 	.word	0x2003a818
+  41e570:	2003a828 	.word	0x2003a828
 
 0041e574 <am_timer01_isr>:
 void am_timer01_isr(void) {
@@ -24070,7 +24070,7 @@ void am_timer01_isr(void) {
   41e592:	68c3      	ldr	r3, [r0, #12]
   41e594:	4718      	bx	r3
   41e596:	bf00      	nop
-  41e598:	2003a818 	.word	0x2003a818
+  41e598:	2003a828 	.word	0x2003a828
 
 0041e59c <am_timer02_isr>:
 void am_timer02_isr(void) {
@@ -24102,7 +24102,7 @@ void am_timer02_isr(void) {
   41e5ba:	68c3      	ldr	r3, [r0, #12]
   41e5bc:	4718      	bx	r3
   41e5be:	bf00      	nop
-  41e5c0:	2003a818 	.word	0x2003a818
+  41e5c0:	2003a828 	.word	0x2003a828
 
 0041e5c4 <am_timer03_isr>:
 void am_timer03_isr(void) {
@@ -24134,7 +24134,7 @@ void am_timer03_isr(void) {
   41e5e2:	68c3      	ldr	r3, [r0, #12]
   41e5e4:	4718      	bx	r3
   41e5e6:	bf00      	nop
-  41e5e8:	2003a818 	.word	0x2003a818
+  41e5e8:	2003a828 	.word	0x2003a828
 
 0041e5ec <am_timer04_isr>:
 void am_timer04_isr(void) {
@@ -24166,7 +24166,7 @@ void am_timer04_isr(void) {
   41e60a:	68c3      	ldr	r3, [r0, #12]
   41e60c:	4718      	bx	r3
   41e60e:	bf00      	nop
-  41e610:	2003a818 	.word	0x2003a818
+  41e610:	2003a828 	.word	0x2003a828
 
 0041e614 <ns_timer_platform_init>:
 
@@ -24338,11 +24338,11 @@ uint32_t ns_us_ticker_read(ns_timer_config_t *cfg) {
   41e6fa:	f000 fa8f 	bl	41ec1c <stftModule_construct>
     ps->pt_norm_mean = norm_mean;
     ps->pt_norm_stdR = norm_stdR;
-    ps->num_context = NUM_FEATURE_CONTEXT;
+    ps->num_context = 1; // for tflm model, we only use 1 context
   41e6fe:	2306      	movs	r3, #6
     ps->pt_norm_mean = norm_mean;
   41e700:	f504 5080 	add.w	r0, r4, #4096	@ 0x1000
-    ps->num_context = NUM_FEATURE_CONTEXT;
+    ps->num_context = 1; // for tflm model, we only use 1 context
   41e704:	f8a0 30a8 	strh.w	r3, [r0, #168]	@ 0xa8
     ps->dim_feat = num_mfltrBank;
     ps->qbit_output = qbit_output;
@@ -24513,39 +24513,39 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
     fprintf(file_pspec_c, "\n");
 #endif
     int32_t *pt_feature;
-    if (ps->num_mfltrBank ==257)
+    if (0)
   41e81a:	f240 1201 	movw	r2, #257	@ 0x101
   41e81e:	f9b6 3494 	ldrsh.w	r3, [r6, #1172]	@ 0x494
   41e822:	4293      	cmp	r3, r2
   41e824:	d155      	bne.n	41e8d2 <FeatureClass_execute+0x112>
+    // if (ps->num_mfltrBank ==257) // need to find the better condition
     {
-        pt_feature = pspec;
   41e826:	f8df a0c0 	ldr.w	sl, [pc, #192]	@ 41e8e8 <FeatureClass_execute+0x128>
   41e82a:	f106 0990 	add.w	r9, r6, #144	@ 0x90
+
+        pt_feature = ps->feature;
+    }
+    #if AMBIQ_NNSP_DEBUG == 1
     for (i = 0; i < ps->num_mfltrBank; i++) {
         fprintf(file_melSpec_c, "%d ", ps->feature[i]);
-    }
-    fprintf(file_melSpec_c, "\n");
-#endif
-    log10_vec(ps->feature, pt_feature, ps->dim_feat, 15);
   41e82e:	230f      	movs	r3, #15
   41e830:	4651      	mov	r1, sl
   41e832:	4648      	mov	r0, r9
   41e834:	f9b8 20aa 	ldrsh.w	r2, [r8, #170]	@ 0xaa
   41e838:	f000 f8a4 	bl	41e984 <log10_vec>
+#endif
+    log10_vec(ps->feature, pt_feature, ps->dim_feat, 15);
+#if AMBIQ_NNSP_DEBUG == 1
+    for (i = 0; i < ps->dim_feat; i++) {
         fprintf(file_feat_c, "%d ", ps->feature[i]);
     }
-    fprintf(file_feat_c, "\n");
-#endif
-
-    for (i = 0; i < ps->dim_feat; i++) {
   41e83c:	f9b8 30aa 	ldrsh.w	r3, [r8, #170]	@ 0xaa
   41e840:	2b00      	cmp	r3, #0
   41e842:	dd43      	ble.n	41e8cc <FeatureClass_execute+0x10c>
   41e844:	ea4f 0c83 	mov.w	ip, r3, lsl #2
-        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
-        tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
-              (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
+    fprintf(file_feat_c, "\n");
+#endif
+
   41e848:	f998 30b4 	ldrsb.w	r3, [r8, #180]	@ 0xb4
   41e84c:	f1ac 0c04 	sub.w	ip, ip, #4
   41e850:	f207 274d 	addw	r7, r7, #589	@ 0x24d
@@ -24557,61 +24557,61 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
   41e866:	f106 098c 	add.w	r9, r6, #140	@ 0x8c
   41e86a:	f10c 0c01 	add.w	ip, ip, #1
   41e86e:	3f04      	subs	r7, #4
-        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
+    fprintf(file_feat_c, "\n");
   41e870:	f858 6b04 	ldr.w	r6, [r8], #4
   41e874:	f859 3f04 	ldr.w	r3, [r9, #4]!
-        tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+#endif
   41e878:	f857 1f04 	ldr.w	r1, [r7, #4]!
-        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
+    fprintf(file_feat_c, "\n");
   41e87c:	ebb3 0e06 	subs.w	lr, r3, r6
-        tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+#endif
   41e880:	fbae ba01 	umull	fp, sl, lr, r1
   41e884:	465c      	mov	r4, fp
   41e886:	ea4f 72e1 	mov.w	r2, r1, asr #31
   41e88a:	fb0e f202 	mul.w	r2, lr, r2
-        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
+    fprintf(file_feat_c, "\n");
   41e88e:	ea4f 73e3 	mov.w	r3, r3, asr #31
   41e892:	eb63 73e6 	sbc.w	r3, r3, r6, asr #31
-        tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+#endif
   41e896:	fb01 2203 	mla	r2, r1, r3, r2
   41e89a:	9b03      	ldr	r3, [sp, #12]
   41e89c:	eb02 050a 	add.w	r5, r2, sl
   41e8a0:	ea54 352d 	asrl	r4, r5, r3
-        tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+    for (i = 0; i < ps->dim_feat; i++) {
   41e8a4:	f514 4f00 	cmn.w	r4, #32768	@ 0x8000
   41e8a8:	f175 33ff 	sbcs.w	r3, r5, #4294967295	@ 0xffffffff
   41e8ac:	bfbc      	itt	lt
   41e8ae:	f04f 35ff 	movlt.w	r5, #4294967295	@ 0xffffffff
   41e8b2:	4c0e      	ldrlt	r4, [pc, #56]	@ (41e8ec <FeatureClass_execute+0x12c>)
-        ps->normFeatContext[i + shift] = (int16_t)tmp;
+        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
   41e8b4:	3002      	adds	r0, #2
-        tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+    for (i = 0; i < ps->dim_feat; i++) {
   41e8b6:	f5b4 4f00 	cmp.w	r4, #32768	@ 0x8000
   41e8ba:	f175 0300 	sbcs.w	r3, r5, #0
   41e8be:	bfa8      	it	ge
   41e8c0:	f647 74ff 	movwge	r4, #32767	@ 0x7fff
-    for (i = 0; i < ps->dim_feat; i++) {
-  41e8c4:	f1bc 0c01 	subs.w	ip, ip, #1
-        ps->normFeatContext[i + shift] = (int16_t)tmp;
-  41e8c8:	8004      	strh	r4, [r0, #0]
-    for (i = 0; i < ps->dim_feat; i++) {
-  41e8ca:	d1d1      	bne.n	41e870 <FeatureClass_execute+0xb0>
     }
-
-}
+  41e8c4:	f1bc 0c01 	subs.w	ip, ip, #1
+        tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
+  41e8c8:	8004      	strh	r4, [r0, #0]
+    }
+  41e8ca:	d1d1      	bne.n	41e870 <FeatureClass_execute+0xb0>
+        tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+              (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
+        tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
   41e8cc:	b007      	add	sp, #28
   41e8ce:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-        melSpecProc(pspec, ps->feature, ps->p_melBanks, ps->num_mfltrBank);
+    else
   41e8d2:	f106 0990 	add.w	r9, r6, #144	@ 0x90
   41e8d6:	4649      	mov	r1, r9
   41e8d8:	f8d6 2498 	ldr.w	r2, [r6, #1176]	@ 0x498
   41e8dc:	4802      	ldr	r0, [pc, #8]	@ (41e8e8 <FeatureClass_execute+0x128>)
   41e8de:	46ca      	mov	sl, r9
   41e8e0:	f000 f8ce 	bl	41ea80 <melSpecProc>
-        pt_feature = ps->feature;
+    {   
   41e8e4:	e7a3      	b.n	41e82e <FeatureClass_execute+0x6e>
   41e8e6:	bf00      	nop
-  41e8e8:	2003a830 	.word	0x2003a830
+  41e8e8:	2003a840 	.word	0x2003a840
   41e8ec:	ffff8000 	.word	0xffff8000
 
 0041e8f0 <my_log10>:
@@ -25133,9 +25133,9 @@ int stftModule_construct(
   41ec56:	2000      	movs	r0, #0
   41ec58:	bdf8      	pop	{r3, r4, r5, r6, r7, pc}
   41ec5a:	bf00      	nop
-  41ec5c:	2003c038 	.word	0x2003c038
-  41ec60:	2003d040 	.word	0x2003d040
-  41ec64:	2003d840 	.word	0x2003d840
+  41ec5c:	2003c048 	.word	0x2003c048
+  41ec60:	2003d050 	.word	0x2003d050
+  41ec64:	2003d850 	.word	0x2003d850
 
 0041ec68 <stftModule_setDefault>:
 
@@ -25324,7 +25324,7 @@ int stftModule_analyze_arm(
   41ed6a:	2000      	movs	r0, #0
   41ed6c:	8013      	strh	r3, [r2, #0]
   41ed6e:	bdf8      	pop	{r3, r4, r5, r6, r7, pc}
-  41ed70:	2003b030 	.word	0x2003b030
+  41ed70:	2003b040 	.word	0x2003b040
 
 0041ed74 <stftModule_synthesize_arm>:
 */
@@ -25465,7 +25465,7 @@ __arm_vstrhq_s32 (int16_t * __addr, int32x4_t __value)
   41ee4e:	464a      	mov	r2, r9
   41ee50:	e7ea      	b.n	41ee28 <stftModule_synthesize_arm+0xb4>
   41ee52:	bf00      	nop
-  41ee54:	2003b030 	.word	0x2003b030
+  41ee54:	2003b040 	.word	0x2003b040
 
 0041ee58 <vec16_vec16_mul_32b>:
 #include "ns_ambiqsuite_harness.h"
@@ -25779,8 +25779,8 @@ static void ns_usb_service_callback(ns_timer_config_t *c) {
 }
   41efcc:	bd10      	pop	{r4, pc}
   41efce:	bf00      	nop
-  41efd0:	20022b18 	.word	0x20022b18
-  41efd4:	2003dc40 	.word	0x2003dc40
+  41efd0:	20022b20 	.word	0x20022b20
+  41efd4:	2003dc50 	.word	0x2003dc50
   41efd8:	0045d428 	.word	0x0045d428
 
 0041efdc <ns_get_cdc_rx_bufferLength>:
@@ -25789,7 +25789,7 @@ uint32_t ns_get_cdc_rx_bufferLength() { return usb_config.rx_bufferLength; }
   41efde:	8998      	ldrh	r0, [r3, #12]
   41efe0:	4770      	bx	lr
   41efe2:	bf00      	nop
-  41efe4:	20022b18 	.word	0x20022b18
+  41efe4:	20022b20 	.word	0x20022b20
 
 0041efe8 <ns_get_cdc_tx_bufferLength>:
 uint32_t ns_get_cdc_tx_bufferLength() { return usb_config.tx_bufferLength; }
@@ -25797,7 +25797,7 @@ uint32_t ns_get_cdc_tx_bufferLength() { return usb_config.tx_bufferLength; }
   41efea:	8a98      	ldrh	r0, [r3, #20]
   41efec:	4770      	bx	lr
   41efee:	bf00      	nop
-  41eff0:	20022b18 	.word	0x20022b18
+  41eff0:	20022b20 	.word	0x20022b20
 
 0041eff4 <ns_usb_get_rx_buffer>:
 uint8_t *ns_usb_get_rx_buffer() { return usb_config.rx_buffer; }
@@ -25805,7 +25805,7 @@ uint8_t *ns_usb_get_rx_buffer() { return usb_config.rx_buffer; }
   41eff6:	6898      	ldr	r0, [r3, #8]
   41eff8:	4770      	bx	lr
   41effa:	bf00      	nop
-  41effc:	20022b18 	.word	0x20022b18
+  41effc:	20022b20 	.word	0x20022b20
 
 0041f000 <ns_usb_get_tx_buffer>:
 uint8_t *ns_usb_get_tx_buffer() { return usb_config.tx_buffer; }
@@ -25813,7 +25813,7 @@ uint8_t *ns_usb_get_tx_buffer() { return usb_config.tx_buffer; }
   41f002:	6918      	ldr	r0, [r3, #16]
   41f004:	4770      	bx	lr
   41f006:	bf00      	nop
-  41f008:	20022b18 	.word	0x20022b18
+  41f008:	20022b20 	.word	0x20022b20
 
 0041f00c <ns_usb_init>:
     .timer = NS_TIMER_USB,
@@ -25920,8 +25920,8 @@ uint32_t ns_usb_init(ns_usb_config_t *cfg, usb_handle_t *h) {
   41f07e:	bf00      	nop
   41f080:	0045e448 	.word	0x0045e448
   41f084:	0045e454 	.word	0x0045e454
-  41f088:	20022b18 	.word	0x20022b18
-  41f08c:	20022b08 	.word	0x20022b08
+  41f088:	20022b20 	.word	0x20022b20
+  41f08c:	20022b10 	.word	0x20022b10
   41f090:	0045d438 	.word	0x0045d438
 
 0041f094 <ns_get_desc_url>:
@@ -25935,7 +25935,7 @@ ns_tusb_desc_webusb_url_t * ns_get_desc_url() {
   41f096:	6a58      	ldr	r0, [r3, #36]	@ 0x24
   41f098:	4770      	bx	lr
   41f09a:	bf00      	nop
-  41f09c:	20022b18 	.word	0x20022b18
+  41f09c:	20022b20 	.word	0x20022b20
 
 0041f0a0 <am_hal_dcu_get>:
 //*****************************************************************************
@@ -26015,8 +26015,8 @@ uint32_t am_hal_dcu_get(uint32_t *pui32Val)
   41f116:	4770      	bx	lr
   41f118:	40021000 	.word	0x40021000
   41f11c:	400c0000 	.word	0x400c0000
-  41f120:	20022b44 	.word	0x20022b44
-  41f124:	2003dc44 	.word	0x2003dc44
+  41f120:	20022b4c 	.word	0x20022b4c
+  41f124:	2003dc54 	.word	0x2003dc54
 
 0041f128 <am_hal_dcu_update>:
 //
@@ -26126,11 +26126,11 @@ uint32_t am_hal_dcu_update(bool bEnable, uint32_t ui32Mask)
   41f1be:	bf00      	nop
   41f1c0:	40021000 	.word	0x40021000
   41f1c4:	400c0000 	.word	0x400c0000
-  41f1c8:	2003dc44 	.word	0x2003dc44
-  41f1cc:	20022b40 	.word	0x20022b40
-  41f1d0:	20022b44 	.word	0x20022b44
-  41f1d4:	20022b50 	.word	0x20022b50
-  41f1d8:	20022b48 	.word	0x20022b48
+  41f1c8:	2003dc54 	.word	0x2003dc54
+  41f1cc:	20022b48 	.word	0x20022b48
+  41f1d0:	20022b4c 	.word	0x20022b4c
+  41f1d4:	20022b58 	.word	0x20022b58
+  41f1d8:	20022b50 	.word	0x20022b50
 
 0041f1dc <am_hal_pwrctrl_mcu_mode_select>:
 //  Select the MCU power mode.
@@ -26397,7 +26397,7 @@ am_hal_pwrctrl_mcu_mode_select(am_hal_pwrctrl_mcu_mode_e ePowerMode)
   41f366:	f008 f9eb 	bl	427740 <am_hal_spotmgr_post_lptohp_handle>
     if (ui32Status == AM_HAL_STATUS_SUCCESS)
   41f36a:	e7f7      	b.n	41f35c <am_hal_pwrctrl_mcu_mode_select+0x180>
-  41f36c:	20022b64 	.word	0x20022b64
+  41f36c:	20022b6c 	.word	0x20022b6c
   41f370:	40021000 	.word	0x40021000
   41f374:	40004030 	.word	0x40004030
 
@@ -26552,8 +26552,8 @@ am_hal_pwrctrl_gpu_mode_select(am_hal_pwrctrl_gpu_mode_e ePowerMode)
   41f444:	e7cc      	b.n	41f3e0 <am_hal_pwrctrl_gpu_mode_select+0x68>
   41f446:	bf00      	nop
   41f448:	40021000 	.word	0x40021000
-  41f44c:	2003dcdf 	.word	0x2003dcdf
-  41f450:	2003dcde 	.word	0x2003dcde
+  41f44c:	2003dcef 	.word	0x2003dcef
+  41f450:	2003dcee 	.word	0x2003dcee
 
 0041f454 <am_hal_pwrctrl_mcu_memory_config>:
 {
@@ -26775,7 +26775,7 @@ am_hal_pwrctrl_gpu_mode_select(am_hal_pwrctrl_gpu_mode_e ePowerMode)
   41f5ce:	2005      	movs	r0, #5
   41f5d0:	e772      	b.n	41f4b8 <am_hal_pwrctrl_mcu_memory_config+0x64>
   41f5d2:	bf00      	nop
-  41f5d4:	2003dcdd 	.word	0x2003dcdd
+  41f5d4:	2003dced 	.word	0x2003dced
   41f5d8:	40021000 	.word	0x40021000
   41f5dc:	40020000 	.word	0x40020000
   41f5e0:	40021018 	.word	0x40021018
@@ -27125,8 +27125,8 @@ am_hal_pwrctrl_gpu_mode_select(am_hal_pwrctrl_gpu_mode_e ePowerMode)
   41f82a:	e7a1      	b.n	41f770 <am_hal_pwrctrl_periph_enable+0x94>
   41f82c:	0045e474 	.word	0x0045e474
   41f830:	40021000 	.word	0x40021000
-  41f834:	2003dcde 	.word	0x2003dcde
-  41f838:	2003dcdf 	.word	0x2003dcdf
+  41f834:	2003dcee 	.word	0x2003dcee
+  41f838:	2003dcef 	.word	0x2003dcef
   41f83c:	400c1f10 	.word	0x400c1f10
 
 0041f840 <am_hal_pwrctrl_periph_disable>:
@@ -27357,8 +27357,8 @@ am_hal_pwrctrl_gpu_mode_select(am_hal_pwrctrl_gpu_mode_e ePowerMode)
   41f9d8:	40014ac4 	.word	0x40014ac4
   41f9dc:	000186a0 	.word	0x000186a0
   41f9e0:	e000ed00 	.word	0xe000ed00
-  41f9e4:	2003dcdf 	.word	0x2003dcdf
-  41f9e8:	2003dcde 	.word	0x2003dcde
+  41f9e4:	2003dcef 	.word	0x2003dcef
+  41f9e8:	2003dcee 	.word	0x2003dcee
 
 0041f9ec <am_hal_pwrctrl_periph_enabled>:
     if ( bEnabled == NULL )
@@ -27744,26 +27744,26 @@ am_hal_pwrctrl_low_power_init(void)
   41fc80:	e6e0      	b.n	41fa44 <am_hal_pwrctrl_low_power_init+0x24>
   41fc82:	bf00      	nop
   41fc84:	40008000 	.word	0x40008000
-  41fc88:	200444c1 	.word	0x200444c1
+  41fc88:	200444d1 	.word	0x200444d1
   41fc8c:	e000ed00 	.word	0xe000ed00
   41fc90:	e001e300 	.word	0xe001e300
   41fc94:	40020000 	.word	0x40020000
-  41fc98:	20022b60 	.word	0x20022b60
+  41fc98:	20022b68 	.word	0x20022b68
   41fc9c:	40021000 	.word	0x40021000
-  41fca0:	2003dc48 	.word	0x2003dc48
+  41fca0:	2003dc58 	.word	0x2003dc58
   41fca4:	1f01600d 	.word	0x1f01600d
-  41fca8:	2003dc7c 	.word	0x2003dc7c
-  41fcac:	2003dc8c 	.word	0x2003dc8c
-  41fcb0:	20022b58 	.word	0x20022b58
+  41fca8:	2003dc8c 	.word	0x2003dc8c
+  41fcac:	2003dc9c 	.word	0x2003dc9c
+  41fcb0:	20022b60 	.word	0x20022b60
   41fcb4:	0045e46c 	.word	0x0045e46c
   41fcb8:	00fbbfc0 	.word	0x00fbbfc0
-  41fcbc:	2003dcdc 	.word	0x2003dcdc
-  41fcc0:	2003dcd8 	.word	0x2003dcd8
-  41fcc4:	2003dcd4 	.word	0x2003dcd4
-  41fcc8:	2003dcd0 	.word	0x2003dcd0
-  41fccc:	2003dccc 	.word	0x2003dccc
-  41fcd0:	2003dcc8 	.word	0x2003dcc8
-  41fcd4:	2003dcdf 	.word	0x2003dcdf
+  41fcbc:	2003dcec 	.word	0x2003dcec
+  41fcc0:	2003dce8 	.word	0x2003dce8
+  41fcc4:	2003dce4 	.word	0x2003dce4
+  41fcc8:	2003dce0 	.word	0x2003dce0
+  41fccc:	2003dcdc 	.word	0x2003dcdc
+  41fcd0:	2003dcd8 	.word	0x2003dcd8
+  41fcd4:	2003dcef 	.word	0x2003dcef
     RD_INFO1(AM_HAL_INFO_INFOSPACE_CURRENT_INFO1, (AM_REG_OTP_INFO1_SBLOTA_O / 4), 1, &info1buf[0]);
   41fcd8:	2201      	movs	r2, #1
     g_sINFO1regs.ui32MAINPTR                = info1buf[0];
@@ -27955,7 +27955,7 @@ am_hal_pwrctrl_low_power_init(void)
   41fe3a:	d9e7      	bls.n	41fe0c <am_hal_pwrctrl_low_power_init+0x3ec>
   41fe3c:	68cb      	ldr	r3, [r1, #12]
   41fe3e:	e69f      	b.n	41fb80 <am_hal_pwrctrl_low_power_init+0x160>
-  41fe40:	2003dc98 	.word	0x2003dc98
+  41fe40:	2003dca8 	.word	0x2003dca8
   41fe44:	1f01600d 	.word	0x1f01600d
   41fe48:	40020000 	.word	0x40020000
 
@@ -29000,7 +29000,7 @@ uint64_to_str(uint64_t ui64Val, char *pcBuf)
 }
   4204c8:	4770      	bx	lr
   4204ca:	bf00      	nop
-  4204cc:	2003e0e8 	.word	0x2003e0e8
+  4204cc:	2003e0f8 	.word	0x2003e0f8
 
 004204d0 <am_util_stdio_vsprintf>:
 // Format data into string. (va_list implementation)
@@ -29453,7 +29453,7 @@ am_util_stdio_vsprintf(char *pcBuf, const char *pcFmt, va_list pArgs)
                 pcStr = va_arg(pArgs, char *);
   420808:	9701      	str	r7, [sp, #4]
   42080a:	e770      	b.n	4206ee <am_util_stdio_vsprintf+0x21e>
-  42080c:	2003dce0 	.word	0x2003dce0
+  42080c:	2003dcf0 	.word	0x2003dcf0
         switch ( *pcFmt )
   420810:	78b3      	ldrb	r3, [r6, #2]
                 pcFmt++;
@@ -30512,8 +30512,8 @@ am_util_stdio_printf(const char *pcFmt, ...)
   420f9c:	e8bd 4030 	ldmia.w	sp!, {r4, r5, lr}
   420fa0:	b004      	add	sp, #16
   420fa2:	4770      	bx	lr
-  420fa4:	2003e0e8 	.word	0x2003e0e8
-  420fa8:	2003dce8 	.word	0x2003dce8
+  420fa4:	2003e0f8 	.word	0x2003e0f8
+  420fa8:	2003dcf8 	.word	0x2003dcf8
   420fac:	00000000 	.word	0x00000000
 
 00420fb0 <vRestoreContextOfFirstTask>:
@@ -30541,7 +30541,7 @@ void vRestoreContextOfFirstTask( void ) /* __attribute__ (( naked )) PRIVILEGED_
   420fdc:	f3af 8000 	nop.w
 
 00420fe0 <pxCurrentTCBConst2>:
-  420fe0:	2003eef4 	.word	0x2003eef4
+  420fe0:	2003ef04 	.word	0x2003ef04
 	...
 
 00420ff0 <vStartFirstTask>:
@@ -30635,7 +30635,7 @@ void PendSV_Handler( void ) /* __attribute__ (( naked )) PRIVILEGED_FUNCTION */
   42109c:	f3af 8000 	nop.w
 
 004210a0 <pxCurrentTCBConst>:
-  4210a0:	2003eef4 	.word	0x2003eef4
+  4210a0:	2003ef04 	.word	0x2003ef04
 	...
 
 004210b0 <SVC_Handler>:
@@ -30702,7 +30702,7 @@ static void prvTaskExitError( void )
   4210f4:	b003      	add	sp, #12
   4210f6:	f85d fb04 	ldr.w	pc, [sp], #4
   4210fa:	bf00      	nop
-  4210fc:	20022b68 	.word	0x20022b68
+  4210fc:	20022b70 	.word	0x20022b70
 
 00421100 <vPortSetupTimerInterrupt>:
     portNVIC_SYSTICK_CTRL_REG = 0UL;
@@ -30733,7 +30733,7 @@ static void prvTaskExitError( void )
 }
   421124:	4770      	bx	lr
   421126:	bf00      	nop
-  421128:	20022b6c 	.word	0x20022b6c
+  421128:	20022b74 	.word	0x20022b74
   42112c:	10624dd3 	.word	0x10624dd3
 
 00421130 <vPortYield>:
@@ -30779,7 +30779,7 @@ void vPortEnterCritical( void ) /* PRIVILEGED_FUNCTION */
   42115a:	f3bf 8f6f 	isb	sy
 }
   42115e:	bd08      	pop	{r3, pc}
-  421160:	20022b68 	.word	0x20022b68
+  421160:	20022b70 	.word	0x20022b70
 
 00421164 <vPortExitCritical>:
 /*-----------------------------------------------------------*/
@@ -30811,7 +30811,7 @@ void vPortExitCritical( void ) /* PRIVILEGED_FUNCTION */
   421180:	f7ff ff48 	bl	421014 <ulSetInterruptMask>
   421184:	e7fe      	b.n	421184 <vPortExitCritical+0x20>
   421186:	bf00      	nop
-  421188:	20022b68 	.word	0x20022b68
+  421188:	20022b70 	.word	0x20022b70
 
 0042118c <SysTick_Handler>:
 /*-----------------------------------------------------------*/
@@ -31049,7 +31049,7 @@ BaseType_t xPortStartScheduler( void ) /* PRIVILEGED_FUNCTION */
   4212a6:	2000      	movs	r0, #0
   4212a8:	b003      	add	sp, #12
   4212aa:	bd30      	pop	{r4, r5, pc}
-  4212ac:	20022b68 	.word	0x20022b68
+  4212ac:	20022b70 	.word	0x20022b70
 
 004212b0 <vApplicationMallocFailedHook>:
     // free memory available in the FreeRTOS heap.  pvPortMalloc() is called
@@ -31095,8 +31095,8 @@ BaseType_t xPortStartScheduler( void ) /* PRIVILEGED_FUNCTION */
 }
   4212c8:	bc30      	pop	{r4, r5}
   4212ca:	4770      	bx	lr
-  4212cc:	2003ed50 	.word	0x2003ed50
-  4212d0:	2003e950 	.word	0x2003e950
+  4212cc:	2003ed60 	.word	0x2003ed60
+  4212d0:	2003e960 	.word	0x2003e960
 
 004212d4 <vApplicationGetTimerTaskMemory>:
     *ppxTimerTaskStackBuffer = uxTimerTaskStack;
@@ -31120,8 +31120,8 @@ BaseType_t xPortStartScheduler( void ) /* PRIVILEGED_FUNCTION */
   4212e2:	6013      	str	r3, [r2, #0]
   4212e4:	bc30      	pop	{r4, r5}
   4212e6:	4770      	bx	lr
-  4212e8:	2003e8f0 	.word	0x2003e8f0
-  4212ec:	2003e0f0 	.word	0x2003e0f0
+  4212e8:	2003e900 	.word	0x2003e900
+  4212ec:	2003e100 	.word	0x2003e100
 
 004212f0 <prvAddNewTaskToReadyList>:
     }
@@ -31315,19 +31315,19 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
   4213d4:	6ae3      	ldr	r3, [r4, #44]	@ 0x2c
 }
   4213d6:	e79d      	b.n	421314 <prvAddNewTaskToReadyList+0x24>
-  4213d8:	2003eddc 	.word	0x2003eddc
-  4213dc:	2003eef4 	.word	0x2003eef4
-  4213e0:	2003edd0 	.word	0x2003edd0
-  4213e4:	2003ee54 	.word	0x2003ee54
-  4213e8:	2003edc0 	.word	0x2003edc0
-  4213ec:	2003edd4 	.word	0x2003edd4
-  4213f0:	2003ee10 	.word	0x2003ee10
-  4213f4:	2003edfc 	.word	0x2003edfc
-  4213f8:	2003ede4 	.word	0x2003ede4
-  4213fc:	2003ee24 	.word	0x2003ee24
-  421400:	2003ee28 	.word	0x2003ee28
-  421404:	2003ee40 	.word	0x2003ee40
-  421408:	2003ee2c 	.word	0x2003ee2c
+  4213d8:	2003edec 	.word	0x2003edec
+  4213dc:	2003ef04 	.word	0x2003ef04
+  4213e0:	2003ede0 	.word	0x2003ede0
+  4213e4:	2003ee64 	.word	0x2003ee64
+  4213e8:	2003edd0 	.word	0x2003edd0
+  4213ec:	2003ede4 	.word	0x2003ede4
+  4213f0:	2003ee20 	.word	0x2003ee20
+  4213f4:	2003ee0c 	.word	0x2003ee0c
+  4213f8:	2003edf4 	.word	0x2003edf4
+  4213fc:	2003ee34 	.word	0x2003ee34
+  421400:	2003ee38 	.word	0x2003ee38
+  421404:	2003ee50 	.word	0x2003ee50
+  421408:	2003ee3c 	.word	0x2003ee3c
 
 0042140c <vTaskSwitchContext.part.0>:
 void vTaskSwitchContext( void )
@@ -31497,14 +31497,14 @@ void vTaskSwitchContext( void )
   421542:	d183      	bne.n	42144c <vTaskSwitchContext.part.0+0x40>
   421544:	e787      	b.n	421456 <vTaskSwitchContext.part.0+0x4a>
   421546:	bf00      	nop
-  421548:	2003edc8 	.word	0x2003edc8
-  42154c:	2003edd8 	.word	0x2003edd8
-  421550:	2003edac 	.word	0x2003edac
-  421554:	2003edb0 	.word	0x2003edb0
-  421558:	2003eef4 	.word	0x2003eef4
-  42155c:	2003edd4 	.word	0x2003edd4
-  421560:	2003ede0 	.word	0x2003ede0
-  421564:	2003ee54 	.word	0x2003ee54
+  421548:	2003edd8 	.word	0x2003edd8
+  42154c:	2003ede8 	.word	0x2003ede8
+  421550:	2003edbc 	.word	0x2003edbc
+  421554:	2003edc0 	.word	0x2003edc0
+  421558:	2003ef04 	.word	0x2003ef04
+  42155c:	2003ede4 	.word	0x2003ede4
+  421560:	2003edf0 	.word	0x2003edf0
+  421564:	2003ee64 	.word	0x2003ee64
 
 00421568 <prvInitialiseNewTask.constprop.0>:
 static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
@@ -31713,10 +31713,10 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
   421690:	4640      	mov	r0, r8
   421692:	f7fa fa57 	bl	41bb44 <vPortFree>
   421696:	e7ce      	b.n	421636 <prvIdleTask+0xa>
-  421698:	2003edf8 	.word	0x2003edf8
-  42169c:	2003edfc 	.word	0x2003edfc
-  4216a0:	2003eddc 	.word	0x2003eddc
-  4216a4:	2003ee54 	.word	0x2003ee54
+  421698:	2003ee08 	.word	0x2003ee08
+  42169c:	2003ee0c 	.word	0x2003ee0c
+  4216a0:	2003edec 	.word	0x2003edec
+  4216a4:	2003ee64 	.word	0x2003ee64
 
 004216a8 <xTaskIncrementTick.part.0>:
 BaseType_t xTaskIncrementTick( void )
@@ -31913,15 +31913,15 @@ static void prvResetNextTaskUnblockTime( void )
   4217e0:	f7ff fc18 	bl	421014 <ulSetInterruptMask>
   4217e4:	e7fe      	b.n	4217e4 <xTaskIncrementTick.part.0+0x13c>
   4217e6:	bf00      	nop
-  4217e8:	2003edd8 	.word	0x2003edd8
-  4217ec:	2003edbc 	.word	0x2003edbc
-  4217f0:	2003ee54 	.word	0x2003ee54
-  4217f4:	2003eef4 	.word	0x2003eef4
-  4217f8:	2003ee28 	.word	0x2003ee28
-  4217fc:	2003ee24 	.word	0x2003ee24
-  421800:	2003edc4 	.word	0x2003edc4
-  421804:	2003edc8 	.word	0x2003edc8
-  421808:	2003edd4 	.word	0x2003edd4
+  4217e8:	2003ede8 	.word	0x2003ede8
+  4217ec:	2003edcc 	.word	0x2003edcc
+  4217f0:	2003ee64 	.word	0x2003ee64
+  4217f4:	2003ef04 	.word	0x2003ef04
+  4217f8:	2003ee38 	.word	0x2003ee38
+  4217fc:	2003ee34 	.word	0x2003ee34
+  421800:	2003edd4 	.word	0x2003edd4
+  421804:	2003edd8 	.word	0x2003edd8
+  421808:	2003ede4 	.word	0x2003ede4
 
 0042180c <xTaskResumeAll.part.0>:
 BaseType_t xTaskResumeAll( void )
@@ -32098,16 +32098,16 @@ BaseType_t xTaskResumeAll( void )
   42195e:	9301      	str	r3, [sp, #4]
   421960:	e7c9      	b.n	4218f6 <xTaskResumeAll.part.0+0xea>
   421962:	bf00      	nop
-  421964:	2003eddc 	.word	0x2003eddc
-  421968:	2003edc8 	.word	0x2003edc8
-  42196c:	2003ee54 	.word	0x2003ee54
-  421970:	2003ee28 	.word	0x2003ee28
-  421974:	2003edbc 	.word	0x2003edbc
-  421978:	2003edcc 	.word	0x2003edcc
-  42197c:	2003edb4 	.word	0x2003edb4
-  421980:	2003ee10 	.word	0x2003ee10
-  421984:	2003edd4 	.word	0x2003edd4
-  421988:	2003eef4 	.word	0x2003eef4
+  421964:	2003edec 	.word	0x2003edec
+  421968:	2003edd8 	.word	0x2003edd8
+  42196c:	2003ee64 	.word	0x2003ee64
+  421970:	2003ee38 	.word	0x2003ee38
+  421974:	2003edcc 	.word	0x2003edcc
+  421978:	2003eddc 	.word	0x2003eddc
+  42197c:	2003edc4 	.word	0x2003edc4
+  421980:	2003ee20 	.word	0x2003ee20
+  421984:	2003ede4 	.word	0x2003ede4
+  421988:	2003ef04 	.word	0x2003ef04
 
 0042198c <xTaskCreateStatic>:
     {
@@ -32330,12 +32330,12 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421aca:	f7ff bb31 	b.w	421130 <vPortYield>
   421ace:	f7ff bb2f 	b.w	421130 <vPortYield>
   421ad2:	bf00      	nop
-  421ad4:	2003edb4 	.word	0x2003edb4
-  421ad8:	2003edd8 	.word	0x2003edd8
-  421adc:	2003eef4 	.word	0x2003eef4
-  421ae0:	2003ee28 	.word	0x2003ee28
-  421ae4:	2003edbc 	.word	0x2003edbc
-  421ae8:	2003ee24 	.word	0x2003ee24
+  421ad4:	2003edc4 	.word	0x2003edc4
+  421ad8:	2003ede8 	.word	0x2003ede8
+  421adc:	2003ef04 	.word	0x2003ef04
+  421ae0:	2003ee38 	.word	0x2003ee38
+  421ae4:	2003edcc 	.word	0x2003edcc
+  421ae8:	2003ee34 	.word	0x2003ee34
 
 00421aec <vTaskSuspend>:
     {
@@ -32443,14 +32443,14 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421b96:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
   421b9a:	f7ff bc37 	b.w	42140c <vTaskSwitchContext.part.0>
   421b9e:	bf00      	nop
-  421ba0:	2003eef4 	.word	0x2003eef4
-  421ba4:	2003ede4 	.word	0x2003ede4
-  421ba8:	2003edd0 	.word	0x2003edd0
-  421bac:	2003edb4 	.word	0x2003edb4
-  421bb0:	2003ee28 	.word	0x2003ee28
-  421bb4:	2003edbc 	.word	0x2003edbc
-  421bb8:	2003eddc 	.word	0x2003eddc
-  421bbc:	2003edc8 	.word	0x2003edc8
+  421ba0:	2003ef04 	.word	0x2003ef04
+  421ba4:	2003edf4 	.word	0x2003edf4
+  421ba8:	2003ede0 	.word	0x2003ede0
+  421bac:	2003edc4 	.word	0x2003edc4
+  421bb0:	2003ee38 	.word	0x2003ee38
+  421bb4:	2003edcc 	.word	0x2003edcc
+  421bb8:	2003edec 	.word	0x2003edec
+  421bbc:	2003edd8 	.word	0x2003edd8
 
 00421bc0 <vTaskStartScheduler>:
 {
@@ -32604,11 +32604,11 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421c9a:	e7fe      	b.n	421c9a <vTaskStartScheduler+0xda>
   421c9c:	454c4449 	.word	0x454c4449
   421ca0:	0042162d 	.word	0x0042162d
-  421ca4:	2003edb8 	.word	0x2003edb8
+  421ca4:	2003edc8 	.word	0x2003edc8
   421ca8:	0045e694 	.word	0x0045e694
-  421cac:	2003edbc 	.word	0x2003edbc
-  421cb0:	2003edd0 	.word	0x2003edd0
-  421cb4:	2003edd8 	.word	0x2003edd8
+  421cac:	2003edcc 	.word	0x2003edcc
+  421cb0:	2003ede0 	.word	0x2003ede0
+  421cb4:	2003ede8 	.word	0x2003ede8
 
 00421cb8 <vTaskSuspendAll>:
     ++uxSchedulerSuspended;
@@ -32619,7 +32619,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 }
   421cc0:	4770      	bx	lr
   421cc2:	bf00      	nop
-  421cc4:	2003edb4 	.word	0x2003edb4
+  421cc4:	2003edc4 	.word	0x2003edc4
 
 00421cc8 <xTaskResumeAll>:
 {
@@ -32634,7 +32634,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421cd6:	e8bd 4008 	ldmia.w	sp!, {r3, lr}
   421cda:	f7ff bd97 	b.w	42180c <xTaskResumeAll.part.0>
   421cde:	bf00      	nop
-  421ce0:	2003edb4 	.word	0x2003edb4
+  421ce0:	2003edc4 	.word	0x2003edc4
 
 00421ce4 <xTaskGetTickCount>:
         xTicks = xTickCount;
@@ -32643,7 +32643,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 }
   421ce8:	4770      	bx	lr
   421cea:	bf00      	nop
-  421cec:	2003edd8 	.word	0x2003edd8
+  421cec:	2003ede8 	.word	0x2003ede8
 
 00421cf0 <xTaskIncrementTick>:
     if( uxSchedulerSuspended == ( UBaseType_t ) pdFALSE )
@@ -32662,8 +32662,8 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 }
   421d04:	4770      	bx	lr
   421d06:	bf00      	nop
-  421d08:	2003edb4 	.word	0x2003edb4
-  421d0c:	2003edcc 	.word	0x2003edcc
+  421d08:	2003edc4 	.word	0x2003edc4
+  421d0c:	2003eddc 	.word	0x2003eddc
 
 00421d10 <vTaskSwitchContext>:
     if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
@@ -32678,8 +32678,8 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421d1c:	4770      	bx	lr
   421d1e:	f7ff bb75 	b.w	42140c <vTaskSwitchContext.part.0>
   421d22:	bf00      	nop
-  421d24:	2003edb4 	.word	0x2003edb4
-  421d28:	2003edc8 	.word	0x2003edc8
+  421d24:	2003edc4 	.word	0x2003edc4
+  421d28:	2003edd8 	.word	0x2003edd8
 
 00421d2c <vTaskPlaceOnEventList>:
 {
@@ -32758,12 +32758,12 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 }
   421da8:	bd70      	pop	{r4, r5, r6, pc}
   421daa:	bf00      	nop
-  421dac:	2003eef4 	.word	0x2003eef4
-  421db0:	2003edd8 	.word	0x2003edd8
-  421db4:	2003ee24 	.word	0x2003ee24
-  421db8:	2003ede4 	.word	0x2003ede4
-  421dbc:	2003ee28 	.word	0x2003ee28
-  421dc0:	2003edbc 	.word	0x2003edbc
+  421dac:	2003ef04 	.word	0x2003ef04
+  421db0:	2003ede8 	.word	0x2003ede8
+  421db4:	2003ee34 	.word	0x2003ee34
+  421db8:	2003edf4 	.word	0x2003edf4
+  421dbc:	2003ee38 	.word	0x2003ee38
+  421dc0:	2003edcc 	.word	0x2003edcc
 
 00421dc4 <vTaskPlaceOnEventListRestricted>:
     {
@@ -32863,12 +32863,12 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
         configASSERT( pxEventList );
   421e72:	f7ff f8cf 	bl	421014 <ulSetInterruptMask>
   421e76:	e7fe      	b.n	421e76 <vTaskPlaceOnEventListRestricted+0xb2>
-  421e78:	2003eef4 	.word	0x2003eef4
-  421e7c:	2003edd8 	.word	0x2003edd8
-  421e80:	2003ede4 	.word	0x2003ede4
-  421e84:	2003ee24 	.word	0x2003ee24
-  421e88:	2003ee28 	.word	0x2003ee28
-  421e8c:	2003edbc 	.word	0x2003edbc
+  421e78:	2003ef04 	.word	0x2003ef04
+  421e7c:	2003ede8 	.word	0x2003ede8
+  421e80:	2003edf4 	.word	0x2003edf4
+  421e84:	2003ee34 	.word	0x2003ee34
+  421e88:	2003ee38 	.word	0x2003ee38
+  421e8c:	2003edcc 	.word	0x2003edcc
 
 00421e90 <xTaskRemoveFromEventList>:
 {
@@ -32982,12 +32982,12 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421f44:	f7ff f866 	bl	421014 <ulSetInterruptMask>
   421f48:	e7fe      	b.n	421f48 <xTaskRemoveFromEventList+0xb8>
   421f4a:	bf00      	nop
-  421f4c:	2003edb4 	.word	0x2003edb4
-  421f50:	2003ee10 	.word	0x2003ee10
-  421f54:	2003eef4 	.word	0x2003eef4
-  421f58:	2003edc8 	.word	0x2003edc8
-  421f5c:	2003edd4 	.word	0x2003edd4
-  421f60:	2003ee54 	.word	0x2003ee54
+  421f4c:	2003edc4 	.word	0x2003edc4
+  421f50:	2003ee20 	.word	0x2003ee20
+  421f54:	2003ef04 	.word	0x2003ef04
+  421f58:	2003edd8 	.word	0x2003edd8
+  421f5c:	2003ede4 	.word	0x2003ede4
+  421f60:	2003ee64 	.word	0x2003ee64
 
 00421f64 <vTaskInternalSetTimeOutState>:
     pxTimeOut->xOverflowCount = xNumOfOverflows;
@@ -33002,8 +33002,8 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 }
   421f70:	4770      	bx	lr
   421f72:	bf00      	nop
-  421f74:	2003edc4 	.word	0x2003edc4
-  421f78:	2003edd8 	.word	0x2003edd8
+  421f74:	2003edd4 	.word	0x2003edd4
+  421f78:	2003ede8 	.word	0x2003ede8
 
 00421f7c <xTaskCheckForTimeOut>:
 {
@@ -33078,8 +33078,8 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421fdc:	f7ff f81a 	bl	421014 <ulSetInterruptMask>
   421fe0:	e7fe      	b.n	421fe0 <xTaskCheckForTimeOut+0x64>
   421fe2:	bf00      	nop
-  421fe4:	2003edd8 	.word	0x2003edd8
-  421fe8:	2003edc4 	.word	0x2003edc4
+  421fe4:	2003ede8 	.word	0x2003ede8
+  421fe8:	2003edd4 	.word	0x2003edd4
 
 00421fec <vTaskMissedYield>:
     xYieldPending = pdTRUE;
@@ -33088,7 +33088,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   421ff0:	601a      	str	r2, [r3, #0]
 }
   421ff2:	4770      	bx	lr
-  421ff4:	2003edc8 	.word	0x2003edc8
+  421ff4:	2003edd8 	.word	0x2003edd8
 
 00421ff8 <xTaskGetSchedulerState>:
         if( xSchedulerRunning == pdFALSE )
@@ -33106,8 +33106,8 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   42200c:	2001      	movs	r0, #1
     }
   42200e:	4770      	bx	lr
-  422010:	2003edd0 	.word	0x2003edd0
-  422014:	2003edb4 	.word	0x2003edb4
+  422010:	2003ede0 	.word	0x2003ede0
+  422014:	2003edc4 	.word	0x2003edc4
 
 00422018 <prvTimerTask>:
         pxTimer->pxCallbackFunction( ( TimerHandle_t ) pxTimer );
@@ -33555,10 +33555,10 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   4222e0:	4798      	blx	r3
     }
   4222e2:	e6c4      	b.n	42206e <prvTimerTask+0x56>
-  4222e4:	2003f088 	.word	0x2003f088
-  4222e8:	2003f090 	.word	0x2003f090
-  4222ec:	2003f080 	.word	0x2003f080
-  4222f0:	2003f08c 	.word	0x2003f08c
+  4222e4:	2003f098 	.word	0x2003f098
+  4222e8:	2003f0a0 	.word	0x2003f0a0
+  4222ec:	2003f090 	.word	0x2003f090
+  4222f0:	2003f09c 	.word	0x2003f09c
             if( ( ( TickType_t ) ( xTimeNow - xCommandTime ) ) >= pxTimer->xTimerPeriodInTicks ) /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
   4222f4:	428b      	cmp	r3, r1
   4222f6:	d81c      	bhi.n	422332 <prvTimerTask+0x31a>
@@ -33707,16 +33707,16 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
   4223d6:	6020      	str	r0, [r4, #0]
   4223d8:	e7c4      	b.n	422364 <xTimerCreateTimerTask+0x10>
   4223da:	bf00      	nop
-  4223dc:	2003f088 	.word	0x2003f088
+  4223dc:	2003f098 	.word	0x2003f098
   4223e0:	0045d44c 	.word	0x0045d44c
   4223e4:	00422019 	.word	0x00422019
-  4223e8:	2003f084 	.word	0x2003f084
-  4223ec:	2003f090 	.word	0x2003f090
-  4223f0:	2003f08c 	.word	0x2003f08c
-  4223f4:	2003eef8 	.word	0x2003eef8
-  4223f8:	2003ef40 	.word	0x2003ef40
-  4223fc:	2003f0a8 	.word	0x2003f0a8
-  422400:	2003f094 	.word	0x2003f094
+  4223e8:	2003f094 	.word	0x2003f094
+  4223ec:	2003f0a0 	.word	0x2003f0a0
+  4223f0:	2003f09c 	.word	0x2003f09c
+  4223f4:	2003ef08 	.word	0x2003ef08
+  4223f8:	2003ef50 	.word	0x2003ef50
+  4223fc:	2003f0b8 	.word	0x2003f0b8
+  422400:	2003f0a4 	.word	0x2003f0a4
 
 00422404 <SystemInit>:
 void
@@ -33788,7 +33788,7 @@ __STATIC_FORCEINLINE void __DSB(void)
   422440:	e000ed00 	.word	0xe000ed00
   422444:	00410000 	.word	0x00410000
   422448:	e001e300 	.word	0xe001e300
-  42244c:	20022b6c 	.word	0x20022b6c
+  42244c:	20022b74 	.word	0x20022b74
   422450:	05b8d800 	.word	0x05b8d800
 
 00422454 <tud_cdc_n_write_flush>:
@@ -35535,10 +35535,10 @@ static void configuration_reset(uint8_t rhport)
   422dd6:	be00      	bkpt	0x0000
 }
   422dd8:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
-  422ddc:	2003f180 	.word	0x2003f180
+  422ddc:	2003f190 	.word	0x2003f190
   422de0:	0045e698 	.word	0x0045e698
-  422de4:	2003f184 	.word	0x2003f184
-  422de8:	2003f188 	.word	0x2003f188
+  422de4:	2003f194 	.word	0x2003f194
+  422de8:	2003f198 	.word	0x2003f198
 
 00422dec <usbd_int_set>:
 
@@ -35560,7 +35560,7 @@ void usbd_int_set(bool enabled)
   422df8:	4618      	mov	r0, r3
   422dfa:	f001 bb7d 	b.w	4244f8 <dcd_int_disable>
   422dfe:	bf00      	nop
-  422e00:	20022b80 	.word	0x20022b80
+  422e00:	20022b88 	.word	0x20022b88
 
 00422e04 <tud_mounted>:
   return _usbd_dev.cfg_num ? true : false;
@@ -35571,7 +35571,7 @@ void usbd_int_set(bool enabled)
   422e0a:	bf18      	it	ne
   422e0c:	2001      	movne	r0, #1
   422e0e:	4770      	bx	lr
-  422e10:	2003f188 	.word	0x2003f188
+  422e10:	2003f198 	.word	0x2003f198
 
 00422e14 <tud_suspended>:
   return _usbd_dev.suspended;
@@ -35581,7 +35581,7 @@ void usbd_int_set(bool enabled)
   422e18:	f3c0 0080 	ubfx	r0, r0, #2, #1
   422e1c:	4770      	bx	lr
   422e1e:	bf00      	nop
-  422e20:	2003f188 	.word	0x2003f188
+  422e20:	2003f198 	.word	0x2003f198
 
 00422e24 <tud_init>:
 {
@@ -35682,15 +35682,15 @@ TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_de
   422ec2:	2000      	movs	r0, #0
   422ec4:	e7b7      	b.n	422e36 <tud_init+0x12>
   422ec6:	bf00      	nop
-  422ec8:	2003f188 	.word	0x2003f188
-  422ecc:	20022b74 	.word	0x20022b74
-  422ed0:	2003f0bc 	.word	0x2003f0bc
-  422ed4:	20022b70 	.word	0x20022b70
+  422ec8:	2003f198 	.word	0x2003f198
+  422ecc:	20022b7c 	.word	0x20022b7c
+  422ed0:	2003f0cc 	.word	0x2003f0cc
+  422ed4:	20022b78 	.word	0x20022b78
   422ed8:	00000000 	.word	0x00000000
-  422edc:	2003f180 	.word	0x2003f180
-  422ee0:	2003f184 	.word	0x2003f184
+  422edc:	2003f190 	.word	0x2003f190
+  422ee0:	2003f194 	.word	0x2003f194
   422ee4:	0045e698 	.word	0x0045e698
-  422ee8:	20022b80 	.word	0x20022b80
+  422ee8:	20022b88 	.word	0x20022b88
 
 00422eec <tud_task_ext>:
 {
@@ -36024,14 +36024,14 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t ui16) { return 
   423198:	a908      	add	r1, sp, #32
   42319a:	f000 fc07 	bl	4239ac <tud_control_status>
   42319e:	e6b5      	b.n	422f0c <tud_task_ext+0x20>
-  4231a0:	2003f0bc 	.word	0x2003f0bc
-  4231a4:	2003f188 	.word	0x2003f188
-  4231a8:	2003f180 	.word	0x2003f180
-  4231ac:	2003f184 	.word	0x2003f184
+  4231a0:	2003f0cc 	.word	0x2003f0cc
+  4231a4:	2003f198 	.word	0x2003f198
+  4231a8:	2003f190 	.word	0x2003f190
+  4231ac:	2003f194 	.word	0x2003f194
   4231b0:	00424799 	.word	0x00424799
   4231b4:	0045e698 	.word	0x0045e698
   4231b8:	00424831 	.word	0x00424831
-  4231bc:	20022b80 	.word	0x20022b80
+  4231bc:	20022b88 	.word	0x20022b88
   4231c0:	004247b1 	.word	0x004247b1
   4231c4:	004247a5 	.word	0x004247a5
   if ( drvid < _app_driver_count ) {
@@ -36434,8 +36434,8 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t ui16) { return 
   4234b4:	f043 0301 	orr.w	r3, r3, #1
   4234b8:	71fb      	strb	r3, [r7, #7]
   4234ba:	e7e0      	b.n	42347e <tud_task_ext+0x592>
-  4234bc:	2003f180 	.word	0x2003f180
-  4234c0:	2003f184 	.word	0x2003f184
+  4234bc:	2003f190 	.word	0x2003f190
+  4234c0:	2003f194 	.word	0x2003f194
   4234c4:	0045e698 	.word	0x0045e698
   4234c8:	00424799 	.word	0x00424799
 	...
@@ -36665,11 +36665,11 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t ui16) { return 
   42365c:	f001 f850 	bl	424700 <tud_descriptor_configuration_cb>
   423660:	4602      	mov	r2, r0
   423662:	e6b7      	b.n	4233d4 <tud_task_ext+0x4e8>
-  423664:	2003f180 	.word	0x2003f180
-  423668:	2003f184 	.word	0x2003f184
+  423664:	2003f190 	.word	0x2003f190
+  423668:	2003f194 	.word	0x2003f194
   42366c:	0045e698 	.word	0x0045e698
   423670:	0042478d 	.word	0x0042478d
-  423674:	2003f19b 	.word	0x2003f19b
+  423674:	2003f1ab 	.word	0x2003f1ab
   423678:	00422581 	.word	0x00422581
 
 0042367c <dcd_event_handler>:
@@ -36908,12 +36908,12 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   423802:	be00      	bkpt	0x0000
   423804:	e7de      	b.n	4237c4 <dcd_event_handler+0x148>
   423806:	bf00      	nop
-  423808:	2003f188 	.word	0x2003f188
-  42380c:	2003f0bc 	.word	0x2003f0bc
+  423808:	2003f198 	.word	0x2003f198
+  42380c:	2003f0cc 	.word	0x2003f0cc
   423810:	00000000 	.word	0x00000000
-  423814:	2003f180 	.word	0x2003f180
+  423814:	2003f190 	.word	0x2003f190
   423818:	0045e698 	.word	0x0045e698
-  42381c:	2003f184 	.word	0x2003f184
+  42381c:	2003f194 	.word	0x2003f194
 
 00423820 <usbd_open_edpt_pair>:
 {
@@ -36999,8 +36999,8 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   4238ae:	2001      	movs	r0, #1
 }
   4238b0:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
-  4238b4:	20022b80 	.word	0x20022b80
-  4238b8:	2003f188 	.word	0x2003f188
+  4238b4:	20022b88 	.word	0x20022b88
+  4238b8:	2003f198 	.word	0x2003f198
 
 004238bc <usbd_edpt_open>:
 {
@@ -37041,8 +37041,8 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   return dcd_edpt_open(rhport, desc_ep);
   4238f6:	f000 be21 	b.w	42453c <dcd_edpt_open>
   4238fa:	bf00      	nop
-  4238fc:	2003f188 	.word	0x2003f188
-  423900:	20022b80 	.word	0x20022b80
+  4238fc:	2003f198 	.word	0x2003f198
+  423900:	20022b88 	.word	0x20022b88
 
 00423904 <usbd_edpt_claim>:
 {
@@ -37057,7 +37057,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   423914:	2100      	movs	r1, #0
   423916:	4418      	add	r0, r3
   423918:	f7fe bfb4 	b.w	422884 <tu_edpt_claim>
-  42391c:	2003f188 	.word	0x2003f188
+  42391c:	2003f198 	.word	0x2003f198
 
 00423920 <usbd_edpt_release>:
 {
@@ -37072,7 +37072,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   423930:	2100      	movs	r1, #0
   423932:	4418      	add	r0, r3
   423934:	f7fe bfc2 	b.w	4228bc <tu_edpt_release>
-  423938:	2003f188 	.word	0x2003f188
+  423938:	2003f198 	.word	0x2003f198
 
 0042393c <usbd_edpt_xfer>:
 {
@@ -37126,8 +37126,8 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   42399e:	d5e1      	bpl.n	423964 <usbd_edpt_xfer+0x28>
   4239a0:	be00      	bkpt	0x0000
   4239a2:	e7df      	b.n	423964 <usbd_edpt_xfer+0x28>
-  4239a4:	2003f188 	.word	0x2003f188
-  4239a8:	20022b80 	.word	0x20022b80
+  4239a4:	2003f198 	.word	0x2003f198
+  4239a8:	20022b88 	.word	0x20022b88
 
 004239ac <tud_control_status>:
   return usbd_edpt_xfer(rhport, ep_addr, NULL, 0);
@@ -37173,7 +37173,7 @@ bool tud_control_status(uint8_t rhport, tusb_control_request_t const * request)
   4239d2:	f001 0180 	and.w	r1, r1, #128	@ 0x80
   4239d6:	f7ff bfb1 	b.w	42393c <usbd_edpt_xfer>
   4239da:	bf00      	nop
-  4239dc:	2003f1b4 	.word	0x2003f1b4
+  4239dc:	2003f1c4 	.word	0x2003f1c4
 
 004239e0 <tud_control_xfer>:
 }
@@ -37270,7 +37270,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_min16 (uint16_t x, uint16_t y) {
   423a46:	461a      	mov	r2, r3
   423a48:	e7df      	b.n	423a0a <tud_control_xfer+0x2a>
   423a4a:	bf00      	nop
-  423a4c:	2003f1b4 	.word	0x2003f1b4
+  423a4c:	2003f1c4 	.word	0x2003f1c4
 
 00423a50 <usbd_control_reset>:
 void usbd_control_set_complete_callback( usbd_control_xfer_cb_t fp );
@@ -37286,7 +37286,7 @@ void usbd_control_reset(void)
   423a5c:	611a      	str	r2, [r3, #16]
 }
   423a5e:	4770      	bx	lr
-  423a60:	2003f1b4 	.word	0x2003f1b4
+  423a60:	2003f1c4 	.word	0x2003f1c4
 
 00423a64 <usbd_control_set_complete_callback>:
 
@@ -37299,7 +37299,7 @@ void usbd_control_set_complete_callback( usbd_control_xfer_cb_t fp )
 }
   423a68:	4770      	bx	lr
   423a6a:	bf00      	nop
-  423a6c:	2003f1b4 	.word	0x2003f1b4
+  423a6c:	2003f1c4 	.word	0x2003f1c4
 
 00423a70 <usbd_control_set_request>:
 
@@ -37326,7 +37326,7 @@ void usbd_control_set_request(tusb_control_request_t const *request)
 }
   423a84:	bc30      	pop	{r4, r5}
   423a86:	4770      	bx	lr
-  423a88:	2003f1b4 	.word	0x2003f1b4
+  423a88:	2003f1c4 	.word	0x2003f1c4
 
 00423a8c <usbd_control_xfer_cb>:
 
@@ -37460,7 +37460,7 @@ bool usbd_control_xfer_cb (uint8_t rhport, uint8_t ep_addr, xfer_result_t result
   423b3a:	d1c5      	bne.n	423ac8 <usbd_control_xfer_cb+0x3c>
   423b3c:	e7b0      	b.n	423aa0 <usbd_control_xfer_cb+0x14>
   423b3e:	bf00      	nop
-  423b40:	2003f1b4 	.word	0x2003f1b4
+  423b40:	2003f1c4 	.word	0x2003f1c4
   423b44:	00000000 	.word	0x00000000
 
 00423b48 <tud_vendor_n_available>:
@@ -38992,7 +38992,7 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport
   4243d8:	f44f 7280 	mov.w	r2, #256	@ 0x100
   4243dc:	e7af      	b.n	42433e <dcd_usb_dev_evt_callback+0x16>
   4243de:	bf00      	nop
-  4243e0:	2003f1c8 	.word	0x2003f1c8
+  4243e0:	2003f1d8 	.word	0x2003f1d8
 
 004243e4 <dcd_usb_ep_xfer_complete_callback>:
 dcd_usb_ep_xfer_complete_callback(const uint8_t ep_addr,
@@ -39181,7 +39181,7 @@ static inline void am_hal_usb_disable_phy_reset_override(void)
   4244d0:	e8bd 4038 	ldmia.w	sp!, {r3, r4, r5, lr}
     am_hal_usb_intr_usb_enable(pUSBHandle, USB_INTRUSB_Reset_Msk);
   4244d4:	f00b b972 	b.w	42f7bc <am_hal_usb_intr_usb_enable>
-  4244d8:	2003f1c8 	.word	0x2003f1c8
+  4244d8:	2003f1d8 	.word	0x2003f1d8
   4244dc:	40020000 	.word	0x40020000
   4244e0:	400b2000 	.word	0x400b2000
 
@@ -39254,7 +39254,7 @@ dcd_set_address (uint8_t rhport, uint8_t dev_addr)
   am_hal_usb_set_dev_state(pUSBHandle, AM_HAL_USB_DEV_STATE_ADDRESSED);
   424532:	f00a b981 	b.w	42e838 <am_hal_usb_set_dev_state>
   424536:	bf00      	nop
-  424538:	2003f1c8 	.word	0x2003f1c8
+  424538:	2003f1d8 	.word	0x2003f1d8
 
 0042453c <dcd_edpt_open>:
 {
@@ -39272,7 +39272,7 @@ dcd_set_address (uint8_t rhport, uint8_t dev_addr)
   424550:	fab0 f080 	clz	r0, r0
   424554:	0940      	lsrs	r0, r0, #5
   424556:	bd08      	pop	{r3, pc}
-  424558:	2003f1c8 	.word	0x2003f1c8
+  424558:	2003f1d8 	.word	0x2003f1d8
 
 0042455c <dcd_edpt_close_all>:
 }
@@ -39295,7 +39295,7 @@ dcd_set_address (uint8_t rhport, uint8_t dev_addr)
   42456e:	0940      	lsrs	r0, r0, #5
   424570:	bd08      	pop	{r3, pc}
   424572:	bf00      	nop
-  424574:	2003f1c8 	.word	0x2003f1c8
+  424574:	2003f1d8 	.word	0x2003f1d8
 
 00424578 <dcd_edpt_stall>:
 void
@@ -39307,7 +39307,7 @@ dcd_edpt_stall (uint8_t rhport, uint8_t ep_addr)
   424578:	4b01      	ldr	r3, [pc, #4]	@ (424580 <dcd_edpt_stall+0x8>)
   42457a:	6818      	ldr	r0, [r3, #0]
   42457c:	f00a b9bc 	b.w	42e8f8 <am_hal_usb_ep_stall>
-  424580:	2003f1c8 	.word	0x2003f1c8
+  424580:	2003f1d8 	.word	0x2003f1d8
 
 00424584 <dcd_edpt_clear_stall>:
 //
@@ -39319,7 +39319,7 @@ dcd_edpt_clear_stall (uint8_t rhport, uint8_t ep_addr)
   424584:	4b01      	ldr	r3, [pc, #4]	@ (42458c <dcd_edpt_clear_stall+0x8>)
   424586:	6818      	ldr	r0, [r3, #0]
   424588:	f00a ba04 	b.w	42e994 <am_hal_usb_ep_clear_stall>
-  42458c:	2003f1c8 	.word	0x2003f1c8
+  42458c:	2003f1d8 	.word	0x2003f1d8
 
 00424590 <dcd_connect>:
 //*****************************************************************************
@@ -39331,7 +39331,7 @@ dcd_connect(uint8_t rhport)
   424590:	4b01      	ldr	r3, [pc, #4]	@ (424598 <dcd_connect+0x8>)
   424592:	6818      	ldr	r0, [r3, #0]
   424594:	f00a b99c 	b.w	42e8d0 <am_hal_usb_attach>
-  424598:	2003f1c8 	.word	0x2003f1c8
+  424598:	2003f1d8 	.word	0x2003f1d8
 
 0042459c <dcd_init>:
 {
@@ -39368,7 +39368,7 @@ dcd_connect(uint8_t rhport)
   4245ce:	f7ff ffdf 	bl	424590 <dcd_connect>
 }
   4245d2:	bd38      	pop	{r3, r4, r5, pc}
-  4245d4:	2003f1c8 	.word	0x2003f1c8
+  4245d4:	2003f1d8 	.word	0x2003f1d8
   4245d8:	00424329 	.word	0x00424329
   4245dc:	00424305 	.word	0x00424305
   4245e0:	004243e5 	.word	0x004243e5
@@ -39422,7 +39422,7 @@ am_usb_isr(void)
   424612:	b008      	add	sp, #32
   424614:	bd10      	pop	{r4, pc}
   424616:	bf00      	nop
-  424618:	2003f1c8 	.word	0x2003f1c8
+  424618:	2003f1d8 	.word	0x2003f1d8
 
 0042461c <alloca>:
 {
@@ -39472,8 +39472,8 @@ void* alloca(int size)
   42463e:	bc30      	pop	{r4, r5}
   424640:	4770      	bx	lr
   424642:	bf00      	nop
-  424644:	2003f1d4 	.word	0x2003f1d4
-  424648:	2003f1dc 	.word	0x2003f1dc
+  424644:	2003f1e4 	.word	0x2003f1e4
+  424648:	2003f1ec 	.word	0x2003f1ec
 
 0042464c <save_stack>:
    }
@@ -39499,10 +39499,10 @@ int save_stack(void)
 }
   42465c:	4770      	bx	lr
   42465e:	bf00      	nop
-  424660:	2003f1dc 	.word	0x2003f1dc
-  424664:	2003f1d4 	.word	0x2003f1d4
-  424668:	2003f1d8 	.word	0x2003f1d8
-  42466c:	2003f1d0 	.word	0x2003f1d0
+  424660:	2003f1ec 	.word	0x2003f1ec
+  424664:	2003f1e4 	.word	0x2003f1e4
+  424668:	2003f1e8 	.word	0x2003f1e8
+  42466c:	2003f1e0 	.word	0x2003f1e0
 
 00424670 <restore_stack>:
 int restore_stack(void)
@@ -39525,10 +39525,10 @@ int restore_stack(void)
 }
   424680:	4770      	bx	lr
   424682:	bf00      	nop
-  424684:	2003f1d8 	.word	0x2003f1d8
-  424688:	2003f1d0 	.word	0x2003f1d0
-  42468c:	2003f1dc 	.word	0x2003f1dc
-  424690:	2003f1d4 	.word	0x2003f1d4
+  424684:	2003f1e8 	.word	0x2003f1e8
+  424688:	2003f1e0 	.word	0x2003f1e0
+  42468c:	2003f1ec 	.word	0x2003f1ec
+  424690:	2003f1e4 	.word	0x2003f1e4
 
 00424694 <alloc_stack>:
 int alloc_stack()
@@ -39557,7 +39557,7 @@ int audio_enc_init(int option)
   4246a4:	601a      	str	r2, [r3, #0]
 }
   4246a6:	bd08      	pop	{r3, pc}
-  4246a8:	2003f1cc 	.word	0x2003f1cc
+  4246a8:	2003f1dc 	.word	0x2003f1dc
 
 004246ac <audio_enc_encode_frame>:
 
@@ -39609,12 +39609,12 @@ int audio_enc_encode_frame(short *p_pcm_buffer, int n_pcm_samples, unsigned char
   4246da:	b002      	add	sp, #8
   4246dc:	bd70      	pop	{r4, r5, r6, pc}
   4246de:	bf00      	nop
-  4246e0:	2003f1cc 	.word	0x2003f1cc
-  4246e4:	2003f1dc 	.word	0x2003f1dc
-  4246e8:	2003f1e0 	.word	0x2003f1e0
-  4246ec:	2003f1d8 	.word	0x2003f1d8
-  4246f0:	2003f1d4 	.word	0x2003f1d4
-  4246f4:	2003f1d0 	.word	0x2003f1d0
+  4246e0:	2003f1dc 	.word	0x2003f1dc
+  4246e4:	2003f1ec 	.word	0x2003f1ec
+  4246e8:	2003f1f0 	.word	0x2003f1f0
+  4246ec:	2003f1e8 	.word	0x2003f1e8
+  4246f0:	2003f1e4 	.word	0x2003f1e4
+  4246f4:	2003f1e0 	.word	0x2003f1e0
 
 004246f8 <tud_descriptor_device_cb>:
 
@@ -39726,8 +39726,8 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
   42477e:	4d02      	ldr	r5, [pc, #8]	@ (424788 <tud_descriptor_string_cb+0x78>)
   424780:	e7f5      	b.n	42476e <tud_descriptor_string_cb+0x5e>
   424782:	bf00      	nop
-  424784:	20022b88 	.word	0x20022b88
-  424788:	200441e0 	.word	0x200441e0
+  424784:	20022b90 	.word	0x20022b90
+  424788:	200441f0 	.word	0x200441f0
 
 0042478c <tud_mount_cb>:
 //--------------------------------------------------------------------+
@@ -39740,7 +39740,7 @@ void tud_mount_cb(void) { webusb_connected = false; }
   42478e:	4b01      	ldr	r3, [pc, #4]	@ (424794 <tud_mount_cb+0x8>)
   424790:	701a      	strb	r2, [r3, #0]
   424792:	4770      	bx	lr
-  424794:	20044230 	.word	0x20044230
+  424794:	20044240 	.word	0x20044240
 
 00424798 <tud_umount_cb>:
 
@@ -39751,7 +39751,7 @@ void tud_umount_cb(void) { webusb_connected = false; }
   42479a:	4b01      	ldr	r3, [pc, #4]	@ (4247a0 <tud_umount_cb+0x8>)
   42479c:	701a      	strb	r2, [r3, #0]
   42479e:	4770      	bx	lr
-  4247a0:	20044230 	.word	0x20044230
+  4247a0:	20044240 	.word	0x20044240
 
 004247a4 <tud_suspend_cb>:
 // Invoked when usb bus is suspended
@@ -39765,7 +39765,7 @@ void tud_suspend_cb(bool remote_wakeup_en) {
   4247a8:	701a      	strb	r2, [r3, #0]
 }
   4247aa:	4770      	bx	lr
-  4247ac:	20044230 	.word	0x20044230
+  4247ac:	20044240 	.word	0x20044240
 
 004247b0 <tud_resume_cb>:
 
@@ -39775,7 +39775,7 @@ void tud_resume_cb(void) { webusb_connected = false; }
   4247b2:	4b01      	ldr	r3, [pc, #4]	@ (4247b8 <tud_resume_cb+0x8>)
   4247b4:	701a      	strb	r2, [r3, #0]
   4247b6:	4770      	bx	lr
-  4247b8:	20044230 	.word	0x20044230
+  4247b8:	20044240 	.word	0x20044240
 
 004247bc <tud_vendor_rx_cb>:
 
@@ -39857,10 +39857,10 @@ static inline uint32_t tud_vendor_read (void* buffer, uint32_t bufsize)
   42481a:	4798      	blx	r3
   42481c:	e7d1      	b.n	4247c2 <tud_vendor_rx_cb+0x6>
   42481e:	bf00      	nop
-  424820:	20044238 	.word	0x20044238
-  424824:	20044220 	.word	0x20044220
+  424820:	20044248 	.word	0x20044248
+  424824:	20044230 	.word	0x20044230
   424828:	0045d494 	.word	0x0045d494
-  42482c:	2004423a 	.word	0x2004423a
+  42482c:	2004424a 	.word	0x2004424a
 
 00424830 <tud_vendor_control_xfer_cb>:
 // Invoked when a control transfer occurred on an interface of this class
@@ -39967,7 +39967,7 @@ bool tud_vendor_control_xfer_cb(
   4248ae:	701d      	strb	r5, [r3, #0]
   4248b0:	e7e3      	b.n	42487a <tud_vendor_control_xfer_cb+0x4a>
   4248b2:	bf00      	nop
-  4248b4:	20044230 	.word	0x20044230
+  4248b4:	20044240 	.word	0x20044240
   4248b8:	0045d4c4 	.word	0x0045d4c4
   4248bc:	0045e6c8 	.word	0x0045e6c8
   4248c0:	0045d4e4 	.word	0x0045d4e4
@@ -40081,7 +40081,7 @@ static inline uint32_t tud_vendor_write_available (void)
   424956:	4647      	mov	r7, r8
   424958:	e7cd      	b.n	4248f6 <webusb_send_data+0x32>
   42495a:	bf00      	nop
-  42495c:	20044230 	.word	0x20044230
+  42495c:	20044240 	.word	0x20044240
   424960:	0045d54c 	.word	0x0045d54c
   424964:	00030d40 	.word	0x00030d40
   424968:	0045d504 	.word	0x0045d504
@@ -40099,7 +40099,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   424970:	60d9      	str	r1, [r3, #12]
 }
   424972:	4770      	bx	lr
-  424974:	20044220 	.word	0x20044220
+  424974:	20044230 	.word	0x20044230
 
 00424978 <am_hal_cachectrl_icache_enable>:
   424978:	4b0f      	ldr	r3, [pc, #60]	@ (4249b8 <am_hal_cachectrl_icache_enable+0x40>)
@@ -40222,7 +40222,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   424ad4:	2001      	movs	r0, #1
   424ad6:	bdf0      	pop	{r4, r5, r6, r7, pc}
   424ad8:	e001e300 	.word	0xe001e300
-  424adc:	20022ba0 	.word	0x20022ba0
+  424adc:	20022ba8 	.word	0x20022ba8
   424ae0:	e001e000 	.word	0xe001e000
   424ae4:	e000ed00 	.word	0xe000ed00
 
@@ -40590,10 +40590,10 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   424e82:	d192      	bne.n	424daa <am_hal_clkmgr_request_XTAL_HS+0x8a>
   424e84:	e7f1      	b.n	424e6a <am_hal_clkmgr_request_XTAL_HS+0x14a>
   424e86:	bf00      	nop
-  424e88:	20022ba8 	.word	0x20022ba8
-  424e8c:	2004444b 	.word	0x2004444b
-  424e90:	20044444 	.word	0x20044444
-  424e94:	20044488 	.word	0x20044488
+  424e88:	20022bb0 	.word	0x20022bb0
+  424e8c:	2004445b 	.word	0x2004445b
+  424e90:	20044454 	.word	0x20044454
+  424e94:	20044498 	.word	0x20044498
 
 00424e98 <am_hal_clkmgr_config_HFRC>:
   424e98:	2300      	movs	r3, #0
@@ -40758,13 +40758,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   425032:	bf00      	nop
   425034:	0025b800 	.word	0x0025b800
   425038:	02dc6c00 	.word	0x02dc6c00
-  42503c:	20022ba8 	.word	0x20022ba8
-  425040:	20044488 	.word	0x20044488
-  425044:	2004447c 	.word	0x2004447c
-  425048:	20022ba4 	.word	0x20022ba4
-  42504c:	2004444a 	.word	0x2004444a
-  425050:	20044440 	.word	0x20044440
-  425054:	20044468 	.word	0x20044468
+  42503c:	20022bb0 	.word	0x20022bb0
+  425040:	20044498 	.word	0x20044498
+  425044:	2004448c 	.word	0x2004448c
+  425048:	20022bac 	.word	0x20022bac
+  42504c:	2004445a 	.word	0x2004445a
+  425050:	20044450 	.word	0x20044450
+  425054:	20044478 	.word	0x20044478
 
 00425058 <am_hal_clkmgr_clock_config>:
   425058:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
@@ -41006,17 +41006,17 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4252ee:	600e      	str	r6, [r1, #0]
   4252f0:	701a      	strb	r2, [r3, #0]
   4252f2:	e705      	b.n	425100 <am_hal_clkmgr_clock_config+0xa8>
-  4252f4:	20022ba8 	.word	0x20022ba8
-  4252f8:	20044488 	.word	0x20044488
+  4252f4:	20022bb0 	.word	0x20022bb0
+  4252f8:	20044498 	.word	0x20044498
   4252fc:	000c49ba 	.word	0x000c49ba
-  425300:	20022ba3 	.word	0x20022ba3
+  425300:	20022bab 	.word	0x20022bab
   425304:	0ee6b280 	.word	0x0ee6b280
   425308:	0bb80000 	.word	0x0bb80000
-  42530c:	2004445c 	.word	0x2004445c
-  425310:	20044450 	.word	0x20044450
-  425314:	20044474 	.word	0x20044474
-  425318:	20044480 	.word	0x20044480
-  42531c:	20044478 	.word	0x20044478
+  42530c:	2004446c 	.word	0x2004446c
+  425310:	20044460 	.word	0x20044460
+  425314:	20044484 	.word	0x20044484
+  425318:	20044490 	.word	0x20044490
+  42531c:	20044488 	.word	0x20044488
   425320:	2f00      	cmp	r7, #0
   425322:	f000 80f1 	beq.w	425508 <am_hal_clkmgr_clock_config+0x4b0>
   425326:	2100      	movs	r1, #0
@@ -41272,13 +41272,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4255e4:	2c00      	cmp	r4, #0
   4255e6:	f43f af01 	beq.w	4253ec <am_hal_clkmgr_clock_config+0x394>
   4255ea:	e76f      	b.n	4254cc <am_hal_clkmgr_clock_config+0x474>
-  4255ec:	20022ba3 	.word	0x20022ba3
-  4255f0:	2004445c 	.word	0x2004445c
-  4255f4:	2004444b 	.word	0x2004444b
-  4255f8:	20044444 	.word	0x20044444
-  4255fc:	20022ba8 	.word	0x20022ba8
+  4255ec:	20022bab 	.word	0x20022bab
+  4255f0:	2004446c 	.word	0x2004446c
+  4255f4:	2004445b 	.word	0x2004445b
+  4255f8:	20044454 	.word	0x20044454
+  4255fc:	20022bb0 	.word	0x20022bb0
   425600:	000c49ba 	.word	0x000c49ba
-  425604:	20044478 	.word	0x20044478
+  425604:	20044488 	.word	0x20044488
 
 00425608 <am_hal_clkmgr_clock_request>:
   425608:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -41559,20 +41559,20 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4258e4:	f001 f8ce 	bl	426a84 <am_hal_interrupt_master_set>
   4258e8:	e69c      	b.n	425624 <am_hal_clkmgr_clock_request+0x1c>
   4258ea:	bf00      	nop
-  4258ec:	20044488 	.word	0x20044488
-  4258f0:	20022ba8 	.word	0x20022ba8
-  4258f4:	2004444a 	.word	0x2004444a
-  4258f8:	20044440 	.word	0x20044440
-  4258fc:	20022ba4 	.word	0x20022ba4
-  425900:	20044448 	.word	0x20044448
-  425904:	20044439 	.word	0x20044439
-  425908:	20044478 	.word	0x20044478
-  42590c:	2004445c 	.word	0x2004445c
-  425910:	20044449 	.word	0x20044449
-  425914:	2004444b 	.word	0x2004444b
-  425918:	20044444 	.word	0x20044444
-  42591c:	2004443c 	.word	0x2004443c
-  425920:	20022ba3 	.word	0x20022ba3
+  4258ec:	20044498 	.word	0x20044498
+  4258f0:	20022bb0 	.word	0x20022bb0
+  4258f4:	2004445a 	.word	0x2004445a
+  4258f8:	20044450 	.word	0x20044450
+  4258fc:	20022bac 	.word	0x20022bac
+  425900:	20044458 	.word	0x20044458
+  425904:	20044449 	.word	0x20044449
+  425908:	20044488 	.word	0x20044488
+  42590c:	2004446c 	.word	0x2004446c
+  425910:	20044459 	.word	0x20044459
+  425914:	2004445b 	.word	0x2004445b
+  425918:	20044454 	.word	0x20044454
+  42591c:	2004444c 	.word	0x2004444c
+  425920:	20022bab 	.word	0x20022bab
   425924:	4baa      	ldr	r3, [pc, #680]	@ (425bd0 <am_hal_clkmgr_clock_request+0x5c8>)
   425926:	691b      	ldr	r3, [r3, #16]
   425928:	2b00      	cmp	r3, #0
@@ -41817,16 +41817,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   425bc8:	f000 ff5c 	bl	426a84 <am_hal_interrupt_master_set>
   425bcc:	e539      	b.n	425642 <am_hal_clkmgr_clock_request+0x3a>
   425bce:	bf00      	nop
-  425bd0:	20022ba8 	.word	0x20022ba8
-  425bd4:	20044449 	.word	0x20044449
-  425bd8:	20044439 	.word	0x20044439
-  425bdc:	20044440 	.word	0x20044440
-  425be0:	20044438 	.word	0x20044438
-  425be4:	20044450 	.word	0x20044450
-  425be8:	2004444b 	.word	0x2004444b
-  425bec:	20044444 	.word	0x20044444
-  425bf0:	2004443c 	.word	0x2004443c
-  425bf4:	20044480 	.word	0x20044480
+  425bd0:	20022bb0 	.word	0x20022bb0
+  425bd4:	20044459 	.word	0x20044459
+  425bd8:	20044449 	.word	0x20044449
+  425bdc:	20044450 	.word	0x20044450
+  425be0:	20044448 	.word	0x20044448
+  425be4:	20044460 	.word	0x20044460
+  425be8:	2004445b 	.word	0x2004445b
+  425bec:	20044454 	.word	0x20044454
+  425bf0:	2004444c 	.word	0x2004444c
+  425bf4:	20044490 	.word	0x20044490
   425bf8:	f000 ff40 	bl	426a7c <am_hal_interrupt_master_disable>
   425bfc:	4ead      	ldr	r6, [pc, #692]	@ (425eb4 <am_hal_clkmgr_clock_request+0x8ac>)
   425bfe:	4cae      	ldr	r4, [pc, #696]	@ (425eb8 <am_hal_clkmgr_clock_request+0x8b0>)
@@ -42088,20 +42088,20 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   425eaa:	f47f aef8 	bne.w	425c9e <am_hal_clkmgr_clock_request+0x696>
   425eae:	f8d9 0000 	ldr.w	r0, [r9]
   425eb2:	e6eb      	b.n	425c8c <am_hal_clkmgr_clock_request+0x684>
-  425eb4:	2004444a 	.word	0x2004444a
-  425eb8:	20044440 	.word	0x20044440
-  425ebc:	20044448 	.word	0x20044448
-  425ec0:	20022ba8 	.word	0x20022ba8
-  425ec4:	20044438 	.word	0x20044438
-  425ec8:	20044450 	.word	0x20044450
-  425ecc:	2004447c 	.word	0x2004447c
-  425ed0:	20044478 	.word	0x20044478
-  425ed4:	20044468 	.word	0x20044468
-  425ed8:	2004445c 	.word	0x2004445c
-  425edc:	2004444b 	.word	0x2004444b
-  425ee0:	20044444 	.word	0x20044444
-  425ee4:	2004444c 	.word	0x2004444c
-  425ee8:	2004443c 	.word	0x2004443c
+  425eb4:	2004445a 	.word	0x2004445a
+  425eb8:	20044450 	.word	0x20044450
+  425ebc:	20044458 	.word	0x20044458
+  425ec0:	20022bb0 	.word	0x20022bb0
+  425ec4:	20044448 	.word	0x20044448
+  425ec8:	20044460 	.word	0x20044460
+  425ecc:	2004448c 	.word	0x2004448c
+  425ed0:	20044488 	.word	0x20044488
+  425ed4:	20044478 	.word	0x20044478
+  425ed8:	2004446c 	.word	0x2004446c
+  425edc:	2004445b 	.word	0x2004445b
+  425ee0:	20044454 	.word	0x20044454
+  425ee4:	2004445c 	.word	0x2004445c
+  425ee8:	2004444c 	.word	0x2004444c
   425eec:	f8d9 0000 	ldr.w	r0, [r9]
   425ef0:	f007 fa04 	bl	42d2fc <am_hal_syspll_enable>
   425ef4:	4607      	mov	r7, r0
@@ -42398,16 +42398,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42620a:	e76e      	b.n	4260ea <am_hal_clkmgr_clock_release+0x1ae>
   42620c:	2006      	movs	r0, #6
   42620e:	e6b0      	b.n	425f72 <am_hal_clkmgr_clock_release+0x36>
-  426210:	20044488 	.word	0x20044488
-  426214:	2004444b 	.word	0x2004444b
-  426218:	20044444 	.word	0x20044444
-  42621c:	20044478 	.word	0x20044478
-  426220:	2004444c 	.word	0x2004444c
-  426224:	20044438 	.word	0x20044438
-  426228:	20044450 	.word	0x20044450
-  42622c:	20044439 	.word	0x20044439
-  426230:	20044449 	.word	0x20044449
-  426234:	2004443c 	.word	0x2004443c
+  426210:	20044498 	.word	0x20044498
+  426214:	2004445b 	.word	0x2004445b
+  426218:	20044454 	.word	0x20044454
+  42621c:	20044488 	.word	0x20044488
+  426220:	2004445c 	.word	0x2004445c
+  426224:	20044448 	.word	0x20044448
+  426228:	20044460 	.word	0x20044460
+  42622c:	20044449 	.word	0x20044449
+  426230:	20044459 	.word	0x20044459
+  426234:	2004444c 	.word	0x2004444c
 
 00426238 <am_hal_clkmgr_clock_release_all>:
   426238:	2838      	cmp	r0, #56	@ 0x38
@@ -42485,7 +42485,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4262ea:	2006      	movs	r0, #6
   4262ec:	4770      	bx	lr
   4262ee:	bf00      	nop
-  4262f0:	20044488 	.word	0x20044488
+  4262f0:	20044498 	.word	0x20044498
 
 004262f4 <am_hal_clkmgr_board_info_set>:
   4262f4:	b190      	cbz	r0, 42631c <am_hal_clkmgr_board_info_set+0x28>
@@ -42507,7 +42507,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42631e:	4618      	mov	r0, r3
   426320:	4770      	bx	lr
   426322:	bf00      	nop
-  426324:	20022ba8 	.word	0x20022ba8
+  426324:	20022bb0 	.word	0x20022bb0
 
 00426328 <am_hal_debug_enable>:
   426328:	b530      	push	{r4, r5, lr}
@@ -42582,10 +42582,10 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4263dc:	f7f9 f97e 	bl	41f6dc <am_hal_pwrctrl_periph_enable>
   4263e0:	e7b6      	b.n	426350 <am_hal_debug_enable+0x28>
   4263e2:	bf00      	nop
-  4263e4:	200444c3 	.word	0x200444c3
-  4263e8:	200444c0 	.word	0x200444c0
-  4263ec:	200444c2 	.word	0x200444c2
-  4263f0:	200444c1 	.word	0x200444c1
+  4263e4:	200444d3 	.word	0x200444d3
+  4263e8:	200444d0 	.word	0x200444d0
+  4263ec:	200444d2 	.word	0x200444d2
+  4263f0:	200444d1 	.word	0x200444d1
   4263f4:	e000ed00 	.word	0xe000ed00
   4263f8:	e000edfc 	.word	0xe000edfc
   4263fc:	40020000 	.word	0x40020000
@@ -42625,7 +42625,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42644e:	b003      	add	sp, #12
   426450:	bd30      	pop	{r4, r5, pc}
   426452:	bf00      	nop
-  426454:	200444c1 	.word	0x200444c1
+  426454:	200444d1 	.word	0x200444d1
   426458:	e000ed00 	.word	0xe000ed00
   42645c:	e000edfc 	.word	0xe000edfc
 
@@ -43092,8 +43092,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42692e:	2006      	movs	r0, #6
   426930:	bc30      	pop	{r4, r5}
   426932:	4770      	bx	lr
-  426934:	20044bc8 	.word	0x20044bc8
-  426938:	200444c8 	.word	0x200444c8
+  426934:	20044bd8 	.word	0x20044bd8
+  426938:	200444d8 	.word	0x200444d8
 
 0042693c <am_hal_gpio_interrupt_service>:
   42693c:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -43136,8 +43136,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4269a6:	f04f 0805 	mov.w	r8, #5
   4269aa:	4640      	mov	r0, r8
   4269ac:	e8bd 83f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, pc}
-  4269b0:	20044bc8 	.word	0x20044bc8
-  4269b4:	200444c8 	.word	0x200444c8
+  4269b0:	20044bd8 	.word	0x20044bd8
+  4269b4:	200444d8 	.word	0x200444d8
 
 004269b8 <am_hal_info1_read>:
   4269b8:	2805      	cmp	r0, #5
@@ -43234,7 +43234,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   426a92:	601a      	str	r2, [r3, #0]
   426a94:	4770      	bx	lr
   426a96:	bf00      	nop
-  426a98:	200452c8 	.word	0x200452c8
+  426a98:	200452d8 	.word	0x200452d8
 
 00426a9c <am_hal_itm_enable>:
   426a9c:	b510      	push	{r4, lr}
@@ -43267,7 +43267,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   426ae2:	601a      	str	r2, [r3, #0]
   426ae4:	e7e5      	b.n	426ab2 <am_hal_itm_enable+0x16>
   426ae6:	bf00      	nop
-  426ae8:	200452c8 	.word	0x200452c8
+  426ae8:	200452d8 	.word	0x200452d8
   426aec:	02dc6c00 	.word	0x02dc6c00
   426af0:	00150511 	.word	0x00150511
   426af4:	000f4240 	.word	0x000f4240
@@ -43550,8 +43550,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   426dd2:	bf00      	nop
   426dd4:	40020000 	.word	0x40020000
   426dd8:	c0007000 	.word	0xc0007000
-  426ddc:	20022bbc 	.word	0x20022bbc
-  426de0:	20022bc0 	.word	0x20022bc0
+  426ddc:	20022bc4 	.word	0x20022bc4
+  426de0:	20022bc8 	.word	0x20022bc8
   426de4:	0fff8c00 	.word	0x0fff8c00
 
 00426de8 <am_hal_mcuctrl_extclk32m_status_get>:
@@ -43598,7 +43598,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   426e4a:	2006      	movs	r0, #6
   426e4c:	4770      	bx	lr
   426e4e:	bf00      	nop
-  426e50:	200452cc 	.word	0x200452cc
+  426e50:	200452dc 	.word	0x200452dc
   426e54:	01f956e2 	.word	0x01f956e2
 
 00426e58 <am_hal_pdm_power_control>:
@@ -44427,7 +44427,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4276b6:	4718      	bx	r3
   4276b8:	4618      	mov	r0, r3
   4276ba:	4770      	bx	lr
-  4276bc:	20045350 	.word	0x20045350
+  4276bc:	20045360 	.word	0x20045360
 
 004276c0 <am_hal_spotmgr_tempco_postpone>:
   4276c0:	4b02      	ldr	r3, [pc, #8]	@ (4276cc <am_hal_spotmgr_tempco_postpone+0xc>)
@@ -44436,7 +44436,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4276c6:	4700      	bx	r0
   4276c8:	4770      	bx	lr
   4276ca:	bf00      	nop
-  4276cc:	20045350 	.word	0x20045350
+  4276cc:	20045360 	.word	0x20045360
 
 004276d0 <am_hal_spotmgr_tempco_pending_handle>:
   4276d0:	4b02      	ldr	r3, [pc, #8]	@ (4276dc <am_hal_spotmgr_tempco_pending_handle+0xc>)
@@ -44445,7 +44445,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4276d6:	4700      	bx	r0
   4276d8:	4770      	bx	lr
   4276da:	bf00      	nop
-  4276dc:	20045350 	.word	0x20045350
+  4276dc:	20045360 	.word	0x20045360
 
 004276e0 <am_hal_spotmgr_simobuck_init_bfr_ovr>:
   4276e0:	4b02      	ldr	r3, [pc, #8]	@ (4276ec <am_hal_spotmgr_simobuck_init_bfr_ovr+0xc>)
@@ -44454,7 +44454,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4276e6:	4700      	bx	r0
   4276e8:	4770      	bx	lr
   4276ea:	bf00      	nop
-  4276ec:	20045350 	.word	0x20045350
+  4276ec:	20045360 	.word	0x20045360
 
 004276f0 <am_hal_spotmgr_simobuck_init_bfr_enable>:
   4276f0:	4b02      	ldr	r3, [pc, #8]	@ (4276fc <am_hal_spotmgr_simobuck_init_bfr_enable+0xc>)
@@ -44463,7 +44463,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4276f6:	4700      	bx	r0
   4276f8:	4770      	bx	lr
   4276fa:	bf00      	nop
-  4276fc:	20045350 	.word	0x20045350
+  4276fc:	20045360 	.word	0x20045360
 
 00427700 <am_hal_spotmgr_simobuck_init_aft_enable>:
   427700:	4b02      	ldr	r3, [pc, #8]	@ (42770c <am_hal_spotmgr_simobuck_init_aft_enable+0xc>)
@@ -44472,7 +44472,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427706:	4700      	bx	r0
   427708:	4770      	bx	lr
   42770a:	bf00      	nop
-  42770c:	20045350 	.word	0x20045350
+  42770c:	20045360 	.word	0x20045360
 
 00427710 <am_hal_spotmgr_boost_timer_interrupt_service>:
   427710:	4b02      	ldr	r3, [pc, #8]	@ (42771c <am_hal_spotmgr_boost_timer_interrupt_service+0xc>)
@@ -44481,7 +44481,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427716:	4718      	bx	r3
   427718:	4770      	bx	lr
   42771a:	bf00      	nop
-  42771c:	20045350 	.word	0x20045350
+  42771c:	20045360 	.word	0x20045360
 
 00427720 <am_hal_spotmgr_ton_config_init>:
   427720:	4b02      	ldr	r3, [pc, #8]	@ (42772c <am_hal_spotmgr_ton_config_init+0xc>)
@@ -44490,7 +44490,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427726:	4700      	bx	r0
   427728:	4770      	bx	lr
   42772a:	bf00      	nop
-  42772c:	20045350 	.word	0x20045350
+  42772c:	20045360 	.word	0x20045360
 
 00427730 <am_hal_spotmgr_ton_config_update>:
   427730:	4b02      	ldr	r3, [pc, #8]	@ (42773c <am_hal_spotmgr_ton_config_update+0xc>)
@@ -44499,7 +44499,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427736:	4718      	bx	r3
   427738:	4618      	mov	r0, r3
   42773a:	4770      	bx	lr
-  42773c:	20045350 	.word	0x20045350
+  42773c:	20045360 	.word	0x20045360
 
 00427740 <am_hal_spotmgr_post_lptohp_handle>:
   427740:	4b02      	ldr	r3, [pc, #8]	@ (42774c <am_hal_spotmgr_post_lptohp_handle+0xc>)
@@ -44508,7 +44508,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427746:	4700      	bx	r0
   427748:	4770      	bx	lr
   42774a:	bf00      	nop
-  42774c:	20045350 	.word	0x20045350
+  42774c:	20045360 	.word	0x20045360
 
 00427750 <am_hal_spotmgr_simobuck_lp_autosw_init>:
   427750:	4b02      	ldr	r3, [pc, #8]	@ (42775c <am_hal_spotmgr_simobuck_lp_autosw_init+0xc>)
@@ -44517,7 +44517,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427756:	4700      	bx	r0
   427758:	4770      	bx	lr
   42775a:	bf00      	nop
-  42775c:	20045350 	.word	0x20045350
+  42775c:	20045360 	.word	0x20045360
 
 00427760 <am_hal_spotmgr_init>:
   427760:	b530      	push	{r4, r5, lr}
@@ -44783,21 +44783,21 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4279b4:	481a      	ldr	r0, [pc, #104]	@ (427a20 <am_hal_spotmgr_init+0x2c0>)
   4279b6:	e9c3 1206 	strd	r1, r2, [r3, #24]
   4279ba:	e72f      	b.n	42781c <am_hal_spotmgr_init+0xbc>
-  4279bc:	20045350 	.word	0x20045350
+  4279bc:	20045360 	.word	0x20045360
   4279c0:	40020000 	.word	0x40020000
-  4279c4:	20045401 	.word	0x20045401
-  4279c8:	20045404 	.word	0x20045404
-  4279cc:	20045403 	.word	0x20045403
-  4279d0:	20045402 	.word	0x20045402
-  4279d4:	20045400 	.word	0x20045400
+  4279c4:	20045411 	.word	0x20045411
+  4279c8:	20045414 	.word	0x20045414
+  4279cc:	20045413 	.word	0x20045413
+  4279d0:	20045412 	.word	0x20045412
+  4279d4:	20045410 	.word	0x20045410
   4279d8:	0042c631 	.word	0x0042c631
   4279dc:	0042c5a9 	.word	0x0042c5a9
   4279e0:	0042bbb1 	.word	0x0042bbb1
   4279e4:	00429e3d 	.word	0x00429e3d
   4279e8:	00429ea9 	.word	0x00429ea9
   4279ec:	0042c55d 	.word	0x0042c55d
-  4279f0:	20022b60 	.word	0x20022b60
-  4279f4:	2003dc48 	.word	0x2003dc48
+  4279f0:	20022b68 	.word	0x20022b68
+  4279f4:	2003dc58 	.word	0x2003dc58
   4279f8:	00429b25 	.word	0x00429b25
   4279fc:	00428bc5 	.word	0x00428bc5
   427a00:	00428b01 	.word	0x00428b01
@@ -44886,8 +44886,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427adc:	2b22      	cmp	r3, #34	@ 0x22
   427ade:	f47f aefd 	bne.w	4278dc <am_hal_spotmgr_init+0x17c>
   427ae2:	e7bb      	b.n	427a5c <am_hal_spotmgr_init+0x2fc>
-  427ae4:	20022b60 	.word	0x20022b60
-  427ae8:	20045350 	.word	0x20045350
+  427ae4:	20022b68 	.word	0x20022b68
+  427ae8:	20045360 	.word	0x20045360
   427aec:	0042867d 	.word	0x0042867d
   427af0:	00428789 	.word	0x00428789
   427af4:	004287e9 	.word	0x004287e9
@@ -44897,7 +44897,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427b04:	00427e41 	.word	0x00427e41
   427b08:	00427d31 	.word	0x00427d31
   427b0c:	00427d61 	.word	0x00427d61
-  427b10:	2003dc48 	.word	0x2003dc48
+  427b10:	2003dc58 	.word	0x2003dc58
   427b14:	00427f95 	.word	0x00427f95
   427b18:	00427b1d 	.word	0x00427b1d
 
@@ -45077,13 +45077,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427d08:	447a0000 	.word	0x447a0000
   427d0c:	40021000 	.word	0x40021000
   427d10:	40020000 	.word	0x40020000
-  427d14:	2004540c 	.word	0x2004540c
-  427d18:	20045408 	.word	0x20045408
-  427d1c:	2003dcdc 	.word	0x2003dcdc
-  427d20:	2003dcd8 	.word	0x2003dcd8
-  427d24:	2003dcd4 	.word	0x2003dcd4
-  427d28:	2003dccc 	.word	0x2003dccc
-  427d2c:	2003dcd0 	.word	0x2003dcd0
+  427d14:	2004541c 	.word	0x2004541c
+  427d18:	20045418 	.word	0x20045418
+  427d1c:	2003dcec 	.word	0x2003dcec
+  427d20:	2003dce8 	.word	0x2003dce8
+  427d24:	2003dce4 	.word	0x2003dce4
+  427d28:	2003dcdc 	.word	0x2003dcdc
+  427d2c:	2003dce0 	.word	0x2003dce0
 
 00427d30 <am_hal_spotmgr_pcm0_7_simobuck_init_bfr_enable>:
   427d30:	4b08      	ldr	r3, [pc, #32]	@ (427d54 <am_hal_spotmgr_pcm0_7_simobuck_init_bfr_enable+0x24>)
@@ -45101,8 +45101,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427d4c:	f8c2 1080 	str.w	r1, [r2, #128]	@ 0x80
   427d50:	2000      	movs	r0, #0
   427d52:	4770      	bx	lr
-  427d54:	2003dcdc 	.word	0x2003dcdc
-  427d58:	2003dcc8 	.word	0x2003dcc8
+  427d54:	2003dcec 	.word	0x2003dcec
+  427d58:	2003dcd8 	.word	0x2003dcd8
   427d5c:	40020000 	.word	0x40020000
 
 00427d60 <am_hal_spotmgr_pcm0_7_simobuck_init_aft_enable>:
@@ -45182,13 +45182,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427e1c:	d1bc      	bne.n	427d98 <am_hal_spotmgr_pcm0_7_ton_config_init+0x14>
   427e1e:	e7b6      	b.n	427d8e <am_hal_spotmgr_pcm0_7_ton_config_init+0xa>
   427e20:	40020000 	.word	0x40020000
-  427e24:	20022bca 	.word	0x20022bca
-  427e28:	20022bc9 	.word	0x20022bc9
-  427e2c:	20022bc6 	.word	0x20022bc6
-  427e30:	20022bc5 	.word	0x20022bc5
-  427e34:	20022bc8 	.word	0x20022bc8
-  427e38:	20022bc7 	.word	0x20022bc7
-  427e3c:	20022b60 	.word	0x20022b60
+  427e24:	20022bd2 	.word	0x20022bd2
+  427e28:	20022bd1 	.word	0x20022bd1
+  427e2c:	20022bce 	.word	0x20022bce
+  427e30:	20022bcd 	.word	0x20022bcd
+  427e34:	20022bd0 	.word	0x20022bd0
+  427e38:	20022bcf 	.word	0x20022bcf
+  427e3c:	20022b68 	.word	0x20022b68
 
 00427e40 <am_hal_spotmgr_pcm0_7_ton_config_update>:
   427e40:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
@@ -45292,12 +45292,12 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   427f72:	bf00      	nop
   427f74:	40021000 	.word	0x40021000
   427f78:	40020000 	.word	0x40020000
-  427f7c:	20022bca 	.word	0x20022bca
-  427f80:	20022bc9 	.word	0x20022bc9
-  427f84:	20022bc8 	.word	0x20022bc8
-  427f88:	20022bc6 	.word	0x20022bc6
-  427f8c:	20022bc5 	.word	0x20022bc5
-  427f90:	20022bc7 	.word	0x20022bc7
+  427f7c:	20022bd2 	.word	0x20022bd2
+  427f80:	20022bd1 	.word	0x20022bd1
+  427f84:	20022bd0 	.word	0x20022bd0
+  427f88:	20022bce 	.word	0x20022bce
+  427f8c:	20022bcd 	.word	0x20022bcd
+  427f90:	20022bcf 	.word	0x20022bcf
 
 00427f94 <am_hal_spotmgr_pcm0_7_init>:
   427f94:	2000      	movs	r0, #0
@@ -45533,18 +45533,18 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428248:	447a0000 	.word	0x447a0000
   42824c:	40021000 	.word	0x40021000
   428250:	40020000 	.word	0x40020000
-  428254:	20045414 	.word	0x20045414
-  428258:	2004541c 	.word	0x2004541c
+  428254:	20045424 	.word	0x20045424
+  428258:	2004542c 	.word	0x2004542c
   42825c:	c3888000 	.word	0xc3888000
-  428260:	20045456 	.word	0x20045456
-  428264:	20045413 	.word	0x20045413
-  428268:	20045410 	.word	0x20045410
-  42826c:	20045412 	.word	0x20045412
+  428260:	20045466 	.word	0x20045466
+  428264:	20045423 	.word	0x20045423
+  428268:	20045420 	.word	0x20045420
+  42826c:	20045422 	.word	0x20045422
   428270:	c3888000 	.word	0xc3888000
   428274:	420c0000 	.word	0x420c0000
-  428278:	20045420 	.word	0x20045420
-  42827c:	20045418 	.word	0x20045418
-  428280:	20045421 	.word	0x20045421
+  428278:	20045430 	.word	0x20045430
+  42827c:	20045428 	.word	0x20045428
+  428280:	20045431 	.word	0x20045431
   428284:	4ab5      	ldr	r2, [pc, #724]	@ (42855c <am_hal_spotmgr_pcm2_0_power_state_update+0x5c4>)
   428286:	2605      	movs	r6, #5
   428288:	f8d2 3080 	ldr.w	r3, [r2, #128]	@ 0x80
@@ -45793,16 +45793,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428556:	f8c3 2088 	str.w	r2, [r3, #136]	@ 0x88
   42855a:	e525      	b.n	427fa8 <am_hal_spotmgr_pcm2_0_power_state_update+0x10>
   42855c:	40020000 	.word	0x40020000
-  428560:	20045420 	.word	0x20045420
-  428564:	20045418 	.word	0x20045418
-  428568:	20045421 	.word	0x20045421
-  42856c:	2003dcdc 	.word	0x2003dcdc
+  428560:	20045430 	.word	0x20045430
+  428564:	20045428 	.word	0x20045428
+  428568:	20045431 	.word	0x20045431
+  42856c:	2003dcec 	.word	0x2003dcec
   428570:	40021000 	.word	0x40021000
-  428574:	2003dcd4 	.word	0x2003dcd4
-  428578:	20045456 	.word	0x20045456
-  42857c:	20045413 	.word	0x20045413
-  428580:	20045410 	.word	0x20045410
-  428584:	20045412 	.word	0x20045412
+  428574:	2003dce4 	.word	0x2003dce4
+  428578:	20045466 	.word	0x20045466
+  42857c:	20045423 	.word	0x20045423
+  428580:	20045420 	.word	0x20045420
+  428584:	20045422 	.word	0x20045422
   428588:	42040000 	.word	0x42040000
   42858c:	42480000 	.word	0x42480000
   428590:	42400000 	.word	0x42400000
@@ -45893,10 +45893,10 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428652:	2300      	movs	r3, #0
   428654:	e7d2      	b.n	4285fc <am_hal_spotmgr_pcm2_0_power_state_update+0x664>
   428656:	bf00      	nop
-  428658:	2003dcdc 	.word	0x2003dcdc
+  428658:	2003dcec 	.word	0x2003dcec
   42865c:	40021000 	.word	0x40021000
-  428660:	2003dcd4 	.word	0x2003dcd4
-  428664:	20045420 	.word	0x20045420
+  428660:	2003dce4 	.word	0x2003dce4
+  428664:	20045430 	.word	0x20045430
   428668:	40020000 	.word	0x40020000
 
 0042866c <am_hal_spotmgr_pcm2_0_tempco_postpone>:
@@ -45906,7 +45906,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428672:	701a      	strb	r2, [r3, #0]
   428674:	4770      	bx	lr
   428676:	bf00      	nop
-  428678:	20045413 	.word	0x20045413
+  428678:	20045423 	.word	0x20045423
 
 0042867c <am_hal_spotmgr_pcm2_0_tempco_pending_handle>:
   42867c:	b510      	push	{r4, lr}
@@ -45976,14 +45976,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428708:	f002 027f 	and.w	r2, r2, #127	@ 0x7f
   42870c:	e7f5      	b.n	4286fa <am_hal_spotmgr_pcm2_0_tempco_pending_handle+0x7e>
   42870e:	bf00      	nop
-  428710:	20045412 	.word	0x20045412
-  428714:	20045413 	.word	0x20045413
-  428718:	2003dcdc 	.word	0x2003dcdc
+  428710:	20045422 	.word	0x20045422
+  428714:	20045423 	.word	0x20045423
+  428718:	2003dcec 	.word	0x2003dcec
   42871c:	40021000 	.word	0x40021000
-  428720:	20045410 	.word	0x20045410
-  428724:	2003dcd4 	.word	0x2003dcd4
+  428720:	20045420 	.word	0x20045420
+  428724:	2003dce4 	.word	0x2003dce4
   428728:	40020000 	.word	0x40020000
-  42872c:	20045420 	.word	0x20045420
+  42872c:	20045430 	.word	0x20045430
 
 00428730 <am_hal_spotmgr_pcm2_0_simobuck_init_bfr_enable>:
   428730:	4b08      	ldr	r3, [pc, #32]	@ (428754 <am_hal_spotmgr_pcm2_0_simobuck_init_bfr_enable+0x24>)
@@ -46001,8 +46001,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42874c:	f8c2 1080 	str.w	r1, [r2, #128]	@ 0x80
   428750:	2000      	movs	r0, #0
   428752:	4770      	bx	lr
-  428754:	2003dcdc 	.word	0x2003dcdc
-  428758:	2003dcc8 	.word	0x2003dcc8
+  428754:	2003dcec 	.word	0x2003dcec
+  428758:	2003dcd8 	.word	0x2003dcd8
   42875c:	40020000 	.word	0x40020000
 
 00428760 <am_hal_spotmgr_pcm2_0_simobuck_init_aft_enable>:
@@ -46059,7 +46059,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4287fe:	f881 c000 	strb.w	ip, [r1]
   428802:	4770      	bx	lr
   428804:	40021000 	.word	0x40021000
-  428808:	20045411 	.word	0x20045411
+  428808:	20045421 	.word	0x20045421
 
 0042880c <am_hal_spotmgr_pcm2_0_simobuck_lp_autosw_disable>:
   42880c:	4b06      	ldr	r3, [pc, #24]	@ (428828 <am_hal_spotmgr_pcm2_0_simobuck_lp_autosw_disable+0x1c>)
@@ -46073,7 +46073,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428822:	7018      	strb	r0, [r3, #0]
   428824:	2000      	movs	r0, #0
   428826:	4770      	bx	lr
-  428828:	20045411 	.word	0x20045411
+  428828:	20045421 	.word	0x20045421
   42882c:	40021000 	.word	0x40021000
 
 00428830 <am_hal_spotmgr_pcm2_0_init>:
@@ -46139,9 +46139,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4288ac:	095b      	lsrs	r3, r3, #5
   4288ae:	e7d7      	b.n	428860 <am_hal_spotmgr_pcm2_0_init+0x30>
   4288b0:	40020000 	.word	0x40020000
-  4288b4:	20045421 	.word	0x20045421
-  4288b8:	20045420 	.word	0x20045420
-  4288bc:	20022b60 	.word	0x20022b60
+  4288b4:	20045431 	.word	0x20045431
+  4288b8:	20045430 	.word	0x20045430
+  4288bc:	20022b68 	.word	0x20022b68
 
 004288c0 <am_hal_spotmgr_pcm2_0_default_reset>:
   4288c0:	2000      	movs	r0, #0
@@ -46323,7 +46323,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428aee:	f3c0 0084 	ubfx	r0, r0, #2, #5
   428af2:	e73f      	b.n	428974 <spotmgr_power_ton_adjust+0xb0>
   428af4:	40020000 	.word	0x40020000
-  428af8:	20045390 	.word	0x20045390
+  428af8:	200453a0 	.word	0x200453a0
   428afc:	00020022 	.word	0x00020022
 
 00428b00 <am_hal_spotmgr_pcm2_1_boost_timer_interrupt_service>:
@@ -46385,14 +46385,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428b9a:	f85d eb04 	ldr.w	lr, [sp], #4
   428b9e:	f7fd bf71 	b.w	426a84 <am_hal_interrupt_master_set>
   428ba2:	bf00      	nop
-  428ba4:	20045400 	.word	0x20045400
+  428ba4:	20045410 	.word	0x20045410
   428ba8:	40020000 	.word	0x40020000
-  428bac:	20045428 	.word	0x20045428
-  428bb0:	20045424 	.word	0x20045424
-  428bb4:	200453fc 	.word	0x200453fc
-  428bb8:	20022bd4 	.word	0x20022bd4
-  428bbc:	20045390 	.word	0x20045390
-  428bc0:	2004542c 	.word	0x2004542c
+  428bac:	20045438 	.word	0x20045438
+  428bb0:	20045434 	.word	0x20045434
+  428bb4:	2004540c 	.word	0x2004540c
+  428bb8:	20022bdc 	.word	0x20022bdc
+  428bbc:	200453a0 	.word	0x200453a0
+  428bc0:	2004543c 	.word	0x2004543c
 
 00428bc4 <am_hal_spotmgr_pcm2_1_power_state_update>:
   428bc4:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -46591,13 +46591,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   428dec:	e717      	b.n	428c1e <am_hal_spotmgr_pcm2_1_power_state_update+0x5a>
   428dee:	bf00      	nop
   428df0:	40021000 	.word	0x40021000
-  428df4:	20045390 	.word	0x20045390
+  428df4:	200453a0 	.word	0x200453a0
   428df8:	1f01600d 	.word	0x1f01600d
-  428dfc:	20045423 	.word	0x20045423
-  428e00:	20045422 	.word	0x20045422
-  428e04:	2003dcdf 	.word	0x2003dcdf
+  428dfc:	20045433 	.word	0x20045433
+  428e00:	20045432 	.word	0x20045432
+  428e04:	2003dcef 	.word	0x2003dcef
   428e08:	c3888000 	.word	0xc3888000
-  428e0c:	20022bc4 	.word	0x20022bc4
+  428e0c:	20022bcc 	.word	0x20022bcc
   428e10:	00012001 	.word	0x00012001
   428e14:	4bb3      	ldr	r3, [pc, #716]	@ (4290e4 <am_hal_spotmgr_pcm2_1_power_state_update+0x520>)
   428e16:	781b      	ldrb	r3, [r3, #0]
@@ -46843,21 +46843,21 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4290dc:	421a      	tst	r2, r3
   4290de:	f43f ae08 	beq.w	428cf2 <am_hal_spotmgr_pcm2_1_power_state_update+0x12e>
   4290e2:	e603      	b.n	428cec <am_hal_spotmgr_pcm2_1_power_state_update+0x128>
-  4290e4:	2004538c 	.word	0x2004538c
+  4290e4:	2004539c 	.word	0x2004539c
   4290e8:	000ff00f 	.word	0x000ff00f
-  4290ec:	20022bd0 	.word	0x20022bd0
+  4290ec:	20022bd8 	.word	0x20022bd8
   4290f0:	0045e8d0 	.word	0x0045e8d0
-  4290f4:	20022bcc 	.word	0x20022bcc
+  4290f4:	20022bd4 	.word	0x20022bd4
   4290f8:	40008100 	.word	0x40008100
-  4290fc:	2004542c 	.word	0x2004542c
+  4290fc:	2004543c 	.word	0x2004543c
   429100:	40020000 	.word	0x40020000
-  429104:	20045400 	.word	0x20045400
-  429108:	20045428 	.word	0x20045428
-  42910c:	20045424 	.word	0x20045424
+  429104:	20045410 	.word	0x20045410
+  429108:	20045438 	.word	0x20045438
+  42910c:	20045434 	.word	0x20045434
   429110:	0002d122 	.word	0x0002d122
-  429114:	200453fc 	.word	0x200453fc
+  429114:	2004540c 	.word	0x2004540c
   429118:	00100011 	.word	0x00100011
-  42911c:	20022bd4 	.word	0x20022bd4
+  42911c:	20022bdc 	.word	0x20022bdc
   429120:	0045e880 	.word	0x0045e880
   429124:	42480000 	.word	0x42480000
   429128:	447a0000 	.word	0x447a0000
@@ -47156,21 +47156,21 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4294cc:	00429531 	.word	0x00429531
   4294d0:	0042921f 	.word	0x0042921f
   4294d4:	42400000 	.word	0x42400000
-  4294d8:	20022bc4 	.word	0x20022bc4
+  4294d8:	20022bcc 	.word	0x20022bcc
   4294dc:	00011001 	.word	0x00011001
   4294e0:	00100210 	.word	0x00100210
   4294e4:	00100310 	.word	0x00100310
   4294e8:	0002d122 	.word	0x0002d122
-  4294ec:	20045428 	.word	0x20045428
-  4294f0:	20045424 	.word	0x20045424
+  4294ec:	20045438 	.word	0x20045438
+  4294f0:	20045434 	.word	0x20045434
   4294f4:	40008100 	.word	0x40008100
   4294f8:	40020000 	.word	0x40020000
-  4294fc:	2004542c 	.word	0x2004542c
-  429500:	20022bcc 	.word	0x20022bcc
+  4294fc:	2004543c 	.word	0x2004543c
+  429500:	20022bd4 	.word	0x20022bd4
   429504:	e000ed00 	.word	0xe000ed00
-  429508:	200453fc 	.word	0x200453fc
-  42950c:	2004538c 	.word	0x2004538c
-  429510:	20045400 	.word	0x20045400
+  429508:	2004540c 	.word	0x2004540c
+  42950c:	2004539c 	.word	0x2004539c
+  429510:	20045410 	.word	0x20045410
   429514:	4bb9      	ldr	r3, [pc, #740]	@ (4297fc <am_hal_spotmgr_pcm2_1_power_state_update+0xc38>)
   429516:	781b      	ldrb	r3, [r3, #0]
   429518:	07da      	lsls	r2, r3, #31
@@ -47423,17 +47423,17 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4297f4:	00b9      	lsls	r1, r7, #2
   4297f6:	f7ff bb76 	b.w	428ee6 <am_hal_spotmgr_pcm2_1_power_state_update+0x322>
   4297fa:	bf00      	nop
-  4297fc:	2004538c 	.word	0x2004538c
+  4297fc:	2004539c 	.word	0x2004539c
   429800:	40020000 	.word	0x40020000
-  429804:	20022bc4 	.word	0x20022bc4
+  429804:	20022bcc 	.word	0x20022bcc
   429808:	c1b00000 	.word	0xc1b00000
   42980c:	40008800 	.word	0x40008800
   429810:	40008000 	.word	0x40008000
-  429814:	20045456 	.word	0x20045456
-  429818:	20022bd4 	.word	0x20022bd4
-  42981c:	200453ff 	.word	0x200453ff
-  429820:	200453fe 	.word	0x200453fe
-  429824:	200453fc 	.word	0x200453fc
+  429814:	20045466 	.word	0x20045466
+  429818:	20022bdc 	.word	0x20022bdc
+  42981c:	2004540f 	.word	0x2004540f
+  429820:	2004540e 	.word	0x2004540e
+  429824:	2004540c 	.word	0x2004540c
   429828:	00012001 	.word	0x00012001
   42982c:	2700      	movs	r7, #0
   42982e:	483d      	ldr	r0, [pc, #244]	@ (429924 <am_hal_spotmgr_pcm2_1_power_state_update+0xd60>)
@@ -47531,16 +47531,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42991a:	f7ff bb2a 	b.w	428f72 <am_hal_spotmgr_pcm2_1_power_state_update+0x3ae>
   42991e:	46e1      	mov	r9, ip
   429920:	f7ff ba0e 	b.w	428d40 <am_hal_spotmgr_pcm2_1_power_state_update+0x17c>
-  429924:	200453ff 	.word	0x200453ff
-  429928:	2004538c 	.word	0x2004538c
-  42992c:	200453fd 	.word	0x200453fd
+  429924:	2004540f 	.word	0x2004540f
+  429928:	2004539c 	.word	0x2004539c
+  42992c:	2004540d 	.word	0x2004540d
   429930:	000ff00f 	.word	0x000ff00f
-  429934:	200453fe 	.word	0x200453fe
+  429934:	2004540e 	.word	0x2004540e
   429938:	40020000 	.word	0x40020000
-  42993c:	20045456 	.word	0x20045456
-  429940:	20045400 	.word	0x20045400
-  429944:	20045428 	.word	0x20045428
-  429948:	20045424 	.word	0x20045424
+  42993c:	20045466 	.word	0x20045466
+  429940:	20045410 	.word	0x20045410
+  429944:	20045438 	.word	0x20045438
+  429948:	20045434 	.word	0x20045434
 
 0042994c <am_hal_spotmgr_pcm2_1_simobuck_init_bfr_ovr>:
   42994c:	2106      	movs	r1, #6
@@ -47567,7 +47567,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   429982:	2000      	movs	r0, #0
   429984:	4770      	bx	lr
   429986:	bf00      	nop
-  429988:	20045390 	.word	0x20045390
+  429988:	200453a0 	.word	0x200453a0
   42998c:	1f01600d 	.word	0x1f01600d
   429990:	40020000 	.word	0x40020000
 
@@ -47589,7 +47589,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4299be:	2000      	movs	r0, #0
   4299c0:	4770      	bx	lr
   4299c2:	bf00      	nop
-  4299c4:	20045390 	.word	0x20045390
+  4299c4:	200453a0 	.word	0x200453a0
   4299c8:	1f01600d 	.word	0x1f01600d
   4299cc:	40020000 	.word	0x40020000
 
@@ -47702,7 +47702,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   429b0e:	4770      	bx	lr
   429b10:	40020000 	.word	0x40020000
   429b14:	40021000 	.word	0x40021000
-  429b18:	20045394 	.word	0x20045394
+  429b18:	200453a4 	.word	0x200453a4
   429b1c:	1f01600d 	.word	0x1f01600d
   429b20:	001fff80 	.word	0x001fff80
 
@@ -47808,7 +47808,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   429c3e:	f3c2 32c4 	ubfx	r2, r2, #15, #5
   429c42:	e7ae      	b.n	429ba2 <spotmgr_power_ton_adjust+0x26>
   429c44:	40020000 	.word	0x40020000
-  429c48:	20045390 	.word	0x20045390
+  429c48:	200453a0 	.word	0x200453a0
 
 00429c4c <transition_sequence_temp>:
   429c4c:	4770      	bx	lr
@@ -48003,7 +48003,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   429e2e:	2010      	movne	r0, #16
   429e30:	2018      	moveq	r0, #24
   429e32:	e77a      	b.n	429d2a <spotmgr_temperature_transition_separate+0xd6>
-  429e34:	20022be0 	.word	0x20022be0
+  429e34:	20022be8 	.word	0x20022be8
   429e38:	004572d0 	.word	0x004572d0
 
 00429e3c <am_hal_spotmgr_pcm2_2_post_lptohp_handle>:
@@ -48039,9 +48039,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   429e92:	2000      	movs	r0, #0
   429e94:	4770      	bx	lr
   429e96:	bf00      	nop
-  429e98:	2004544c 	.word	0x2004544c
-  429e9c:	20022c54 	.word	0x20022c54
-  429ea0:	20045390 	.word	0x20045390
+  429e98:	2004545c 	.word	0x2004545c
+  429e9c:	20022c5c 	.word	0x20022c5c
+  429ea0:	200453a0 	.word	0x200453a0
   429ea4:	40020000 	.word	0x40020000
 
 00429ea8 <am_hal_spotmgr_pcm2_2_boost_timer_interrupt_service>:
@@ -48170,12 +48170,12 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a002:	075b      	lsls	r3, r3, #29
   42a004:	d4ca      	bmi.n	429f9c <am_hal_spotmgr_pcm2_2_boost_timer_interrupt_service+0xf4>
   42a006:	e7f6      	b.n	429ff6 <am_hal_spotmgr_pcm2_2_boost_timer_interrupt_service+0x14e>
-  42a008:	20022c4c 	.word	0x20022c4c
+  42a008:	20022c54 	.word	0x20022c54
   42a00c:	40020000 	.word	0x40020000
-  42a010:	20045448 	.word	0x20045448
-  42a014:	2004543c 	.word	0x2004543c
-  42a018:	20045440 	.word	0x20045440
-  42a01c:	20045444 	.word	0x20045444
+  42a010:	20045458 	.word	0x20045458
+  42a014:	2004544c 	.word	0x2004544c
+  42a018:	20045450 	.word	0x20045450
+  42a01c:	20045454 	.word	0x20045454
   42a020:	40021000 	.word	0x40021000
 
 0042a024 <transition_sequence_22>:
@@ -48279,15 +48279,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a13e:	e7c2      	b.n	42a0c6 <transition_sequence_22+0xa2>
   42a140:	b2db      	uxtb	r3, r3
   42a142:	e7f6      	b.n	42a132 <transition_sequence_22+0x10e>
-  42a144:	20045390 	.word	0x20045390
+  42a144:	200453a0 	.word	0x200453a0
   42a148:	40008100 	.word	0x40008100
   42a14c:	40008000 	.word	0x40008000
-  42a150:	20045438 	.word	0x20045438
-  42a154:	20045434 	.word	0x20045434
-  42a158:	20045440 	.word	0x20045440
-  42a15c:	2004543c 	.word	0x2004543c
-  42a160:	20045448 	.word	0x20045448
-  42a164:	20045444 	.word	0x20045444
+  42a150:	20045448 	.word	0x20045448
+  42a154:	20045444 	.word	0x20045444
+  42a158:	20045450 	.word	0x20045450
+  42a15c:	2004544c 	.word	0x2004544c
+  42a160:	20045458 	.word	0x20045458
+  42a164:	20045454 	.word	0x20045454
   42a168:	40020000 	.word	0x40020000
 
 0042a16c <transition_sequence_21>:
@@ -48398,15 +48398,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a294:	b2db      	uxtb	r3, r3
   42a296:	e7e0      	b.n	42a25a <transition_sequence_21+0xee>
   42a298:	40008100 	.word	0x40008100
-  42a29c:	20045390 	.word	0x20045390
+  42a29c:	200453a0 	.word	0x200453a0
   42a2a0:	40008000 	.word	0x40008000
-  42a2a4:	20045438 	.word	0x20045438
-  42a2a8:	20045434 	.word	0x20045434
-  42a2ac:	20045440 	.word	0x20045440
-  42a2b0:	2004543c 	.word	0x2004543c
-  42a2b4:	20045448 	.word	0x20045448
-  42a2b8:	20045444 	.word	0x20045444
-  42a2bc:	2004544c 	.word	0x2004544c
+  42a2a4:	20045448 	.word	0x20045448
+  42a2a8:	20045444 	.word	0x20045444
+  42a2ac:	20045450 	.word	0x20045450
+  42a2b0:	2004544c 	.word	0x2004544c
+  42a2b4:	20045458 	.word	0x20045458
+  42a2b8:	20045454 	.word	0x20045454
+  42a2bc:	2004545c 	.word	0x2004545c
   42a2c0:	40020000 	.word	0x40020000
   42a2c4:	e000ed00 	.word	0xe000ed00
 
@@ -48465,14 +48465,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a35a:	f7f5 befd 	b.w	420158 <am_hal_delay_us>
   42a35e:	bf00      	nop
   42a360:	40008100 	.word	0x40008100
-  42a364:	20045390 	.word	0x20045390
+  42a364:	200453a0 	.word	0x200453a0
   42a368:	40008000 	.word	0x40008000
-  42a36c:	20045438 	.word	0x20045438
-  42a370:	20045434 	.word	0x20045434
-  42a374:	2004543c 	.word	0x2004543c
-  42a378:	20045440 	.word	0x20045440
-  42a37c:	20045448 	.word	0x20045448
-  42a380:	20045444 	.word	0x20045444
+  42a36c:	20045448 	.word	0x20045448
+  42a370:	20045444 	.word	0x20045444
+  42a374:	2004544c 	.word	0x2004544c
+  42a378:	20045450 	.word	0x20045450
+  42a37c:	20045458 	.word	0x20045458
+  42a380:	20045454 	.word	0x20045454
   42a384:	40020000 	.word	0x40020000
 
 0042a388 <transition_sequence_19>:
@@ -48573,15 +48573,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a48e:	649a      	str	r2, [r3, #72]	@ 0x48
   42a490:	e7ed      	b.n	42a46e <transition_sequence_19+0xe6>
   42a492:	bf00      	nop
-  42a494:	20045390 	.word	0x20045390
+  42a494:	200453a0 	.word	0x200453a0
   42a498:	40008100 	.word	0x40008100
   42a49c:	40008000 	.word	0x40008000
-  42a4a0:	20045438 	.word	0x20045438
-  42a4a4:	20045434 	.word	0x20045434
-  42a4a8:	20045440 	.word	0x20045440
-  42a4ac:	2004543c 	.word	0x2004543c
-  42a4b0:	20045448 	.word	0x20045448
-  42a4b4:	20045444 	.word	0x20045444
+  42a4a0:	20045448 	.word	0x20045448
+  42a4a4:	20045444 	.word	0x20045444
+  42a4a8:	20045450 	.word	0x20045450
+  42a4ac:	2004544c 	.word	0x2004544c
+  42a4b0:	20045458 	.word	0x20045458
+  42a4b4:	20045454 	.word	0x20045454
   42a4b8:	40020000 	.word	0x40020000
 
 0042a4bc <transition_sequence_18>:
@@ -48744,15 +48744,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a66e:	b2db      	uxtb	r3, r3
   42a670:	e7ef      	b.n	42a652 <transition_sequence_18+0x196>
   42a672:	bf00      	nop
-  42a674:	20045390 	.word	0x20045390
+  42a674:	200453a0 	.word	0x200453a0
   42a678:	40008100 	.word	0x40008100
   42a67c:	40008000 	.word	0x40008000
-  42a680:	20045438 	.word	0x20045438
-  42a684:	20045434 	.word	0x20045434
-  42a688:	20045440 	.word	0x20045440
-  42a68c:	2004543c 	.word	0x2004543c
-  42a690:	20045448 	.word	0x20045448
-  42a694:	20045444 	.word	0x20045444
+  42a680:	20045448 	.word	0x20045448
+  42a684:	20045444 	.word	0x20045444
+  42a688:	20045450 	.word	0x20045450
+  42a68c:	2004544c 	.word	0x2004544c
+  42a690:	20045458 	.word	0x20045458
+  42a694:	20045454 	.word	0x20045454
   42a698:	40020000 	.word	0x40020000
 
 0042a69c <transition_sequence_17>:
@@ -48856,15 +48856,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a7b2:	6498      	str	r0, [r3, #72]	@ 0x48
   42a7b4:	e7e4      	b.n	42a780 <transition_sequence_17+0xe4>
   42a7b6:	bf00      	nop
-  42a7b8:	20045390 	.word	0x20045390
+  42a7b8:	200453a0 	.word	0x200453a0
   42a7bc:	40008100 	.word	0x40008100
   42a7c0:	40008000 	.word	0x40008000
-  42a7c4:	20045438 	.word	0x20045438
-  42a7c8:	20045434 	.word	0x20045434
-  42a7cc:	20045440 	.word	0x20045440
-  42a7d0:	2004543c 	.word	0x2004543c
-  42a7d4:	20045448 	.word	0x20045448
-  42a7d8:	20045444 	.word	0x20045444
+  42a7c4:	20045448 	.word	0x20045448
+  42a7c8:	20045444 	.word	0x20045444
+  42a7cc:	20045450 	.word	0x20045450
+  42a7d0:	2004544c 	.word	0x2004544c
+  42a7d4:	20045458 	.word	0x20045458
+  42a7d8:	20045454 	.word	0x20045454
   42a7dc:	40020000 	.word	0x40020000
 
 0042a7e0 <transition_sequence_16>:
@@ -48935,15 +48935,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a898:	b005      	add	sp, #20
   42a89a:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
   42a89e:	bf00      	nop
-  42a8a0:	20045390 	.word	0x20045390
+  42a8a0:	200453a0 	.word	0x200453a0
   42a8a4:	40008100 	.word	0x40008100
   42a8a8:	40008000 	.word	0x40008000
-  42a8ac:	20045438 	.word	0x20045438
-  42a8b0:	20045434 	.word	0x20045434
-  42a8b4:	20045440 	.word	0x20045440
-  42a8b8:	2004543c 	.word	0x2004543c
-  42a8bc:	20045448 	.word	0x20045448
-  42a8c0:	20045444 	.word	0x20045444
+  42a8ac:	20045448 	.word	0x20045448
+  42a8b0:	20045444 	.word	0x20045444
+  42a8b4:	20045450 	.word	0x20045450
+  42a8b8:	2004544c 	.word	0x2004544c
+  42a8bc:	20045458 	.word	0x20045458
+  42a8c0:	20045454 	.word	0x20045454
   42a8c4:	40020000 	.word	0x40020000
 
 0042a8c8 <transition_sequence_15>:
@@ -49023,15 +49023,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42a9a0:	b005      	add	sp, #20
   42a9a2:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
   42a9a6:	bf00      	nop
-  42a9a8:	20045390 	.word	0x20045390
+  42a9a8:	200453a0 	.word	0x200453a0
   42a9ac:	40008100 	.word	0x40008100
   42a9b0:	40008000 	.word	0x40008000
-  42a9b4:	20045438 	.word	0x20045438
-  42a9b8:	20045434 	.word	0x20045434
-  42a9bc:	20045440 	.word	0x20045440
-  42a9c0:	2004543c 	.word	0x2004543c
-  42a9c4:	20045448 	.word	0x20045448
-  42a9c8:	20045444 	.word	0x20045444
+  42a9b4:	20045448 	.word	0x20045448
+  42a9b8:	20045444 	.word	0x20045444
+  42a9bc:	20045450 	.word	0x20045450
+  42a9c0:	2004544c 	.word	0x2004544c
+  42a9c4:	20045458 	.word	0x20045458
+  42a9c8:	20045454 	.word	0x20045454
   42a9cc:	40020000 	.word	0x40020000
 
 0042a9d0 <transition_sequence_14>:
@@ -49083,14 +49083,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42aa4a:	64da      	str	r2, [r3, #76]	@ 0x4c
   42aa4c:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
   42aa50:	40008100 	.word	0x40008100
-  42aa54:	20045390 	.word	0x20045390
+  42aa54:	200453a0 	.word	0x200453a0
   42aa58:	40008000 	.word	0x40008000
-  42aa5c:	20045438 	.word	0x20045438
-  42aa60:	20045434 	.word	0x20045434
-  42aa64:	20045440 	.word	0x20045440
-  42aa68:	2004543c 	.word	0x2004543c
-  42aa6c:	20045444 	.word	0x20045444
-  42aa70:	20045448 	.word	0x20045448
+  42aa5c:	20045448 	.word	0x20045448
+  42aa60:	20045444 	.word	0x20045444
+  42aa64:	20045450 	.word	0x20045450
+  42aa68:	2004544c 	.word	0x2004544c
+  42aa6c:	20045454 	.word	0x20045454
+  42aa70:	20045458 	.word	0x20045458
   42aa74:	40020000 	.word	0x40020000
 
 0042aa78 <transition_sequence_13>:
@@ -49252,15 +49252,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42ac26:	b2db      	uxtb	r3, r3
   42ac28:	e7f6      	b.n	42ac18 <transition_sequence_13+0x1a0>
   42ac2a:	bf00      	nop
-  42ac2c:	20045390 	.word	0x20045390
+  42ac2c:	200453a0 	.word	0x200453a0
   42ac30:	40008100 	.word	0x40008100
   42ac34:	40008000 	.word	0x40008000
-  42ac38:	20045440 	.word	0x20045440
-  42ac3c:	2004543c 	.word	0x2004543c
-  42ac40:	20045438 	.word	0x20045438
-  42ac44:	20045448 	.word	0x20045448
-  42ac48:	20045434 	.word	0x20045434
-  42ac4c:	20045444 	.word	0x20045444
+  42ac38:	20045450 	.word	0x20045450
+  42ac3c:	2004544c 	.word	0x2004544c
+  42ac40:	20045448 	.word	0x20045448
+  42ac44:	20045458 	.word	0x20045458
+  42ac48:	20045444 	.word	0x20045444
+  42ac4c:	20045454 	.word	0x20045454
   42ac50:	3f666666 	.word	0x3f666666
   42ac54:	40020000 	.word	0x40020000
   42ac58:	40021000 	.word	0x40021000
@@ -49347,15 +49347,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42ad32:	e7e0      	b.n	42acf6 <transition_sequence_12+0x9a>
   42ad34:	b2c1      	uxtb	r1, r0
   42ad36:	e7f6      	b.n	42ad26 <transition_sequence_12+0xca>
-  42ad38:	20045390 	.word	0x20045390
+  42ad38:	200453a0 	.word	0x200453a0
   42ad3c:	40008100 	.word	0x40008100
   42ad40:	40008000 	.word	0x40008000
-  42ad44:	20045438 	.word	0x20045438
-  42ad48:	20045434 	.word	0x20045434
-  42ad4c:	20045440 	.word	0x20045440
-  42ad50:	2004543c 	.word	0x2004543c
-  42ad54:	20045444 	.word	0x20045444
-  42ad58:	20045448 	.word	0x20045448
+  42ad44:	20045448 	.word	0x20045448
+  42ad48:	20045444 	.word	0x20045444
+  42ad4c:	20045450 	.word	0x20045450
+  42ad50:	2004544c 	.word	0x2004544c
+  42ad54:	20045454 	.word	0x20045454
+  42ad58:	20045458 	.word	0x20045458
   42ad5c:	40020000 	.word	0x40020000
 
 0042ad60 <transition_sequence_11>:
@@ -49491,15 +49491,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42aece:	e7f6      	b.n	42aebe <transition_sequence_11+0x15e>
   42aed0:	40008100 	.word	0x40008100
   42aed4:	40008000 	.word	0x40008000
-  42aed8:	20045438 	.word	0x20045438
-  42aedc:	20045434 	.word	0x20045434
-  42aee0:	20045440 	.word	0x20045440
-  42aee4:	2004543c 	.word	0x2004543c
+  42aed8:	20045448 	.word	0x20045448
+  42aedc:	20045444 	.word	0x20045444
+  42aee0:	20045450 	.word	0x20045450
+  42aee4:	2004544c 	.word	0x2004544c
   42aee8:	40021000 	.word	0x40021000
-  42aeec:	20045448 	.word	0x20045448
-  42aef0:	20045444 	.word	0x20045444
+  42aeec:	20045458 	.word	0x20045458
+  42aef0:	20045454 	.word	0x20045454
   42aef4:	40020000 	.word	0x40020000
-  42aef8:	20045390 	.word	0x20045390
+  42aef8:	200453a0 	.word	0x200453a0
 
 0042aefc <transition_sequence_8>:
   42aefc:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -49550,14 +49550,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42af76:	f7fe be01 	b.w	429b7c <spotmgr_power_ton_adjust>
   42af7a:	bf00      	nop
   42af7c:	40008100 	.word	0x40008100
-  42af80:	20045390 	.word	0x20045390
+  42af80:	200453a0 	.word	0x200453a0
   42af84:	40008000 	.word	0x40008000
-  42af88:	20045440 	.word	0x20045440
-  42af8c:	20045438 	.word	0x20045438
-  42af90:	2004543c 	.word	0x2004543c
-  42af94:	20045434 	.word	0x20045434
-  42af98:	20045444 	.word	0x20045444
-  42af9c:	20045448 	.word	0x20045448
+  42af88:	20045450 	.word	0x20045450
+  42af8c:	20045448 	.word	0x20045448
+  42af90:	2004544c 	.word	0x2004544c
+  42af94:	20045444 	.word	0x20045444
+  42af98:	20045454 	.word	0x20045454
+  42af9c:	20045458 	.word	0x20045458
 
 0042afa0 <transition_sequence_7>:
   42afa0:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -49669,17 +49669,17 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b0ba:	bf00      	nop
   42b0bc:	40008100 	.word	0x40008100
   42b0c0:	40008000 	.word	0x40008000
-  42b0c4:	20045438 	.word	0x20045438
-  42b0c8:	20045434 	.word	0x20045434
-  42b0cc:	20045440 	.word	0x20045440
-  42b0d0:	2004543c 	.word	0x2004543c
-  42b0d4:	20045448 	.word	0x20045448
-  42b0d8:	20045444 	.word	0x20045444
+  42b0c4:	20045448 	.word	0x20045448
+  42b0c8:	20045444 	.word	0x20045444
+  42b0cc:	20045450 	.word	0x20045450
+  42b0d0:	2004544c 	.word	0x2004544c
+  42b0d4:	20045458 	.word	0x20045458
+  42b0d8:	20045454 	.word	0x20045454
   42b0dc:	3f666666 	.word	0x3f666666
   42b0e0:	40020000 	.word	0x40020000
-  42b0e4:	20022c50 	.word	0x20022c50
-  42b0e8:	20022c4c 	.word	0x20022c4c
-  42b0ec:	20045390 	.word	0x20045390
+  42b0e4:	20022c58 	.word	0x20022c58
+  42b0e8:	20022c54 	.word	0x20022c54
+  42b0ec:	200453a0 	.word	0x200453a0
 
 0042b0f0 <transition_sequence_6>:
   42b0f0:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -49733,14 +49733,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b170:	e8bd 4ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
   42b174:	f7fe bd02 	b.w	429b7c <spotmgr_power_ton_adjust>
   42b178:	40008100 	.word	0x40008100
-  42b17c:	20045390 	.word	0x20045390
+  42b17c:	200453a0 	.word	0x200453a0
   42b180:	40008000 	.word	0x40008000
-  42b184:	20045440 	.word	0x20045440
-  42b188:	2004543c 	.word	0x2004543c
-  42b18c:	20045438 	.word	0x20045438
-  42b190:	20045448 	.word	0x20045448
-  42b194:	20045444 	.word	0x20045444
-  42b198:	20045434 	.word	0x20045434
+  42b184:	20045450 	.word	0x20045450
+  42b188:	2004544c 	.word	0x2004544c
+  42b18c:	20045448 	.word	0x20045448
+  42b190:	20045458 	.word	0x20045458
+  42b194:	20045454 	.word	0x20045454
+  42b198:	20045444 	.word	0x20045444
   42b19c:	40020000 	.word	0x40020000
 
 0042b1a0 <transition_sequence_5>:
@@ -49861,17 +49861,17 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b2ee:	4b0b      	ldr	r3, [pc, #44]	@ (42b31c <transition_sequence_5+0x17c>)
   42b2f0:	701a      	strb	r2, [r3, #0]
   42b2f2:	e7ef      	b.n	42b2d4 <transition_sequence_5+0x134>
-  42b2f4:	20045390 	.word	0x20045390
+  42b2f4:	200453a0 	.word	0x200453a0
   42b2f8:	40008100 	.word	0x40008100
-  42b2fc:	20022c50 	.word	0x20022c50
-  42b300:	20045440 	.word	0x20045440
-  42b304:	2004543c 	.word	0x2004543c
-  42b308:	20045438 	.word	0x20045438
-  42b30c:	20045448 	.word	0x20045448
-  42b310:	20045434 	.word	0x20045434
-  42b314:	20045444 	.word	0x20045444
+  42b2fc:	20022c58 	.word	0x20022c58
+  42b300:	20045450 	.word	0x20045450
+  42b304:	2004544c 	.word	0x2004544c
+  42b308:	20045448 	.word	0x20045448
+  42b30c:	20045458 	.word	0x20045458
+  42b310:	20045444 	.word	0x20045444
+  42b314:	20045454 	.word	0x20045454
   42b318:	40020000 	.word	0x40020000
-  42b31c:	20022c4c 	.word	0x20022c4c
+  42b31c:	20022c54 	.word	0x20022c54
   42b320:	40008000 	.word	0x40008000
   42b324:	40021000 	.word	0x40021000
 
@@ -49945,14 +49945,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b3ec:	f8c4 337c 	str.w	r3, [r4, #892]	@ 0x37c
   42b3f0:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
   42b3f4:	40008100 	.word	0x40008100
-  42b3f8:	20045390 	.word	0x20045390
+  42b3f8:	200453a0 	.word	0x200453a0
   42b3fc:	40008000 	.word	0x40008000
-  42b400:	20045440 	.word	0x20045440
-  42b404:	2004543c 	.word	0x2004543c
-  42b408:	20045448 	.word	0x20045448
-  42b40c:	20045438 	.word	0x20045438
-  42b410:	20045444 	.word	0x20045444
-  42b414:	20045434 	.word	0x20045434
+  42b400:	20045450 	.word	0x20045450
+  42b404:	2004544c 	.word	0x2004544c
+  42b408:	20045458 	.word	0x20045458
+  42b40c:	20045448 	.word	0x20045448
+  42b410:	20045454 	.word	0x20045454
+  42b414:	20045444 	.word	0x20045444
   42b418:	40020000 	.word	0x40020000
 
 0042b41c <transition_sequence_3>:
@@ -50036,14 +50036,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b4ec:	b2db      	uxtb	r3, r3
   42b4ee:	e7f6      	b.n	42b4de <transition_sequence_3+0xc2>
   42b4f0:	40008100 	.word	0x40008100
-  42b4f4:	20045390 	.word	0x20045390
+  42b4f4:	200453a0 	.word	0x200453a0
   42b4f8:	40008000 	.word	0x40008000
-  42b4fc:	20045440 	.word	0x20045440
-  42b500:	2004543c 	.word	0x2004543c
-  42b504:	20045438 	.word	0x20045438
-  42b508:	20045448 	.word	0x20045448
-  42b50c:	20045434 	.word	0x20045434
-  42b510:	20045444 	.word	0x20045444
+  42b4fc:	20045450 	.word	0x20045450
+  42b500:	2004544c 	.word	0x2004544c
+  42b504:	20045448 	.word	0x20045448
+  42b508:	20045458 	.word	0x20045458
+  42b50c:	20045444 	.word	0x20045444
+  42b510:	20045454 	.word	0x20045454
   42b514:	40020000 	.word	0x40020000
 
 0042b518 <transition_sequence_2>:
@@ -50133,16 +50133,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b5f6:	e7f6      	b.n	42b5e6 <transition_sequence_2+0xce>
   42b5f8:	40008100 	.word	0x40008100
   42b5fc:	40008000 	.word	0x40008000
-  42b600:	20045438 	.word	0x20045438
-  42b604:	20045434 	.word	0x20045434
-  42b608:	20045440 	.word	0x20045440
-  42b60c:	2004543c 	.word	0x2004543c
-  42b610:	20045448 	.word	0x20045448
-  42b614:	20045444 	.word	0x20045444
+  42b600:	20045448 	.word	0x20045448
+  42b604:	20045444 	.word	0x20045444
+  42b608:	20045450 	.word	0x20045450
+  42b60c:	2004544c 	.word	0x2004544c
+  42b610:	20045458 	.word	0x20045458
+  42b614:	20045454 	.word	0x20045454
   42b618:	40020000 	.word	0x40020000
-  42b61c:	20022c50 	.word	0x20022c50
-  42b620:	20022c4c 	.word	0x20022c4c
-  42b624:	20045390 	.word	0x20045390
+  42b61c:	20022c58 	.word	0x20022c58
+  42b620:	20022c54 	.word	0x20022c54
+  42b624:	200453a0 	.word	0x200453a0
 
 0042b628 <transition_sequence_1>:
   42b628:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -50293,15 +50293,15 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b7d2:	e7d2      	b.n	42b77a <transition_sequence_1+0x152>
   42b7d4:	b2db      	uxtb	r3, r3
   42b7d6:	e7d8      	b.n	42b78a <transition_sequence_1+0x162>
-  42b7d8:	20045390 	.word	0x20045390
+  42b7d8:	200453a0 	.word	0x200453a0
   42b7dc:	40008100 	.word	0x40008100
   42b7e0:	40008000 	.word	0x40008000
-  42b7e4:	20045440 	.word	0x20045440
-  42b7e8:	2004543c 	.word	0x2004543c
-  42b7ec:	20045438 	.word	0x20045438
-  42b7f0:	20045448 	.word	0x20045448
-  42b7f4:	20045434 	.word	0x20045434
-  42b7f8:	20045444 	.word	0x20045444
+  42b7e4:	20045450 	.word	0x20045450
+  42b7e8:	2004544c 	.word	0x2004544c
+  42b7ec:	20045448 	.word	0x20045448
+  42b7f0:	20045458 	.word	0x20045458
+  42b7f4:	20045444 	.word	0x20045444
+  42b7f8:	20045454 	.word	0x20045454
   42b7fc:	40020000 	.word	0x40020000
   42b800:	e000ed00 	.word	0xe000ed00
 
@@ -50439,17 +50439,17 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42b97e:	4b0b      	ldr	r3, [pc, #44]	@ (42b9ac <transition_sequence_0+0x1a8>)
   42b980:	701a      	strb	r2, [r3, #0]
   42b982:	e7d0      	b.n	42b926 <transition_sequence_0+0x122>
-  42b984:	20045390 	.word	0x20045390
-  42b988:	20022c50 	.word	0x20022c50
-  42b98c:	20045438 	.word	0x20045438
-  42b990:	20045434 	.word	0x20045434
-  42b994:	20045440 	.word	0x20045440
-  42b998:	2004543c 	.word	0x2004543c
-  42b99c:	20045448 	.word	0x20045448
-  42b9a0:	20045444 	.word	0x20045444
+  42b984:	200453a0 	.word	0x200453a0
+  42b988:	20022c58 	.word	0x20022c58
+  42b98c:	20045448 	.word	0x20045448
+  42b990:	20045444 	.word	0x20045444
+  42b994:	20045450 	.word	0x20045450
+  42b998:	2004544c 	.word	0x2004544c
+  42b99c:	20045458 	.word	0x20045458
+  42b9a0:	20045454 	.word	0x20045454
   42b9a4:	40020000 	.word	0x40020000
   42b9a8:	e000ed00 	.word	0xe000ed00
-  42b9ac:	20022c4c 	.word	0x20022c4c
+  42b9ac:	20022c54 	.word	0x20022c54
   42b9b0:	40008100 	.word	0x40008100
   42b9b4:	40008000 	.word	0x40008000
 
@@ -50505,14 +50505,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42ba38:	e8bd 4ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
   42ba3c:	f7fe b89e 	b.w	429b7c <spotmgr_power_ton_adjust>
   42ba40:	40008100 	.word	0x40008100
-  42ba44:	20045390 	.word	0x20045390
+  42ba44:	200453a0 	.word	0x200453a0
   42ba48:	40008000 	.word	0x40008000
-  42ba4c:	20045440 	.word	0x20045440
-  42ba50:	2004543c 	.word	0x2004543c
-  42ba54:	20045438 	.word	0x20045438
-  42ba58:	20045448 	.word	0x20045448
-  42ba5c:	20045444 	.word	0x20045444
-  42ba60:	20045434 	.word	0x20045434
+  42ba4c:	20045450 	.word	0x20045450
+  42ba50:	2004544c 	.word	0x2004544c
+  42ba54:	20045448 	.word	0x20045448
+  42ba58:	20045458 	.word	0x20045458
+  42ba5c:	20045454 	.word	0x20045454
+  42ba60:	20045444 	.word	0x20045444
   42ba64:	40020000 	.word	0x40020000
 
 0042ba68 <transition_sequence_10>:
@@ -50564,14 +50564,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42bae2:	f7fe b84b 	b.w	429b7c <spotmgr_power_ton_adjust>
   42bae6:	bf00      	nop
   42bae8:	40008100 	.word	0x40008100
-  42baec:	20045390 	.word	0x20045390
+  42baec:	200453a0 	.word	0x200453a0
   42baf0:	40008000 	.word	0x40008000
-  42baf4:	20045440 	.word	0x20045440
-  42baf8:	20045438 	.word	0x20045438
-  42bafc:	2004543c 	.word	0x2004543c
-  42bb00:	20045434 	.word	0x20045434
-  42bb04:	20045444 	.word	0x20045444
-  42bb08:	20045448 	.word	0x20045448
+  42baf4:	20045450 	.word	0x20045450
+  42baf8:	20045448 	.word	0x20045448
+  42bafc:	2004544c 	.word	0x2004544c
+  42bb00:	20045444 	.word	0x20045444
+  42bb04:	20045454 	.word	0x20045454
+  42bb08:	20045458 	.word	0x20045458
 
 0042bb0c <transition_sequence_23>:
   42bb0c:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -50622,14 +50622,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42bb86:	f7fd bff9 	b.w	429b7c <spotmgr_power_ton_adjust>
   42bb8a:	bf00      	nop
   42bb8c:	40008100 	.word	0x40008100
-  42bb90:	20045390 	.word	0x20045390
+  42bb90:	200453a0 	.word	0x200453a0
   42bb94:	40008000 	.word	0x40008000
-  42bb98:	20045440 	.word	0x20045440
-  42bb9c:	20045438 	.word	0x20045438
-  42bba0:	2004543c 	.word	0x2004543c
-  42bba4:	20045434 	.word	0x20045434
-  42bba8:	20045444 	.word	0x20045444
-  42bbac:	20045448 	.word	0x20045448
+  42bb98:	20045450 	.word	0x20045450
+  42bb9c:	20045448 	.word	0x20045448
+  42bba0:	2004544c 	.word	0x2004544c
+  42bba4:	20045444 	.word	0x20045444
+  42bba8:	20045454 	.word	0x20045454
+  42bbac:	20045458 	.word	0x20045458
 
 0042bbb0 <am_hal_spotmgr_pcm2_2_power_state_update>:
   42bbb0:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -50831,14 +50831,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42bde8:	e763      	b.n	42bcb2 <am_hal_spotmgr_pcm2_2_power_state_update+0x102>
   42bdea:	bf00      	nop
   42bdec:	40021000 	.word	0x40021000
-  42bdf0:	20045390 	.word	0x20045390
+  42bdf0:	200453a0 	.word	0x200453a0
   42bdf4:	1f01600d 	.word	0x1f01600d
-  42bdf8:	20045431 	.word	0x20045431
-  42bdfc:	2003dcdf 	.word	0x2003dcdf
+  42bdf8:	20045441 	.word	0x20045441
+  42bdfc:	2003dcef 	.word	0x2003dcef
   42be00:	c3888000 	.word	0xc3888000
-  42be04:	20022bc4 	.word	0x20022bc4
+  42be04:	20022bcc 	.word	0x20022bcc
   42be08:	00012001 	.word	0x00012001
-  42be0c:	20045430 	.word	0x20045430
+  42be0c:	20045440 	.word	0x20045440
   42be10:	4bc2      	ldr	r3, [pc, #776]	@ (42c11c <am_hal_spotmgr_pcm2_2_power_state_update+0x56c>)
   42be12:	781b      	ldrb	r3, [r3, #0]
   42be14:	07df      	lsls	r7, r3, #31
@@ -51094,9 +51094,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c116:	240a      	movs	r4, #10
   42c118:	e680      	b.n	42be1c <am_hal_spotmgr_pcm2_2_power_state_update+0x26c>
   42c11a:	bf00      	nop
-  42c11c:	2004538c 	.word	0x2004538c
+  42c11c:	2004539c 	.word	0x2004539c
   42c120:	000ff00f 	.word	0x000ff00f
-  42c124:	20022be0 	.word	0x20022be0
+  42c124:	20022be8 	.word	0x20022be8
   42c128:	00100011 	.word	0x00100011
   42c12c:	00011001 	.word	0x00011001
   42c130:	00100210 	.word	0x00100210
@@ -51104,9 +51104,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c138:	42480000 	.word	0x42480000
   42c13c:	447a0000 	.word	0x447a0000
   42c140:	42400000 	.word	0x42400000
-  42c144:	20022bc4 	.word	0x20022bc4
-  42c148:	20022c54 	.word	0x20022c54
-  42c14c:	20022bd8 	.word	0x20022bd8
+  42c144:	20022bcc 	.word	0x20022bcc
+  42c148:	20022c5c 	.word	0x20022c5c
+  42c14c:	20022be0 	.word	0x20022be0
   42c150:	004572d0 	.word	0x004572d0
   42c154:	4bb8      	ldr	r3, [pc, #736]	@ (42c438 <am_hal_spotmgr_pcm2_2_power_state_update+0x888>)
   42c156:	781b      	ldrb	r3, [r3, #0]
@@ -51380,16 +51380,16 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c430:	4630      	mov	r0, r6
   42c432:	f367 220b 	bfi	r2, r7, #8, #4
   42c436:	e431      	b.n	42bc9c <am_hal_spotmgr_pcm2_2_power_state_update+0xec>
-  42c438:	2004538c 	.word	0x2004538c
-  42c43c:	20022bc4 	.word	0x20022bc4
+  42c438:	2004539c 	.word	0x2004539c
+  42c43c:	20022bcc 	.word	0x20022bcc
   42c440:	c1b00000 	.word	0xc1b00000
   42c444:	00012001 	.word	0x00012001
   42c448:	40008800 	.word	0x40008800
   42c44c:	40008000 	.word	0x40008000
-  42c450:	20045456 	.word	0x20045456
-  42c454:	20022c54 	.word	0x20022c54
-  42c458:	200453ff 	.word	0x200453ff
-  42c45c:	200453fe 	.word	0x200453fe
+  42c450:	20045466 	.word	0x20045466
+  42c454:	20022c5c 	.word	0x20022c5c
+  42c458:	2004540f 	.word	0x2004540f
+  42c45c:	2004540e 	.word	0x2004540e
   42c460:	2c0c      	cmp	r4, #12
   42c462:	d0da      	beq.n	42c41a <am_hal_spotmgr_pcm2_2_power_state_update+0x86a>
   42c464:	2a19      	cmp	r2, #25
@@ -51502,7 +51502,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c550:	e4af      	b.n	42beb2 <am_hal_spotmgr_pcm2_2_power_state_update+0x302>
   42c552:	bf00      	nop
   42c554:	000ff00f 	.word	0x000ff00f
-  42c558:	20045456 	.word	0x20045456
+  42c558:	20045466 	.word	0x20045466
 
 0042c55c <am_hal_spotmgr_pcm2_2_simobuck_init_aft_enable>:
   42c55c:	4b0f      	ldr	r3, [pc, #60]	@ (42c59c <am_hal_spotmgr_pcm2_2_simobuck_init_aft_enable+0x40>)
@@ -51526,7 +51526,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c594:	f8c2 31b0 	str.w	r3, [r2, #432]	@ 0x1b0
   42c598:	2000      	movs	r0, #0
   42c59a:	4770      	bx	lr
-  42c59c:	20045390 	.word	0x20045390
+  42c59c:	200453a0 	.word	0x200453a0
   42c5a0:	1f01600d 	.word	0x1f01600d
   42c5a4:	40020000 	.word	0x40020000
 
@@ -51582,7 +51582,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c61e:	bf00      	nop
   42c620:	40020000 	.word	0x40020000
   42c624:	40021000 	.word	0x40021000
-  42c628:	20045394 	.word	0x20045394
+  42c628:	200453a4 	.word	0x200453a4
   42c62c:	1f01600d 	.word	0x1f01600d
 
 0042c630 <am_hal_spotmgr_pcm2_2_default_reset>:
@@ -51638,7 +51638,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c6a6:	2000      	movs	r0, #0
   42c6a8:	4770      	bx	lr
   42c6aa:	bf00      	nop
-  42c6ac:	2004544d 	.word	0x2004544d
+  42c6ac:	2004545d 	.word	0x2004545d
   42c6b0:	40008800 	.word	0x40008800
 
 0042c6b4 <am_hal_sysctrl_fpu_enable>:
@@ -51734,7 +51734,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42c792:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
   42c796:	f7fa b975 	b.w	426a84 <am_hal_interrupt_master_set>
   42c79a:	bf00      	nop
-  42c79c:	20045450 	.word	0x20045450
+  42c79c:	20045460 	.word	0x20045460
   42c7a0:	40008800 	.word	0x40008800
 
 0042c7a4 <am_hal_sysctrl_clkmuxrst_low_power_init>:
@@ -52620,7 +52620,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42d282:	2006      	movs	r0, #6
   42d284:	bd70      	pop	{r4, r5, r6, pc}
   42d286:	bf00      	nop
-  42d288:	20045458 	.word	0x20045458
+  42d288:	20045468 	.word	0x20045468
   42d28c:	01504c30 	.word	0x01504c30
 
 0042d290 <am_hal_syspll_deinitialize>:
@@ -53252,7 +53252,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42d8f6:	e7e7      	b.n	42d8c8 <am_hal_tpiu_config+0x2c>
   42d8f8:	40020000 	.word	0x40020000
   42d8fc:	e0040000 	.word	0xe0040000
-  42d900:	20045461 	.word	0x20045461
+  42d900:	20045471 	.word	0x20045471
 
 0042d904 <am_hal_tpiu_enable>:
   42d904:	b530      	push	{r4, r5, lr}
@@ -53293,9 +53293,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42d956:	b003      	add	sp, #12
   42d958:	bd30      	pop	{r4, r5, pc}
   42d95a:	bf00      	nop
-  42d95c:	20045460 	.word	0x20045460
+  42d95c:	20045470 	.word	0x20045470
   42d960:	000f4240 	.word	0x000f4240
-  42d964:	20045461 	.word	0x20045461
+  42d964:	20045471 	.word	0x20045471
 
 0042d968 <am_hal_usb_ep0_handle_setup_req.part.0.constprop.0>:
   42d968:	b5f0      	push	{r4, r5, r6, r7, lr}
@@ -53772,9 +53772,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42de96:	e7df      	b.n	42de58 <am_hal_usb_out_ep_dma0_handling.constprop.0+0x270>
   42de98:	400b0000 	.word	0x400b0000
   42de9c:	e000e100 	.word	0xe000e100
-  42dea0:	20045462 	.word	0x20045462
+  42dea0:	20045472 	.word	0x20045472
   42dea4:	400b2000 	.word	0x400b2000
-  42dea8:	200454dc 	.word	0x200454dc
+  42dea8:	200454ec 	.word	0x200454ec
 
 0042deac <am_hal_usb_out_ep_handling.constprop.0>:
   42deac:	4b7f      	ldr	r3, [pc, #508]	@ (42e0ac <am_hal_usb_out_ep_handling.constprop.0+0x200>)
@@ -54252,7 +54252,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42e3e6:	709a      	strb	r2, [r3, #2]
   42e3e8:	e7e2      	b.n	42e3b0 <am_hal_usb_phy_electrical_tuning_set+0x24>
   42e3ea:	bf00      	nop
-  42e3ec:	20022c58 	.word	0x20022c58
+  42e3ec:	20022c60 	.word	0x20022c60
 
 0042e3f0 <am_hal_usb_initialize>:
   42e3f0:	bb58      	cbnz	r0, 42e44a <am_hal_usb_initialize+0x5a>
@@ -54294,11 +54294,11 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42e44e:	2006      	movs	r0, #6
   42e450:	bd70      	pop	{r4, r5, r6, pc}
   42e452:	bf00      	nop
-  42e454:	200454f4 	.word	0x200454f4
+  42e454:	20045504 	.word	0x20045504
   42e458:	01ea9e06 	.word	0x01ea9e06
-  42e45c:	20045464 	.word	0x20045464
-  42e460:	200454dc 	.word	0x200454dc
-  42e464:	20022c58 	.word	0x20022c58
+  42e45c:	20045474 	.word	0x20045474
+  42e460:	200454ec 	.word	0x200454ec
+  42e464:	20022c60 	.word	0x20022c60
 
 0042e468 <am_hal_usb_power_control>:
   42e468:	2800      	cmp	r0, #0
@@ -55894,7 +55894,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42f5a8:	400b0020 	.word	0x400b0020
   42f5ac:	400b0000 	.word	0x400b0000
   42f5b0:	e000e100 	.word	0xe000e100
-  42f5b4:	20045462 	.word	0x20045462
+  42f5b4:	20045472 	.word	0x20045472
   42f5b8:	400b2000 	.word	0x400b2000
   42f5bc:	f8df c180 	ldr.w	ip, [pc, #384]	@ 42f740 <am_hal_usb_ep_xfer+0xacc>
   42f5c0:	f8dc c014 	ldr.w	ip, [ip, #20]
@@ -56030,7 +56030,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42f73c:	400b0020 	.word	0x400b0020
   42f740:	400b0000 	.word	0x400b0000
   42f744:	e000e100 	.word	0xe000e100
-  42f748:	200454dc 	.word	0x200454dc
+  42f748:	200454ec 	.word	0x200454ec
   42f74c:	400b2000 	.word	0x400b2000
 
 0042f750 <am_hal_usb_intr_status_get>:
@@ -56432,8 +56432,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   42fb68:	400b0000 	.word	0x400b0000
   42fb6c:	400b0024 	.word	0x400b0024
   42fb70:	400b2000 	.word	0x400b2000
-  42fb74:	20045462 	.word	0x20045462
-  42fb78:	200454dc 	.word	0x200454dc
+  42fb74:	20045472 	.word	0x20045472
+  42fb78:	200454ec 	.word	0x200454ec
   42fb7c:	400b2210 	.word	0x400b2210
   42fb80:	6ada      	ldr	r2, [r3, #44]	@ 0x2c
   42fb82:	f360 421b 	bfi	r2, r0, #16, #12
@@ -57238,7 +57238,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   430438:	f7ff bb2b 	b.w	42fa92 <am_hal_usb_interrupt_service+0x22e>
   43043c:	400b0000 	.word	0x400b0000
   430440:	e000e100 	.word	0xe000e100
-  430444:	20045462 	.word	0x20045462
+  430444:	20045472 	.word	0x20045472
   430448:	400b2000 	.word	0x400b2000
   43044c:	f421 0103 	bic.w	r1, r1, #8585216	@ 0x830000
   430450:	f441 0100 	orr.w	r1, r1, #8388608	@ 0x800000
@@ -57383,7 +57383,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4305c0:	e75c      	b.n	43047c <am_hal_usb_interrupt_service+0xc18>
   4305c2:	bf00      	nop
   4305c4:	e000e100 	.word	0xe000e100
-  4305c8:	200454dc 	.word	0x200454dc
+  4305c8:	200454ec 	.word	0x200454ec
   4305cc:	400b0000 	.word	0x400b0000
 
 004305d0 <am_hal_triple_read>:
@@ -57540,7 +57540,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   43071c:	205b      	movs	r0, #91	@ 0x5b
   43071e:	f7f5 bef7 	b.w	426510 <am_hal_gpio_state_write>
   430722:	bf00      	nop
-  430724:	20022c60 	.word	0x20022c60
+  430724:	20022c68 	.word	0x20022c68
 
 00430728 <am_bsp_external_vddusb0p9_switch>:
   430728:	b510      	push	{r4, lr}
@@ -57554,7 +57554,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   43073c:	205a      	movs	r0, #90	@ 0x5a
   43073e:	f7f5 bee7 	b.w	426510 <am_hal_gpio_state_write>
   430742:	bf00      	nop
-  430744:	20022c5c 	.word	0x20022c5c
+  430744:	20022c64 	.word	0x20022c64
 
 00430748 <am_bsp_low_power_init>:
   430748:	b510      	push	{r4, lr}
@@ -57754,8 +57754,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   430944:	40021000 	.word	0x40021000
   430948:	400c0000 	.word	0x400c0000
   43094c:	000f4240 	.word	0x000f4240
-  430950:	200456c4 	.word	0x200456c4
-  430954:	200456c0 	.word	0x200456c0
+  430950:	200456d4 	.word	0x200456d4
+  430954:	200456d0 	.word	0x200456d0
   430958:	00426af9 	.word	0x00426af9
 
 0043095c <am_bsp_pdm_pins_enable>:
@@ -57772,8 +57772,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   430972:	e8bd 4008 	ldmia.w	sp!, {r3, lr}
   430976:	f7f5 bd83 	b.w	426480 <am_hal_gpio_pinconfig>
   43097a:	bf00      	nop
-  43097c:	200456cc 	.word	0x200456cc
-  430980:	200456c8 	.word	0x200456c8
+  43097c:	200456dc 	.word	0x200456dc
+  430980:	200456d8 	.word	0x200456d8
 
 00430984 <_arm_radix4_butterfly_inverse_q31_mve>:
   430984:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -78737,8 +78737,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   43de22:	6018      	str	r0, [r3, #0]
   43de24:	6002      	str	r2, [r0, #0]
   43de26:	4770      	bx	lr
-  43de28:	200456d0 	.word	0x200456d0
-  43de2c:	200456d4 	.word	0x200456d4
+  43de28:	200456e0 	.word	0x200456e0
+  43de2c:	200456e4 	.word	0x200456e4
   43de30:	00489620 	.word	0x00489620
 
 0043de34 <_ZN6tflite14GetBuiltinCodeEPKNS_12OperatorCodeE>:
@@ -92523,7 +92523,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   44742c:	6818      	ldr	r0, [r3, #0]
   44742e:	f000 b80b 	b.w	447448 <_malloc_r>
   447432:	bf00      	nop
-  447434:	20023080 	.word	0x20023080
+  447434:	20023088 	.word	0x20023088
 
 00447438 <free>:
   447438:	4b02      	ldr	r3, [pc, #8]	@ (447444 <free+0xc>)
@@ -92531,7 +92531,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   44743c:	6818      	ldr	r0, [r3, #0]
   44743e:	f000 bd5d 	b.w	447efc <_free_r>
   447442:	bf00      	nop
-  447444:	20023080 	.word	0x20023080
+  447444:	20023088 	.word	0x20023088
 
 00447448 <_malloc_r>:
   447448:	f101 030b 	add.w	r3, r1, #11
@@ -92812,13 +92812,13 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   44774e:	4299      	cmp	r1, r3
   447750:	d111      	bne.n	447776 <_malloc_r+0x32e>
   447752:	e0a5      	b.n	4478a0 <_malloc_r+0x458>
-  447754:	20022c78 	.word	0x20022c78
-  447758:	20045708 	.word	0x20045708
-  44775c:	20022c6c 	.word	0x20022c6c
-  447760:	200456d8 	.word	0x200456d8
-  447764:	20045704 	.word	0x20045704
-  447768:	20045700 	.word	0x20045700
-  44776c:	20022c80 	.word	0x20022c80
+  447754:	20022c80 	.word	0x20022c80
+  447758:	20045718 	.word	0x20045718
+  44775c:	20022c74 	.word	0x20022c74
+  447760:	200456e8 	.word	0x200456e8
+  447764:	20045714 	.word	0x20045714
+  447768:	20045710 	.word	0x20045710
+  44776c:	20022c88 	.word	0x20022c88
   447770:	689b      	ldr	r3, [r3, #8]
   447772:	4299      	cmp	r1, r3
   447774:	d004      	beq.n	447780 <_malloc_r+0x338>
@@ -93027,19 +93027,19 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4479b4:	f105 0308 	add.w	r3, r5, #8
   4479b8:	e556      	b.n	447468 <_malloc_r+0x20>
   4479ba:	bf00      	nop
-  4479bc:	200456d8 	.word	0x200456d8
+  4479bc:	200456e8 	.word	0x200456e8
 
 004479c0 <__malloc_lock>:
   4479c0:	4801      	ldr	r0, [pc, #4]	@ (4479c8 <__malloc_lock+0x8>)
   4479c2:	f000 b9ad 	b.w	447d20 <__retarget_lock_acquire_recursive>
   4479c6:	bf00      	nop
-  4479c8:	20045710 	.word	0x20045710
+  4479c8:	20045720 	.word	0x20045720
 
 004479cc <__malloc_unlock>:
   4479cc:	4801      	ldr	r0, [pc, #4]	@ (4479d4 <__malloc_unlock+0x8>)
   4479ce:	f000 b9a9 	b.w	447d24 <__retarget_lock_release_recursive>
   4479d2:	bf00      	nop
-  4479d4:	20045710 	.word	0x20045710
+  4479d4:	20045720 	.word	0x20045720
 
 004479d8 <memcmp>:
   4479d8:	2a03      	cmp	r2, #3
@@ -93324,7 +93324,7 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   447c8e:	602b      	str	r3, [r5, #0]
   447c90:	bd38      	pop	{r3, r4, r5, pc}
   447c92:	bf00      	nop
-  447c94:	20023080 	.word	0x20023080
+  447c94:	20023088 	.word	0x20023088
 
 00447c98 <_sbrk_r>:
   447c98:	b538      	push	{r3, r4, r5, lr}
@@ -93342,14 +93342,14 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   447cb2:	d0fb      	beq.n	447cac <_sbrk_r+0x14>
   447cb4:	6023      	str	r3, [r4, #0]
   447cb6:	bd38      	pop	{r3, r4, r5, pc}
-  447cb8:	200459ec 	.word	0x200459ec
+  447cb8:	200459fc 	.word	0x200459fc
 
 00447cbc <__errno>:
   447cbc:	4b01      	ldr	r3, [pc, #4]	@ (447cc4 <__errno+0x8>)
   447cbe:	6818      	ldr	r0, [r3, #0]
   447cc0:	4770      	bx	lr
   447cc2:	bf00      	nop
-  447cc4:	20023080 	.word	0x20023080
+  447cc4:	20023088 	.word	0x20023088
 
 00447cc8 <__libc_init_array>:
   447cc8:	4b0f      	ldr	r3, [pc, #60]	@ (447d08 <__libc_init_array+0x40>)
@@ -93494,9 +93494,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   447e1c:	f04f 30ff 	mov.w	r0, #4294967295	@ 0xffffffff
   447e20:	e7de      	b.n	447de0 <__register_exitproc+0x34>
   447e22:	bf00      	nop
-  447e24:	200231c8 	.word	0x200231c8
-  447e28:	200458ac 	.word	0x200458ac
-  447e2c:	2004571c 	.word	0x2004571c
+  447e24:	200231d0 	.word	0x200231d0
+  447e28:	200458bc 	.word	0x200458bc
+  447e2c:	2004572c 	.word	0x2004572c
 
 00447e30 <register_fini>:
   447e30:	4b02      	ldr	r3, [pc, #8]	@ (447e3c <register_fini+0xc>)
@@ -93572,9 +93572,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   447eea:	6008      	str	r0, [r1, #0]
   447eec:	e7d1      	b.n	447e92 <_malloc_trim_r+0x4e>
   447eee:	bf00      	nop
-  447ef0:	200456d8 	.word	0x200456d8
-  447ef4:	20022c6c 	.word	0x20022c6c
-  447ef8:	20022c78 	.word	0x20022c78
+  447ef0:	200456e8 	.word	0x200456e8
+  447ef4:	20022c74 	.word	0x20022c74
+  447ef8:	20022c80 	.word	0x20022c80
 
 00447efc <_free_r>:
   447efc:	2900      	cmp	r1, #0
@@ -93760,9 +93760,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4480d2:	247e      	movs	r4, #126	@ 0x7e
   4480d4:	e783      	b.n	447fde <_free_r+0xe2>
   4480d6:	bf00      	nop
-  4480d8:	20022c78 	.word	0x20022c78
-  4480dc:	20022c70 	.word	0x20022c70
-  4480e0:	20045708 	.word	0x20045708
+  4480d8:	20022c80 	.word	0x20022c80
+  4480dc:	20022c78 	.word	0x20022c78
+  4480e0:	20045718 	.word	0x20045718
 
 004480e4 <stdio_exit_handler>:
   4480e4:	4a02      	ldr	r2, [pc, #8]	@ (4480f0 <stdio_exit_handler+0xc>)
@@ -93770,9 +93770,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4480e8:	4803      	ldr	r0, [pc, #12]	@ (4480f8 <stdio_exit_handler+0x14>)
   4480ea:	f000 b8c9 	b.w	448280 <_fwalk_sglue>
   4480ee:	bf00      	nop
-  4480f0:	200231cc 	.word	0x200231cc
+  4480f0:	200231d4 	.word	0x200231d4
   4480f4:	00448381 	.word	0x00448381
-  4480f8:	20023088 	.word	0x20023088
+  4480f8:	20023090 	.word	0x20023090
 
 004480fc <cleanup_stdio>:
   4480fc:	4b0c      	ldr	r3, [pc, #48]	@ (448130 <cleanup_stdio+0x34>)
@@ -93797,9 +93797,9 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   448128:	f000 b92a 	b.w	448380 <_fclose_r>
   44812c:	bd10      	pop	{r4, pc}
   44812e:	bf00      	nop
-  448130:	200458b0 	.word	0x200458b0
-  448134:	20045918 	.word	0x20045918
-  448138:	20045980 	.word	0x20045980
+  448130:	200458c0 	.word	0x200458c0
+  448134:	20045928 	.word	0x20045928
+  448138:	20045990 	.word	0x20045990
 
 0044813c <global_stdio_init.part.0>:
   44813c:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -93864,8 +93864,8 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   4481fe:	e8bd 43f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
   448202:	f7ff bd89 	b.w	447d18 <__retarget_lock_init_recursive>
   448206:	bf00      	nop
-  448208:	200459e8 	.word	0x200459e8
-  44820c:	200458b0 	.word	0x200458b0
+  448208:	200459f8 	.word	0x200459f8
+  44820c:	200458c0 	.word	0x200458c0
   448210:	004480e5 	.word	0x004480e5
   448214:	00448329 	.word	0x00448329
   448218:	00448351 	.word	0x00448351
@@ -93893,21 +93893,21 @@ void webusb_register_raw_cb(webusb_rx_cb cb, void *param) {
   448252:	4802      	ldr	r0, [pc, #8]	@ (44825c <__sinit+0x30>)
   448254:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
   448258:	f7ff bd64 	b.w	447d24 <__retarget_lock_release_recursive>
-  44825c:	20045718 	.word	0x20045718
-  448260:	200459e8 	.word	0x200459e8
+  44825c:	20045728 	.word	0x20045728
+  448260:	200459f8 	.word	0x200459f8
   448264:	004480fd 	.word	0x004480fd
 
 00448268 <__sfp_lock_acquire>:
   448268:	4801      	ldr	r0, [pc, #4]	@ (448270 <__sfp_lock_acquire+0x8>)
   44826a:	f7ff bd59 	b.w	447d20 <__retarget_lock_acquire_recursive>
   44826e:	bf00      	nop
-  448270:	20045718 	.word	0x20045718
+  448270:	20045728 	.word	0x20045728
 
 00448274 <__sfp_lock_release>:
   448274:	4801      	ldr	r0, [pc, #4]	@ (44827c <__sfp_lock_release+0x8>)
   448276:	f7ff bd55 	b.w	447d24 <__retarget_lock_release_recursive>
   44827a:	bf00      	nop
-  44827c:	20045718 	.word	0x20045718
+  44827c:	20045728 	.word	0x20045728
 
 00448280 <_fwalk_sglue>:
   448280:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -94743,7 +94743,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4489b8:	4613      	mov	r3, r2
   4489ba:	f101 0c04 	add.w	ip, r1, #4
   4489be:	e7df      	b.n	448980 <_ZN12_GLOBAL__N_14pool4freeEPv.constprop.0+0x44>
-  4489c0:	200459f0 	.word	0x200459f0
+  4489c0:	20045a00 	.word	0x20045a00
 
 004489c4 <_ZN12_GLOBAL__N_14pool8allocateEj.constprop.0>:
   4489c4:	f100 0308 	add.w	r3, r0, #8
@@ -94788,7 +94788,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448a16:	4770      	bx	lr
   448a18:	4770      	bx	lr
   448a1a:	bf00      	nop
-  448a1c:	200459f0 	.word	0x200459f0
+  448a1c:	20045a00 	.word	0x20045a00
 
 00448a20 <__cxa_allocate_exception>:
   448a20:	b510      	push	{r4, lr}
@@ -94823,7 +94823,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448a62:	f7ff bf6b 	b.w	44893c <_ZN12_GLOBAL__N_14pool4freeEPv.constprop.0>
   448a66:	f7fe bce7 	b.w	447438 <free>
   448a6a:	bf00      	nop
-  448a6c:	200459f0 	.word	0x200459f0
+  448a6c:	20045a00 	.word	0x20045a00
 
 00448a70 <_GLOBAL__sub_I__ZN9__gnu_cxx9__freeresEv>:
   448a70:	b5f0      	push	{r4, r5, r6, r7, lr}
@@ -94924,7 +94924,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448b46:	e7b8      	b.n	448aba <_GLOBAL__sub_I__ZN9__gnu_cxx9__freeresEv+0x4a>
   448b48:	60e8      	str	r0, [r5, #12]
   448b4a:	e7cb      	b.n	448ae4 <_GLOBAL__sub_I__ZN9__gnu_cxx9__freeresEv+0x74>
-  448b4c:	200459f0 	.word	0x200459f0
+  448b4c:	20045a00 	.word	0x20045a00
   448b50:	0045d574 	.word	0x0045d574
   448b54:	0045d588 	.word	0x0045d588
   448b58:	0045d594 	.word	0x0045d594
@@ -94969,7 +94969,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448b9a:	4b02      	ldr	r3, [pc, #8]	@ (448ba4 <_ZSt9terminatev+0xc>)
   448b9c:	e8d3 0faf 	lda	r0, [r3]
   448ba0:	f7ff fff2 	bl	448b88 <_ZN10__cxxabiv111__terminateEPFvvE>
-  448ba4:	200231dc 	.word	0x200231dc
+  448ba4:	200231e4 	.word	0x200231e4
 
 00448ba8 <_ZN10__cxxabiv112__unexpectedEPFvvE>:
   448ba8:	b508      	push	{r3, lr}
@@ -94981,19 +94981,19 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448bb2:	4b02      	ldr	r3, [pc, #8]	@ (448bbc <_ZSt10unexpectedv+0xc>)
   448bb4:	e8d3 0faf 	lda	r0, [r3]
   448bb8:	f7ff fff6 	bl	448ba8 <_ZN10__cxxabiv112__unexpectedEPFvvE>
-  448bbc:	200231d8 	.word	0x200231d8
+  448bbc:	200231e0 	.word	0x200231e0
 
 00448bc0 <_ZSt13get_terminatev>:
   448bc0:	4b01      	ldr	r3, [pc, #4]	@ (448bc8 <_ZSt13get_terminatev+0x8>)
   448bc2:	e8d3 0faf 	lda	r0, [r3]
   448bc6:	4770      	bx	lr
-  448bc8:	200231dc 	.word	0x200231dc
+  448bc8:	200231e4 	.word	0x200231e4
 
 00448bcc <_ZSt14get_unexpectedv>:
   448bcc:	4b01      	ldr	r3, [pc, #4]	@ (448bd4 <_ZSt14get_unexpectedv+0x8>)
   448bce:	e8d3 0faf 	lda	r0, [r3]
   448bd2:	4770      	bx	lr
-  448bd4:	200231d8 	.word	0x200231d8
+  448bd4:	200231e0 	.word	0x200231e0
 
 00448bd8 <_ZL23__gxx_exception_cleanup19_Unwind_Reason_CodeP21_Unwind_Control_Block>:
   448bd8:	2801      	cmp	r0, #1
@@ -95207,8 +95207,8 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   448de2:	f007 f937 	bl	450054 <__cxa_end_catch>
   448de6:	f007 f82f 	bl	44fe48 <__cxa_end_cleanup>
   448dea:	bf00      	nop
-  448dec:	20045a00 	.word	0x20045a00
-  448df0:	20023080 	.word	0x20023080
+  448dec:	20045a10 	.word	0x20045a10
+  448df0:	20023088 	.word	0x20023088
   448df4:	0045d5f4 	.word	0x0045d5f4
   448df8:	0045d628 	.word	0x0045d628
   448dfc:	0045d62c 	.word	0x0045d62c
@@ -106228,12 +106228,12 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
 004500dc <__cxa_get_globals_fast>:
   4500dc:	4800      	ldr	r0, [pc, #0]	@ (4500e0 <__cxa_get_globals_fast+0x4>)
   4500de:	4770      	bx	lr
-  4500e0:	20045a04 	.word	0x20045a04
+  4500e0:	20045a14 	.word	0x20045a14
 
 004500e4 <__cxa_get_globals>:
   4500e4:	4800      	ldr	r0, [pc, #0]	@ (4500e8 <__cxa_get_globals+0x4>)
   4500e6:	4770      	bx	lr
-  4500e8:	20045a04 	.word	0x20045a04
+  4500e8:	20045a14 	.word	0x20045a14
 
 004500ec <_ZL28read_encoded_value_with_basehjPKhPj>:
   4500ec:	2850      	cmp	r0, #80	@ 0x50
@@ -106993,7 +106993,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   450860:	b003      	add	sp, #12
   450862:	f85d fb04 	ldr.w	pc, [sp], #4
   450866:	bf00      	nop
-  450868:	20023080 	.word	0x20023080
+  450868:	20023088 	.word	0x20023088
 
 0045086c <_findenv_r>:
   45086c:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -107044,7 +107044,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4508dc:	f000 fec0 	bl	451660 <__env_unlock>
   4508e0:	f10a 0001 	add.w	r0, sl, #1
   4508e4:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
-  4508e8:	200231e0 	.word	0x200231e0
+  4508e8:	200231e8 	.word	0x200231e8
 
 004508ec <realloc>:
   4508ec:	4b02      	ldr	r3, [pc, #8]	@ (4508f8 <realloc+0xc>)
@@ -107052,7 +107052,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4508f0:	4601      	mov	r1, r0
   4508f2:	6818      	ldr	r0, [r3, #0]
   4508f4:	f000 b802 	b.w	4508fc <_realloc_r>
-  4508f8:	20023080 	.word	0x20023080
+  4508f8:	20023088 	.word	0x20023088
 
 004508fc <_realloc_r>:
   4508fc:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -107371,7 +107371,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   450c62:	f8ca 201c 	str.w	r2, [sl, #28]
   450c66:	f10a 0220 	add.w	r2, sl, #32
   450c6a:	e740      	b.n	450aee <_realloc_r+0x1f2>
-  450c6c:	20022c78 	.word	0x20022c78
+  450c6c:	20022c80 	.word	0x20022c80
 
 00450c70 <_strtoul_l.isra.0>:
   450c70:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -107492,7 +107492,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   450da2:	6820      	ldr	r0, [r4, #0]
   450da4:	f85d 4b04 	ldr.w	r4, [sp], #4
   450da8:	f7ff bf62 	b.w	450c70 <_strtoul_l.isra.0>
-  450dac:	20023080 	.word	0x20023080
+  450dac:	20023088 	.word	0x20023088
 
 00450db0 <fputc>:
   450db0:	4b14      	ldr	r3, [pc, #80]	@ (450e04 <fputc+0x54>)
@@ -107533,7 +107533,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   450dfc:	f7f7 fa16 	bl	44822c <__sinit>
   450e00:	e7de      	b.n	450dc0 <fputc+0x10>
   450e02:	bf00      	nop
-  450e04:	20023080 	.word	0x20023080
+  450e04:	20023088 	.word	0x20023088
 
 00450e08 <_fputs_r>:
   450e08:	b530      	push	{r4, r5, lr}
@@ -107614,7 +107614,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   450eb4:	4601      	mov	r1, r0
   450eb6:	6818      	ldr	r0, [r3, #0]
   450eb8:	f7ff bfa6 	b.w	450e08 <_fputs_r>
-  450ebc:	20023080 	.word	0x20023080
+  450ebc:	20023088 	.word	0x20023088
 
 00450ec0 <__sfvwrite_r>:
   450ec0:	6893      	ldr	r3, [r2, #8]
@@ -108017,7 +108017,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   451290:	f7ff ff88 	bl	4511a4 <_fwrite_r>
   451294:	b003      	add	sp, #12
   451296:	bd30      	pop	{r4, r5, pc}
-  451298:	20023080 	.word	0x20023080
+  451298:	20023088 	.word	0x20023088
 
 0045129c <_putc_r>:
   45129c:	b570      	push	{r4, r5, r6, lr}
@@ -108103,7 +108103,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   451348:	e8bd 4030 	ldmia.w	sp!, {r4, r5, lr}
   45134c:	b003      	add	sp, #12
   45134e:	4770      	bx	lr
-  451350:	20023080 	.word	0x20023080
+  451350:	20023088 	.word	0x20023088
   451354:	ffff0208 	.word	0xffff0208
 
 00451358 <__swbuf_r>:
@@ -108295,7 +108295,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4514f8:	f04f 30ff 	mov.w	r0, #4294967295	@ 0xffffffff
   4514fc:	bd38      	pop	{r3, r4, r5, pc}
   4514fe:	bf00      	nop
-  451500:	20023080 	.word	0x20023080
+  451500:	20023088 	.word	0x20023088
 
 00451504 <strchr>:
   451504:	f011 01ff 	ands.w	r1, r1, #255	@ 0xff
@@ -108436,13 +108436,13 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   451654:	4801      	ldr	r0, [pc, #4]	@ (45165c <__env_lock+0x8>)
   451656:	f7f6 bb63 	b.w	447d20 <__retarget_lock_acquire_recursive>
   45165a:	bf00      	nop
-  45165c:	2004570c 	.word	0x2004570c
+  45165c:	2004571c 	.word	0x2004571c
 
 00451660 <__env_unlock>:
   451660:	4801      	ldr	r0, [pc, #4]	@ (451668 <__env_unlock+0x8>)
   451662:	f7f6 bb5f 	b.w	447d24 <__retarget_lock_release_recursive>
   451666:	bf00      	nop
-  451668:	2004570c 	.word	0x2004570c
+  451668:	2004571c 	.word	0x2004571c
   45166c:	00000000 	.word	0x00000000
 
 00451670 <_svfprintf_r>:
@@ -108630,7 +108630,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   45187c:	af27      	add	r7, sp, #156	@ 0x9c
   45187e:	e7df      	b.n	451840 <_svfprintf_r+0x1d0>
 	...
-  451888:	200231e4 	.word	0x200231e4
+  451888:	200231ec 	.word	0x200231ec
   45188c:	9507      	str	r5, [sp, #28]
   45188e:	2c00      	cmp	r4, #0
   451890:	d0dc      	beq.n	45184c <_svfprintf_r+0x1dc>
@@ -111671,12 +111671,12 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   453818:	4b01      	ldr	r3, [pc, #4]	@ (453820 <__locale_mb_cur_max+0x8>)
   45381a:	f893 0128 	ldrb.w	r0, [r3, #296]	@ 0x128
   45381e:	4770      	bx	lr
-  453820:	200231e4 	.word	0x200231e4
+  453820:	200231ec 	.word	0x200231ec
 
 00453824 <_localeconv_r>:
   453824:	4800      	ldr	r0, [pc, #0]	@ (453828 <_localeconv_r+0x4>)
   453826:	4770      	bx	lr
-  453828:	200232d4 	.word	0x200232d4
+  453828:	200232dc 	.word	0x200232dc
 
 0045382c <quorem>:
   45382c:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -113876,7 +113876,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   454f4a:	602b      	str	r3, [r5, #0]
   454f4c:	b004      	add	sp, #16
   454f4e:	bd70      	pop	{r4, r5, r6, pc}
-  454f50:	200231e4 	.word	0x200231e4
+  454f50:	200231ec 	.word	0x200231ec
 
 00454f54 <_wcsrtombs_r>:
   454f54:	b510      	push	{r4, lr}
@@ -113989,7 +113989,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   455052:	4904      	ldr	r1, [pc, #16]	@ (455064 <__assert_func+0x38>)
   455054:	460c      	mov	r4, r1
   455056:	e7f4      	b.n	455042 <__assert_func+0x16>
-  455058:	20023080 	.word	0x20023080
+  455058:	20023088 	.word	0x20023088
   45505c:	0045e0ec 	.word	0x0045e0ec
   455060:	0045e0fc 	.word	0x0045e0fc
   455064:	0045d4e0 	.word	0x0045d4e0
@@ -114149,8 +114149,8 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4551e0:	f7ff ff7a 	bl	4550d8 <_wcsnrtombs_l>
   4551e4:	b004      	add	sp, #16
   4551e6:	bd10      	pop	{r4, pc}
-  4551e8:	200231e4 	.word	0x200231e4
-  4551ec:	20023080 	.word	0x20023080
+  4551e8:	200231ec 	.word	0x200231ec
+  4551ec:	20023088 	.word	0x20023088
 
 004551f0 <fiprintf>:
   4551f0:	b40e      	push	{r1, r2, r3}
@@ -114168,7 +114168,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   45520e:	b003      	add	sp, #12
   455210:	4770      	bx	lr
   455212:	bf00      	nop
-  455214:	20023080 	.word	0x20023080
+  455214:	20023088 	.word	0x20023088
 
 00455218 <_vfiprintf_r>:
   455218:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -114423,7 +114423,7 @@ ns_ipc_ring_buffer_init(ns_ipc_ring_buffer_t *ring_buffs, ns_ipc_ringbuff_setup_
   4554e8:	f04f 33ff 	mov.w	r3, #4294967295	@ 0xffffffff
   4554ec:	9307      	str	r3, [sp, #28]
   4554ee:	e7e6      	b.n	4554be <_vfiprintf_r+0x2a6>
-  4554f0:	200231e4 	.word	0x200231e4
+  4554f0:	200231ec 	.word	0x200231ec
   4554f4:	2b00      	cmp	r3, #0
   4554f6:	d0b7      	beq.n	455468 <_vfiprintf_r+0x250>
   4554f8:	2201      	movs	r2, #1

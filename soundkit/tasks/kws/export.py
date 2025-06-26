@@ -1,10 +1,11 @@
 from pathlib import Path
 import tensorflow as tf
-from ...utils.tflite_convert import tflite_convert, warp_tf_model   
-from ...defines import SKTaskParams
-from ...utils.download_tf_model import build_model, load_model_checkpoint
-from ...utils.tf_copy_model import copy_model_weights
-from ...utils.feature_utils import FeatureExtractor
+from  soundkit.utils.tflite_convert import tflite_convert, warp_tf_model   
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.feature_utils import FeatureExtractor
+
 def export(params: SKTaskParams):
     """Export SE task model with given parameters.
 

@@ -162,6 +162,7 @@ def build_model(
         shape = (None, time_steps, dim_feat, 2)
     else:
         shape = (None, time_steps, dim_feat)
+
     model.build(
         input_shape=shape)
     model.summary()

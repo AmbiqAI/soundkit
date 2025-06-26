@@ -1,36 +1,33 @@
+"""Evaluate KWS task model with given parameters."""
 import re
 import os
-from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import soundfile as sf
 import matplotlib.pyplot as plt
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.calculate_feat_stats import feat_stats_estimator
+from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.basic_dsp import dc_remove
+from soundkit.utils.audio import audio_read
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
-from ...defines import SKTaskParams
-from ...utils.download_tf_model import build_model, load_model_checkpoint
-from ...utils.feature_utils import FeatureExtractor
-from ...utils.calculate_feat_stats import feat_stats_estimator
-from ...utils.lookaheadBuffer import LookaheadBuffer
-
-from ...utils.tf_copy_model import copy_model_weights
-from ...utils.basic_dsp import dc_remove
-from ...utils.audio import audio_read
-from ...utils.plot_api import plot_spectrograms
-from ...utils.tf_basic_math import tf_log10_eps
-from ...utils.calculate_feat_stats import mean_varinace_norm
 
 def evaluate(params: SKTaskParams):
-    """Evaluate SE task model with given parameters.
+    """Evaluate KWS task model with given parameters.
 
     Args:
         params (HKTaskParams): Task parameters
     """
-    print(f"Evaluating SE model with params: {params} and more")
+    print(f"Evaluating KWS model with params: {params} and more")
 
     params_evaluate = params.evaluate
-    num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
     result_folder = params.evaluate['data']['result_folder']
@@ -218,4 +215,3 @@ def evaluate(params: SKTaskParams):
                 params.data['signal']['sampling_rate'])
             
             print(f"Saved kws audio to {save_path}")
-        

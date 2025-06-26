@@ -1,4 +1,4 @@
-name: crnn_experiment
+name: crnn_experiment_1
 project: vad
 job_dir: ./soundkit/tasks/vad
 
@@ -8,8 +8,8 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 50000
-    val: 3590
+    train: 40000
+    val: 2000
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
@@ -36,10 +36,10 @@ data:
 
 train:
   initial_lr: 4e-4
-  batchsize: 128
+  batchsize: 32
   epochs: 150
   warmup_epochs: 5
-  epoch_loaded: latest
+  epoch_loaded: random
   loss_function: 
     type: cross_entropy
     params: {}
@@ -49,7 +49,8 @@ train:
     checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 0
-  
+  spec_aug: false
+
   feature:
     frame_size: 480
     hop_size: 160
@@ -60,17 +61,18 @@ train:
     # bins_fft: 100
     # n_mels: 72
 
-  standardization: true
+  standardization: false
   
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
     override:
-      units: 22
+      units: 28
       dropout_rate_input: 0.1
-      dropout_rate: 0.2
+      dropout_rate: 0.25
       stride_time: 1
       len_time: 6
+
   reset_every_batch: false
   debug: false
 

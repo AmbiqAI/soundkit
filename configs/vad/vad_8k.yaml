@@ -55,8 +55,8 @@ train:
     frame_size: 240
     hop_size: 80
     fft_size: 256
-    type: logpspec
-    bins: 129
+    type: mel
+    bins: 22
     # type: hybrid
     # bins_fft: 100
     # n_mels: 72

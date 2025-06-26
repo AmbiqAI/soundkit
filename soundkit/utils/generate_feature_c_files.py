@@ -20,6 +20,7 @@ def generate_feature_c_files(
     lookahead: int = 1,
     stft_win_coeff_name: str = "stft_win_coeff_w480_h160",
     filterbank_name: str | None = "filter_banks",
+    task: str = "se",
 ):
     if filterbank_name is None:
         filter_name_def='\n'
@@ -60,23 +61,23 @@ PARAMS_NNSP {param_struct_name} = {{
 
 
 /*************stats***********/
-{int2str_array("feature_mean_se", feature_mean*32768, nbits=32)}
+{int2str_array(f"feature_mean_{task}", feature_mean*32768, nbits=32)}
 
-{int2str_array("feature_stdR_se", feature_std*32768, nbits=32)}
+{int2str_array(f"feature_stdR_{task}", feature_std*32768, nbits=32)}
 """
     Path(f"{dir}/{file_name}.c").write_text(c_code)
     print(f"✅ Wrote {file_name}.c")
 
     # === Generate .h file
-    h_code = f"""#ifndef __DEF_NN3_SE__
-#define __DEF_NN3_SE__
+    h_code = f"""#ifndef __DEF_NN3_{task.upper()}__
+#define __DEF_NN3_{task.upper()}__
 
 #include <stdint.h>
 #include "neural_nets.h"
 #include "nn_speech.h"
 
-extern const int32_t feature_mean_se[];
-extern const int32_t feature_stdR_se[];
+extern const int32_t feature_mean_{task}[];
+extern const int32_t feature_stdR_{task}[];
 
 #define NUM_LOOKAHEAD {lookahead}
 extern PARAMS_NNSP {param_struct_name};

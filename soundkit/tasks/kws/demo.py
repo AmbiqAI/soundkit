@@ -15,6 +15,7 @@ from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
+from soundkit.utils.basic_dsp import DCRemover
 from .export import export
 
 logging.basicConfig(
@@ -131,6 +132,7 @@ def demo_evb(params: SKTaskParams):
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        task=params.project
     )
 
     # === Define Key Paths ===
@@ -231,9 +233,14 @@ def demo_pc(params: SKTaskParams):
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+        mel_bins=params.train.feature.bins
+    )
     dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
@@ -276,13 +283,7 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
+    
 
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
@@ -299,6 +300,8 @@ def demo_pc(params: SKTaskParams):
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
+            if params.data.signal.dc_removal:
+                self.dc_remover = DCRemover()
 
         def __call__(self,
                      inputs: np.ndarray # input from microphone
@@ -306,6 +309,8 @@ def demo_pc(params: SKTaskParams):
             """Process input audio signal and return VAD output."""
             shape=inputs.shape
             inputs=inputs.flatten()
+            if params.data.signal.dc_removal:
+                inputs = self.dc_remover.process(inputs)
             features,_ = self.feat_extractor(inputs)
 
             if self.stats is not None:

@@ -18,7 +18,7 @@ from ...utils.plot_api import plot_spectrograms
 from ...utils.tf_basic_math import tf_log10_eps
 from ...utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from ...utils.calculate_feat_stats import mean_varinace_norm
-
+from ...utils.spec_aug import SpecAug
 @tf.function
 def train_step(
         net: tf.keras.Model,
@@ -77,6 +77,8 @@ def run_epoch(
     loss_fn = config["loss_fn"]
     params  = config["params"]
     stats = config["feat_stats"]
+    spec_aug = config["spec_aug"]
+
 
     stft_feat = params.train['feature']
     batchsize = params.train["batchsize"]
@@ -93,13 +95,20 @@ def run_epoch(
     loss_metric = tf.keras.metrics.Mean()
     confused_metric = ConfusionMatrixMetric(num_classes=2)
     # Initialize left-over state buffers for streaming STFT
-    states_audio_sn = tf.random.uniform(
-        [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-        minval=-1.0,
-        maxval=1.0,
-        dtype=tf.float32
-    )
-    model.reset_states()
+
+
+    def reset_nn_states(model: tf.keras.Model) -> tf.Tensor:
+        """Reset the state buffer for the next batch."""
+        states_audio_sn = tf.random.uniform(
+            [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
+            minval=-1.0,
+            maxval=1.0,
+            dtype=tf.float32
+        )* 10**-5
+        model.reset_states()
+        return states_audio_sn
+
+    states_audio_sn = reset_nn_states(model)
     for step, batch in enumerate(dataset):
 
         audio_sn, _, vad = batch
@@ -109,21 +118,20 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
+
         if params.train.reset_every_batch:
-            # Reset the state buffer for the next batch
-            states_audio_sn = tf.random.uniform(
-                [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-                minval=-1.0,
-                maxval=1.0,
-                dtype=tf.float32
-            )
-            model.reset_states()
+            states_audio_sn = reset_nn_states(model)
+
         if params.train['standardization']:
             # Standardize features
             feat_sn_norm = mean_varinace_norm(feat_sn, stats['nMean_feat'], stats['nInvStd'])
         else:
             # No standardization, use raw features
             feat_sn_norm = feat_sn
+
+        if spec_aug and training:
+            # Apply spec augmentation
+            feat_sn_norm = spec_aug(feat_sn_norm)
 
         if feat_extractor.feat_type=="spec":
             feat_sn_norm = complex_to_realarray(feat_sn_norm)
@@ -251,16 +259,7 @@ def train(params: SKTaskParams):
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
-
-    # import pickle
-
-    # with open('array_list.pkl', 'rb') as f:
-    #         reloaded_list = pickle.load(f)
-
-    # for u, v in zip(model.trainable_variables, reloaded_list):
-    #     u.assign(v)
-    #     print(u.shape, v.shape)
-
+    
     # 3. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
@@ -315,7 +314,25 @@ def train(params: SKTaskParams):
 
     log_path = f"{checkpoint_dir}/train_log.json"
     train_log = load_train_log(log_path, params_train['epochs'])
-    # import pdb; pdb.set_trace()
+
+    if params.train.spec_aug:
+        spec_aug = SpecAug()
+    else:
+        spec_aug = None
+
+
+    # import pickle    
+    # # Load
+    # with open('array_list.pkl', 'rb') as f:
+    #     reloaded_list = pickle.load(f)
+    # for u in reloaded_list:
+    #     print(u.shape, u.dtype)
+    # for u, v in zip(reloaded_list, model.trainable_variables):
+    #     v.assign(u)
+    # epoch=0
+    # import pdb; pdb.set_trace()  # pylint: disable=forgotten-debug-statement
+
+
     for epoch in range(epoch_loaded_1, params_train['epochs']):
         log_epoch ={"epoch": epoch}
         train_config={
@@ -327,6 +344,7 @@ def train(params: SKTaskParams):
             'loss_fn': loss_fn,
             'total_batches': {'train': batches_train, 'val': batches_val},
             'train_summary_writer': train_summary_writer,
+            'spec_aug': spec_aug,
             }
         print(f"Epoch {epoch}/{params_train['epochs']}\n")
 

@@ -2,7 +2,7 @@
 #include "def_nnvad_params.h"
 #include "mut_model_metadata.h"
 #include "mut_model_data.h"
-#include "def_nn1_nnvad.h"
+#include "def_nn_kws.h"
 #include "tflm_ns_model.h"
 #include <stdint.h>
 #include "AudioPipe_wrapper.h"
@@ -19,7 +19,7 @@ extern int tflm_validator_model_init(ns_model_state_t *ms);
 // Feature class instance
 FeatureClass FEAT_INST;
 IIR_CLASS dcrm_inst;
-PARAMS_NNSP *pt_param = &params_nn1_nnvad;
+PARAMS_NNSP *pt_param = &params_nn_kws;
 // TFLM Config
 static ns_model_state_t tflm;
 
@@ -65,8 +65,8 @@ int AudioPipe_wrapper_init(void)
 { 
     FeatureClass_construct(
         &FEAT_INST,
-        (const int32_t*) feature_mean_se,
-        (const int32_t*) feature_stdR_se,
+        (const int32_t*) feature_mean_kws,
+        (const int32_t*) feature_stdR_kws,
         FEATURE_QBIT,
         pt_param->num_mfltrBank, // FEATURE_NUM_MFC
         pt_param->winsize_stft, // FEATURE_WINSIZE,

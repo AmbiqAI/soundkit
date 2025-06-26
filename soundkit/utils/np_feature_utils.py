@@ -22,8 +22,14 @@ class FeatureExtractor_np:
             hop_len=160,
             fft_len=512,
             sampling_rate=16000,
-            mel_bins=72):
-        self.stft_exec = StreamingSTFT(frame_len, hop_len, fft_len)
+            mel_bins=72,
+            stream=True):
+
+        self.stft_exec = StreamingSTFT(
+            frame_len,
+            hop_len,
+            fft_len,
+            stream=stream)
 
         self.sampling_rate = sampling_rate
         self.feat_type=feat_type
@@ -54,7 +60,7 @@ class FeatureExtractor_np:
             self.dim_feat = fbanks.shape[0]
         else:
             dim_feat = (fft_len // 2) + 1
-            
+
             self.mel_filter = np.eye(
                 dim_feat)
             self.dim_feat = dim_feat
@@ -77,7 +83,7 @@ class FeatureExtractor_np:
         spec = self.stft_exec.process(audio_sn)
 
         return spec, spec.copy()
-    
+
     def _extract_pspec(
             self,
             audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

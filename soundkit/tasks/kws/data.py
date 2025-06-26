@@ -1,5 +1,4 @@
 ''' prepare tfrecords data for KWS task '''
-import os
 import random
 import re
 import multiprocessing
@@ -8,16 +7,16 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from ...utils.tf_stft import tf_stft
-from ...utils.tf_basic_math import tf_log10_eps
-from ...utils.audio import pad_or_crop
+from soundkit.utils.tf_stft import tf_stft
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.audio import pad_or_crop
+from soundkit.defines import SKTaskParams
+from soundkit.utils.basic_dsp import dc_remove
+from soundkit.utils.download_api import corpus_download
+from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.datasets import SKDatasetFactory
 from .datasets import create_raw_tfrecord
-from ...defines import SKTaskParams
-from ...utils.basic_dsp import dc_remove
-from ...utils.download_api import corpus_download
-from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
-from ...utils.plot_api import plot_spectrograms
-from ...datasets import SKDatasetFactory
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -88,15 +87,17 @@ class FeatMultiProcsClass(multiprocessing.Process):
 
                             garb = audio_read(wavname_g, sample_rate=target_sample_rate)
                             garb, *_ = pad_or_crop(garb, target_length)
-                            garb = garb[starts_g[0]:ends_g[0]]
+
+                            if len(ends_g) > 0:
+                                garb = garb[starts_g[0]:ends_g[0]]
                             if len(garb) > len_d:
                                 garb = garb[:len_d]
                             else:
                                 garb = np.pad(garb, (0, len_d - len(garb)), mode='constant')
                         if rn == 0: # destroy the front of the keyword speech
                             clean[starts[0]: starts[0] + len_d] = 0.0
-                            if rn1 == 1: # remove target speech
-                                clean[starts[0]: starts[0] + len_d] = garb
+                            # if rn1 == 1: # remove target speech
+                            #     clean[starts[0]: starts[0] + len_d] = garb
                         else: # destroy the back of the keyword speech
                             clean[ends[0] - len_d: ends[0]] = 0.0
                             if rn1 == 1: # remove target speech
@@ -187,7 +188,9 @@ class FeatMultiProcsClass(multiprocessing.Process):
                     target_length=target_length,
                     sample_rate=target_sample_rate,
                     is_short_segments_remove=False,)
-
+                if self.params.data.debug:
+                    import sounddevice as sd
+                    sd.play(audio_sn, samplerate=target_sample_rate)
                 # vad = np.zeros_like(audio_sn, dtype=np.float32)
                 # vad[start:end] = 1.0  # Mark the valid region
                 
@@ -209,18 +212,19 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 # plt.plot(audio_reverb, label='Noisy Speech')
                 # plt.plot(vad)
                 # plt.show()
-                
+
                 if is_dc_removal:
                     audio_sn = dc_remove(audio_sn)
                     audio_s = dc_remove(audio_s)
                 # print(f"[Process {self.proc_pid}] {wavname} -> {snr_db}dB")
-                
+     
                 if self.debug:
                     hop_size=self.params.train['feature']['hop_size']
 
                     self._debug_plot(
                         audio_sn, audio_s, snr_db,
                         label=(starts // hop_size, ends // hop_size))
+
                 else:
                     tfrecord_name = re.sub(r'^wavs', path_tfrecord,
                         re.sub(r'\.(wav|flac)$', f'_{snr_db}-db_{self.info}_{k}_proc_id{self.proc_pid}.tfrecord', wavname))

@@ -77,6 +77,9 @@ export:
 
 demo:
   epoch_loaded: 50
+  platform: evb # or pc
   tflite_dir: ./soundkit/tasks/se/tflite
+  # evb_dir: ./soundkit/tasks/se/evb
   evb_dir: ./soundkit/tasks/se/evb_webusb
+  
   pre_gain: 1

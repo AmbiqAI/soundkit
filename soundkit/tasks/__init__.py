@@ -3,6 +3,7 @@ from .task import SKTask
 from .se import SeTask
 from .vad import VadTask
 from .kws import KwsTask
+from .id import IdTask
 
 class TaskFactory:
     _registry = {}
@@ -22,3 +23,4 @@ class TaskFactory:
 TaskFactory.register("se", SeTask)
 TaskFactory.register("vad", VadTask)
 TaskFactory.register("kws", KwsTask)
+TaskFactory.register("id", IdTask)
