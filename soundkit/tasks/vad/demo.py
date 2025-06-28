@@ -161,8 +161,9 @@ def demo_evb(params: SKTaskParams):
 
     subprocess.run(["python", "-m", "venv", ".venv"], check=True)
     subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "."], check=True)
-
+    # import pdb; pdb.set_trace()
+    # subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    # import pdb; pdb.set_trace()
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
     svd_dir = neuralspot_root / "extern/AmbiqSuite/R5.3.0/pack/svd"
@@ -263,20 +264,36 @@ def demo_pc(params: SKTaskParams):
 
     copy_model_weights(model_dst=model, model_src=model_train)
 
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat)
-
     dtype='float32'
+    if 1:
+        inputs_x = tf.keras.Input(shape=[1, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+        inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
+        output = model(inputs_x, reset_input=inputs_reset)
+        model_export = tf.keras.Model(inputs=[inputs_x, inputs_reset], outputs=output)
+        from .model import tflite_conversion
+        
+        path_tflite = f'{params.export["tflite_dir"]}/{params.name}.tflite'
+        tflite_conversion(
+            model_export,
+            timesteps=1,
+            input_dim=dim_feat,
+            path_tflite=path_tflite,
+            dtype=dtype)
+        interpreter = tf.lite.Interpreter(
+            model_path= path_tflite)
+    else:
+        model_wrap = warp_tf_model(
+            model,
+            time_steps=1,
+            dim_feat=dim_feat)
 
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+        tflite_fp16_model = tflite_convert(
+            model_wrap,
+            dtype=dtype,
+            path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
-    interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
+        interpreter = tf.lite.Interpreter(
+            model_content=tflite_fp16_model)
     interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
@@ -301,13 +318,27 @@ def demo_pc(params: SKTaskParams):
             self.stats = stats
             self.feat_extractor = feat_extractor
             self.is_inference = 1
+            self.reset_flag = np.array([1.0], dtype=np.float32)  # Reset flag for stateful model
+            self.counts_vad_trigger = 0
             if params.data.signal.dc_removal:
                 self.dc_remover = DCRemover()
 
+        def reset(self):
+            """Reset the model state."""
+            self.reset_flag = np.array([1.0], dtype=np.float32)
+            self.counts_vad_trigger = 0
+            self.feat_extractor.reset()
+            self.dc_remover.reset()
+
         def __call__(self,
-                     inputs: np.ndarray # input from microphone
-                    ) -> np.ndarray: # output to AudioShowClass
+                     inputs: np.ndarray,  # input from microphone
+                     reset_flag: int=0,  # reset flag for stateful model
+                    ) -> np.ndarray:  # output to AudioShowClass
             """Process input audio signal and return VAD output."""
+            
+            if reset_flag==1:
+                self.reset()
+
             shape=inputs.shape
             inputs=inputs.flatten()
             if params.data.signal.dc_removal:
@@ -319,13 +350,19 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            outputs = self.model_tflite(features)
+
+            outputs = self.model_tflite(features, reset_tensor=self.reset_flag)  # Run inference
+
+            self.reset_flag = np.array([0.0], dtype=np.float32)  # Reset flag for next call
+
             outputs = outputs.flatten()
             if 0:
                 if outputs[0] < outputs[1]:
                     outputs = np.ones(hop_size, dtype=np.float32)*0.95
+                    self.counts_vad_trigger += 1
                 else:
                     outputs = np.zeros(hop_size, dtype=np.float32)
+                    self.counts_vad_trigger = 0
             else:
                 tot = np.exp(outputs, out=outputs)  # Apply softmax
                 out = tot / np.sum(tot)  # Normalize
@@ -338,6 +375,21 @@ def demo_pc(params: SKTaskParams):
         feat_extractor=feat_extractor,
         stats=stats,
     )
+
+    vad_model.reset()  # Reset the model state
+
+    # inputs = np.random.uniform(-1, 1, size=(hop_size,)).astype(np.float32)
+    # reset_flag = 0  # Reset flag for stateful model
+
+    # outputs = vad_model(inputs, reset_flag=reset_flag)  # Run inference
+
+    # print(f"VAD outputs: {outputs}")
+
+
+    # reset_flag = 1  # Reset flag for stateful model
+    # outputs = vad_model(inputs, reset_flag=reset_flag)  # Run inference with reset
+    # print(f"VAD outputs after reset: {outputs}")
+
     aud_handle = AudioShowClass(
         frame_size=hop_size,
         sample_rate=sample_rate,

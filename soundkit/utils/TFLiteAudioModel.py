@@ -29,11 +29,20 @@ class TFLiteAudioModel:
         """
         super().__init__(*args, **kwargs)
         self.interpreter = interpreter
-        self.input_details = interpreter.get_input_details()[0]
-        self.output_details = interpreter.get_output_details()[0]
         self.dtype = dtype
 
-    def __call__(self, input_tensor: np.ndarray) -> np.ndarray:
+        if len(interpreter.get_input_details()) == 1 :
+            self.input_details = interpreter.get_input_details()[0]
+            self.output_details = interpreter.get_output_details()[0]
+        elif len(interpreter.get_input_details()) == 2:
+            self.reset_details = interpreter.get_input_details()[0]
+            self.input_details = interpreter.get_input_details()[1]
+            
+            self.output_details = interpreter.get_output_details()[0]
+
+    def __call__(self,
+                input_tensor: np.ndarray,
+                reset_tensor: np.ndarray | None = None) -> np.ndarray:
         """
         Runs the model on input audio.
 
@@ -51,9 +60,18 @@ class TFLiteAudioModel:
             input_tensor = input_tensor.astype(np.int8 if self.dtype == "int8" else np.int16)
         else:
             input_tensor = input_tensor.astype(np.float32)
+        self.interpreter.set_tensor(self.input_details['index'], input_tensor)
+
+        if reset_tensor is not None:
+            if self.dtype in ("int8", "int16"):
+                scale, zero_point = self.reset_details["quantization"]
+                reset_tensor = reset_tensor / scale + zero_point
+                reset_tensor = reset_tensor.astype(np.int8 if self.dtype == "int8" else np.int16)
+            else:
+                reset_tensor = reset_tensor.astype(np.float32)
+            self.interpreter.set_tensor(self.reset_details['index'], reset_tensor)
 
         # Inference
-        self.interpreter.set_tensor(self.input_details['index'], input_tensor)
         self.interpreter.invoke()
         output_tensor = self.interpreter.get_tensor(self.output_details['index'])
 

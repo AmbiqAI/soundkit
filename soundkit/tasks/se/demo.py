@@ -291,6 +291,7 @@ def demo_pc(params: SKTaskParams):
                 feat_extractor: FeatureExtractor_np,
                 stats: dict | None = None,
                 num_lookahead: int = 0):
+            self.num_lookahead = num_lookahead
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
@@ -300,6 +301,7 @@ def demo_pc(params: SKTaskParams):
                 hop_len=params.train.feature.hop_size,
                 fft_len=params.train.feature.fft_size,
             )
+            self.reset_nn = 0.0
             if num_lookahead > 0:
                 _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(num_lookahead):
@@ -323,7 +325,13 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            tfmask = self.model_tflite(features)
+            if self.reset_nn > 0.5:
+                reset_tensor = np.array([1.0], dtype=np.float32)
+                self.reset_nn = 0.0
+            else:
+                reset_tensor = np.array([0.0], dtype=np.float32)
+            tfmask = self.model_tflite(features, reset_tensor)
+
             tfmask = tfmask.flatten()
             
             pcm_out = self.istft.process(spec * tfmask)
@@ -331,43 +339,30 @@ def demo_pc(params: SKTaskParams):
 
             return pcm_out.reshape((-1,1))
 
+        def reset(self):
+            """Reset the internal state of the model."""
+            self.feat_extractor.reset()
+            self.specs = []
+            self.istft.reset()
+            self.reset_nn = 1
+            if self.num_lookahead > 0:
+                _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+                for i in range(self.num_lookahead):
+                    self.specs.append(z_spec.copy())
+            if hasattr(self, 'dc_remover'):
+                self.dc_remover.reset()
     se_model = SEModel(
         model_tflite=model_tflite,
         feat_extractor=feat_extractor,
         stats=stats,
         num_lookahead=params.train.num_lookahead
     )
-    # se_model(np.random.randn(64))
-    
-    # from soundkit.utils.audio import audio_read
-    # sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
-    
-    
-    # import time
-    
-    # inputs = []
-    # outputs = []
-    
-    # start = time.time()
-    # for i in range(len(sig)//hop_size):
-    #     x = sig[i*hop_size:(i+1)*hop_size]
-    #     inputs.append(x)
-    #     y = se_model(x)
-    #     y = y.flatten()
-    #     outputs.append(y)
-
-    # print(f"Time taken: {time.time() - start:.2f} seconds")
-    # print(f"average time per chunk: {(time.time() - start) / (len(sig)//hop_size):.8f} seconds")
-    # outputs = np.concatenate(outputs)
-    # inputs = np.concatenate(inputs)
-
-    # import pdb; pdb.set_trace()
-    
     
     aud_handle = AudioShowClass(
         record_seconds=15,
         non_stop=True,
         proc_st=se_model,
+        reset_st=se_model.reset,
         frame_size=hop_size,
         title="SoundKit SE Demo",
     )

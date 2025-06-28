@@ -68,7 +68,9 @@ class FeatureExtractor_np:
     def dim(self) -> int:
         """Return the number of feature dimensions."""
         return self.dim_feat
-
+    def reset(self):
+        """Reset the internal state of the feature extractor."""
+        self.stft_exec.reset()
     def __call__(
             self,
             audio: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

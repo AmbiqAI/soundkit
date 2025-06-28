@@ -99,8 +99,6 @@ int AudioPipe_wrapper_init(AudioTaskClass *self)
         }
         self->nn_dim_out = output_dim; // Set the number of output dimensions for the model
     }
-    
-    
 
     ns_lp_printf("Model initialized\n");
     return 0;
@@ -114,7 +112,7 @@ int AudioPipe_wrapper_reset(AudioTaskClass *self)
     FeatureClass_setDefault(pt_feat);
     IIR_CLASS_reset(pt_dcrm);
 
-    self->reset_nn = 0.0f; // Reset the neural network state    
+    self->reset_nn = 1.0f; // Reset the neural network state    
     return 0;
 }
 
@@ -173,7 +171,7 @@ int AudioPipe_wrapper_frameProc(
     int16_t reset = (int16_t) ((float32_t) self->reset_nn / (float32_t) input_scale + (float32_t) input_zero_point);
     pt_tflm->interpreter->input(input_idx)->data.i16[0] =  reset;
     if (self->reset_nn > 0.5f) {
-        self->reset_nn = 1.0f; // reset: value=0.0f only run once
+        self->reset_nn = 0.0f; // reset: value=0.0f only run once
     }
     
     input_idx=1;

@@ -3,12 +3,12 @@ Args:
     params (HKTaskParams): Task parameters
 """
 from soundkit.defines import SKTaskParams
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model, tflite_convert_with_reset, warp_tf_model_with_reset
+from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
 
-def export1(params: SKTaskParams):
+def export(params: SKTaskParams):
     """Export ID task model with given parameters.
 
     Args:
@@ -52,28 +52,18 @@ def export1(params: SKTaskParams):
         export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
 
-
-    if 1:
-        model_wrap = warp_tf_model(
-            model,
-            time_steps=1,
-            dim_feat=dim_feat)
-        tflite_fp16_model = tflite_convert(
-            model_wrap,
-            dtype='int16',
-            path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
-    else:
-        model_wrap = warp_tf_model_with_reset(
-            model,
-            time_steps=1,
-            dim_feat=dim_feat)
-        tflite_fp16_model = tflite_convert_with_reset(
-            model_wrap,
-            dtype='int16',
-            path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+    model_wrap = warp_tf_model(
+        model,
+        time_steps=1,
+        dim_feat=dim_feat)
+    tflite_fp16_model = tflite_convert(
+        model_wrap,
+        dtype='int16',
+        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+    
     print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")
 
-def export(params: SKTaskParams):
+def export0(params: SKTaskParams):
     """Export ID task model with given parameters.
 
     Args:

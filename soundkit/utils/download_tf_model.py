@@ -117,28 +117,32 @@ def build_model(
         dim_feat: int = 72,
         time_steps: int = 1,
         export: bool = False,
-        complex_input: bool=False) -> Tuple[tf.keras.Model, int]:
+        complex_input: bool=False,
+        new_nn: bool=False) -> Tuple[tf.keras.Model, int]:
     """Download model weights from a remote server.
 
     Args:
         params (SKTaskParams): Task parameters
     """
     print(f"Downloading model weights for {params.name} to {params.job_dir}")
-
+    if new_nn:
+        model_config="model_new"
+    else:
+        model_config="model"
 
     # 1.1. Build the model
 
     # Load from YAML file
 
-    config_path = f"{params.train['model']['config_dir']}/{params.train['model']['config_file']}"
-
+    config_path = f"{params.train[model_config]['config_dir']}/{params.train[model_config]['config_file']}"
+    
     config_dict = OmegaConf.load(config_path)
 
     # Apply model override from vad.yaml if present
-    if "override" in params.train["model"]:
-        override_cfg = OmegaConf.create(params.train["model"]["override"])
+    if "override" in params.train[model_config]:
+        override_cfg = OmegaConf.create(params.train[model_config]["override"])
         config_dict = OmegaConf.merge(config_dict, override_cfg)
-
+    
     OmegaConf.resolve(config_dict)
 
     model_name=config_dict['name']
@@ -147,7 +151,7 @@ def build_model(
         config_dict['unroll_rnn'] = True
 
     Params_Cls = ModelParamFactory.get(model_name)
-
+    
     params_net = Params_Cls(
         dim_feat=dim_feat,
         batchsize=batchsize,
@@ -159,11 +163,16 @@ def build_model(
         params=params_net)
 
     if complex_input:
-        shape = (None, time_steps, dim_feat, 2)
+        shape = (batchsize, time_steps, dim_feat, 2)
     else:
-        shape = (None, time_steps, dim_feat)
+        shape = (batchsize, time_steps, dim_feat)
 
-    model.build(
-        input_shape=shape)
+    if model_name == "crnn_new":
+        inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+        inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
+        model(inputs_x, inputs_reset)
+    else:
+        model.build(
+            input_shape=shape)
     model.summary()
     return model

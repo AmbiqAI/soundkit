@@ -143,8 +143,6 @@ class CRNN(tf.keras.Model):
                     value=tf.zeros_like(state)
                 )
 
-    
-    # @tf.function(input_signature=[])
     def reset_states(self, zero_state=False):
         """Reset the states of the CRNN model."""
         for i, state in enumerate(self.states):
@@ -173,8 +171,10 @@ class CRNN(tf.keras.Model):
             else:
                 state.assign(tf.zeros_like(state))
 
-    def call(self, x, mask = 1.0, training=False):
+    def call(self, x, mask = 1.0, reset_input=tf.constant([0.0], dtype=tf.float32), training=False):
         """Forward pass through the CRNN model."""
+        
+        reset_input = reset_input[0]
         for layer, config, state in zip(self.layer_stack, self.params.layer_configs, self.states):
             if config['type'] == 'conv2d':
                 x = tf.concat([state, x], axis=1)
@@ -182,15 +182,15 @@ class CRNN(tf.keras.Model):
                 x = tf.expand_dims(x, axis=-1)
                 x = layer(x, training=training)
                 x = x[:, :, 0, :]
-                state.assign(state_update)
+                state.assign(state_update * (1 - reset_input))  # Update state
             elif config['type'] == 'lstm':
                 h_state, c_state = state
                 x, h_state_update, c_state_update = layer(
                                 x,
                                 initial_state = (h_state, c_state),
                                 training = training)
-                h_state.assign(h_state_update)
-                c_state.assign(c_state_update)
+                h_state.assign(h_state_update * (1 - reset_input))
+                c_state.assign(c_state_update * (1 - reset_input))
             else:
                 x = layer(x, training=training)
         return x

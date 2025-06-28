@@ -302,6 +302,15 @@ def demo_pc(params: SKTaskParams):
             self.feat_extractor = feat_extractor
             if params.data.signal.dc_removal:
                 self.dc_remover = DCRemover()
+            self.reset()
+
+        def reset(self):
+            """Reset the model state if needed."""
+            # This is a no-op for TFLite models, but can be overridden if needed.
+            self.nn_reset=1.0
+            feat_extractor.reset()
+            if params.data.signal.dc_removal:
+                self.dc_remover.reset()
 
         def __call__(self,
                      inputs: np.ndarray # input from microphone
@@ -318,7 +327,12 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            outputs = self.model_tflite(features)
+            if self.nn_reset > 0.5:
+                reset_tensor = np.array([1.0], dtype=np.float32) # reset tensor
+            else:
+                reset_tensor = np.array([0.0], dtype=np.float32)
+            self.nn_reset = 0.0
+            outputs = self.model_tflite(features, reset_tensor)
             outputs = outputs.flatten()
             if outputs[0] < outputs[1]:
                 outputs = np.ones(160, dtype=np.float32)*0.95
@@ -336,6 +350,7 @@ def demo_pc(params: SKTaskParams):
         record_seconds=15,
         non_stop=True,
         proc_st=kws_model,
+        reset_st=kws_model.reset,
         title="KWS",
     )
     if 0:

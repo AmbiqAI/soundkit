@@ -300,29 +300,32 @@ def demo_pc(params_id: SKTaskParams):
             if params_id.data.signal.dc_removal:
                 self.dc_removers['id'] = DCRemover()
 
+
             self.vad_init()
             self.vad_reset()
+
 
         def vad_init(self):
             """Initialize the model state."""
             self.interpreters = {}
             self.stats_list = {}
             self.feat_extractors = {}
-
+            self.reset_flag = {'vad': 0, 'id': 0}
             for key, params in params_list.items():
                 feat_extractor, stats, interpreter = init_model_artifacts(params)
                 self.feat_extractors[key] = feat_extractor
                 self.stats_list[key] = stats
                 self.interpreters[key] = interpreter
-
-        def vad_reset(self):
-            """Reset the model state."""
-            self.vad_counts=0
-            self.buffer *= 0
             self.models_tflite = {}
             for key, interpreter in self.interpreters.items():
                 interpreter.allocate_tensors()
                 self.models_tflite[key] = TFLiteAudioModel(interpreter=interpreter, dtype="float32")
+        def vad_reset(self):
+            """Reset the model state."""
+            self.reset_flag = {'vad': 1, 'id': 1}
+            self.vad_counts=0
+            self.buffer *= 0
+            
             
             self.dc_removers['vad'].reset()
             
@@ -354,8 +357,14 @@ def demo_pc(params_id: SKTaskParams):
                 features = (features - stats['nMean_feat']) * stats['nInvStd']
 
             # input to the tflite model
+            reset_flag_tensor = np.array([self.reset_flag['vad']], dtype=np.float32)
+
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            outputs = model_tflite(features)
+            outputs = model_tflite(features, reset_flag_tensor)
+
+            if self.reset_flag['vad'] == 1:
+                self.reset_flag['vad'] = 0
+
             outputs = outputs.flatten()
 
             request = {
@@ -415,7 +424,13 @@ def demo_pc(params_id: SKTaskParams):
 
                 # input to the tflite model
                 features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-                outputs = model_tflite(features)
+
+                reset_flag_tensor = np.array([self.reset_flag['id']], dtype=np.float32)
+
+                outputs = model_tflite(features, reset_flag_tensor)
+
+                if self.reset_flag['id'] == 1:
+                    self.reset_flag['id'] = 0
             d_vector = outputs.flatten()
 
             if register['is_register']: # registering mode

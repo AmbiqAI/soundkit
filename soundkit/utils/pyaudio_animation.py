@@ -29,6 +29,7 @@ class AudioShowClass:
             wave_output_filename="",
             non_stop=False,
             proc_st=None,
+            reset_st=None,
             title="VAD"):
 
         self.record_seconds = record_seconds
@@ -39,6 +40,7 @@ class AudioShowClass:
         self.frame_time_replay = 0.05
         self.non_stop = non_stop
         self.proc_st = proc_st
+        self.reset_st = reset_st
 
         self.num_blks = int(self.sample_rate / self.frame_size * self.record_seconds)
         self.data_buffer = np.zeros((self.sample_rate * self.record_seconds, 2), dtype=float)
@@ -101,7 +103,10 @@ class AudioShowClass:
         print('Window closed')
 
     def stop_recording(self):
+        if self.reset_st is not None:
+            self.reset_st()
         self.start_record = 0
+        
 
     def callback_stop(self, event):
         self.stop_recording()

@@ -61,11 +61,11 @@ train:
     # bins_fft: 100
     # n_mels: 72
 
-  standardization: false
+  standardization: true
   
   model:
     config_dir: ./soundkit/models/arch_configs
-    config_file: config_crnn_vad.yaml
+    config_file: config_crnn_new.yaml
     override:
       units: 28
       dropout_rate_input: 0.1
@@ -73,7 +73,16 @@ train:
       stride_time: 1
       len_time: 6
 
-  reset_every_batch: false
+  model_new:
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_crnn_new.yaml
+    override:
+      units: 28
+      dropout_rate_input: 0.1
+      dropout_rate: 0.25
+      stride_time: 1
+      len_time: 6
+  reset_every_batch: true
   debug: false
 
 evaluate:

@@ -61,20 +61,14 @@ def tflite_convert(
         path_tflite: str = "./tflite/nnse.tflite"):
     """tflite converter"""
     os.makedirs('tflite', exist_ok=True)
-    def dataset_example(
-            num_samples: int = 100,):
-        """Placeholder for a representative data-set. For best quantization
-        performance, replace this with a few examples from your own data-set, the
-        more the better. This should include any pre-processing needed."""
+    def dataset_example():
         shapes = model._feed_input_shapes
-
-        for _ in range(num_samples):
-            yield [
-                tf.random.uniform(
-                    shape=shapes[0],
-                    minval=-32768 / 2**8,
-                    maxval= 32767 / 2**8),
-            ]
+        shape_inputs = shapes[0]
+        for i in range(100):
+            x = np.random.uniform(-32768 / 2**8, 32767 / 2**8, size=shape_inputs).astype(np.float32)
+            reset_value = 0.0 if i < 80 else 1.0  # 80% no-reset, 20% reset
+            reset = np.array([reset_value], dtype=np.float32)
+            yield {"x_input": x, "reset_input": reset}
     model.summary()
 
     net_tflite = convert_model(
@@ -89,62 +83,6 @@ def tflite_convert(
     os.system(f"xxd -i {path_tflite_b} > {os.path.dirname(path_tflite)}/model_data_{dtype}.c")
     return net_tflite
 
-
-def tflite_convert_with_reset(model, dtype, path_tflite):
-    # Call function for inference
-    call_fn = model.call.get_concrete_function(
-        tf.TensorSpec(shape=[1, model.params.time_steps, model.params.dim_feat], dtype=tf.float32)
-    )
-
-    # Reset function — pass dummy input so TFLite doesn't break
-    reset_fn = model.base_model.reset_rv.get_concrete_function(tf.constant([0.0], dtype=tf.float32))
-
-
-    converter = tf.lite.TFLiteConverter.from_concrete_functions(
-        [call_fn, reset_fn], model
-    )
-    converter.experimental_enable_resource_variables = True
-
-    if dtype == "int16":
-        converter.target_spec.supported_types = [tf.int16]
-        converter.inference_input_type = tf.int16
-        converter.inference_output_type = tf.int16
-        converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-    tflite_model = converter.convert()
-
-    # Save
-    from pathlib import Path
-    Path(path_tflite).write_bytes(tflite_model)
-    return tflite_model
-
-
-def warp_tf_model_with_reset(model, time_steps, dim_feat, batch_size=1):
-    """Wraps a tf.keras.Model to expose both inference and reset as TFLite subgraphs."""
-
-    class ResettableKerasWrapper(tf.keras.Model):
-        def __init__(self, base_model):
-            super().__init__()
-            self.base_model = base_model
-
-        @property
-        def params(self):
-            return self.base_model.params  # ✅ add this
-
-        @tf.function(input_signature=[
-            tf.TensorSpec(shape=(batch_size, time_steps, dim_feat), dtype=tf.float32)
-        ])
-        def call(self, x):
-            return self.base_model(x, training=False)
-
-        @tf.function(input_signature=[
-            tf.TensorSpec(shape=[1], dtype=tf.float32)
-        ])
-        def reset(self, reset_trigger):
-            self.base_model.reset_rv(reset_trigger)
-
-    return ResettableKerasWrapper(model)
-
 def warp_tf_model(
         model,
         dim_feat=257,
@@ -157,12 +95,20 @@ def warp_tf_model(
 
     inputs_feat = tf.keras.Input(
         shape=input_shape,
-        batch_size=batch_size) # batch_size fixed to 1
-    outputs= model(inputs_feat)
+        batch_size=batch_size,
+        name='x_input') # batch_size fixed to 1
+
+    reset_input = tf.keras.Input(
+        shape=(),
+        batch_size=batch_size,
+        dtype=tf.float32,
+        name='reset_input')
+    outputs= model(inputs_feat, reset_input=reset_input)
 
     model_wrap = tf.keras.Model(
         inputs=[
             inputs_feat,
+            reset_input
             ],
         outputs=[
             outputs,

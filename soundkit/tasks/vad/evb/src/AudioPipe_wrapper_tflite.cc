@@ -61,6 +61,11 @@ volatile int example_status = 0; // Prevent the compiler from optimizing out whi
 
 int8_t num_lookeahead = NUM_LOOKAHEAD;
 int32_t spec_buffer[514 * 4];
+
+float16_t nn_reset=0.0f;
+
+
+int16_t vad_trigger_counts=0;
 int AudioPipe_wrapper_init(void)
 { 
     ns_model_state_t *pt_tflm = &tflm;
@@ -146,6 +151,8 @@ int AudioPipe_wrapper_reset(void)
     }
     FeatureClass_setDefault(&FEAT_INST);
     IIR_CLASS_reset(&dcrm_inst);
+    nn_reset = 1.0f; // Reset the NN model state
+    vad_trigger_counts = 0;
     return 0;
 }
 
@@ -218,11 +225,12 @@ int AudioPipe_wrapper_frameProc(
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
-    // int16_t reset = (int16_t) ((float32_t) 0.0f / (float32_t) input_scale + (float32_t) input_zero_point);
-    // pt_tflm->interpreter->input(input_idx)->data.i16[0] =  reset;
-
+    float32_t val = ((float32_t) nn_reset ) * scalar_norm;
+    int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+    pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
+    nn_reset = 0.0f; // Reset the flag
     
-    // input_idx=1;
+    input_idx=1;
     input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
@@ -256,7 +264,18 @@ int AudioPipe_wrapper_frameProc(
     outputs[1] /= den;
     if (outputs[1] >= 0.5f) {
         trigger = ((int16_t) 32767) >> 1; // trigger
+        vad_trigger_counts++;
     }
+    else {
+        trigger = 0; // no trigger
+        vad_trigger_counts=0;
+    }
+
+    if (vad_trigger_counts == 180) {
+        AudioPipe_wrapper_reset(); // Reset the vad trigger counts
+        trigger=-32768 >> 1;
+    }
+
     
     for (int i = 0; i < 160; i++) {
         pcm_output[i] = (int16_t) trigger;

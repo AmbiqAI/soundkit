@@ -90,6 +90,8 @@ int tflm_validator_model_init(ns_model_state_t *ms) {
 resolver.AddVarHandle();
 resolver.AddReadVariable();
 resolver.AddFullyConnected();
+resolver.AddStridedSlice();
+resolver.AddSub();
 resolver.AddConcatenation();
 resolver.AddReshape();
 resolver.AddConv2D();
@@ -99,8 +101,6 @@ resolver.AddAdd();
 resolver.AddSplit();
 resolver.AddLogistic();
 resolver.AddMul();
-resolver.AddStridedSlice();
-resolver.AddSub();
 resolver.AddAssignVariable();
 
 
