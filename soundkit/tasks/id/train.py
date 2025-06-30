@@ -7,7 +7,7 @@ from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import save_train_log, load_train_log
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
-from soundkit.utils.losses import LossFactory
+# from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
@@ -21,7 +21,7 @@ from .utils.nnid_utils import gen_target_nnid, get_corr_fast, cross_entropy_nnid
 def train_step(
         net: tf.keras.Model,
         optimizer: tf.keras.optimizers.Optimizer,
-        loss_fn: Any,
+        # loss_fn: Any,
         batch: dict[str, tf.Tensor],
         training: bool = True,
     ):
@@ -36,9 +36,6 @@ def train_step(
     mask = batch['masks']
     with tf.GradientTape() as tape:
         est= net(feat_sn, mask, training=training)
-        # import pdb; pdb.set_trace()
-
-        # Suppose est is of shape [640, 180, 100]
         batch_size = tf.shape(est)[0]  # 640
         # Create a tensor of indices: [[0, end_frames[0]], [1, end_frames[1]], ..., [639, end_frames[639]]]
         batch_indices = tf.range(batch_size)
@@ -96,7 +93,7 @@ def run_epoch(
     """
     model = config["model"]
     optimizer = config["optimizer"]
-    loss_fn = config["loss_fn"]
+    # loss_fn = config["loss_fn"]
     params  = config["params"]
     stats = config["feat_stats"]
 
@@ -159,7 +156,7 @@ def run_epoch(
         loss, pred, steps = train_step(
             model,
             optimizer,
-            loss_fn,
+            # loss_fn,
             batch_data,
             training=training)
 
@@ -319,9 +316,10 @@ def train(params: SKTaskParams):
             'nInvStd': tf.ones([dim_feat], dtype=tf.float32),
         }
     # 5. Define loss function
-    loss_fn = LossFactory.get(
-        params.train["loss_function"]["type"],
-        **params.train["loss_function"]["params"])
+    if params.train.loss_function["type"] != "cross_entropy":
+        raise ValueError(
+            f"Loss function {params.train.loss_function['type']} is not supported for KWS task. Use 'cross_entropy' instead."
+        )
     if params.train.lr_schedule=='cos':
         lr_schedule = WarmUpCosineDecay(
             initial_lr = float(params_train['initial_lr']),
@@ -353,7 +351,7 @@ def train(params: SKTaskParams):
             'feat_extractor': feat_extractor,
             'model': model,
             'optimizer': optimizer,
-            'loss_fn': loss_fn,
+            # 'loss_fn': loss_fn,
             'total_batches': {'train': batches_train, 'val': batches_val},
             'train_summary_writer': train_summary_writer,
             "target" : target,

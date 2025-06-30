@@ -109,7 +109,7 @@ resolver.AddQuantize();
     tflite::MicroAllocator *var_allocator;
     ns_lp_printf("Allocating %d resource variables...\n", ms->rv_count);
     if (ms->rv_count != 0) {
-        var_allocator = tflite::MicroAllocator::Create(ms->rv_arena, ms->rv_arena_size, nullptr);
+        var_allocator = tflite::MicroAllocator::Create(ms->rv_arena, ms->6, nullptr);
         resource_variables = tflite::MicroResourceVariables::Create(var_allocator, ms->rv_count);
     } else {
         resource_variables = nullptr;

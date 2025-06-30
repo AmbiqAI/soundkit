@@ -265,35 +265,20 @@ def demo_pc(params: SKTaskParams):
     copy_model_weights(model_dst=model, model_src=model_train)
 
     dtype='float32'
-    if 1:
-        inputs_x = tf.keras.Input(shape=[1, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
-        inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
-        output = model(inputs_x, reset_input=inputs_reset)
-        model_export = tf.keras.Model(inputs=[inputs_x, inputs_reset], outputs=output)
-        from .model import tflite_conversion
-        
-        path_tflite = f'{params.export["tflite_dir"]}/{params.name}.tflite'
-        tflite_conversion(
-            model_export,
-            timesteps=1,
-            input_dim=dim_feat,
-            path_tflite=path_tflite,
-            dtype=dtype)
-        interpreter = tf.lite.Interpreter(
-            model_path= path_tflite)
-    else:
-        model_wrap = warp_tf_model(
-            model,
-            time_steps=1,
-            dim_feat=dim_feat)
 
-        tflite_fp16_model = tflite_convert(
-            model_wrap,
-            dtype=dtype,
-            path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+    model_wrap = warp_tf_model(
+        model,
+        time_steps=1,
+        dim_feat=dim_feat)
 
-        interpreter = tf.lite.Interpreter(
-            model_content=tflite_fp16_model)
+    tflite_fp16_model = tflite_convert(
+        model_wrap,
+        dtype=dtype,
+        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+
+    interpreter = tf.lite.Interpreter(
+        model_content=tflite_fp16_model)
+
     interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
@@ -356,7 +341,7 @@ def demo_pc(params: SKTaskParams):
             self.reset_flag = np.array([0.0], dtype=np.float32)  # Reset flag for next call
 
             outputs = outputs.flatten()
-            if 0:
+            if 1:
                 if outputs[0] < outputs[1]:
                     outputs = np.ones(hop_size, dtype=np.float32)*0.95
                     self.counts_vad_trigger += 1

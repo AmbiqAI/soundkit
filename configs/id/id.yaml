@@ -43,10 +43,11 @@ train:
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
+  
+  # only cross_entropy in this task
   loss_function: 
     type: cross_entropy # or cross_entropy
     params: {} # for cross_entropy
-    # params: {gamma: 2.0, alpha: 0.75} # for focal loss
 
   path:
     full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
@@ -82,10 +83,9 @@ evaluate:
   epoch_loaded: best
 
   data: 
-    dir: "./wavs/vad/test_wavs"
-    files: [rpc_audio_raw.wav,speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
-    # # dir: ./wavs/LibriSpeech/test-clean
-    # # files:
+    dir: "./wavs/id/test_wavs"
+    reg_files: [register1.wav, register2.wav, register3.wav, register4.wav] # list of registration files
+    test_files: [test1.wav, test2.wav] # list of test files to evaluate
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:

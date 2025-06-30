@@ -4,8 +4,7 @@ import tensorflow as tf
 
 # === Import model classes ===
 from .SimpleFC import SimpleFC
-from .crnn import CRNN, CRNNParams
-from .crnn_new import crnn_new, newCRNNParams
+from .crnn_new import CRNN, CRNNParams
 
 from .ccrnn import CCRNN, CCRNNParams
 
@@ -55,15 +54,12 @@ class ModelParamFactory:
 
 # Register models
 ModelFactory.register("crnn", CRNN)
-ModelFactory.register("crnn_new", crnn_new)
-
 
 ModelFactory.register("ccrnn", CCRNN)
 ModelFactory.register("unet", unet)
 
 # Register parameter schemas
 ModelParamFactory.register("crnn", CRNNParams)
-ModelParamFactory.register("crnn_new", newCRNNParams)
 
 ModelParamFactory.register("ccrnn", CCRNNParams)
 

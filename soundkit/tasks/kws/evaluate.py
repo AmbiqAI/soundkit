@@ -1,4 +1,3 @@
-"""Evaluate KWS task model with given parameters."""
 import re
 import os
 from tqdm import tqdm
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
-from soundkit.utils.calculate_feat_stats import feat_stats_estimator
+from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
@@ -24,6 +23,7 @@ def evaluate(params: SKTaskParams):
 
     Args:
         params (HKTaskParams): Task parameters
+
     """
     print(f"Evaluating KWS model with params: {params} and more")
 
@@ -51,29 +51,6 @@ def evaluate(params: SKTaskParams):
         wavs = params.evaluate['data']['files']
         wavs_path = [os.path.join(dir, f) for f in params.evaluate['data']['files']]
 
-    tfrecords=[]
-
-    for wav_path in tqdm(wavs_path, desc="Generating TFRecords", unit="file"):
-        fname = os.path.basename(wav_path)
-        tfname= re.sub(r'(\.wav$|\.flac$)', '.tfrecord', fname)
-        tfrecord= f"{dst_dir}/{tfname}"
-
-        sig = audio_read(
-            wav_path,
-            params.data['signal']['sampling_rate']
-        )
-
-        if params.data['signal']['dc_removal']:
-            sig = dc_remove(sig)
-
-        create_raw_tfrecord(
-            tfrecord, sig, (np.array([]),np.array([])))
-        tfrecords += [tfrecord]
-        dataset, batches = create_dataset(
-            tfrecords,
-            batchsize=batchsize,
-            is_shuffle=False,
-        )
 
     batchsize_train = params.train['batchsize']
 
@@ -99,25 +76,26 @@ def evaluate(params: SKTaskParams):
         model_train, params_evaluate['epoch_loaded'], checkpoint_dir)
 
     # 3. Compute feature statistics for standardization
-    stats = feat_stats_estimator(
-        dataset,
-        batches,
-        folder_nn=checkpoint_dir,
-        feat_extractor=feat_extractor,)
+    
+    stats = load_feat_stats(
+        dir=checkpoint_dir,
+        stats_name='stats.pkl')
 
-    for step, batch in enumerate(dataset):
-        print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
 
-        # Initialize left-over state buffers for streaming STFT
-        states_audio_sn = tf.zeros(
-            [batchsize, feat_params["frame_size"] - feat_params["hop_size"]],
-            dtype=tf.float32
+    for step, wavs_path in enumerate(wavs_path):
+        print(f"\rEvaluating {wavs_path}, ", end='')
+        # Read audio file
+        audio_sn = audio_read(
+            wavs_path,
+            params.data['signal']['sampling_rate']
         )
 
-        audio_sn, *_ = batch
+        audio_sn = tf.convert_to_tensor(audio_sn, dtype=tf.float32) 
+        audio_sn = tf.expand_dims(audio_sn, axis=0)  # Add batch dimension
+
 
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
-            audio_sn, states=states_audio_sn)
+            audio_sn)
 
         if params.train['standardization']:
             # Standardize features
@@ -126,92 +104,84 @@ def evaluate(params: SKTaskParams):
             feat_sn_norm = feat_sn
 
         time_steps = feat_sn_norm.shape[1]
-        if 0:
-            tfmask = []
-            for f in range(time_steps):
-                print(f"\rframe {f}/{time_steps}, ", end='')
-                feat = feat_sn_norm[:, f:f+1, :]
-                m = model(feat, training=False)
-                tfmask+= [m]
-            tfmask = tf.concat(tfmask, axis=1)
 
-        else:
-            model = build_model(
-                params,
-                batchsize=batchsize,
-                dim_feat=dim_feat,
-                time_steps=time_steps)
+        model = build_model(
+            params,
+            batchsize=batchsize,
+            dim_feat=dim_feat,
+            time_steps=time_steps)
 
-            copy_model_weights(
-                model_dst=model,
-                model_src=model_train)
+        copy_model_weights(
+            model_dst=model,
+            model_src=model_train)
 
-            out = model(feat_sn_norm, training=False)
-            out = tf.math.softmax(out, axis=-1)
-            prob = out[...,1]
-            kws = tf.cast(prob > 0.5, dtype=tf.int32)
+        out = model(feat_sn_norm, training=False)
+        out = tf.math.softmax(out, axis=-1)
+        prob = out[...,1]
+        vad = tf.cast(prob > 0.5, dtype=tf.int32)
 
-            stride = model.stride_time
+        stride = model.stride_time
 
-            hop_size = feat_params['hop_size']
+        hop_size = feat_params['hop_size']
 
-        if step < 10:
-            # draw spectrograms and tfmask
-            name = re.sub(r'(\.wav$|\.flac$)', '.pdf', wavs[step])
-            save_path = f"{result_folder}/{name}"
 
-            if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
-                logpfeat_sn = (10 * feat_sn).numpy()[0].T
-            elif params.train['feature']['type'] in ('pspec'):
-                logpfeat_sn = 10*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
-            elif params.train['feature']['type'] in ('spec'):
-                logpfeat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
-            logpspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn)).numpy()[0].T
+        # draw spectrograms and tfmask
+        name = re.sub(r'(\.wav$|\.flac$)', '.pdf', wavs[step])
+        save_path = f"{result_folder}/{name}"
 
-            plot_spectrograms(
-                images=[
-                    logpfeat_sn,
-                    logpspec_sn,
-                ],
-                titles=["Noisy feat", "Noisy pspec"],
-                vmin_vmax=[(-80, 10), (-80, 10)],
-                save_path=None,
-            )
+        if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
+            logpfeat_sn = (10 * feat_sn).numpy()[0].T
+        elif params.train['feature']['type'] in ('pspec'):
+            logpfeat_sn = 10*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+        elif params.train['feature']['type'] in ('spec'):
+            logpfeat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+        logpspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn)).numpy()[0].T
 
-            kws = kws[0]
-            kws = tf.tile(tf.expand_dims(kws, axis=0), [stride, 1])    
-            kws = tf.reshape(tf.transpose(kws), [-1])
+        plot_spectrograms(
+            images=[
+                logpfeat_sn,
+                logpspec_sn,
+            ],
+            titles=["Noisy feat", "Noisy pspec"],
+            vmin_vmax=[(-80, 10), (-80, 10)],
+            save_path=None,
+        )
 
-            prob = prob[0]
-            prob = tf.tile(tf.expand_dims(prob, axis=0), [stride, 1])
-            prob = tf.reshape(tf.transpose(prob), [-1])
-            
-            plt.plot(kws*250)
-            plt.plot(prob*250)
-            plt.savefig(save_path, format="pdf", bbox_inches="tight")
-            print(f"Saved figure to {save_path}")
+        vad = vad[0]
+        vad = tf.tile(tf.expand_dims(vad, axis=0), [stride, 1])    
+        vad = tf.reshape(tf.transpose(vad), [-1])
 
-            # Save noisy audio
-            sample_level_kws = tf.repeat(kws.numpy(), repeats=hop_size)
-            sample_level_kws = tf.cast(sample_level_kws, dtype=tf.float32)
+        prob = prob[0]
+        prob = tf.tile(tf.expand_dims(prob, axis=0), [stride, 1])
+        prob = tf.reshape(tf.transpose(prob), [-1])
 
-            name = re.sub(r'(\.wav$|\.flac$)', '_sn.wav', wavs[step])
-            save_path = f"{result_folder}/{name}"
+        plt.plot(vad*250)
+        plt.plot(prob*250)
+        plt.savefig(save_path, format="pdf", bbox_inches="tight")
+        print(f"Saved figure to {save_path}")
 
-            audio_sn_np = tf.squeeze(audio_sn, axis=0).numpy()
-            sf.write(
-                save_path,
-                audio_sn_np,
-                params.data['signal']['sampling_rate'])
-            print(f"Saved noisy audio to {save_path}")
+        # Save noisy audio
+        sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
+        sample_level_vad = tf.cast(sample_level_vad, dtype=tf.float32)
 
-            # save enhanced audio
-            name = re.sub(r'(\.wav$|\.flac$)', '_kws.wav', wavs[step])
-            save_path = f"{result_folder}/{name}"
-            audio_kws_np = sample_level_kws.numpy()
-            sf.write(
-                save_path,
-                audio_kws_np,
-                params.data['signal']['sampling_rate'])
-            
-            print(f"Saved kws audio to {save_path}")
+        name = re.sub(r'(\.wav$|\.flac$)', '_sn.wav', wavs[step])
+        save_path = f"{result_folder}/{name}"
+
+        audio_sn_np = tf.squeeze(audio_sn, axis=0).numpy()
+        sf.write(
+            save_path,
+            audio_sn_np,
+            params.data['signal']['sampling_rate'])
+        print(f"Saved original audio to {save_path}")
+
+        # save enhanced audio
+        name = re.sub(r'(\.wav$|\.flac$)', '_vad.wav', wavs[step])
+        save_path = f"{result_folder}/{name}"
+        audio_vad_np = sample_level_vad.numpy()
+        sf.write(
+            save_path,
+            audio_vad_np,
+            params.data['signal']['sampling_rate'])
+
+        print(f"Saved kws signal to {save_path}")
+        

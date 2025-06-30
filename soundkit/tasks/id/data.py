@@ -267,7 +267,7 @@ def data(params: SKTaskParams) -> None:
                     raise ValueError(f"Unknown split type: {split} for corpus {name}")
         else:
             raise ValueError(f"Unknown corpus type: {ctype} for corpus {name}")
- 
+
     def group_speakers(speech_list):
         "group speakers by their ID"
         grouped = defaultdict(list)
@@ -279,7 +279,6 @@ def data(params: SKTaskParams) -> None:
 
         # Convert to list of lists
         spks = [[spk, files] for spk, files in grouped.items()]
-        
         return spks
 
     def extract_sentences(spks,  sentences=10):
@@ -320,7 +319,7 @@ def data(params: SKTaskParams) -> None:
         speech_list_split = np.array_split(
             lst,
             params_data['num_processes'])
-        
+
         # for noise_type in list(noise_type2list.keys()):
         #     for snr_db in params_data['snr_dbs']:
         print(f"Processing [{train_set}] set with ")

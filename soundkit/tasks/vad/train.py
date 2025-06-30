@@ -294,7 +294,7 @@ def train(params: SKTaskParams):
     # 5. Define loss function
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
-        **params.train["loss_function"]["params"])
+        params=params.train["loss_function"]["params"])
 
     lr_schedule = WarmUpCosineDecay(
         initial_lr = float(params_train['initial_lr']),

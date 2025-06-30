@@ -39,7 +39,7 @@ data:
 
 train:
   initial_lr: 4e-4
-  batchsize: 128
+  batchsize: 32
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
@@ -82,10 +82,8 @@ evaluate:
   epoch_loaded: best
 
   data: 
-    dir: "./wavs/vad/test_wavs"
-    files: [rpc_audio_raw.wav,speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
-    # # dir: ./wavs/LibriSpeech/test-clean
-    # # files:
+    dir: "./wavs/kws/test_wavs"
+    files: [galaxy_example.wav, galaxy_counter_example.wav]
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:

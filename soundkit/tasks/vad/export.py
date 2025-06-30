@@ -6,7 +6,7 @@ from ...utils.download_tf_model import build_model, load_model_checkpoint
 from ...utils.tf_copy_model import copy_model_weights
 from ...utils.feature_utils import FeatureExtractor
 
-def export_orig(params: SKTaskParams):
+def export(params: SKTaskParams):
     """Export VAD task model with given parameters.
 
     Args:
@@ -54,7 +54,7 @@ def export_orig(params: SKTaskParams):
 
     print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")
 
-def export(params: SKTaskParams):
+def export1(params: SKTaskParams):
     """Export VAD task model with given parameters.
 
     Args:

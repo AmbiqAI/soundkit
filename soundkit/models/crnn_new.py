@@ -1,11 +1,13 @@
-import tensorflow as tf
 from pydantic import BaseModel
 from typing import Optional, List
+import tensorflow as tf
+from ..utils.tf_basic_math import tf_log10_eps
+import numpy as np
+class CRNNParams(BaseModel):
 
-class newCRNNParams(BaseModel):
-
+    batchsize: int = 1
+    time_steps: int = 1
     dim_feat: int = 257
-    stride_time: int = 1
     unroll_rnn: bool = False
     layer_configs: List[dict] = [
         {
@@ -15,201 +17,160 @@ class newCRNNParams(BaseModel):
         },
     ]
 
-
-class crnn_new(tf.keras.Model):
+class CRNN(tf.keras.Model):
+    """Convolutional Recurrent Neural Network (CRNN) for sequence prediction.
+    This model consists of convolutional layers followed by a GRU layer and an output layer.
+    It is designed for sequence prediction tasks.
+    """
     def __init__(
             self,
-            params: newCRNNParams = newCRNNParams(),
+            params: CRNNParams = CRNNParams(),
             **kwargs):
-        super(crnn_new, self).__init__()
-
-        self.dim_feat = params.dim_feat
-        self.layer_configs = params.layer_configs
-        self.unroll_rnn = params.unroll_rnn
-        self.stride_time = params.stride_time
-
+        super().__init__()
+        self.params = params
         self.layers_list = []
-        self.cnn_states = []
-        self.h_states = []
-        self.c_states = []
-        self.lstm_units = []
-        self.output_dims = [self.dim_feat]  # Track output dims per layer for cnn state shapes
-        
-        # for speaker verification
+        self.states = []
+        self.stride_time=1
 
+        # for speaker verification
         self.weight_cos = tf.Variable(30.0, dtype=tf.float32)
         self.bias_cos = tf.Variable(0, dtype=tf.float32)
-
-        for idx, layer_def in enumerate(self.layer_configs):
-            layer_type = layer_def["type"]
-            activation = layer_def.get("activation", "linear")
-
-            if layer_type == "conv2d":
-                filters = layer_def["filters"]
-                kernel_size = layer_def["kernel_size"]
+        self.output_dims=[params.dim_feat]
+        for i, layer_def in enumerate(params.layer_configs):
+            # import pdb; pdb.set_trace()
+            if layer_def['type'] == 'conv2d':
+                self.output_dims.append(layer_def['filters'])
                 self.layers_list.append(tf.keras.layers.Conv2D(
-                    filters=filters,
-                    strides=layer_def.get("strides", (1, 1)),
-                    kernel_size=kernel_size,
-                    activation=activation,
-                    padding='valid'
+                    filters=layer_def['filters'],
+                    kernel_size=layer_def['kernel_size'],
+                    strides=layer_def['strides'],
+                    activation=layer_def['activation'],
+                    padding='valid',
                 ))
-                self.cnn_states.append(None)
-                self.output_dims.append(filters)
 
-            elif layer_type == "lstm":
-                units = layer_def["units"]
+                self.stride_time = layer_def['strides'][0]
+            elif layer_def['type'] == 'lstm':
+                self.output_dims.append(layer_def['units'])
+
                 self.layers_list.append(tf.keras.layers.LSTM(
-                    units=units,
+                    units=layer_def['units'],
                     return_sequences=True,
+                    unroll=params.unroll_rnn,
+                    stateful=False,
                     return_state=True,
-                    unroll=self.unroll_rnn,
-                    activation=activation,
-                    recurrent_activation='sigmoid'
+                    unit_forget_bias = True,
+                    activation='tanh',
+                    recurrent_activation='sigmoid',
                 ))
-                self.h_states.append(None)
-                self.c_states.append(None)
-                self.lstm_units.append(units)
-                self.output_dims.append(units)
 
-            elif layer_type == "fc":
-                units = layer_def["units"]
+            elif layer_def['type'] == 'fc':
+                self.output_dims.append(layer_def['units'])
                 self.layers_list.append(tf.keras.layers.Dense(
-                    units=units,
-                    activation=activation
+                    units=layer_def['units'],
+                    activation=layer_def['activation'],
                 ))
-                self.output_dims.append(units)
+            elif layer_def['type'] == 'batchnorm':
+                self.output_dims.append(self.output_dims[-1])  # Keep the same output dimension as the previous layer
 
-            elif layer_type == "batchnorm":
-                self.layers_list.append(tf.keras.layers.BatchNormalization())
+                self.layers_list.append(
+                    tf.keras.layers.BatchNormalization(
+                        momentum=layer_def['momentum'],
+                        epsilon=float(layer_def['epsilon'])
+                    ))
+            elif layer_def['type']  == 'layernorm':
                 self.output_dims.append(self.output_dims[-1])
-
-            elif layer_type == "layernorm":
-                self.layers_list.append(tf.keras.layers.LayerNormalization())
+                self.layers_list.append(
+                    tf.keras.layers.LayerNormalization(
+                    epsilon=float(layer_def['epsilon'])
+                ))
+            elif layer_def['type'] == 'dropout':
                 self.output_dims.append(self.output_dims[-1])
-
-            elif layer_type == "dropout":
-                rate = layer_def.get("rate", 0.5)
-                self.layers_list.append(tf.keras.layers.Dropout(rate))
-                self.output_dims.append(self.output_dims[-1])
-
+                self.layers_list.append(tf.keras.layers.Dropout(rate=layer_def['rate']))
             else:
-                raise ValueError(f"Unsupported layer type: {layer_type}")
-
-    def build(self, input_shape):
-        # super(crnn_new, self).build(input_shape)
-        batch_size = input_shape[0]
+                raise ValueError(f"Unsupported layer type: {layer_def['type']}")
+    
+        # Initialize states for CNN and LSTM layers
+        self.cnn_states = []
         cnn_idx = 0
-        for idx, layer_def in enumerate(self.layer_configs):
-            if layer_def["type"] == "conv2d":
-
-                k_t = layer_def["kernel_size"][0]
-                feature_dim = self.output_dims[idx]
-
-                self.cnn_states[cnn_idx] = self.add_weight(
-                    shape=(batch_size, k_t - 1, feature_dim),
-                    trainable=False,
-                    name=f"cnn_state_{cnn_idx}",
-                    initializer="zeros"
-                )
-
+        for i, layer_def in enumerate(params.layer_configs):
+            if layer_def['type'] == 'conv2d':
+                k_t = layer_def['kernel_size'][0]
+                input_dim = self.output_dims[i]
+                if k_t > 1:
+                    state = tf.Variable(
+                        tf.zeros((params.batchsize, k_t - 1, input_dim), dtype=tf.float32),
+                        trainable=False,
+                        # name=f"conv2d_state_{cnn_idx}"
+                    )
+                self.cnn_states.append(state)
                 cnn_idx += 1
 
+        self.h_states = []
+        self.c_states = []
         h_idx = 0
-        for idx, layer_def in enumerate(self.layer_configs):
-            if layer_def["type"] == "lstm":
-                units = layer_def["units"]
-                self.h_states[h_idx] = self.add_weight(
-                    shape=(batch_size, units),
+        for i, layer_def in enumerate(params.layer_configs):
+            if layer_def['type'] == 'lstm':
+                h_state = tf.Variable(
+                    tf.zeros((params.batchsize, layer_def['units']), dtype=tf.float32),
                     trainable=False,
                     name=f"h_state_{h_idx}",
-                    initializer="zeros"
                 )
-
-                self.c_states[h_idx] = self.add_weight(
-                    shape=(batch_size, units),
+                c_state = tf.Variable(
+                    tf.zeros((params.batchsize, layer_def['units']), dtype=tf.float32),
                     trainable=False,
                     name=f"c_state_{h_idx}",
-                    initializer="zeros"
                 )
-
-
+                self.h_states.append(h_state)
+                self.c_states.append(c_state)
                 h_idx += 1
+        self.reset_states(zero_state=False)
 
-    def reset_states(self, zero_state=True):
-        for state in self.cnn_states + self.h_states + self.c_states:
-            if state is not None:
-                state.assign(tf.zeros_like(state))
+    def reset_states(self, zero_state=False):
 
-    def call(self, x_input,mask = 1.0, reset_input=[0.0], training=False):
-        cnn_idx = 0
-        lstm_idx = 0
-        reset_input = reset_input[0]
-        for layer, layer_def in zip(self.layers_list, self.layer_configs):
-            layer_type = layer_def["type"]
+        """Reset the states of the CRNN model."""
+        for state in self.cnn_states:
+            state.assign(tf.zeros_like(state))
 
-            if layer_type == "conv2d":
-                
-                k_t = layer_def["kernel_size"][0]
-                x_input = tf.concat([self.cnn_states[cnn_idx], x_input], axis=1)
-                new_state = x_input[:, -k_t + 1:, :]
-
-                self.cnn_states[cnn_idx].assign(new_state * (1 - reset_input))
-                x_input = tf.expand_dims(x_input, axis=-1)  # [B, T, D, 1]
-                x_input = layer(x_input)
-                x_input = tf.squeeze(x_input, axis=-2)
-                cnn_idx += 1
-
-            elif layer_type == "lstm":
-                x_input, h_new, c_new = layer(x_input, initial_state=[self.h_states[lstm_idx], self.c_states[lstm_idx]])
-                self.h_states[lstm_idx].assign(h_new * (1 - reset_input))
-                self.c_states[lstm_idx].assign(c_new * (1 - reset_input))
-                lstm_idx += 1
-
+        for h_state in self.h_states:
+            if zero_state:
+                h_state.assign(tf.zeros_like(h_state))
             else:
-                x_input = layer(x_input, training=training) if layer_type == "dropout" else layer(x_input)
+                state = tf.random.truncated_normal(tf.shape(h_state), stddev=1/np.sqrt(tf.shape(h_state)[-1]))
+                h_state.assign(tf.minimum(tf.maximum(state, -1.0), 1.0-2**-15))
 
-        return x_input
+        for c_state in self.c_states:
+            if zero_state:
+                c_state.assign(tf.zeros_like(c_state))
+            else:
+                c_state.assign(tf.random.truncated_normal(tf.shape(c_state), stddev=1/np.sqrt(tf.shape(c_state)[-1])))
 
-if __name__ == "__main__":
+    def call(self, x, mask = 1.0, reset_input=tf.constant([0.0], dtype=tf.float32), training=False):
+        """Forward pass through the CRNN model."""
+        
+        reset_input = reset_input[0]
 
-    params = newCRNNParams(
-        dim_feat=257,
-        unroll_rnn=True,
-        layer_configs=[
-            {'type': 'conv2d', 'filters': 32, 'kernel_size': (3, 257), 'activation': 'relu'},
-            {'type': 'lstm', 'units': 64, 'activation': 'tanh'},
-            {'type': 'fc', 'units': 10, 'activation': 'softmax'}
-        ]
-    )
-    model = crnn_new(params)
-    inputs_x = tf.keras.Input(shape=[100, 257], batch_size=3, dtype=tf.float32, name="x_input")
-    inputs_reset = tf.keras.Input(shape=(), batch_size=3, dtype=tf.float32, name="reset_input")
-    model(inputs_x, reset_input=inputs_reset)
+        idx_cnn = 0
+        idx_lstm = 0
 
-    for v in model.trainable_variables:
-        print(f"{v.name}: {v.shape}")
-    # print(model.summary())
-
-    model.save_weights("trained_model_weights.h5")
-    
-    model_load = crnn_new(params)
-    inputs_x = tf.keras.Input(shape=[100, 257], batch_size=1, dtype=tf.float32, name="x_input")
-    inputs_reset = tf.keras.Input(shape=(), batch_size=1, dtype=tf.float32, name="reset_input")
-    model_load(inputs_x, reset_input=inputs_reset)
-    model_load.load_weights("trained_model_weights.h5", by_name=True, skip_mismatch=True)
-    for v in model.trainable_variables:
-        print(f"{v.name}: {v.shape}")
-    # print(model.summary())
-
-    import pdb; pdb.set_trace()
-    
-    
-    # import pdb; pdb.set_trace()
-    # inputs_x = tf.random.normal(shape=(1, 100, 257), dtype=tf.float32)
-    # inputs_reset = tf.constant([0.0], dtype=tf.float32)
-    # model(inputs_x, reset_input=inputs_reset)
-    # for v in model.trainable_variables:
-    #     print(f"{v.name}: {v.shape}")
-
-    # print(model.summary())
+        for layer, config in zip(self.layers_list, self.params.layer_configs):
+            if config['type'] == 'conv2d': # 1d conv
+                k_t = config['kernel_size'][0]
+                x = tf.concat([self.cnn_states[idx_cnn], x], axis=1)
+                state_update= tf.identity(x[:,-(k_t-1):,:])
+                x = tf.expand_dims(x, axis=-1)
+                x = layer(x, training=training)
+                x = x[:, :, 0, :]
+                self.cnn_states[idx_cnn].assign(state_update * (1 - reset_input))  # Update state
+                idx_cnn += 1
+            elif config['type'] == 'lstm':
+                h_state, c_state = self.h_states[idx_lstm], self.c_states[idx_lstm]
+                x, h_state_update, c_state_update = layer(
+                                x,
+                                initial_state = (h_state, c_state),
+                                training = training)
+                h_state.assign(h_state_update * (1 - reset_input))
+                c_state.assign(c_state_update * (1 - reset_input))
+                idx_lstm += 1
+            else:
+                x = layer(x, training=training)
+        return x

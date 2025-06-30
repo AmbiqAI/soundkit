@@ -11,5 +11,5 @@
 # soundkit -t kws -m data   -c configs/kws/galaxy.yaml
 # soundkit -t kws -m train -c configs/kws/galaxy.yaml
 
-soundkit -t vad -m data  -c configs/vad/vad.yaml
+# soundkit -t vad -m data  -c configs/vad/vad.yaml
 soundkit -t vad -m train -c configs/vad/vad.yaml

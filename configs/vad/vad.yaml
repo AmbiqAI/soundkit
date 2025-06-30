@@ -1,4 +1,4 @@
-name: crnn_experiment_1
+name: crnn
 project: vad
 job_dir: ./soundkit/tasks/vad
 
@@ -8,7 +8,7 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 40000
+    train: 10000
     val: 2000
   force_download: false
   reverb_prob: 0.0
@@ -37,13 +37,15 @@ data:
 train:
   initial_lr: 4e-4
   batchsize: 32
-  epochs: 150
+  epochs: 300
   warmup_epochs: 5
   epoch_loaded: random
   loss_function: 
+    # type: focal
+    # params: {gamma: 2.0, alpha: 0.75} # for focal loss
     type: cross_entropy
     params: {}
-
+    
   path:
     full_name: Reset-${train.reset_every_batch}-${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
     checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
@@ -65,7 +67,7 @@ train:
   
   model:
     config_dir: ./soundkit/models/arch_configs
-    config_file: config_crnn_new.yaml
+    config_file: config_crnn_vad.yaml
     override:
       units: 28
       dropout_rate_input: 0.1
@@ -73,15 +75,6 @@ train:
       stride_time: 1
       len_time: 6
 
-  model_new:
-    config_dir: ./soundkit/models/arch_configs
-    config_file: config_crnn_new.yaml
-    override:
-      units: 28
-      dropout_rate_input: 0.1
-      dropout_rate: 0.25
-      stride_time: 1
-      len_time: 6
   reset_every_batch: true
   debug: false
 
@@ -90,9 +83,7 @@ evaluate:
 
   data: 
     dir: "./wavs/vad/test_wavs"
-    files: [rpc_audio_raw.wav,speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
-    # # dir: ./wavs/LibriSpeech/test-clean
-    # # files:
+    files: [speech.wav, speech_pubNoise.wav]
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:
