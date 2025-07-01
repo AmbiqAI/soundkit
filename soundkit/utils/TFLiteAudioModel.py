@@ -28,6 +28,7 @@ class TFLiteAudioModel:
             dtype (str): Input/output precision, e.g., 'float32', 'int8', or 'int16'.
         """
         super().__init__(*args, **kwargs)
+        
         self.interpreter = interpreter
         self.dtype = dtype
 
@@ -52,8 +53,9 @@ class TFLiteAudioModel:
         Returns:
             np.ndarray: Model output reshaped to match input layout.
         """
-
+        
         # Handle quantized inputs
+        
         if self.dtype in ("int8", "int16"):
             scale, zero_point = self.input_details["quantization"]
             input_tensor = input_tensor / scale + zero_point
@@ -61,7 +63,8 @@ class TFLiteAudioModel:
         else:
             input_tensor = input_tensor.astype(np.float32)
         self.interpreter.set_tensor(self.input_details['index'], input_tensor)
-
+        # import pdb; pdb.set_trace()
+        
         if reset_tensor is not None:
             if self.dtype in ("int8", "int16"):
                 scale, zero_point = self.reset_details["quantization"]
@@ -83,3 +86,8 @@ class TFLiteAudioModel:
             output = output_tensor
 
         return output
+
+    def reset(self):
+        """Reset the TFLite model state."""
+        # self.interpreter.reset_all_variables() # doesn't work
+        self.interpreter.allocate_tensors()  # Reallocate tensors to reset state

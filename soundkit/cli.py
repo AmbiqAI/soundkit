@@ -25,7 +25,7 @@ def parse_config(path: str, overrides: list[str] = None) -> DictConfig:
     return cfg
 
 # === Real logic (can be called from anywhere) ===
-def run_task(mode: str, task: str, config: str, tensorboard: bool):
+def run_task(mode: str, task: str, config: str, tensorboard: bool, view: bool = False):
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
 
@@ -48,7 +48,17 @@ def run_task(mode: str, task: str, config: str, tensorboard: bool):
         case SKMode.export:
             task_handler.export(params)
         case SKMode.demo:
-            task_handler.demo(params)
+            if view:
+                if task in ["se", "vad", "kws"] :
+                    script="audioview_se"
+                elif task == "id":
+                    script="audioview_nnid"
+    
+                if params.demo.platform == "evb":
+                    print("🔌 Running EVB demo...")
+                    os.system(f"python -m soundkit.tools.{script}")
+            else:
+                task_handler.demo(params)
 
 # === CLI entry point for argdantic users ===
 @parser.command()
@@ -57,8 +67,9 @@ def run_cli(
     task: str = ArgField("-t", default="se"),
     config: str = ArgField("-c", default="./configs/se.yaml"),
     tensorboard: bool = ArgField("--tensorboard", default=False),
+    view: bool = ArgField("--view", default=False),
 ):
-    run_task(mode, task, config, tensorboard)
+    run_task(mode, task, config, tensorboard, view)
 
 # === Main entrypoint for manual CLI invocation ===
 def main():
@@ -69,6 +80,7 @@ def main():
     ap.add_argument("-t", "--task", type=str)
     ap.add_argument("-c", "--config", type=str)
     ap.add_argument("--tensorboard", action="store_true")
+    ap.add_argument("--view", action="store_true")
 
     known_args, unknown_args = ap.parse_known_args()
     extra_overrides = unknown_args
@@ -79,6 +91,7 @@ def main():
         task=known_args.task or "se",
         config=known_args.config or "./configs/se.yaml",
         tensorboard=known_args.tensorboard,
+        view=known_args.view
     )
 
 if __name__ == "__main__":

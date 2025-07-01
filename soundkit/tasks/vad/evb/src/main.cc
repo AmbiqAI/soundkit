@@ -121,7 +121,7 @@ static uint8_t my_cdc_tx_ff_buf[MY_USB_TX_BUFSIZE];
 
 int16_t buf_downsample[160];
 DOWNSAMPLE_CLASS downsample_inst;
-
+extern 
 int main(void) {
     ns_core_config_t ns_core_cfg = {.api = &ns_core_V1_0_0};
 
@@ -253,8 +253,10 @@ int main(void) {
     ns_printf("\nElapsedtime measurement\n");
     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
     tic();
+    
     for (int i=0; i < 100; i++)
-    {
+    {   
+        AudioPipe_wrapper_reset(); // reset the Audio Pipe
         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
     }
     elapsedTime = toc();

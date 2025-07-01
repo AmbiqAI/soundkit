@@ -82,25 +82,26 @@ int tflm_validator_model_init(ns_model_state_t *ms) {
     }
     ns_lp_printf("Model mapped.\n");
 #ifdef NS_TFSTRUCTURE_RECENT
-    static tflite::MicroMutableOpResolver<16> resolver;
+    static tflite::MicroMutableOpResolver<17> resolver;
 #else
-    static tflite::MicroMutableOpResolver<16> resolver(ms->error_reporter);
+    static tflite::MicroMutableOpResolver<17> resolver(ms->error_reporter);
 #endif
     resolver.AddCallOnce();
 resolver.AddVarHandle();
 resolver.AddReadVariable();
 resolver.AddFullyConnected();
+resolver.AddStridedSlice();
+resolver.AddSub();
 resolver.AddTanh();
 resolver.AddConcatenation();
 resolver.AddReshape();
 resolver.AddConv2D();
 resolver.AddUnpack();
-resolver.AddStridedSlice();
-resolver.AddAssignVariable();
 resolver.AddAdd();
 resolver.AddSplit();
 resolver.AddLogistic();
 resolver.AddMul();
+resolver.AddAssignVariable();
 resolver.AddQuantize();
 
 
@@ -109,7 +110,7 @@ resolver.AddQuantize();
     tflite::MicroAllocator *var_allocator;
     ns_lp_printf("Allocating %d resource variables...\n", ms->rv_count);
     if (ms->rv_count != 0) {
-        var_allocator = tflite::MicroAllocator::Create(ms->rv_arena, ms->6, nullptr);
+        var_allocator = tflite::MicroAllocator::Create(ms->rv_arena, ms->rv_arena_size, nullptr);
         resource_variables = tflite::MicroResourceVariables::Create(var_allocator, ms->rv_count);
     } else {
         resource_variables = nullptr;

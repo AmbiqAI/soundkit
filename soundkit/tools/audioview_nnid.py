@@ -9,12 +9,12 @@ import multiprocessing
 from multiprocessing import Process, Array, Lock
 import time
 import erpc
-import GenericDataOperations_EvbToPc
+from . import GenericDataOperations_EvbToPc
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, TextBox
 import scipy.io.wavfile as wavfile
-
+from .usb_utils import find_tinyusb_port
 # Define the RPC service handlers - one for each EVB-to-PC RPC function
 FRAMES_TO_SHOW  = 500
 SAMPLING_RATE   = 16000
@@ -473,6 +473,7 @@ def main(args):
     event_stop = multiprocessing.Event()
     lock = Lock()
     databuf = Array('d', FRAMES_TO_SHOW * HOP_SIZE)
+    tty = find_tinyusb_port()
     """
     pc_info:
         0 : is_record indicator
@@ -498,7 +499,7 @@ def main(args):
                               args.thres_nnid))
     proc_evb2pc = Process(
                     target = target_proc_evb2pc,
-                    args   = (  args.tty,
+                    args   = (  tty,
                                 args.baud,
                                 databuf,
                                 args.out,
@@ -522,12 +523,12 @@ if __name__ == "__main__":
     # parse cmd parameters
     argParser = argparse.ArgumentParser(description="NeuralSPOT GenericData RPC Demo")
 
-    argParser.add_argument(
-        "-w",
-        "--tty",
-        default = "/dev/serial/by-id/usb-TinyUSB_TinyUSB_Device_123457-if00", # "/dev/tty.usbmodem1234561"
-        help    = "Serial device (default value is None)",
-    )
+    # argParser.add_argument(
+    #     "-w",
+    #     "--tty",
+    #     default = "/dev/serial/by-id/usb-TinyUSB_TinyUSB_Device_123457-if00", # "/dev/tty.usbmodem1234561"
+    #     help    = "Serial device (default value is None)",
+    # )
     argParser.add_argument(
         "-B",
         "--baud",

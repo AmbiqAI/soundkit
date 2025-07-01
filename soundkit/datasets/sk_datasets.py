@@ -105,7 +105,7 @@ def load_train_galaxy(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/galaxy_train.csv')
+    return load_wav_label_csv('metadata/galaxy_train.csv')
 
 def load_val_galaxy(corpus: str) -> list:
     """
@@ -115,7 +115,7 @@ def load_val_galaxy(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/galaxy_val.csv')
+    return load_wav_label_csv('metadata/galaxy_val.csv')
 
 # for vad
 def load_vad_train_clean_100(corpus: str) -> list:
@@ -126,7 +126,7 @@ def load_vad_train_clean_100(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/vad/libri_train_clean_100.csv')
+    return load_wav_label_csv('metadata/vad/libri_train_clean_100.csv')
 
 def load_vad_train_clean_360(corpus: str) -> list:
     """
@@ -136,7 +136,7 @@ def load_vad_train_clean_360(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/vad/libri_train_clean_360.csv')
+    return load_wav_label_csv('metadata/vad/libri_train_clean_360.csv')
 
 def load_vad_train_other_500(corpus: str) -> list:
     """
@@ -146,7 +146,7 @@ def load_vad_train_other_500(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/vad/libri_train_other_500.csv')
+    return load_wav_label_csv('metadata/vad/libri_train_other_500.csv')
 
 
 def load_vad_dev_clean(corpus: str) -> list:
@@ -157,7 +157,7 @@ def load_vad_dev_clean(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
-    return load_wav_label_csv('data/vad/libri_dev_clean.csv')
+    return load_wav_label_csv('metadata/vad/libri_dev_clean.csv')
 
 def load_vad_thchs30(corpus: str) -> dict:
     """
@@ -168,8 +168,8 @@ def load_vad_thchs30(corpus: str) -> dict:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
 
-    train_list = load_wav_label_csv('data/vad/thchs30_train.csv')
-    dev_list = load_wav_label_csv('data/vad/thchs30_dev.csv')
+    train_list = load_wav_label_csv('metadata/vad/thchs30_train.csv')
+    dev_list = load_wav_label_csv('metadata/vad/thchs30_dev.csv')
 
     return {"train": train_list, "val": dev_list}
 
@@ -197,7 +197,7 @@ def load_fsd50k(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
-    with open('data/FSD50K/non_speech.csv', 'r') as f:
+    with open('metadata/FSD50K/non_speech.csv', 'r') as f:
         lines = [line.strip() for line in f.readlines()]
     random.shuffle(lines)
     split = len(lines) // 5
@@ -212,7 +212,7 @@ def load_esc50(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
-    with open('data/ESC-50-master/non_speech.csv', 'r') as f:
+    with open('metadata/ESC-50-master/non_speech.csv', 'r') as f:
         lines = [line.strip() for line in f.readlines()]
     random.shuffle(lines)
     split = len(lines) // 5

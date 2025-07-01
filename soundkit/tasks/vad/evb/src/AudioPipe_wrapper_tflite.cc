@@ -133,9 +133,56 @@ int AudioPipe_wrapper_init(void)
         }
         // self->nn_dim_out = output_dim; // Set the number of output dimensions for the model
     }
-    
+    int input_idx;
+    float32_t input_scale;
+    int input_zero_point;
+    float32_t val;
+    int16_t input;
+    float32_t output_scale;
+    int output_zero_point;
+    if (0)
+    {
+        for (int m=0; m < 10; m++)
+        {
+            input_idx = 0;
+            input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+            input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
-    ns_lp_printf("Model initialized\n");
+            nn_reset = 1.0f; // Reset the flag
+            val = (float32_t) nn_reset;
+            input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+            pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
+
+            input_idx=1;
+            input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+            input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+
+            for (int i =0; i < pt_param->num_mfltrBank; i++)
+            {
+                input = i * 20;
+                pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
+            }
+
+            // tflm.interpreter->Reset(); // Reset the interpreter state before invoking
+            TfLiteStatus invoke_status = tflm.interpreter->Invoke(); 
+            if (invoke_status != kTfLiteOk) {
+                while (1)
+                {
+                    example_status = NS_STATUS_FAILURE; // invoke failed, so hang
+                }
+            }
+            output_scale = tflm.model_output[0]->params.scale;
+            output_zero_point = tflm.model_output[0]->params.zero_point;
+            
+            
+            for (int i = 0; i < NN_DIM_OUT; i++) {
+                ns_printf("%d ", tflm.model_output[0]->data.i16[i]);
+            }
+            ns_printf("\n");
+
+            ns_lp_printf("Model initialized\n");
+        }
+    }
     return 0;
 }
 
@@ -149,6 +196,7 @@ int AudioPipe_wrapper_reset(void)
             pt_spec_buffer[i] = 0;
         }
     }
+    // tflm.interpreter->Reset();
     FeatureClass_setDefault(&FEAT_INST);
     IIR_CLASS_reset(&dcrm_inst);
     nn_reset = 1.0f; // Reset the NN model state
@@ -225,7 +273,7 @@ int AudioPipe_wrapper_frameProc(
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
-    float32_t val = ((float32_t) nn_reset ) * scalar_norm;
+    float32_t val = ((float32_t) nn_reset );
     int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
     pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
     nn_reset = 0.0f; // Reset the flag
@@ -250,7 +298,7 @@ int AudioPipe_wrapper_frameProc(
     }
     float32_t output_scale = tflm.model_output[0]->params.scale;
     int output_zero_point = tflm.model_output[0]->params.zero_point;
-    
+
     float32_t den=0.0f;
     for (int i = 0; i < NN_DIM_OUT; i++) {
         float32_t out; 
@@ -272,8 +320,9 @@ int AudioPipe_wrapper_frameProc(
     }
 
     if (vad_trigger_counts == 180) {
-        AudioPipe_wrapper_reset(); // Reset the vad trigger counts
-        trigger=-32768 >> 1;
+        // AudioPipe_wrapper_reset(); // Reset the vad trigger counts
+        // trigger=-32768 >> 1;
+        vad_trigger_counts=0; // Reset the vad trigger counts
     }
 
     

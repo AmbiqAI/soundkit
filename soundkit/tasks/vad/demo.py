@@ -314,15 +314,12 @@ def demo_pc(params: SKTaskParams):
             self.counts_vad_trigger = 0
             self.feat_extractor.reset()
             self.dc_remover.reset()
+            # self.model_tflite.reset()
 
         def __call__(self,
                      inputs: np.ndarray,  # input from microphone
-                     reset_flag: int=0,  # reset flag for stateful model
                     ) -> np.ndarray:  # output to AudioShowClass
             """Process input audio signal and return VAD output."""
-            
-            if reset_flag==1:
-                self.reset()
 
             shape=inputs.shape
             inputs=inputs.flatten()
@@ -352,6 +349,9 @@ def demo_pc(params: SKTaskParams):
                 tot = np.exp(outputs, out=outputs)  # Apply softmax
                 out = tot / np.sum(tot)  # Normalize
                 outputs = np.ones(hop_size, dtype=np.float32)*out[1]
+
+            if self.counts_vad_trigger ==180:
+                self.reset()
             outputs = outputs.reshape(shape)
             return outputs
 
@@ -361,14 +361,17 @@ def demo_pc(params: SKTaskParams):
         stats=stats,
     )
 
-    vad_model.reset()  # Reset the model state
-
+    # vad_model.reset()  # Reset the model state
+    # tf.random.set_seed(42)  # For reproducibility
     # inputs = np.random.uniform(-1, 1, size=(hop_size,)).astype(np.float32)
-    # reset_flag = 0  # Reset flag for stateful model
-
-    # outputs = vad_model(inputs, reset_flag=reset_flag)  # Run inference
-
-    # print(f"VAD outputs: {outputs}")
+    # # reset_flag = 0  # Reset flag for stateful model
+    # vad_model.reset()  # Reset the model state
+    # outputs = vad_model(inputs)  # Run inference
+    # vad_model.reset()  # Reset the model state
+    # outputs = vad_model(inputs)  # Run inference
+    # vad_model.reset()  # Reset the model state
+    # outputs = vad_model(inputs)  # Run inference
+    # # print(f"VAD outputs: {outputs}")
 
 
     # reset_flag = 1  # Reset flag for stateful model

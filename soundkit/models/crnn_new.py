@@ -123,7 +123,7 @@ class CRNN(tf.keras.Model):
                 self.h_states.append(h_state)
                 self.c_states.append(c_state)
                 h_idx += 1
-        self.reset_states(zero_state=False)
+        # self.reset_states(zero_state=False)
 
     def reset_states(self, zero_state=False):
 
