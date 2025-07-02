@@ -7,7 +7,7 @@ This page describes how to evaluate a trained Voice Activity Detection (VAD) mod
 ## 🔧 Run `evaluate` Mode
 
 ```bash
-soundkit -t vad -m evaluate -c vad.yaml
+soundkit -t vad -m evaluate -c configs/vad/vad.yaml
 ```
 
 ---
@@ -40,14 +40,7 @@ Running the evaluation step will generate:
 
 - Prediction results showing voice activity regions
 - Visualization of audio signals and detected speech segments
-- Annotated spectrograms or framewise outputs (if enabled in the pipeline)
 
 > 📌 Be sure the `vad.yaml` configuration aligns with the model settings used during training and export.
 
 ---
-
-## 🛠 Advanced Tips
-
-- Works well on short or long-form audio files (up to the configured `target_length_in_secs`)
-- Combine with `export` mode if you want to visualize `.tflite` model performance
-- Great for testing behavior across various noise conditions

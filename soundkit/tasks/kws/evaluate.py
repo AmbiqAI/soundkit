@@ -81,7 +81,6 @@ def evaluate(params: SKTaskParams):
         dir=checkpoint_dir,
         stats_name='stats.pkl')
 
-
     for step, wavs_path in enumerate(wavs_path):
         print(f"\rEvaluating {wavs_path}, ", end='')
         # Read audio file
@@ -92,7 +91,6 @@ def evaluate(params: SKTaskParams):
 
         audio_sn = tf.convert_to_tensor(audio_sn, dtype=tf.float32) 
         audio_sn = tf.expand_dims(audio_sn, axis=0)  # Add batch dimension
-
 
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn)
@@ -164,7 +162,7 @@ def evaluate(params: SKTaskParams):
         sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
         sample_level_vad = tf.cast(sample_level_vad, dtype=tf.float32)
 
-        name = re.sub(r'(\.wav$|\.flac$)', '_sn.wav', wavs[step])
+        name = re.sub(r'(\.wav$|\.flac$)', '_orig.wav', wavs[step])
         save_path = f"{result_folder}/{name}"
 
         audio_sn_np = tf.squeeze(audio_sn, axis=0).numpy()
@@ -175,7 +173,7 @@ def evaluate(params: SKTaskParams):
         print(f"Saved original audio to {save_path}")
 
         # save enhanced audio
-        name = re.sub(r'(\.wav$|\.flac$)', '_vad.wav', wavs[step])
+        name = re.sub(r'(\.wav$|\.flac$)', '_kws.wav', wavs[step])
         save_path = f"{result_folder}/{name}"
         audio_vad_np = sample_level_vad.numpy()
         sf.write(

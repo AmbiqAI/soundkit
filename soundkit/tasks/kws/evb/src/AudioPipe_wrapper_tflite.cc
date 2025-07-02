@@ -219,7 +219,7 @@ int AudioPipe_wrapper_frameProc(
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
-    float32_t val = ((float32_t) nn_reset ) * scalar_norm;
+    float32_t val = ((float32_t) nn_reset );
     int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
     pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
     nn_reset = 0.0f; // Reset the flag

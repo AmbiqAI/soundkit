@@ -7,7 +7,7 @@ This page describes how to train a Voice Activity Detection (VAD) model using th
 ## 🚀 Run `train` Mode
 
 ```bash
-soundkit -t vad -m train -c vad.yaml
+soundkit -t vad -m train -c configs/vad/vad.yaml
 ```
 
 This starts training using settings from `vad.yaml`, including TFRecord input, features, and model parameters.
@@ -18,7 +18,7 @@ To monitor training live, open a second terminal and run:
 soundkit -t vad -m train --tensorboard -c configs/vad/vad.yaml
 ```
 
-This starts TensorBoard. Visit http://localhost:6006 to view real-time metrics and logs.
+This starts TensorBoard. Visit **http://localhost:6006** to view real-time metrics and logs.
 
 ---
 
@@ -150,5 +150,5 @@ After training completes:
 To visualize metrics:
 
 ```bash
-soundkit -m train --tensorboard -c vad.yaml
+soundkit -m train --tensorboard -c configs/vad/vad.yaml
 ```

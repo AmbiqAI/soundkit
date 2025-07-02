@@ -82,12 +82,13 @@ train:
 evaluate:
   epoch_loaded: best
 
+  threshold_id: 0.8 # threshold for id verification
+
   data: 
     dir: "./wavs/id/test_wavs"
-    reg_files: [register1.wav, register2.wav, register3.wav, register4.wav] # list of registration files
+    reg_files: [registration1.wav, registration2.wav, registration3.wav, registration4.wav] # list of registration files
     test_files: [test1.wav, test2.wav] # list of test files to evaluate
-    result_folder: ${job_dir}/test_results/${train.path.full_name}
-
+    
 export:
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite

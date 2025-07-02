@@ -218,7 +218,7 @@ class VisualDataClass:
         secs2show = FRAMES_TO_SHOW * HOP_SIZE/SAMPLING_RATE
         self.xdata = np.arange(FRAMES_TO_SHOW * HOP_SIZE) / SAMPLING_RATE
         self.fig, self.ax_handle = plt.subplots(2,1)
-        self.ax_handle[0].title.set_text("Speech Enhancement Viewer")
+        self.ax_handle[0].title.set_text("Soundkit Viewer")
         self.fig.canvas.mpl_connect(
             'close_event',
             self.handle_close)

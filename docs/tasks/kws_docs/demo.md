@@ -10,7 +10,7 @@ The demo module in **SoundKit** allows real-time evaluation of your trained KWS 
 To run the demo on your chosen platform:
 
 ```bash
-soundkit -t kws -m demo -c configs/kws.yaml
+soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=pc # or evb
 ```
 
 ---
@@ -53,11 +53,25 @@ demo:
 
 ## Example
 
-Run on the PC-based test or [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) for real-time KWS task. You can choose on PC or EVB based on command-line overwrite
+### PC
+Run on the PC-based test for real-time KWS task.
 
 ```bash
 soundkit -t kws -m demo -c configs/kws.yaml demo.platform=pc # run on PC 
-soundkit -t kws -m demo -c configs/kws.yaml demo.platform=evb # run on Ambiq EVB
 ```
 
-For more help, refer to the SoundKit [QuickStart Guide](../../quickstart.md).
+### EVB
+Run on the PC-based test or [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) for real-time KWS task. You can choose on PC or EVB based on command-line overwrite
+
+1. Type 
+  ```bash
+  soundkit -t kws -m demo -c configs/kws.yaml demo.platform=evb # run on Ambiq EVB
+  ```
+1. Open the other terminal. Type
+
+  ```bash
+  soundkit -t kws -m demo -c configs/kws.yaml demo.platform=evb --view
+  ```
+  You should see a GUI pop out
+1. Press the Button-0 on your EVB
+1. Follow the GUI instructions

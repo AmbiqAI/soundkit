@@ -106,13 +106,15 @@ int AudioPipe_wrapper_init(AudioTaskClass *self)
 
 int AudioPipe_wrapper_reset(AudioTaskClass *self)
 {
+    ns_model_state_t *pt_tflm = (ns_model_state_t *) self->pt_tflm;
+
     FeatureClass* pt_feat = (FeatureClass*) self->pt_feat_inst;
     IIR_CLASS* pt_dcrm = (IIR_CLASS*) self->pt_dcrm_inst;
     PARAMS_NNSP* pt_param = (PARAMS_NNSP*) self->pt_param;
     FeatureClass_setDefault(pt_feat);
     IIR_CLASS_reset(pt_dcrm);
 
-    self->reset_nn = 1.0f; // Reset the neural network state    
+    pt_tflm->interpreter->Reset(); // Reset all tensors to default values
     return 0;
 }
 
@@ -166,7 +168,6 @@ int AudioPipe_wrapper_frameProc(
     int input_idx=0;
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
-
 
     int16_t reset = (int16_t) ((float32_t) self->reset_nn / (float32_t) input_scale + (float32_t) input_zero_point);
     pt_tflm->interpreter->input(input_idx)->data.i16[0] =  reset;

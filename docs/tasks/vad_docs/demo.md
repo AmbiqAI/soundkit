@@ -7,7 +7,7 @@ This page explains how to run a real-time **Voice Activity Detection (VAD)** dem
 ## 🔧 Run `demo` Mode
 
 ```bash
-soundkit -t vad -m demo -c vad.yaml
+soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=pc # or demo.platform=evb
 ```
 
 ## 🧾 Demo Parameters
@@ -39,44 +39,29 @@ demo:
 
 ## 💻 Deployment Modes
 
+
+### 🔌 PC
+
+The fast deploying tflite on your PC for real-time testing.
+
+- Ensure you have a microphone connected to your PC (or built-in one)
+  ```bash
+  soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=pc 
+  ```
+- A simple GUI will show up to start
+
+
 ### 🔌 Embedded Board (EVB)
 
-- Builds firmware from `evb_dir`
-- Deploys it via J-Link or USB
-- Streams audio in/out through onboard codec or USB interface
-
-Ensure:
-- The EVB is connected and recognized
-- Required toolchains are installed (e.g., GNU Arm, J-Link, Make)
-
+1. Type:
+  ```bash
+  soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb
+  ```
+1. Turn on a the other terminal. Type
+  ```bash
+  soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb --view
+  
+  ```
+1. Press Button-0 on your EVB
+1. Follow the GUI instructions
 ---
-
-### 🌐 WebUSB Demo
-
-- Runs in **Chrome-based browsers**
-- Uses `.tflite` model with in-browser audio I/O
-- Requires microphone access and HTTPS or `localhost`
-
-To launch:
-
-1. Serve the `webusb/` directory (if included)
-2. Connect the device using WebUSB
-3. Load model and start inference
-
-> ⚠️ WebUSB works only in secure contexts and modern Chromium browsers.
-
----
-
-## ✅ Output
-
-- Real-time voice activity detection results
-- Optional logs for debug and latency measurement
-- Can include visual indicators for speech segments
-
----
-
-## 🧠 Tips
-
-- Use `pre_gain` to normalize input amplitude
-- Ensure `tflite_dir` and `epoch_loaded` match your export step
-- Re-run `export` if the model structure or parameters change

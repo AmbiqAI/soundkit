@@ -272,7 +272,8 @@ int main(void) {
     // USB. This gives the user a chance to start the server then
     // pressing the button to let the EVB it is ready to start RPCing.
 
-    ns_printf("Type $tools/python -m record_evb --tty <your tty>\n");
+    ns_printf("Open the other terminal\n");
+    ns_printf("Type $ soundkit -t vad -m demo -c your_config.yaml demo.platform=evb --view\n");
 
     ns_printf("Start the PC-side server, then press Button 0 to get started\n");
     while (g_intButtonPressed == 0) {
@@ -288,8 +289,7 @@ int main(void) {
     // RPC handler functions defined above.
 
 #if GUI_ON==1
-    // -- Init the NNSE2 model
-    ns_printf("Type $tools/python audioview_se.py\n");
+    
 #if PERF_TEST==0
     AudioPipe_wrapper_init();
 #endif

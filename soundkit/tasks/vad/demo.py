@@ -351,7 +351,8 @@ def demo_pc(params: SKTaskParams):
                 outputs = np.ones(hop_size, dtype=np.float32)*out[1]
 
             if self.counts_vad_trigger ==180:
-                self.reset()
+                # self.reset()
+                self.counts_vad_trigger = 0
             outputs = outputs.reshape(shape)
             return outputs
 
@@ -361,27 +362,11 @@ def demo_pc(params: SKTaskParams):
         stats=stats,
     )
 
-    # vad_model.reset()  # Reset the model state
-    # tf.random.set_seed(42)  # For reproducibility
-    # inputs = np.random.uniform(-1, 1, size=(hop_size,)).astype(np.float32)
-    # # reset_flag = 0  # Reset flag for stateful model
-    # vad_model.reset()  # Reset the model state
-    # outputs = vad_model(inputs)  # Run inference
-    # vad_model.reset()  # Reset the model state
-    # outputs = vad_model(inputs)  # Run inference
-    # vad_model.reset()  # Reset the model state
-    # outputs = vad_model(inputs)  # Run inference
-    # # print(f"VAD outputs: {outputs}")
-
-
-    # reset_flag = 1  # Reset flag for stateful model
-    # outputs = vad_model(inputs, reset_flag=reset_flag)  # Run inference with reset
-    # print(f"VAD outputs after reset: {outputs}")
-
     aud_handle = AudioShowClass(
         frame_size=hop_size,
         sample_rate=sample_rate,
         record_seconds=15,
         non_stop=True,
-        proc_st=vad_model
+        proc_st=vad_model,
+        reset_st=vad_model.reset,  # Reset function for the model
     )

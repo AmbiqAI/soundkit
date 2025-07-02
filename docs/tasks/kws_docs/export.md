@@ -10,7 +10,7 @@ The export step in **SoundKit** converts your trained KWS model into formats opt
 To export the best-performing model checkpoint:
 
 ```bash
-soundkit -t kws -m export -c configs/kws.yaml
+soundkit -t kws -m export -c configs/kws/kws.yaml
 ```
 
 ---

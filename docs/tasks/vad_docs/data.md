@@ -7,7 +7,7 @@ This page outlines how to prepare training and validation datasets for **Voice A
 ## 🔧 **Run `data` Mode**
 
 ```bash
-soundkit -t vad -m data -c vad.yaml
+soundkit -t vad -m data -c vad/vad.yaml
 ```
 
 ---
