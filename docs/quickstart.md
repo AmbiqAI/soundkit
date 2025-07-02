@@ -1,17 +1,6 @@
 # Quickstart Guide
 
 
-## **Setup Virtual Environment**
-
-Its best to isolate your dependencies:
-
-```bash
-python -m venv .venv         # Create virtual environment
-source .venv/bin/activate    # Activate it
-```
-
----
-
 ## **Install SoundKit**
 
 !!! note "SE Mode Selection"
@@ -21,6 +10,8 @@ source .venv/bin/activate    # Activate it
         ```bash
         git clone https://github.com/AmbiqAI/soundkit.git
         cd soundkit
+        python -m venv .venv         # Create virtual environment
+        source .venv/bin/activate    # Activate it
         pip install -e .
         ```
     === "From PyPI"
@@ -51,7 +42,7 @@ SoundKit provides a unified CLI for handling various ML tasks.
     soundkit --task [TASK] --mode [MODE] --config [CONFIG]
     ```
 
-- **TASK**  One of: `se`, `vad`, `kws`  
+- **TASK**  One of: `se`, `vad`, `kws`, `id`  
 - **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`  
 - **CONFIG**  Path to your YAML config
 
@@ -110,7 +101,7 @@ Understand key settings in your SoundKit YAML config for SE tasks:
 ### **Top-Level**
 
 - `name`: Name of the experiment (used in folder names)
-- `project`: Task type, e.g., `se`, `kws`, `vad`
+- `project`: Task type, e.g., `se`, `kws`, `vad`, `id`
 - `job_dir`: Where outputs (models, logs) are saved
 
 ### **Data (`data`)**
