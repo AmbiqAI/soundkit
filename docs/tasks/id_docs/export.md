@@ -7,7 +7,7 @@ This page explains how to export a trained **Speaker Verification (ID)** model f
 ## 🔧 Run `export` Mode
 
 ```bash
-soundkit -t id -m export -c id.yaml
+soundkit -t id -m export -c configs/id/id.yaml
 ```
 
 This command loads a trained speaker embedding model and converts it into deployable formats such as TFLite and C arrays for real-time inference.

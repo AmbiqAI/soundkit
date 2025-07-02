@@ -113,7 +113,7 @@ int AudioPipe_wrapper_reset(AudioTaskClass *self)
     PARAMS_NNSP* pt_param = (PARAMS_NNSP*) self->pt_param;
     FeatureClass_setDefault(pt_feat);
     IIR_CLASS_reset(pt_dcrm);
-
+    self->reset_nn = 0.0f; // Reset the reset flag
     pt_tflm->interpreter->Reset(); // Reset all tensors to default values
     return 0;
 }
@@ -171,9 +171,7 @@ int AudioPipe_wrapper_frameProc(
 
     int16_t reset = (int16_t) ((float32_t) self->reset_nn / (float32_t) input_scale + (float32_t) input_zero_point);
     pt_tflm->interpreter->input(input_idx)->data.i16[0] =  reset;
-    if (self->reset_nn > 0.5f) {
-        self->reset_nn = 0.0f; // reset: value=0.0f only run once
-    }
+    self->reset_nn = 0.0f; // Reset the reset flag after use
     
     input_idx=1;
     input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
@@ -185,7 +183,6 @@ int AudioPipe_wrapper_frameProc(
         int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
         pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
     }
-
     TfLiteStatus invoke_status = pt_tflm->interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
         while (1)

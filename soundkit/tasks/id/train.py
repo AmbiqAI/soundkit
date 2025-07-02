@@ -127,9 +127,10 @@ def run_epoch(
         # states = lstm_states(model, batchsize, zero_state= False)
 
         feat_sn, _, _, end_frames, mask = batch
+
         if params.train.reset_every_batch:
             # Reset the state buffer for the next batch
-            states_audio_sn = reset_nn_states(model,zero_state=training)
+            states_audio_sn = reset_nn_states(model, zero_state=training)
 
         if params.train['standardization']:
             # Standardize features

@@ -64,7 +64,7 @@ void nnidCntrlClass_reset(nnidCntrlClass* pt_inst)
 	// vad
 	AudioPipe_wrapper_reset(pt_inst->pt_vad);
 	pt_inst->count_vad_trigger = 0;
-	
+
 	// id
 	AudioPipe_wrapper_reset(pt_inst->pt_id);
 	pt_inst->acc_utterances_enroll = 0;

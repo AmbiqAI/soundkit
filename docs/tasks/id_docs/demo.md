@@ -7,7 +7,7 @@ This page explains how to run a real-time **Speaker Verification (ID)** demo usi
 ## 🔧 Run `demo` Mode
 
 ```bash
-soundkit -t id -m demo -c id.yaml
+soundkit -t id -m demo -c configs/id/id.yaml demo.platform=pc # or evb
 ```
 
 ## 🧾 Demo Parameters
@@ -43,32 +43,30 @@ demo:
 
 ## 💻 Deployment Modes
 
-### 🔌 Embedded Board (EVB)
+## Example
 
-- Builds and flashes firmware from `evb_dir`
-- Streams audio via onboard codec or USB mic
-- Performs enrollment and verification on-device
-- Optionally interfaces with host PC for result display
+### PC
+Run on the PC-based test for real-time ID task.
 
-**Requirements:**
+```bash
+soundkit -t id -m demo -c configs/id/id.yaml demo.platform=pc # run on PC 
+```
 
-- Ambiq EVB connected and recognized
-- Toolchains installed (e.g., GNU Arm, J-Link, Make)
+### EVB
+Run on the PC-based test or [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) for real-time KWS task. You can choose on PC or EVB based on command-line overwrite
 
----
+1. Type 
+  ```bash
+  soundkit -t id -m demo -c configs/id/id.yaml demo.platform=evb # run on Ambiq EVB
+  ```
+1. Open the other terminal. Type
 
-### 🖥️ PC-Based Demo
-
-- Runs entirely on your desktop using a connected microphone
-- Uses `.tflite` model for inference via TFLite runtime
-- Performs local speaker registration and verification
-
-To run:
-
-1. Export your model using the `export` mode
-2. Launch the `demo` with `platform: pc`
-3. Speak to register, then verify against stored embeddings
-
+  ```bash
+  soundkit -t id -m demo -c configs/id/id.yaml demo.platform=evb --view
+  ```
+  You should see a GUI pop out
+1. Press the Button-0 on your EVB
+1. Follow the GUI instructions
 ---
 
 ## ✅ Output

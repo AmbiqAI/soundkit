@@ -1,5 +1,5 @@
-#ifndef __MUT_MODEL_METADATA_H
-#define __MUT_MODEL_METADATA_H
+#ifndef __MUT_MODEL_METADATA_VAD_H
+#define __MUT_MODEL_METADATA_VAD_H
 #include "ns_ambiqsuite_harness.h"
 
 // Default Arena and RPC buffer sizes
@@ -11,9 +11,9 @@
 #define TFLM_MODEL_LOCATION NS_AD_TCM
 #define TFLM_ARENA_LOCATION NS_AD_TCM
 
-#define TFLM_VALIDATOR_MAC_ESTIMATE_COUNT 50
+#define TFLM_VALIDATOR_MAC_ESTIMATE_COUNT 49
 const uint32_t tflm_validator_mac_estimates[TFLM_VALIDATOR_MAC_ESTIMATE_COUNT] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3136, 0, 257, 0, 0, 0, 0, 4704, 0, 0, 0, 3136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 28, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3136, 0, 0, 0, 257, 0, 0, 0, 0, 4704, 0, 0, 0, 3136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 28, 28, 0, 0, 0, 0, 0, 0, 0};
 const int tflm_validator_number_of_estimates = TFLM_VALIDATOR_MAC_ESTIMATE_COUNT;
 
 #ifdef AM_PART_APOLLO5B

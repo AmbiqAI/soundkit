@@ -7,7 +7,7 @@ This page describes how to evaluate a trained **Speaker Verification (ID)** mode
 ## 🔧 Run `evaluate` Mode
 
 ```bash
-soundkit -t id -m evaluate -c id.yaml
+soundkit -t id -m evaluate -c configs/id/id.yaml
 ```
 
 ---

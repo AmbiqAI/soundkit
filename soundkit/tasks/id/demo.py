@@ -230,7 +230,7 @@ def demo_pc(params_id: SKTaskParams):
     from ...cli import parse_config
     
 
-    params_vad = parse_config("configs/vad/vad.yaml")
+    params_vad = parse_config("zoo/vad/vad.yaml")
 
     params_list={
         'id': params_id,

@@ -7,7 +7,7 @@ This page explains how to train a **Speaker Verification (ID)** model using the 
 ## 🚀 Run `train` Mode
 
 ```bash
-soundkit -t id -m train -c id.yaml
+soundkit -t id -m train -c configs/id/id.yaml
 ```
 
 This command launches training using your settings in `id.yaml`.
@@ -15,7 +15,7 @@ This command launches training using your settings in `id.yaml`.
 To monitor training in real time using TensorBoard, open a second terminal:
 
 ```bash
-soundkit -t id -m train --tensorboard -c id.yaml
+soundkit -t id -m train --tensorboard -c configs/id/id.yaml
 ```
 
 Then visit [http://localhost:6006](http://localhost:6006) in your browser.
@@ -111,7 +111,7 @@ Once training completes:
 To visualize training progress again:
 
 ```bash
-soundkit -m train --tensorboard -c id.yaml
+soundkit -t id -m train --tensorboard -c configs/id/id.yaml
 ```
 
 Let SoundKit help you build robust, low-power speaker ID models for embedded and on-device voice authentication.

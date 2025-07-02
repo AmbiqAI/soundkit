@@ -240,7 +240,7 @@ int main(void) {
     if (params_nn1_nnvad.samplingRate == 8000)
     {
         // Initialize the downsample instance
-        DOWNSAMPLE_CLASS_init(&downsample_inst);
+        // DOWNSAMPLE_CLASS_init(&downsample_inst);
     }
     
     int16_t *pcm_input = (int16_t*) audioDataBuffer;
@@ -268,7 +268,7 @@ int main(void) {
     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
     tic();
     for (int i=0; i < 100; i++)
-    {
+    {   
         nnidCntrlClass_exec(&nnidControl_inst, pcm_input, corr, &g_audioRecording);
     }
     elapsedTime = toc();

@@ -50,7 +50,7 @@ Use the `soundkit` CLI to run ID tasks through different modes using a configura
         Prepares utterances from multiple speakers with augmentations for training the speaker embedding network.
 
         ```bash
-        soundkit -t id -m data -c configs/id.yaml
+        soundkit -t id -m data -c configs/id/id.yaml
         ```
 
         See [Data](./id_docs/data.md) for dataset setup.
@@ -59,22 +59,22 @@ Use the `soundkit` CLI to run ID tasks through different modes using a configura
         Trains a speaker verification model using contrastive learning and embedding normalization.
 
         ```bash
-        soundkit -t id -m train -c configs/id.yaml
+        soundkit -t id -m train -c configs/id/id.yaml
         ```
 
         Optional: run TensorBoard for live training metrics:
 
         ```bash
-        soundkit -t id -m train --tensorboard -c configs/id.yaml
+        soundkit -t id -m train --tensorboard -c configs/id/id.yaml
         ```
 
         See [Train](./id_docs/train.md) for training details.
 
     === "Evaluate"
-        Measures model accuracy on speaker-pair samples and computes verification metrics (EER, ROC AUC).
+        Measures model accuracy
 
         ```bash
-        soundkit -t id -m evaluate -c configs/id.yaml
+        soundkit -t id -m evaluate -c configs/id/id.yaml
         ```
 
         See [Evaluate](./id_docs/evaluate.md) for evaluation metrics.
@@ -83,16 +83,19 @@ Use the `soundkit` CLI to run ID tasks through different modes using a configura
         Converts the trained model to TFLite and C formats for embedded use.
 
         ```bash
-        soundkit -t id -m export -c configs/id.yaml
+        soundkit -t id -m export -c configs/id/id.yaml
         ```
 
         See [Export](./id_docs/export.md) for export options.
 
     === "Demo"
         Runs real-time speaker enrollment and verification demo on PC or EVB using the exported model.
+        We suggest to try on PC first for fast evaluation and then EVB.
 
         ```bash
-        soundkit -t id -m demo -c configs/id.yaml
+        soundkit -t id -m demo -c configs/id.yaml demo.platform=pc
+        # or 
+        soundkit -t id -m demo -c configs/id.yaml demo.platform=evb
         ```
 
         See [Demo](./id_docs/demo.md) to test speaker recognition live.

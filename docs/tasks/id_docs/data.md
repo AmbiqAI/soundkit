@@ -7,7 +7,7 @@ This guide explains how to prepare training and validation datasets for **Speake
 ## 🔧 **Run `data` Mode**
 
 ```bash
-soundkit -t id -m data -c id.yaml
+soundkit -t id -m data -c configs/id/id.yaml
 ```
 
 ---
