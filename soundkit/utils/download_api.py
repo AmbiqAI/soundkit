@@ -143,10 +143,10 @@ def corpus_download(
                 "FSD50K.dev_audio.zip",
             ]
             for fname in fsd50_lst:
-                url = f'https://zenodo.org/record/4060432/files/{fname}?download=1"'
-                url_download(url, f"../{tmp_download}/{fname}")
+                url = f'https://zenodo.org/record/4060432/files/{fname}?download=1'
+                url_download(url, f"./{tmp_download}/{fname}")
             os.system(f"zip -s 0 ./{tmp_download}/FSD50K.dev_audio.zip --out ./{tmp_download}/unsplit.zip")
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
             shutil.copyfile(
-                'data/non_speech_fsd50k.csv',
+                'metadata/non_speech_fsd50k.csv',
                 'wavs/noise/FSD50K/non_speech.csv')
