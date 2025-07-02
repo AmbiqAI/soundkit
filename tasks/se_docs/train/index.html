@@ -9,22 +9,22 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../data/">
       
       
-        <link rel="next" href="../tasks/se/">
+        <link rel="next" href="../evaluate/">
       
       
-      <link rel="icon" href="../assets/favicon.ico">
+      <link rel="icon" href="../../../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
-        <title>Quickstart - SoundKit</title>
+        <title>Train - SoundKit</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
       
 
@@ -43,7 +43,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart-guide" class="md-skip">
+        <a href="#training" class="md-skip">
           Skip to content
         </a>
       
@@ -78,9 +78,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="SoundKit" class="md-header__button md-logo" aria-label="SoundKit" data-md-component="logo">
+    <a href="../../.." title="SoundKit" class="md-header__button md-logo" aria-label="SoundKit" data-md-component="logo">
       
-  <img src="../assets/logo.png" alt="logo">
+  <img src="../../../assets/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -97,7 +97,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              Train
             
           </span>
         </div>
@@ -187,9 +187,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="SoundKit" class="md-nav__button md-logo" aria-label="SoundKit" data-md-component="logo">
+    <a href="../../.." title="SoundKit" class="md-nav__button md-logo" aria-label="SoundKit" data-md-component="logo">
       
-  <img src="../assets/logo.png" alt="logo">
+  <img src="../../../assets/logo.png" alt="logo">
 
     </a>
     SoundKit
@@ -216,7 +216,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -235,32 +235,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Quickstart
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../quickstart/" class="md-nav__link">
         
   
   
@@ -271,149 +249,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-soundkit" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install SoundKit
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Requirements
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-soundkit-with-cli" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use SoundKit with CLI
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-speech-enhancement-se-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example: Speech Enhancement (SE) Workflow
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-parameters-simplified" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration Parameters (Simplified)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration Parameters (Simplified)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#top-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      Top-Level
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      Data (data)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-train" class="md-nav__link">
-    <span class="md-ellipsis">
-      Training (train)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#evaluation-evaluate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Evaluation (evaluate)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-export" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export (export)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demo-demo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Demo (demo)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overriding-config-values-via-omegaconf" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overriding Config Values via OmegaConf
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#model-zoo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Model Zoo
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -422,18 +257,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -449,7 +286,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Tasks
@@ -460,18 +297,20 @@
                 
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
         
           
           <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
@@ -487,7 +326,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_1">
             <span class="md-nav__icon md-icon"></span>
             SE
@@ -501,7 +340,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se/" class="md-nav__link">
+      <a href="../../se/" class="md-nav__link">
         
   
   
@@ -524,7 +363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se_docs/introduction/" class="md-nav__link">
+      <a href="../introduction/" class="md-nav__link">
         
   
   
@@ -547,7 +386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se_docs/data/" class="md-nav__link">
+      <a href="../data/" class="md-nav__link">
         
   
   
@@ -567,10 +406,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../tasks/se_docs/train/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Train
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -581,6 +442,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-train-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run train Mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Training Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature-extraction-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Extraction Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standardization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standardization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Model Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -593,7 +528,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se_docs/evaluate/" class="md-nav__link">
+      <a href="../evaluate/" class="md-nav__link">
         
   
   
@@ -616,7 +551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se_docs/export/" class="md-nav__link">
+      <a href="../export/" class="md-nav__link">
         
   
   
@@ -639,7 +574,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/se_docs/demo/" class="md-nav__link">
+      <a href="../demo/" class="md-nav__link">
         
   
   
@@ -708,7 +643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad/" class="md-nav__link">
+      <a href="../../vad/" class="md-nav__link">
         
   
   
@@ -731,7 +666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/introduction/" class="md-nav__link">
+      <a href="../../vad_docs/introduction/" class="md-nav__link">
         
   
   
@@ -754,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/data/" class="md-nav__link">
+      <a href="../../vad_docs/data/" class="md-nav__link">
         
   
   
@@ -777,7 +712,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/train/" class="md-nav__link">
+      <a href="../../vad_docs/train/" class="md-nav__link">
         
   
   
@@ -800,7 +735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/evaluate/" class="md-nav__link">
+      <a href="../../vad_docs/evaluate/" class="md-nav__link">
         
   
   
@@ -823,7 +758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/export/" class="md-nav__link">
+      <a href="../../vad_docs/export/" class="md-nav__link">
         
   
   
@@ -846,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/vad_docs/demo/" class="md-nav__link">
+      <a href="../../vad_docs/demo/" class="md-nav__link">
         
   
   
@@ -915,7 +850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws/" class="md-nav__link">
+      <a href="../../kws/" class="md-nav__link">
         
   
   
@@ -938,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/introduction/" class="md-nav__link">
+      <a href="../../kws_docs/introduction/" class="md-nav__link">
         
   
   
@@ -961,7 +896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/data/" class="md-nav__link">
+      <a href="../../kws_docs/data/" class="md-nav__link">
         
   
   
@@ -984,7 +919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/train/" class="md-nav__link">
+      <a href="../../kws_docs/train/" class="md-nav__link">
         
   
   
@@ -1007,7 +942,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/evaluate/" class="md-nav__link">
+      <a href="../../kws_docs/evaluate/" class="md-nav__link">
         
   
   
@@ -1030,7 +965,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/export/" class="md-nav__link">
+      <a href="../../kws_docs/export/" class="md-nav__link">
         
   
   
@@ -1053,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/kws_docs/demo/" class="md-nav__link">
+      <a href="../../kws_docs/demo/" class="md-nav__link">
         
   
   
@@ -1122,7 +1057,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id/" class="md-nav__link">
+      <a href="../../id/" class="md-nav__link">
         
   
   
@@ -1145,7 +1080,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/introduction/" class="md-nav__link">
+      <a href="../../id_docs/introduction/" class="md-nav__link">
         
   
   
@@ -1168,7 +1103,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/data/" class="md-nav__link">
+      <a href="../../id_docs/data/" class="md-nav__link">
         
   
   
@@ -1191,7 +1126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/train/" class="md-nav__link">
+      <a href="../../id_docs/train/" class="md-nav__link">
         
   
   
@@ -1214,7 +1149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/evaluate/" class="md-nav__link">
+      <a href="../../id_docs/evaluate/" class="md-nav__link">
         
   
   
@@ -1237,7 +1172,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/export/" class="md-nav__link">
+      <a href="../../id_docs/export/" class="md-nav__link">
         
   
   
@@ -1260,7 +1195,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/id_docs/demo/" class="md-nav__link">
+      <a href="../../id_docs/demo/" class="md-nav__link">
         
   
   
@@ -1336,7 +1271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../datasets/corpora/" class="md-nav__link">
+      <a href="../../../datasets/corpora/" class="md-nav__link">
         
   
   
@@ -1359,7 +1294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../datasets/byod/" class="md-nav__link">
+      <a href="../../../datasets/byod/" class="md-nav__link">
         
   
   
@@ -1427,7 +1362,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/crnn/" class="md-nav__link">
+      <a href="../../../models/crnn/" class="md-nav__link">
         
   
   
@@ -1450,7 +1385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/unet/" class="md-nav__link">
+      <a href="../../../models/unet/" class="md-nav__link">
         
   
   
@@ -1473,7 +1408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/byom/" class="md-nav__link">
+      <a href="../../../models/byom/" class="md-nav__link">
         
   
   
@@ -1503,7 +1438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../loss/" class="md-nav__link">
+      <a href="../../../loss/" class="md-nav__link">
         
   
   
@@ -1545,123 +1480,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#install-soundkit" class="md-nav__link">
+  <a href="#run-train-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      Install SoundKit
+      Run train Mode
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
+  <a href="#training-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Requirements
+      Training Parameters
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-soundkit-with-cli" class="md-nav__link">
+  <a href="#feature-extraction-parameters" class="md-nav__link">
     <span class="md-ellipsis">
-      Use SoundKit with CLI
+      Feature Extraction Parameters
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-speech-enhancement-se-workflow" class="md-nav__link">
+  <a href="#standardization" class="md-nav__link">
     <span class="md-ellipsis">
-      Example: Speech Enhancement (SE) Workflow
+      Standardization
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration-parameters-simplified" class="md-nav__link">
+  <a href="#model-configuration" class="md-nav__link">
     <span class="md-ellipsis">
-      Configuration Parameters (Simplified)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration Parameters (Simplified)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#top-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      Top-Level
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      Data (data)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-train" class="md-nav__link">
-    <span class="md-ellipsis">
-      Training (train)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#evaluation-evaluate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Evaluation (evaluate)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-export" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export (export)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demo-demo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Demo (demo)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overriding-config-values-via-omegaconf" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overriding Config Values via OmegaConf
+      Model Configuration
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-zoo" class="md-nav__link">
+  <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Zoo
+      Output
     </span>
   </a>
   
@@ -1686,163 +1552,173 @@
   
 
 
-<h1 id="quickstart-guide">Quickstart Guide</h1>
-<h2 id="install-soundkit"><strong>Install SoundKit</strong></h2>
-<div class="admonition note">
-<p class="admonition-title">SE Mode Selection</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">From GitHub (Development Mode)</label><label for="__tabbed_1_2">From PyPI</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/AmbiqAI/soundkit.git
-<span class="nb">cd</span><span class="w"> </span>soundkit
-python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">         </span><span class="c1"># Create virtual environment</span>
-<span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">    </span><span class="c1"># Activate it</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>soundkit
-</code></pre></div>
-</div>
-</div>
-</div>
-</div>
+<h1 id="training">Training</h1>
+<p>This page describes how to train a Speech Enhancement (SE) model using the <code>soundkit</code> CLI. You can customize the architecture, feature extraction, loss functions, and learning rate schedule via the configuration YAML file.</p>
 <hr />
-<h2 id="requirements"><strong>Requirements</strong></h2>
-<ul>
-<li>Python  <strong>3.10</strong></li>
-</ul>
-<p><strong>Optional (for EVB demo support):</strong></p>
-<ul>
-<li><a href="https://developer.arm.com/downloads/-/gnu-rm">Arm GNU Toolchain</a>  <strong>12.2</strong></li>
-<li><a href="https://www.segger.com/downloads/jlink/">Segger J-Link</a>  <strong>7.92</strong></li>
-</ul>
+<h2 id="run-train-mode">Run <code>train</code> Mode</h2>
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>your_config.yaml
+</code></pre></div>
+<p>This command starts training using the provided configuration, including TFRecord input, feature extraction settings, and model architecture.</p>
+<p>To monitor training progress in real-time, open a new terminal and launch TensorBoard:</p>
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--tensorboard<span class="w"> </span>-c<span class="w"> </span>your_config.yaml
+</code></pre></div>
+<p>This will open TensorBoard with logs from the specified training run. Visit http://localhost:6006 in your browser to view metrics and visualizations.</p>
 <hr />
-<h2 id="use-soundkit-with-cli"><strong>Use SoundKit with CLI</strong></h2>
-<p>SoundKit provides a unified CLI for handling various ML tasks.</p>
-<div class="admonition note">
-<p class="admonition-title">Syntax</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>--task<span class="w"> </span><span class="o">[</span>TASK<span class="o">]</span><span class="w"> </span>--mode<span class="w"> </span><span class="o">[</span>MODE<span class="o">]</span><span class="w"> </span>--config<span class="w"> </span><span class="o">[</span>CONFIG<span class="o">]</span>
-</code></pre></div>
-</div>
-<ul>
-<li><strong>TASK</strong>  One of: <code>se</code>, <code>vad</code>, <code>kws</code>, <code>id</code>  </li>
-<li><strong>MODE</strong>  One of: <code>data</code>, <code>train</code>, <code>evaluate</code>, <code>export</code>, <code>demo</code>  </li>
-<li><strong>CONFIG</strong>  Path to your YAML config</li>
-</ul>
+<h2 id="training-parameters">Training Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>initial_lr</code></td>
+<td>Initial learning rate for the optimizer. Uses cosine decay schedule</td>
+</tr>
+<tr>
+<td><code>batchsize</code></td>
+<td>Mini-batch size used during training</td>
+</tr>
+<tr>
+<td><code>epochs</code></td>
+<td>Total number of training epochs</td>
+</tr>
+<tr>
+<td><code>warmup_epochs</code></td>
+<td>Number of warm-up epochs for linear learning rate ramp-up</td>
+</tr>
+<tr>
+<td><code>epoch_loaded</code></td>
+<td>You can continue to train your model if your training procedure was interrupted for any reason. One of: <br>• <code>random</code>: start from scratch <br>• <code>latest</code>: resume from last checkpoint <br>• <code>best</code>: resume from best-performing checkpoint <br>• <code>&lt;int&gt;</code>: resume from a specific epoch</td>
+</tr>
+<tr>
+<td><code>loss_function.type</code></td>
+<td>Loss function type: <a href="../../../loss/">mse</a> or <a href="../../../loss/">compressed_mse</a></td>
+</tr>
+<tr>
+<td><code>loss_function.params.exp</code></td>
+<td>Exponent for <a href="../../../loss/">compressed_mse</a>  (e.g., 0.6)</td>
+</tr>
+<tr>
+<td><code>loss_function.params.eps</code></td>
+<td>Epsilon to avoid division by zero in magnitude computation (see <a href="../../../loss/">compressed_mse</a>)</td>
+</tr>
+<tr>
+<td><code>path.checkpoint_dir</code></td>
+<td>Path to save model checkpoints</td>
+</tr>
+<tr>
+<td><code>path.tensorboard_dir</code></td>
+<td>Path to save TensorBoard logs</td>
+</tr>
+<tr>
+<td><code>num_lookahead</code></td>
+<td>Lookahead frames used during training (0 for causal models)</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="example-speech-enhancement-se-workflow"><strong>Example: Speech Enhancement (SE) Workflow</strong></h2>
-<div class="admonition note">
-<p class="admonition-title">Common CLI Usage</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><input id="__tabbed_2_5" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Data</label><label for="__tabbed_2_2">Train</label><label for="__tabbed_2_3">Evaluate</label><label for="__tabbed_2_4">Export</label><label for="__tabbed_2_5">Demo</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>data<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
+<h2 id="feature-extraction-parameters">Feature Extraction Parameters</h2>
+<div class="highlight"><pre><span></span><code><span class="nt">feature</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">frame_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">480</span>
+<span class="w">  </span><span class="nt">hop_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">160</span>
+<span class="w">  </span><span class="nt">fft_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mel</span>
+<span class="w">  </span><span class="nt">bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">72</span>
 </code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-<p>Open TensorBoard in another terminal:</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--tensorboard<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-<p>Visit <a href="http://localhost:6006">http://localhost:6006</a></p>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>evaluate<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>evb<span class="w"> </span><span class="c1"># for amibiq evb deployment</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># for pc deployment</span>
-</code></pre></div>
-</div>
-</div>
-</div>
-</div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>Feature type: <code>mel</code>, <code>logpsec</code>, or <code>hybrid</code></td>
+</tr>
+<tr>
+<td><code>bins</code></td>
+<td>Number of mel bins or FFT bins</td>
+</tr>
+<tr>
+<td><code>frame_size</code></td>
+<td>Window size in samples</td>
+</tr>
+<tr>
+<td><code>hop_size</code></td>
+<td>Hop length in samples</td>
+</tr>
+<tr>
+<td><code>fft_size</code></td>
+<td>FFT length used for STFT</td>
+</tr>
+</tbody>
+</table>
+<p>These settings must match those used during TFRecord generation.</p>
 <hr />
-<h2 id="configuration-parameters-simplified">Configuration Parameters (Simplified)</h2>
-<p>Understand key settings in your SoundKit YAML config for SE tasks:</p>
-<h3 id="top-level"><strong>Top-Level</strong></h3>
-<ul>
-<li><code>name</code>: Name of the experiment (used in folder names)</li>
-<li><code>project</code>: Task type, e.g., <code>se</code>, <code>kws</code>, <code>vad</code>, <code>id</code></li>
-<li><code>job_dir</code>: Where outputs (models, logs) are saved</li>
-</ul>
-<h3 id="data-data"><strong>Data (<code>data</code>)</strong></h3>
-<ul>
-<li><code>path_tfrecord</code>: Where TFRecords are stored</li>
-<li><code>corpora</code>: List of datasets (type: <code>speech</code>, <code>noise</code>, <code>reverb</code>)</li>
-<li><code>snr_dbs</code>: List of SNR values for noise mixing (e.g., <code>[0, 5, 10]</code>)</li>
-<li><code>target_length_in_secs</code>: Length of each audio clip (e.g., <code>5</code>)</li>
-<li><code>reverb_prob</code>: Probability to apply reverb</li>
-<li><code>min_amp</code>/<code>max_amp</code>: Controls audio amplitude range</li>
-<li><code>signal.sampling_rate</code>: Sampling rate (e.g., <code>16000</code>)</li>
-</ul>
-<h3 id="training-train"><strong>Training (<code>train</code>)</strong></h3>
-<ul>
-<li><code>initial_lr</code>: Learning rate</li>
-<li><code>batchsize</code>: Batch size</li>
-<li><code>epochs</code>: Total number of epochs</li>
-<li><code>loss_function</code>: Type of loss and its parameters (e.g., <code>mrl_mse</code>)</li>
-<li><code>feature</code>: Feature extraction settings (e.g., <code>type</code>, <code>frame_size</code>)</li>
-<li><code>model.config_file</code>: Model architecture YAML (e.g., <code>config_crnn.yaml</code>)</li>
-</ul>
-<h3 id="evaluation-evaluate"><strong>Evaluation (<code>evaluate</code>)</strong></h3>
-<ul>
-<li><code>data.dir</code>: Path to evaluation audio samples</li>
-<li><code>data.files</code>: List of test audio files</li>
-<li><code>result_folder</code>: Where results are saved</li>
-</ul>
-<h3 id="export-export"><strong>Export (<code>export</code>)</strong></h3>
-<ul>
-<li><code>tflite_dir</code>: Exported model path (TFLite format)</li>
-<li><code>epoch_loaded</code>: Which model checkpoint to export</li>
-</ul>
-<h3 id="demo-demo"><strong>Demo (<code>demo</code>)</strong></h3>
-<ul>
-<li><code>platform</code>: <code>pc</code> or <code>evb</code> (Evaluation Board)</li>
-<li><code>evb_dir</code>: Output directory for EVB firmware</li>
-<li><code>filename</code>: Name of generated firmware</li>
-<li><code>param_struct_name</code>: Struct name for exported parameters</li>
-</ul>
+<h2 id="standardization">Standardization</h2>
+<div class="highlight"><pre><span></span><code><span class="nt">standardization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<p>If enabled, mean and variance normalization is applied to features during training.</p>
 <hr />
-<h2 id="overriding-config-values-via-omegaconf"><strong>Overriding Config Values via OmegaConf</strong></h2>
-<p>SoundKit uses <a href="https://omegaconf.readthedocs.io/">OmegaConf</a> for configuration management. You can override any value in the config file <strong>directly from the CLI</strong> using <code>key=value</code> syntax (dot notation).</p>
-<p><strong>Example: Change platform to <code>evb</code> at runtime</strong></p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>evb
+<h2 id="model-configuration">Model Configuration</h2>
+<p>Specify the architecture using a YAML file:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">config_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./soundkit/models/arch_configs</span>
+<span class="w">  </span><span class="nt">config_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config_crnn.yaml</span>
 </code></pre></div>
-<p><strong>Example: Override training batch size</strong></p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>train.batchsize<span class="o">=</span><span class="m">64</span>
+<p><strong><code>config_crnn.yaml</code></strong> will configure your NN:</p>
+<details class="example">
+<summary><code>./soundkit/models/arch_configs/config_simple_crnn.yaml</code></summary>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">crnn</span>
+
+<span class="nt">units</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+
+<span class="nt">len_time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+
+<span class="nt">layer_configs</span><span class="p">:</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dropout</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">rate</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">conv2d</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">filters</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${units}</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">kernel_size</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;${len_time}&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">72</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">strides</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">activation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">relu</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lstm</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${units}</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fc</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${units}</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">activation</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">relu</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fc</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${units}</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">activation</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">relu</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fc</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">units</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">257</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">activation</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sigmoid</span>
 </code></pre></div>
-<h2 id="model-zoo"><strong>Model Zoo</strong></h2>
-<p>You can directly try on already trained model on your PC.</p>
+</details>
+<p>This allows switching between CRNN, UNet, or other registered architectures. To register your own NN architecture, see <a href="../../../models/byom/">Bring-Your-Own-Model (BYOM)</a></p>
+<hr />
+<h2 id="output">Output</h2>
+<p>After training:</p>
 <ul>
-<li>
-<p>se:</p>
-<p><div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># crnn</span>
-<span class="c1"># or</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se/se_unet.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># unet</span>
-</code></pre></div>
-- vad</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/vad/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span>
-</code></pre></div>
-</li>
-<li>
-<p>kws</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>kws<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/kws/kws.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div>
-</li>
-<li>
-<p>id
-    <div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>id<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/id/id.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div></p>
-</li>
+<li>Model checkpoints will be saved to <code>checkpoint_root</code></li>
+<li>Training logs will be available in TensorBoard (<code>tensorboard_dir</code>)</li>
+<li>You can evaluate or export the model using the same <code>name</code> and <code>epoch_loaded</code> settings</li>
 </ul>
+<p>To visualize training:</p>
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--tensorboard<span class="w"> </span>-c<span class="w"> </span>your_config.yaml
+</code></pre></div>
 
 
 
@@ -1891,10 +1767,10 @@ soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </s
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

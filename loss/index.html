@@ -9,10 +9,8 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../models/byom/">
       
-      
-        <link rel="next" href="../tasks/se/">
       
       
       <link rel="icon" href="../assets/favicon.ico">
@@ -20,7 +18,7 @@
     
     
       
-        <title>Quickstart - SoundKit</title>
+        <title>Loss Functions - SoundKit</title>
       
     
     
@@ -62,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart-guide" class="md-skip">
+        <a href="#mean-squared-error-mse" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              Loss Functions
             
           </span>
         </div>
@@ -235,32 +233,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Quickstart
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -271,149 +247,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-soundkit" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install SoundKit
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Requirements
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-soundkit-with-cli" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use SoundKit with CLI
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-speech-enhancement-se-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example: Speech Enhancement (SE) Workflow
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-parameters-simplified" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration Parameters (Simplified)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration Parameters (Simplified)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#top-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      Top-Level
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      Data (data)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-train" class="md-nav__link">
-    <span class="md-ellipsis">
-      Training (train)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#evaluation-evaluate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Evaluation (evaluate)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-export" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export (export)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demo-demo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Demo (demo)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overriding-config-values-via-omegaconf" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overriding Config Values via OmegaConf
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#model-zoo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Model Zoo
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1500,10 +1333,19 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../loss/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1514,6 +1356,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -1538,137 +1381,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-soundkit" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install SoundKit
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Requirements
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-soundkit-with-cli" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use SoundKit with CLI
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-speech-enhancement-se-workflow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example: Speech Enhancement (SE) Workflow
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-parameters-simplified" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration Parameters (Simplified)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration Parameters (Simplified)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#top-level" class="md-nav__link">
-    <span class="md-ellipsis">
-      Top-Level
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      Data (data)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#training-train" class="md-nav__link">
-    <span class="md-ellipsis">
-      Training (train)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#evaluation-evaluate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Evaluation (evaluate)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-export" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export (export)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demo-demo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Demo (demo)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overriding-config-values-via-omegaconf" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overriding Config Values via OmegaConf
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#model-zoo" class="md-nav__link">
-    <span class="md-ellipsis">
-      Model Zoo
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1686,163 +1398,64 @@
   
 
 
-<h1 id="quickstart-guide">Quickstart Guide</h1>
-<h2 id="install-soundkit"><strong>Install SoundKit</strong></h2>
-<div class="admonition note">
-<p class="admonition-title">SE Mode Selection</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">From GitHub (Development Mode)</label><label for="__tabbed_1_2">From PyPI</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/AmbiqAI/soundkit.git
-<span class="nb">cd</span><span class="w"> </span>soundkit
-python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">         </span><span class="c1"># Create virtual environment</span>
-<span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">    </span><span class="c1"># Activate it</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>soundkit
-</code></pre></div>
-</div>
-</div>
-</div>
-</div>
+<h1 id="mean-squared-error-mse">Mean Squared Error (MSE)</h1>
+<p>The <strong>Mean Squared Error</strong> is a commonly used loss function for regression tasks. It penalizes the squared difference between predictions and targets:</p>
+<div class="arithmatex">\[
+\text{MSE}(\mathbf{x}, \mathbf{y}) = \sum_i (x_i - y_i)^2
+\]</div>
+<p>This loss assumes a linear scale and gives more weight to larger errors.</p>
 <hr />
-<h2 id="requirements"><strong>Requirements</strong></h2>
+<h1 id="compressed-mean-squared-error-compressed-mse">Compressed Mean Squared Error (Compressed MSE)</h1>
+<p>The <strong>Compressed MSE</strong> introduces a power-law transformation to better match perceptual sensitivity or improve convergence during training. The input values are compressed by a fractional exponent before computing the squared error:</p>
+<div class="arithmatex">\[
+\text{Compressed MSE}(\mathbf{x}, \mathbf{y}, \epsilon) = \sum_i \left((x_i+\epsilon)^r - (y_i+\epsilon)^r \right)^2
+\]</div>
+<p>where:</p>
 <ul>
-<li>Python  <strong>3.10</strong></li>
+<li><span class="arithmatex">\(x_i\)</span> and <span class="arithmatex">\(y_i\)</span> are real and &gt; 0 (e.g., clean and noisy amplitudes of a spectrogram)  </li>
+<li><span class="arithmatex">\(\epsilon\)</span> is a small number to avoid singularities during gradient descent  </li>
+<li><span class="arithmatex">\(0 &lt; r \leq 1\)</span>  </li>
+<li><span class="arithmatex">\(r &lt; 1\)</span> applies compression to reduce the influence of high-magnitude values</li>
 </ul>
-<p><strong>Optional (for EVB demo support):</strong></p>
-<ul>
-<li><a href="https://developer.arm.com/downloads/-/gnu-rm">Arm GNU Toolchain</a>  <strong>12.2</strong></li>
-<li><a href="https://www.segger.com/downloads/jlink/">Segger J-Link</a>  <strong>7.92</strong></li>
-</ul>
+<p>This loss is particularly useful in speech enhancement or audio applications where human perception is non-linear.</p>
 <hr />
-<h2 id="use-soundkit-with-cli"><strong>Use SoundKit with CLI</strong></h2>
-<p>SoundKit provides a unified CLI for handling various ML tasks.</p>
-<div class="admonition note">
-<p class="admonition-title">Syntax</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>--task<span class="w"> </span><span class="o">[</span>TASK<span class="o">]</span><span class="w"> </span>--mode<span class="w"> </span><span class="o">[</span>MODE<span class="o">]</span><span class="w"> </span>--config<span class="w"> </span><span class="o">[</span>CONFIG<span class="o">]</span>
-</code></pre></div>
-</div>
+<h1 id="cross-entropy-loss">Cross Entropy Loss</h1>
+<p>The <strong>Cross Entropy Loss</strong> is a standard loss function for classification tasks. It measures the dissimilarity between the predicted probability distribution and the true distribution:</p>
+<div class="arithmatex">\[
+\text{CrossEntropy}(\mathbf{p}, \mathbf{y}) = - \sum_i y_i \log(p_i)
+\]</div>
+<p>where:</p>
 <ul>
-<li><strong>TASK</strong>  One of: <code>se</code>, <code>vad</code>, <code>kws</code>, <code>id</code>  </li>
-<li><strong>MODE</strong>  One of: <code>data</code>, <code>train</code>, <code>evaluate</code>, <code>export</code>, <code>demo</code>  </li>
-<li><strong>CONFIG</strong>  Path to your YAML config</li>
+<li><span class="arithmatex">\(\mathbf{p}\)</span> is the vector of predicted probabilities (output of softmax)  </li>
+<li><span class="arithmatex">\(\mathbf{y}\)</span> is the one-hot encoded ground truth vector  </li>
+<li>The sum runs over all classes <span class="arithmatex">\(i\)</span></li>
 </ul>
-<hr />
-<h2 id="example-speech-enhancement-se-workflow"><strong>Example: Speech Enhancement (SE) Workflow</strong></h2>
-<div class="admonition note">
-<p class="admonition-title">Common CLI Usage</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><input id="__tabbed_2_5" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Data</label><label for="__tabbed_2_2">Train</label><label for="__tabbed_2_3">Evaluate</label><label for="__tabbed_2_4">Export</label><label for="__tabbed_2_5">Demo</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>data<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-<p>Open TensorBoard in another terminal:</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>--tensorboard<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-<p>Visit <a href="http://localhost:6006">http://localhost:6006</a></p>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>evaluate<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-c<span class="w"> </span>configs/se.yaml
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>evb<span class="w"> </span><span class="c1"># for amibiq evb deployment</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># for pc deployment</span>
-</code></pre></div>
-</div>
-</div>
-</div>
-</div>
-<hr />
-<h2 id="configuration-parameters-simplified">Configuration Parameters (Simplified)</h2>
-<p>Understand key settings in your SoundKit YAML config for SE tasks:</p>
-<h3 id="top-level"><strong>Top-Level</strong></h3>
+<p>Cross Entropy is minimized when the predicted probability for the correct class is 1 and all others are 0. It strongly penalizes confident but incorrect predictions.</p>
+<h1 id="focal-loss">Focal Loss</h1>
+<p>The <strong>Focal Loss</strong> is designed to address class imbalance in classification tasks by down-weighting easy examples and focusing training on hard negatives:</p>
+<div class="arithmatex">\[
+\text{Focal Loss}(p_t) = -\alpha_t\,(1 - p_t)^\gamma\,\log(p_t)
+\]</div>
+<p>where:</p>
 <ul>
-<li><code>name</code>: Name of the experiment (used in folder names)</li>
-<li><code>project</code>: Task type, e.g., <code>se</code>, <code>kws</code>, <code>vad</code>, <code>id</code></li>
-<li><code>job_dir</code>: Where outputs (models, logs) are saved</li>
+<li><span class="arithmatex">\(p_t\)</span> is the model's estimated probability for the true class  </li>
+<li><span class="arithmatex">\(\alpha_t\)</span> is a balancing factor to address class imbalance (optional)  </li>
+<li><span class="arithmatex">\(\gamma \geq 0\)</span> is the focusing parameter: higher values of <span class="arithmatex">\(\gamma\)</span> focus more on hard, misclassified examples</li>
 </ul>
-<h3 id="data-data"><strong>Data (<code>data</code>)</strong></h3>
-<ul>
-<li><code>path_tfrecord</code>: Where TFRecords are stored</li>
-<li><code>corpora</code>: List of datasets (type: <code>speech</code>, <code>noise</code>, <code>reverb</code>)</li>
-<li><code>snr_dbs</code>: List of SNR values for noise mixing (e.g., <code>[0, 5, 10]</code>)</li>
-<li><code>target_length_in_secs</code>: Length of each audio clip (e.g., <code>5</code>)</li>
-<li><code>reverb_prob</code>: Probability to apply reverb</li>
-<li><code>min_amp</code>/<code>max_amp</code>: Controls audio amplitude range</li>
-<li><code>signal.sampling_rate</code>: Sampling rate (e.g., <code>16000</code>)</li>
-</ul>
-<h3 id="training-train"><strong>Training (<code>train</code>)</strong></h3>
-<ul>
-<li><code>initial_lr</code>: Learning rate</li>
-<li><code>batchsize</code>: Batch size</li>
-<li><code>epochs</code>: Total number of epochs</li>
-<li><code>loss_function</code>: Type of loss and its parameters (e.g., <code>mrl_mse</code>)</li>
-<li><code>feature</code>: Feature extraction settings (e.g., <code>type</code>, <code>frame_size</code>)</li>
-<li><code>model.config_file</code>: Model architecture YAML (e.g., <code>config_crnn.yaml</code>)</li>
-</ul>
-<h3 id="evaluation-evaluate"><strong>Evaluation (<code>evaluate</code>)</strong></h3>
-<ul>
-<li><code>data.dir</code>: Path to evaluation audio samples</li>
-<li><code>data.files</code>: List of test audio files</li>
-<li><code>result_folder</code>: Where results are saved</li>
-</ul>
-<h3 id="export-export"><strong>Export (<code>export</code>)</strong></h3>
-<ul>
-<li><code>tflite_dir</code>: Exported model path (TFLite format)</li>
-<li><code>epoch_loaded</code>: Which model checkpoint to export</li>
-</ul>
-<h3 id="demo-demo"><strong>Demo (<code>demo</code>)</strong></h3>
-<ul>
-<li><code>platform</code>: <code>pc</code> or <code>evb</code> (Evaluation Board)</li>
-<li><code>evb_dir</code>: Output directory for EVB firmware</li>
-<li><code>filename</code>: Name of generated firmware</li>
-<li><code>param_struct_name</code>: Struct name for exported parameters</li>
-</ul>
-<hr />
-<h2 id="overriding-config-values-via-omegaconf"><strong>Overriding Config Values via OmegaConf</strong></h2>
-<p>SoundKit uses <a href="https://omegaconf.readthedocs.io/">OmegaConf</a> for configuration management. You can override any value in the config file <strong>directly from the CLI</strong> using <code>key=value</code> syntax (dot notation).</p>
-<p><strong>Example: Change platform to <code>evb</code> at runtime</strong></p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>evb
-</code></pre></div>
-<p><strong>Example: Override training batch size</strong></p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>train.batchsize<span class="o">=</span><span class="m">64</span>
-</code></pre></div>
-<h2 id="model-zoo"><strong>Model Zoo</strong></h2>
-<p>You can directly try on already trained model on your PC.</p>
+<p>Focal Loss reduces the impact of easily classified samples (<span class="arithmatex">\(p_t \rightarrow 1\)</span>), enabling the model to concentrate more on difficult or misclassified examples. This mechanism is especially useful in highly imbalanced classification problems.</p>
+<p><strong>Example: Keyword Spotting (KWS)</strong>:
+The dataset may contain very few positive samples (i.e., actual keywords) compared to a large number of negative (non-keyword) samples. A naive neural network could achieve high accuracy by simply predicting the negative class most of the time, due to the class imbalance.</p>
+<p>A common approach to mitigating this is to apply a class weighting factor (such as <span class="arithmatex">\(\alpha_t\)</span>) to give more importance to the minority class. However, Focal Loss provides an automatic mechanism by leveraging the model’s own confidence:</p>
 <ul>
 <li>
-<p>se:</p>
-<p><div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># crnn</span>
-<span class="c1"># or</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/se/se_unet.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># unet</span>
-</code></pre></div>
-- vad</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/vad/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span>
-</code></pre></div>
+<p>When a prediction is correct and confident (e.g., <span class="arithmatex">\(p_t = 0.99\)</span>), the modulating factor <span class="arithmatex">\((1 - p_t)^\gamma\)</span>, spontaneously, becomes very small (e.g., <span class="arithmatex">\((1 - 0.99)^2 = 0.0001\)</span> when <span class="arithmatex">\(\gamma = 2\)</span>), greatly reducing the loss contribution from this easy example.</p>
 </li>
 <li>
-<p>kws</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>kws<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/kws/kws.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div>
-</li>
-<li>
-<p>id
-    <div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>id<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>configs/id/id.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div></p>
+<p>In contrast, incorrect or uncertain predictions (low <span class="arithmatex">\(p_t\)</span>) contribute significantly more to the loss, guiding the model to focus its learning effort where it is needed most.</p>
 </li>
 </ul>
+<p>This dynamic scaling of the loss helps prevent the model from being overwhelmed by the majority class and improves performance on underrepresented classes without manual tuning.</p>
+<hr />
 
 
 
