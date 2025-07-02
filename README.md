@@ -71,7 +71,7 @@ SoundKit supports three core **audio tasks**, each with reference pipelines for 
 - **SE (Sound Enhancement)**: Speech enhancemnt.
 - **VAD (Voice Activity Detection)**: Detect presence or absence of human voice in audio streams.
 - **KWS (Keyword Spotting)**: Recognize short spoken keywords, such as wake words.
-
+- **ID (Speaker Identification)**: Recognize speaker voice.
 Custom tasks can be implemented using the task registry.
 
 ---

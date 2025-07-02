@@ -17,35 +17,29 @@ soundkit -t id -m evaluate -c configs/id/id.yaml
 | Parameter | Description |
 |-----------|-------------|
 | `epoch_loaded` | Model checkpoint to load for evaluation. Use `best`, `latest`, or a specific epoch number |
+| `threshold_id` ( in [0,1]) | 0.8 is suggested. the threshold to determine whether the enroll person is verified
 | `data.dir` | Path to the folder containing WAV files for evaluation |
-| `data.files` | List of WAV filenames (relative to `data.dir`) for enrollment and testing |
-| `result_folder` | Directory to save evaluation outputs, including scores, match results, and visualizations |
+| `data.reg_files` | List of WAV filenames (relative to `data.dir`) for enrollment |
+| `data.test_files` | List of WAV filenames (relative to `data.dir`) for testing |
 
 Example:
 
 ```yaml
 evaluate:
   epoch_loaded: best
-  data:
-    dir: ./wavs/vad/test_wavs
-    files: [rpc_audio_raw.wav, speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
-  result_folder: ./soundkit/tasks/id/test_results/crnn100_speakerid
+
+  threshold_id: 0.8 # threshold for id verification
+
+  data: 
+    dir: "./wavs/id/test_wavs"
+    reg_files: [registration1.wav, registration2.wav, registration3.wav, registration4.wav] # list of registration files
+    test_files: [test1.wav, test2.wav] # list of test files to evaluate
+    
 ```
-
+In the registration phase, 4 utterances for one person are recorded in **registration1-4.wav** . then NN will verify if **test1-2.wav** is belonging to this person.  
 ---
 
-## 📈 Output
 
-Running the evaluation step will generate:
-
-- Embeddings and similarity scores between enrollment and test utterances
-- Decision thresholds and match/no-match outputs
-- Metrics such as **Equal Error Rate (EER)**, **ROC AUC**, and **confusion matrices**
-- Visuals for similarity heatmaps and threshold calibration (if configured)
-
-> 📌 Ensure the `id.yaml` configuration matches the model architecture and feature settings used during training and export.
-
----
 
 ## 🛠 Advanced Tips
 

@@ -228,13 +228,14 @@ def demo_pc(params: SKTaskParams):
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
+
     feat_extractor = FeatureExtractor_np(
         feat_type=params.train.feature.type,
         frame_len=params.train.feature.frame_size,
         hop_len=params.train.feature.hop_size,
         fft_len=params.train.feature.fft_size,
         sampling_rate=params.data.signal.sampling_rate,
-        mel_bins=params.train.feature.bins,
+        mel_bins=params.train.feature.n_mels,
     )
     dim_feat = feat_extractor.dim_feat
     hop_size = params.train.feature.hop_size

@@ -122,6 +122,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
       tflite_dir: ${job_dir}/tflite
 
     demo:
+      platform: pc
       epoch_loaded: best
       tflite_dir: ${job_dir}/tflite
       evb_dir: ${job_dir}/evb
@@ -136,20 +137,20 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         Download and prepare the training and validation data by generating TFRecords from raw audio corpora.
 
         ```bash
-        soundkit -t se -m data -c configs/se.yaml
+        soundkit -t se -m data -c configs/se/se.yaml
         ```
         See [Data](./se_docs/data.md) in detail.
     === "Train"
         Train the speech enhancement model using the specified configuration and dataset.
 
         ```bash
-        soundkit -t se -m train -c configs/se.yaml
+        soundkit -t se -m train -c configs/se/se.yaml
         ```
 
         To monitor training progress in real-time, open a new terminal and launch TensorBoard:
     
         ```bash
-        soundkit -t se -m train --tensorboard -c configs/se.yaml
+        soundkit -t se -m train --tensorboard -c configs/se/se.yaml
         ```
         This will open TensorBoard with logs from the specified training run. Visit http://localhost:6006 in your browser to view metrics and visualizations.
 
@@ -159,7 +160,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         Evaluate the model on a test set and compute metrics such as SI-SDR, STOI, PESQ, or DNSMOS.
 
         ```bash
-        soundkit -t se -m evaluate -c configs/se.yaml
+        soundkit -t se -m evaluate -c configs/se/se.yaml
         ```
         See See [Evaluate](./se_docs/evaluate.md) in detail.
 
@@ -169,16 +170,18 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         Convert the trained model into formats suitable for embedded or web deployment (e.g., TFLite, C arrays).
 
         ```bash
-        soundkit -t se -m export -c configs/se.yaml
+        soundkit -t se -m export -c configs/se/se.yaml
         ```
         See [Export](./se_docs/export.md) in detail.
     === "Demo"
         Run real-time inference either on:
-        - A connected embedded development board (EVB), or  
-        - In-browser using WebUSB (Chrome-based browsers only)
-
+        - On your PC
+        - A connected embedded development board (EVB) via WebUSB
+        We suggest to use PC first for fast testing.
         ```bash
-        soundkit -t se -m demo -c configs/se.yaml
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc
+        # or
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb
         ```
         See [Demo](./se_docs/demo.md) in detail.
 ---

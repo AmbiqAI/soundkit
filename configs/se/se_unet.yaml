@@ -1,15 +1,15 @@
-name: unet_lookahead0
+name: unet_relu_noncausal_sep_specmel_th50
 project: se
 job_dir: ./soundkit/tasks/se
 
 data:
-  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 1000
-    val: 250
+    train: 10000
+    test: 2500
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
@@ -31,15 +31,15 @@ data:
   signal:
     sampling_rate: 16000
     dc_removal: true
-
+  
   debug: false
 
 train:
   initial_lr: 4e-4
   batchsize: 32
-  epochs: 150
+  epochs: 160
   warmup_epochs: 5
-  epoch_loaded: latest
+  epoch_loaded: random
   loss_function: {
     type: compressed_mse,
     params: {exp: 0.6, eps: 1e-8}
@@ -47,35 +47,40 @@ train:
   path:
     checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
     tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
-  num_lookahead: 0
-  feature:
+
+  num_lookahead: 1
+
+  feature: 
     frame_size: 480
     hop_size: 160
-    fft_size: 512 
-    type: logpspec
-    bins: 257
+    fft_size: 512
+    type: hybrid
+    bins_fft: 50
+    n_mels: 32
+
   standardization: true
   
   model:
     config_dir: ./soundkit/models/arch_configs
-    config_file: config_unet.yaml
-  
+    config_file: config_unet_relu_noncausal_sep_specmel_th50.yaml
+
   debug: false
 
 evaluate:
-  epoch_loaded: best
+  epoch_loaded: 151
 
   data: 
-  dir: "./wavs/se/test_wavs"
-  files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
-  result_folder: ${job_dir}/test_results/${name}
+    dir: "./wavs/se/test_wavs"
+    files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    result_folder: ${job_dir}/test_results/${name}
 
 export:
-  epoch_loaded: best
-  tflite_dir: ./soundkit/tasks/se/tflite
+  epoch_loaded: 151
+  tflite_dir: ${job_dir}/tflite
 
 demo:
-  epoch_loaded: best
-  tflite_dir: ./soundkit/tasks/se/tflite
-  evb_dir: ./soundkit/tasks/se/evb
+  epoch_loaded: 151
+  platform: evb # or pc
+  tflite_dir: ${job_dir}/tflite
+  evb_dir: ${job_dir}/evb_webusb
   pre_gain: 1

@@ -1,15 +1,15 @@
-name: se_nn_arch72_mel
+name: unet_relu_noncausal_sep_specmel_th50
 project: se
 job_dir: ./soundkit/tasks/se
 
 data:
-  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: val_tfrecord.csv 
+    train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 10000
-    val: 2500
+    test: 2500
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
@@ -31,40 +31,43 @@ data:
   signal:
     sampling_rate: 16000
     dc_removal: true
-
+  
   debug: false
 
 train:
   initial_lr: 4e-4
   batchsize: 32
-  epochs: 150
+  epochs: 160
   warmup_epochs: 5
-  epoch_loaded: latest
+  epoch_loaded: 0
   loss_function: {
     type: compressed_mse,
     params: {exp: 0.6, eps: 1e-8}
     }
   path:
-    checkpoint_dir: ./zoo/se/crnn/model_trained
+    checkpoint_dir: zoo/se/unet/model
     tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
-  num_lookahead: 0
+
+  num_lookahead: 1
 
   feature: 
     frame_size: 480
     hop_size: 160
     fft_size: 512
-    type: mel
-    bins: 72
+    type: hybrid
+    bins_fft: 50
+    n_mels: 32
+
   standardization: true
   
   model:
-    config_dir: ./zoo/se/crnn
+    config_dir: ./zoo/se/unet
     config_file: arch_config.yaml
-  
+
   debug: false
 
 evaluate:
-  epoch_loaded: 50
+  epoch_loaded: 0
 
   data: 
     dir: "./wavs/se/test_wavs"
@@ -72,11 +75,11 @@ evaluate:
     result_folder: ${job_dir}/test_results/${name}
 
 export:
-  epoch_loaded: 50
-  tflite_dir: ./soundkit/tasks/se/tflite
+  epoch_loaded: 0
+  tflite_dir: ${job_dir}/tflite
 
 demo:
-  epoch_loaded: 50
-  tflite_dir: ./soundkit/tasks/se/tflite
-  evb_dir: ./soundkit/tasks/se/evb_webusb
+  epoch_loaded: 0
+  tflite_dir: ${job_dir}/tflite
+  evb_dir: ${job_dir}/evb
   pre_gain: 1

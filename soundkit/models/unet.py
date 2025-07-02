@@ -109,6 +109,7 @@ class unet(tf.keras.Model):
     def call(
             self,
             inputs,
+            reset_input=tf.constant([0.0], dtype=tf.float32),
             # states=None,
             training=False):
         """ Forward pass"""

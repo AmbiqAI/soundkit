@@ -9,7 +9,7 @@ The dataset preparation process mixes clean speech with noise (and optional reve
 ## 🔧 **Run `data` Mode**
 
 ```bash
-soundkit -t se -m data -c your_config.yaml
+soundkit -t se -m data -c configs/se/se.yaml
 ```
 
 ---

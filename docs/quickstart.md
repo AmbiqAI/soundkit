@@ -168,3 +168,32 @@ soundkit -t se -m demo -c configs/se.yaml demo.platform=evb
 ```bash
 soundkit -t se -m train -c configs/se.yaml train.batchsize=64
 ```
+
+
+## **Model Zoo**
+
+You can directly try on already trained model on your PC.
+
+- se:
+
+    ```bash
+    soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # crnn
+    # or
+    soundkit -t se -m demo -c configs/se/se_unet.yaml demo.platform=pc # unet
+    ```
+- vad
+
+    ```bash
+    soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=pc 
+    ```
+
+- kws
+
+    ```bash
+    soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=pc
+    ```
+
+- id
+    ```bash
+    soundkit -t id -m demo -c configs/id/id.yaml demo.platform=pc
+    ```

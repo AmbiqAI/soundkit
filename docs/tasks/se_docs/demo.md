@@ -7,7 +7,7 @@ This page explains how to run a real-time **Speech Enhancement (SE)** demo using
 ## 🔧 Run `demo` Mode
 
 ```bash
-soundkit -t se -m demo -c your_config.yaml
+soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # or evb
 ```
 
 ## 🧾 Demo Parameters
@@ -24,6 +24,7 @@ Example:
 ```yaml
 demo:
 epoch_loaded: best
+platform: pc # or evb
 tflite_dir: ./soundkit/tasks/se/tflite
 evb_dir: ./soundkit/tasks/se/evb
 pre_gain: 1
@@ -33,43 +34,18 @@ pre_gain: 1
 
 ## 💻 Deployment Modes
 
+### 🔌 PC
+
+- Type
+    ```bash
+    soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # or evb
+    ```
+- A GUI will pop up. Click start to demo
 ### 🔌 Embedded Board (EVB)
-
-- Builds firmware from `evb_dir`
-- Deploys it via J-Link or USB
-- Streams audio in/out through onboard codec or USB interface
-
-Make sure:
-- Your board is connected and drivers are installed
-- You have required toolchains (e.g., GNU Arm, J-Link, Make)
-
+- Type
+    ```bash
+    soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb # or evb
+    ```
+- Open your browser on https://ambiqai.github.io/web-ble-dashboards/nnse-usb/
+- Switch raw or enhance audio via pressing Button-0 on EVB
 ---
-
-### 🌐 WebUSB Demo
-
-- Works in **Chrome-based browsers** only
-- Uses the `.tflite` model and in-browser audio I/O
-- Requires microphone permission
-
-To launch:
-
-1. Serve the `webusb/` directory (if applicable)
-2. Connect device via WebUSB
-3. Select model and run demo
-
-> ⚠️ WebUSB requires HTTPS or `localhost` and a compatible browser.
-
----
-
-## ✅ Output
-
-- Real-time audio enhancement
-- Optional debug logs, latency measurement, and visualization (if supported)
-
----
-
-## 🧠 Tips
-
-- Use `pre_gain` to boost or attenuate input volume if needed
-- Match `tflite_dir` and `epoch_loaded` with your exported model
-- Re-export if changes are made to model architecture or parameters
