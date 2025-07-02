@@ -124,11 +124,11 @@ def corpus_download(
             unzip_with_progress(target_path, dst_folder)
             if corpus == 'ESC-50':
                 shutil.copyfile(
-                    'data/ESC-50-master/non_speech.csv',
+                    'metadata/ESC-50-master/non_speech.csv',
                     'wavs/noise/ESC-50-master/non_speech.csv')
             else:
                 shutil.copyfile(
-                    'data/FSD50K/non_speech.csv',
+                    'metadata/FSD50K/non_speech.csv',
                     'wavs/noise/FSD50K/non_speech.csv')
 
         case 'rirs_noises':
