@@ -36,10 +36,10 @@ pyqt5 = "*"
 pyserial = "*"
 
 # Torch and related packages
-torch = { version = "*", source = "pytorch-cu118" }
-torchvision = { version = "*", source = "pytorch-cu118" }
-torchaudio = { version = "*", source = "pytorch-cu118" }
-torchmetrics = "*"
+torch = { version = "2.7.0+cu118", source = "pytorch-cu118" }
+torchvision = { version = "0.22.0+cu118", source = "pytorch-cu118" }
+torchaudio = { version = "2.7.0+cu118", source = "pytorch-cu118" }
+torchmetrics = "1.7.1"
 
 # ONNX Runtime
 onnxruntime-gpu = "*"

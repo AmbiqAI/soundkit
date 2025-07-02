@@ -1,14 +1,20 @@
 # Quickstart Guide
 
+
+## **Setup Virtual Environment**
+
+Its best to isolate your dependencies:
+
+```bash
+python -m venv .venv         # Create virtual environment
+source .venv/bin/activate    # Activate it
+```
+
+---
+
 ## **Install SoundKit**
 
 !!! note "SE Mode Selection"
-
-    === "From PyPI"
-
-        ```bash
-        pip install soundkit
-        ```
 
     === "From GitHub (Development Mode)"
 
@@ -17,7 +23,11 @@
         cd soundkit
         pip install -e .
         ```
+    === "From PyPI"
 
+        ```bash
+        pip install soundkit
+        ```
 ---
 
 ## **Requirements**
@@ -28,17 +38,6 @@
 
 - [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)  **12.2**
 - [Segger J-Link](https://www.segger.com/downloads/jlink/)  **7.92**
-
----
-
-## **Setup Virtual Environment**
-
-Its best to isolate your dependencies:
-
-```bash
-python -m venv .venv         # Create virtual environment
-source .venv/bin/activate    # Activate it (use `.venv\Scripts\activate` on Windows)
-```
 
 ---
 
