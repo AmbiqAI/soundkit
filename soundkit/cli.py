@@ -1,10 +1,32 @@
 import os
 import sys
+import subprocess
 import argparse
 from pathlib import Path
 from argdantic import ArgField, ArgParser
 from omegaconf import OmegaConf, DictConfig
 from .defines import SKTaskParams, SKMode
+def install_missing_packages():
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install",
+        "torch", "torchvision", "torchaudio",
+        "--index-url", "https://download.pytorch.org/whl/cu118"
+    ])
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install",
+        "torchmetrics", "librosa", "onnxruntime-gpu", "requests"
+    ])
+
+try:
+    import torch
+    import torchaudio
+    import torchmetrics
+except ImportError:
+    install_missing_packages()
+    import torch
+    import torchaudio
+    import torchmetrics
+
 from .tasks import TaskFactory
 
 # === Global to pass dotlist overrides ===
