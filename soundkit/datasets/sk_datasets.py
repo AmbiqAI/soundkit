@@ -5,6 +5,29 @@ import re
 import csv
 import json
 
+corpus2path_map= {
+    "train-clean-100": "wavs/LibriSpeech/train-clean-100",
+    "train-clean-360": "wavs/LibriSpeech/train-clean-360",
+    "dev-clean": "wavs/LibriSpeech/dev-clean",
+    "test-clean": "wavs/LibriSpeech/test-clean",
+    "thchs30": "wavs/data_thchs30",
+    "galaxy_train": "metadata/galaxy_train.csv",
+    "galaxy_val": "metadata/galaxy_val.csv",
+    "vad_train_clean_100": "wavs/LibriSpeech/train-clean-100",
+    "vad_train_clean_360": "wavs/LibriSpeech/train-clean-360",
+    "vad_train_other_500": "wavs/LibriSpeech/train-other-500",
+    "vad_dev_clean": "wavs/LibriSpeech/dev-clean",
+    "vad_thchs30": "wavs/data_thchs30",
+    "musan": "wavs/noise/musan",
+    "wham_noise": "wavs/noise/wham_noise",
+    "FSD50K": "wavs/noise/FSD50K",
+    "ESC-50-master": "wavs/noise/ESC-50-master",
+    "ESC-50": "wavs/noise/ESC-50-master",
+    "rirs_noises": "wavs/noise/RIRS_NOISES",
+}
+
+
+
 def load_wav_label_csv(lst: str, filter=None) -> list:
     """
     Load VAD data from a CSV file.
@@ -49,6 +72,10 @@ def load_train_clean_100(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
     return get_wavefiles("wavs/LibriSpeech/train-clean-100")
 
 
@@ -60,6 +87,10 @@ def load_train_clean_360(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
     return get_wavefiles("wavs/LibriSpeech/train-clean-360")
 
 
@@ -71,6 +102,11 @@ def load_dev_clean(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return get_wavefiles("wavs/LibriSpeech/dev-clean")
 
 
@@ -82,6 +118,11 @@ def load_test_clean(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return get_wavefiles("wavs/LibriSpeech/test-clean")
 
 def load_thchs30(corpus: str) -> dict:
@@ -92,6 +133,11 @@ def load_thchs30(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     train_list = get_wavefiles("wavs/data_thchs30/train")
     dev_list = get_wavefiles("wavs/data_thchs30/dev")
     return {"train": train_list, "val": dev_list}
@@ -105,6 +151,11 @@ def load_train_galaxy(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+
     return load_wav_label_csv('metadata/galaxy_train.csv')
 
 def load_val_galaxy(corpus: str) -> list:
@@ -115,6 +166,12 @@ def load_val_galaxy(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+
+
     return load_wav_label_csv('metadata/galaxy_val.csv')
 
 # for vad
@@ -126,6 +183,11 @@ def load_vad_train_clean_100(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return load_wav_label_csv('metadata/vad/libri_train_clean_100.csv')
 
 def load_vad_train_clean_360(corpus: str) -> list:
@@ -136,6 +198,11 @@ def load_vad_train_clean_360(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return load_wav_label_csv('metadata/vad/libri_train_clean_360.csv')
 
 def load_vad_train_other_500(corpus: str) -> list:
@@ -146,6 +213,11 @@ def load_vad_train_other_500(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return load_wav_label_csv('metadata/vad/libri_train_other_500.csv')
 
 
@@ -157,6 +229,11 @@ def load_vad_dev_clean(corpus: str) -> list:
     Returns:
         list: List of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     return load_wav_label_csv('metadata/vad/libri_dev_clean.csv')
 
 def load_vad_thchs30(corpus: str) -> dict:
@@ -167,6 +244,10 @@ def load_vad_thchs30(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
 
     train_list = load_wav_label_csv('metadata/vad/thchs30_train.csv')
     dev_list = load_wav_label_csv('metadata/vad/thchs30_dev.csv')
@@ -183,6 +264,12 @@ def load_wham_noise(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     files = {}
     files['train'] = get_wavefiles('wavs/noise/wham_noise/tr')
     files['val'] = get_wavefiles('wavs/noise/wham_noise/cv')
@@ -197,6 +284,12 @@ def load_fsd50k(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     with open('metadata/FSD50K/non_speech.csv', 'r') as f:
         lines = [line.strip() for line in f.readlines()]
     random.shuffle(lines)
@@ -212,6 +305,12 @@ def load_esc50(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
+
     with open('metadata/ESC-50-master/non_speech.csv', 'r') as f:
         lines = [line.strip() for line in f.readlines()]
     random.shuffle(lines)
@@ -227,6 +326,12 @@ def load_musan(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
+
     music = get_wavefiles('wavs/noise/musan/music')
     noise = get_wavefiles('wavs/noise/musan/noise')
     lines = music + noise
@@ -245,6 +350,11 @@ def load_rirs_noises(corpus: str) -> dict:
     Returns:
         dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
     """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
     all_files = get_wavefiles('wavs/noise/RIRS_NOISES')
     random.shuffle(all_files)
     split = len(all_files) // 5

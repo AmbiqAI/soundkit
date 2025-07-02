@@ -116,7 +116,7 @@ def corpus_download(
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
-        case 'ESC-50':
+        case 'ESC-50-master' | 'ESC-50':
             target_name = f'master.zip'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://github.com/karoldvl/ESC-50/archive/{target_name}'
