@@ -122,14 +122,9 @@ def corpus_download(
             url = f'https://github.com/karoldvl/ESC-50/archive/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
-            if corpus == 'ESC-50':
-                shutil.copyfile(
-                    'metadata/ESC-50-master/non_speech.csv',
-                    'wavs/noise/ESC-50-master/non_speech.csv')
-            else:
-                shutil.copyfile(
-                    'metadata/FSD50K/non_speech.csv',
-                    'wavs/noise/FSD50K/non_speech.csv')
+            shutil.copyfile(
+                'metadata/ESC-50-master/non_speech.csv',
+                'wavs/noise/ESC-50-master/non_speech.csv')
 
         case 'rirs_noises':
             target_name = f'{corpus}.zip'
