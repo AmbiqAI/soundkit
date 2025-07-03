@@ -13,10 +13,10 @@ corpus2path_map= {
     "thchs30": "wavs/data_thchs30",
     "galaxy_train": "metadata/galaxy_train.csv",
     "galaxy_val": "metadata/galaxy_val.csv",
-    "vad_train_clean_100": "wavs/LibriSpeech/train-clean-100",
-    "vad_train_clean_360": "wavs/LibriSpeech/train-clean-360",
-    "vad_train_other_500": "wavs/LibriSpeech/train-other-500",
-    "vad_dev_clean": "wavs/LibriSpeech/dev-clean",
+    "vad_train-clean-100": "wavs/LibriSpeech/train-clean-100",
+    "vad_train-clean-360": "wavs/LibriSpeech/train-clean-360",
+    "vad_train-other-500": "wavs/LibriSpeech/train-other-500",
+    "vad_dev-clean": "wavs/LibriSpeech/dev-clean",
     "vad_thchs30": "wavs/data_thchs30",
     "musan": "wavs/noise/musan",
     "wham_noise": "wavs/noise/wham_noise",
@@ -25,8 +25,6 @@ corpus2path_map= {
     "ESC-50": "wavs/noise/ESC-50-master",
     "rirs_noises": "wavs/noise/RIRS_NOISES",
 }
-
-
 
 def load_wav_label_csv(lst: str, filter=None) -> list:
     """
@@ -338,7 +336,6 @@ def load_musan(corpus: str) -> dict:
     random.shuffle(lines)
     split = len(lines) // 5
     return {"train": lines[split:], "val": lines[:split]}
-
 
 # === Reverb Corpus ===
 
