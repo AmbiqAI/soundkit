@@ -7,17 +7,17 @@ from .export import export
 from .demo import demo
 
 class IdTask(SKTask):
-    """SoundKit VAD Task"""
+    """SoundKit ID Task"""
 
     @staticmethod
     def description() -> str:
         return (
-            "This task is used to train, evaluate, and export vad models."
+            "This task is used to train, evaluate, and export id models."
         )
 
     @staticmethod
     def data(params: SKTaskParams):
-        """ Data preparation for vad task
+        """ Data preparation for id task
 
         Args:
             params (SKTaskParams): Task parameters
@@ -26,7 +26,7 @@ class IdTask(SKTask):
 
     @staticmethod
     def train(params: SKTaskParams):
-        """Train model for vad task
+        """Train model for id task
 
         Args:
             params (SKTaskParams): Task parameters
@@ -35,7 +35,7 @@ class IdTask(SKTask):
 
     @staticmethod
     def evaluate(params: SKTaskParams):
-        """Evaluate beat vad model
+        """Evaluate id model
 
         Args:
             params (SKTaskParams): Task parameters
@@ -44,7 +44,7 @@ class IdTask(SKTask):
 
     @staticmethod
     def export(params: SKTaskParams):
-        """Export model for vad task
+        """Export model for id task
 
         Args:
             params (SKTaskParams): Task parameters
@@ -53,7 +53,7 @@ class IdTask(SKTask):
 
     @staticmethod
     def demo(params: SKTaskParams):
-        """Run demo on vad task model
+        """Run demo on id task model
 
         Args:
             params (SKTaskParams): Task parameters

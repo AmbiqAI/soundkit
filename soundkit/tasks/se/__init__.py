@@ -7,7 +7,7 @@ from .export import export
 from .demo import demo
 
 class SeTask(SKTask):
-    """SoundKit Task"""
+    """SoundKit SE Task"""
 
     @staticmethod
     def description() -> str:
