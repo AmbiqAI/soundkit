@@ -130,7 +130,7 @@ def corpus_download(
             target_name = f'{corpus}.zip'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://www.openslr.org/resources/28/{target_name}'
-            # url_download(url, target_path )
+            url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
         case 'FSD50K':

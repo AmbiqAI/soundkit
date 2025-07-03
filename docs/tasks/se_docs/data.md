@@ -19,8 +19,8 @@ soundkit -t se -m data -c configs/se/se.yaml
 | Parameter | Description |
 |-----------|-------------|
 | `path_tfrecord` | Output directory to store generated TFRecords. Uses `${job_dir}/tfrecords` |
-| `tfrecord_datalist_name` | CSV file listing TFRecord shards for training and validation |
-| `num_samples_per_noise` | Number of samples generated per noise clip for `train` and `val` splits |
+| `tfrecord_datalist_name` | CSV file listing TFRecord shards for training and validation. The file is saved unter the directory of path_threcord |
+| `num_samples_per_noise` | Number of samples for clean speeches generated per type of noise for `train` and `val` splits |
 | `force_download` | If `true`, forces re-download of corpora |
 | `reverb_prob` | Probability of applying room reverb using impulse responses |
 | `num_processes` | Number of parallel processes used for synthesis |
@@ -28,6 +28,7 @@ soundkit -t se -m data -c configs/se/se.yaml
 | `target_length_in_secs` | Duration of each synthesized example (in seconds) |
 | `min_amp`, `max_amp` | Amplitude scaling range used to randomly scale synthesized signals |
 | `debug` | If `true`, enables additional logging for debugging |
+| `signal`| signal.sampling_rate: target sampling rate; dc_remove: applying dc removal for your training examples
 
 ---
 
@@ -87,5 +88,3 @@ Running the `data` mode will generate:
 
 - TFRecord files (e.g., `train-00001.tfrecord`) at `./soundkit/tasks/se/tfrecords`
 - CSV index files (`train_tfrecord.csv`, `val_tfrecord.csv`) referencing TFRecord shards
-
-These are required by the `train`, `evaluate`, and `export` steps.
