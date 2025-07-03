@@ -1539,11 +1539,11 @@
 </tr>
 <tr>
 <td><code>tfrecord_datalist_name</code></td>
-<td>CSV file listing TFRecord shards for training and validation</td>
+<td>CSV file listing TFRecord shards for training and validation. The file is saved unter the directory of path_threcord</td>
 </tr>
 <tr>
 <td><code>num_samples_per_noise</code></td>
-<td>Number of samples generated per noise clip for <code>train</code> and <code>val</code> splits</td>
+<td>Number of samples for clean speeches generated per type of noise for <code>train</code> and <code>val</code> splits</td>
 </tr>
 <tr>
 <td><code>force_download</code></td>
@@ -1572,6 +1572,10 @@
 <tr>
 <td><code>debug</code></td>
 <td>If <code>true</code>, enables additional logging for debugging</td>
+</tr>
+<tr>
+<td><code>signal</code></td>
+<td>signal.sampling_rate: target sampling rate; dc_remove: applying dc removal for your training examples</td>
 </tr>
 </tbody>
 </table>
@@ -1636,7 +1640,6 @@
 <li>TFRecord files (e.g., <code>train-00001.tfrecord</code>) at <code>./soundkit/tasks/se/tfrecords</code></li>
 <li>CSV index files (<code>train_tfrecord.csv</code>, <code>val_tfrecord.csv</code>) referencing TFRecord shards</li>
 </ul>
-<p>These are required by the <code>train</code>, <code>evaluate</code>, and <code>export</code> steps.</p>
 
 
 
