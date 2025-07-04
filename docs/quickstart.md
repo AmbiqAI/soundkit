@@ -171,6 +171,7 @@ You can directly try on already trained model on your PC.
     # or
     soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc # unet
     ```
+
 - vad
 
     ```bash
@@ -184,6 +185,7 @@ You can directly try on already trained model on your PC.
     ```
 
 - id
+
     ```bash
     soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
     ```
