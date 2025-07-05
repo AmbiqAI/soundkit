@@ -29,7 +29,7 @@ def export(params: SKTaskParams):
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     load_model_checkpoint(
         model_train, params_export['epoch_loaded'], checkpoint_dir)

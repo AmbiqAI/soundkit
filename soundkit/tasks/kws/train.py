@@ -248,7 +248,7 @@ def train(params: SKTaskParams):
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100,
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,
         complex_input=is_complex)
 
     _, epoch_loaded_1 = load_model_checkpoint(

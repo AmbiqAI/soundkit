@@ -26,19 +26,23 @@ def train_step(
     """Perform a single training step."""
 
     feat_sn = batch["feat_sn"]
-    pspec_sn_delay = tf.abs(batch["spec_sn_delay"])
-    pspec_s_delay = tf.abs(batch["spec_s_delay"])
+    if feat_sn.dtype == tf.complex64:
+        feat_sn = tf.stack([tf.math.real(feat_sn), tf.math.imag(feat_sn)], axis=-1)
     
+    else:
+        pspec_sn_delay = tf.abs(batch["spec_sn_delay"])
+        pspec_s_delay = tf.abs(batch["spec_s_delay"])
+
     with tf.GradientTape() as tape:
         est = net(feat_sn, training=training)
         if loss_type == "mrl_mse":
-            spec_en_delay = tf.complex(est, tf.zeros_like(est)) * batch["spec_sn_delay"]
-
+            spec_en_delay = est * batch["spec_sn_delay"]
+            spec_en = spec_en_delay
             loss = loss_fn(spec_en_delay, batch["spec_s_delay"])
 
         else:
             pspec_en_delay = tf.abs(est) * pspec_sn_delay
-
+            spec_en = pspec_en_delay
             loss = loss_fn(pspec_en_delay, pspec_s_delay)
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
@@ -48,7 +52,8 @@ def train_step(
         optimizer.apply_gradients(
                     zip(gradients_clips,
                         net.trainable_variables))
-    return loss, est
+        
+    return loss, est, spec_en
 
 def run_epoch(
     config: dict[str, Any],
@@ -146,13 +151,14 @@ def run_epoch(
         }
 
         # Perform one training or val step
-        loss, logits = train_step(
+        loss, logits, spec_en = train_step(
             model,
             optimizer,
             loss_fn,
             batch_data,
             training=training,
             loss_type=params.train['loss_function']['type'],)
+
         loss_metric.update_state(loss)
         # acc_metric.update_state(y_batch, logits)  # accuracy not computed yet
 
@@ -176,7 +182,17 @@ def run_epoch(
 
         if not training:
             if step == 0:
+
+                spec_en = tf.abs(spec_en)
+                pspec_en = 20*tf_log10_eps( tf.abs(spec_en[0])).numpy()
+
+                if logits.dtype == tf.complex64:
+                    logits = tf.math.real(logits)
+                    mask_range=(-1, 1)
+                else:
+                    mask_range=(0, 1)
                 mask = logits[0].numpy()
+
                 pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
                 pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
 
@@ -186,9 +202,9 @@ def run_epoch(
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
 
                 fig = plot_spectrograms(
-                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, mask.T],
-                    titles=["clean logspec", "noisy logspec", "feat", "mask"],
-                    vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (0, 1)],
+                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask.T],
+                    titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask"],
+                    vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_range],
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
                 )
@@ -232,11 +248,12 @@ def train(params: SKTaskParams):
     # 2. Build the model
 
     # Load from YAML file
+
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,)
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)

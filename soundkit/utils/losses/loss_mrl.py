@@ -15,10 +15,10 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
         super().__init__(name=name)
         if stft_configs is None:
             stft_configs = [
-                {"n_fft": 256, "hop_length": 80, "win_length": 160},    # 5ms
-                {"n_fft": 512, "hop_length": 160, "win_length": 320},   # 10ms
-                {"n_fft": 1024, "hop_length": 320, "win_length": 640},  # 20ms
-                {"n_fft": 2048, "hop_length": 640, "win_length": 1280}, # 40ms
+                {"n_fft": 128, "hop_length": 64, "win_length": 128},    # 5ms
+                {"n_fft": 256, "hop_length": 128, "win_length": 256},   # 10ms
+                {"n_fft": 512, "hop_length": 256, "win_length": 512},  # 20ms
+                {"n_fft": 1024, "hop_length": 512, "win_length": 1024}, # 40ms
             ]
         self.exp = exp
         self.eps = eps

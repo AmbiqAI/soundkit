@@ -24,6 +24,8 @@ class unet(tf.keras.Model):
         self.freq_bins, self.pad_freq_bins = get_unet_info(
             params.num_chs,
             dim_feat=params.dim_feat)
+        params.dim_out = params.dim_feat
+
         self.F=self.freq_bins[-1]
         self.chs=params.num_chs[-1]
         self.states = self.make_states()

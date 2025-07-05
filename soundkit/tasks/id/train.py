@@ -262,7 +262,7 @@ def train(params: SKTaskParams):
     is_complex = True if params_train['feature']['type'] =='spec' else False
 
 
-    target_length_frames= int(params.data['target_length_in_secs'] * 100)
+    target_length_frames= params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size
     model = build_model(
         params,
         batchsize,

@@ -125,10 +125,7 @@ def build_model(
         params (SKTaskParams): Task parameters
     """
     print(f"Downloading model weights for {params.name} to {params.job_dir}")
-    if new_nn:
-        model_config="model_new"
-    else:
-        model_config="model"
+    model_config="model"
 
     # 1.1. Build the model
 
@@ -162,17 +159,21 @@ def build_model(
         model_name,
         params=params_net)
 
-    if complex_input:
-        shape = (batchsize, time_steps, dim_feat, 2)
+    if hasattr(model, 'complex'):
+        if model.complex:
+            inputs_x = tf.keras.Input(shape=[time_steps, dim_feat, 2], batch_size=batchsize, dtype=tf.float32, name="x_input")
+        else:
+            inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
     else:
-        shape = (batchsize, time_steps, dim_feat)
-
-    if model_name == "crnn_new":
         inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
-        inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
-        model(inputs_x, inputs_reset)
-    else:
-        model.build(
-            input_shape=shape)
+    inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
+    model(inputs_x, inputs_reset)
+    # if model_name == "crnn_new":
+    #     inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+    #     inputs_reset = tf.keras.Input(shape=(), batch_size=batchsize, dtype=tf.float32, name="reset_input")
+    #     model(inputs_x, inputs_reset)
+    # else:
+    #     model.build(
+    #         input_shape=shape)
     model.summary()
     return model
