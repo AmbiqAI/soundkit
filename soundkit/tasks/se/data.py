@@ -126,12 +126,16 @@ class FeatMultiProcsClass(multiprocessing.Process):
         feat_s, spec_s, states_audio_s = feat_extractor(
             tf.constant([audio_s], dtype=tf.float32))
 
-        # spec_sn = tf_stft([audio_sn], frame_size, hop_size, fft_size)
-        # spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
-        logspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn[0])).numpy()
-        logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
-        logmel_sn = 20 * feat_sn[0].numpy()
-
+        
+        logspec_sn = 10 * tf_log10_eps(tf.abs(spec_sn[0])**2).numpy()
+        logspec_s = 10 * tf_log10_eps(tf.abs(spec_s[0])**2).numpy()
+        
+        if self.params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
+            logmel_sn = 10 * feat_sn[0].numpy()
+        elif self.params.train['feature']['type'] in ('pspec'):
+            logmel_sn = 10 * tf_log10_eps(tf.abs(feat_sn[0])**2).numpy()
+        elif self.params.train['feature']['type'] in ('spec'):
+            logmel_sn = 20 * tf_log10_eps(tf.abs(feat_sn[0])**2).numpy()
         plot_spectrograms(
             images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
             titles=[f"noisy logspec {snr_db}dB", "clean logspec", "noisy feat"],
