@@ -5,7 +5,7 @@ job_dir: ./soundkit/tasks/se
 data:
   path_tfrecord: ./soundkit/tasks/se/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: val_tfrecord.csv 
+    train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 10000
