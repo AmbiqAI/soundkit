@@ -1,12 +1,11 @@
 """Evaluate SE task model with given parameters."""
 import re
 import os
-from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
-import torch
 import soundfile as sf
+import torch
 from torchmetrics.functional.audio.dnsmos import deep_noise_suppression_mean_opinion_score
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
@@ -30,7 +29,6 @@ def evaluate(params: SKTaskParams):
         params (HKTaskParams): Task parameters
     """
     print(f"Evaluating SE model with params: {params} and more")
-
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']

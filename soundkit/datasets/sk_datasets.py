@@ -25,6 +25,12 @@ corpus2path_map= {
     "ESC-50": "wavs/noise/ESC-50-master",
     "rirs_noises": "wavs/noise/RIRS_NOISES",
 }
+ERROR_CORPUS_NOT_FOUND = (
+    "❌ Corpus not found.\n"
+    "Please verify that the corpus name is correct and that it exists on your system.\n\n"
+    "To automatically download the corpus, rerun the command with the following flag:\n\n"
+    "    soundkit -t your_task -m data -c your_config.yaml data.force_download=true\n"
+)
 
 def load_wav_label_csv(lst: str, filter=None) -> list:
     """
@@ -73,7 +79,7 @@ def load_train_clean_100(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
     return get_wavefiles("wavs/LibriSpeech/train-clean-100")
 
 
@@ -88,7 +94,7 @@ def load_train_clean_360(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
     return get_wavefiles("wavs/LibriSpeech/train-clean-360")
 
 
@@ -103,7 +109,7 @@ def load_dev_clean(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return get_wavefiles("wavs/LibriSpeech/dev-clean")
 
@@ -119,7 +125,7 @@ def load_test_clean(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return get_wavefiles("wavs/LibriSpeech/test-clean")
 
@@ -134,7 +140,7 @@ def load_thchs30(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     train_list = get_wavefiles("wavs/data_thchs30/train")
     dev_list = get_wavefiles("wavs/data_thchs30/dev")
@@ -184,7 +190,7 @@ def load_vad_train_clean_100(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return load_wav_label_csv('metadata/vad/libri_train_clean_100.csv')
 
@@ -199,7 +205,7 @@ def load_vad_train_clean_360(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return load_wav_label_csv('metadata/vad/libri_train_clean_360.csv')
 
@@ -214,7 +220,7 @@ def load_vad_train_other_500(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return load_wav_label_csv('metadata/vad/libri_train_other_500.csv')
 
@@ -230,7 +236,7 @@ def load_vad_dev_clean(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     return load_wav_label_csv('metadata/vad/libri_dev_clean.csv')
 
@@ -245,7 +251,7 @@ def load_vad_thchs30(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     train_list = load_wav_label_csv('metadata/vad/thchs30_train.csv')
     dev_list = load_wav_label_csv('metadata/vad/thchs30_dev.csv')
@@ -266,7 +272,7 @@ def load_wham_noise(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     files = {}
     files['train'] = get_wavefiles('wavs/noise/wham_noise/tr')
@@ -286,7 +292,7 @@ def load_fsd50k(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     with open('metadata/FSD50K/non_speech.csv', 'r') as f:
         lines = [line.strip() for line in f.readlines()]
@@ -306,7 +312,7 @@ def load_esc50(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
 
     with open('metadata/ESC-50-master/non_speech.csv', 'r') as f:
@@ -327,7 +333,7 @@ def load_musan(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
 
     music = get_wavefiles('wavs/noise/musan/music')
@@ -350,7 +356,7 @@ def load_rirs_noises(corpus: str) -> dict:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     all_files = get_wavefiles('wavs/noise/RIRS_NOISES')
     random.shuffle(all_files)
