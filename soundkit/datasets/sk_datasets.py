@@ -29,7 +29,10 @@ ERROR_CORPUS_NOT_FOUND = (
     "❌ Corpus not found.\n"
     "Please verify that the corpus name is correct and that it exists on your system.\n\n"
     "To automatically download the corpus, rerun the command with the following flag:\n\n"
-    "    soundkit -t your_task -m data -c your_config.yaml data.force_download=true\n"
+    "    soundkit -t your_task -m data -c your_config.yaml data.force_download=true\n\n"
+    "Or manually set your_config.yaml with:\n\n"
+    "    data:\n"
+    "      force_download: true\n"
 )
 
 def load_wav_label_csv(lst: str, filter=None) -> list:
