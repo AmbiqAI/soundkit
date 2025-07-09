@@ -10,6 +10,8 @@
         ```bash
         git clone https://github.com/AmbiqAI/soundkit.git
         cd soundkit
+        python -m venv .venv         # Create virtual environment
+        source .venv/bin/activate    # Activate it
         ./install.sh
         ```
     === "From PyPI"

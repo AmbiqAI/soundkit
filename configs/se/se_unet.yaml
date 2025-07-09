@@ -36,7 +36,7 @@ data:
 
 train:
   initial_lr: 4e-4
-  batchsize: 32
+  batchsize: 8
   epochs: 160
   warmup_epochs: 5
   epoch_loaded: random

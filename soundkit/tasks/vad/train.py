@@ -238,7 +238,17 @@ def train(params: SKTaskParams):
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
-
+    if batchsize < 8:
+        print(
+            "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
+            "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
+            "    train:\n"
+            "      batchsize: 32\n\n"
+            "   or \n\n"
+            "     soundkit -t se -m train -c configs/se/se.yaml train.batchsize=32\n\n"
+            "Or set it to a value that fits your GPU memory.\n"
+            "Or choose the highest value that fits within your available memory.\n"
+        )
     # 1. Define feature extractor
     feat_extractor = FeatureExtractor(
         params=params,

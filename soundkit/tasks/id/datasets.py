@@ -49,43 +49,6 @@ def create_tfrecord(
 
         writer.write(seq_example.SerializeToString())
 
-# def create_raw_tfrecord(
-#         fname: str,
-#         audio_sn: np.ndarray,
-#         indices: tuple[np.ndarray, np.ndarray]) -> None:
-#     """
-#     Make TFRecord with multiple start/end indices
-#     """
-#     os.makedirs(os.path.dirname(fname), exist_ok=True)
-#     with tf.io.TFRecordWriter(fname) as writer:
-#         timesteps = audio_sn.shape[0]
-#         start_indices, end_indices = indices  # both are np.ndarray or list
-
-#         audio_sn_feature = tf.train.Feature(
-#             float_list=tf.train.FloatList(value=audio_sn))
-
-#         context = tf.train.Features(feature={
-#             "length": tf.train.Feature(
-#                 int64_list=tf.train.Int64List(value=[timesteps])),
-#             "start_index": tf.train.Feature(
-#                 int64_list=tf.train.Int64List(value=list(start_indices))),
-#             "end_index": tf.train.Feature(
-#                 int64_list=tf.train.Int64List(value=list(end_indices))),
-#         })
-
-#         feature_lists = tf.train.FeatureLists(feature_list={
-#             "audio_sn": tf.train.FeatureList(
-#                 feature=[audio_sn_feature]
-#             )
-#         })
-
-#         seq_example = tf.train.SequenceExample(
-#             context=context,
-#             feature_lists=feature_lists
-#         )
-
-#         writer.write(seq_example.SerializeToString())
-
 def parser(example_proto: tf.Tensor, hop_size: int = 160) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     """
     Parse a TFRecord sequence example with multi-segment VAD labels.

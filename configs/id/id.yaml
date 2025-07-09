@@ -33,7 +33,7 @@ data:
     sampling_rate: 16000
     dc_removal: true
   num_sentences: 10
-  ppls_per_group: 64
+  ppls_per_group: 8
   debug: false
 
 train:
