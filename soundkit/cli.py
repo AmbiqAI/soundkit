@@ -75,12 +75,30 @@ def run_cli(
 def main():
     global extra_overrides
 
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-m", "--mode", type=str)
-    ap.add_argument("-t", "--task", type=str)
-    ap.add_argument("-c", "--config", type=str)
-    ap.add_argument("--tensorboard", action="store_true")
-    ap.add_argument("--view", action="store_true")
+    ap = argparse.ArgumentParser(
+        description="SoundKit CLI - data, train, evaluate, export, and demo AI tasks.",
+    )
+
+    ap.add_argument(
+        "-t", "--task",
+        type=str,
+        help="Task name: se, vad, kws, id")
+    ap.add_argument(
+        "-m", "--mode",
+        type=str,
+        help="Execution mode: data, train, evaluate, export, demo")
+    ap.add_argument(
+        "-c", "--config",
+        type=str,
+        help="Path to YAML configuration file")
+    ap.add_argument(
+        "--tensorboard",
+        action="store_true",
+        help="Launch TensorBoard (only for train mode)")
+    ap.add_argument(
+        "--view",
+        action="store_true",
+        help="Enable waveform/audio viewer (only for demo)")
 
     known_args, unknown_args = ap.parse_known_args()
     extra_overrides = unknown_args
