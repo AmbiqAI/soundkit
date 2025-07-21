@@ -18,6 +18,8 @@ from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
 
+from .utils.vad_silero import get_vad, calculate_vad_accuracy
+
 def evaluate(params: SKTaskParams):
     """Evaluate VAD task model with given parameters.
 
@@ -85,12 +87,12 @@ def evaluate(params: SKTaskParams):
     for step, wavs_path in enumerate(wavs_path):
         print(f"\rEvaluating {wavs_path}, ", end='')
         # Read audio file
-        audio_sn = audio_read(
+        audio_sn_np = audio_read(
             wavs_path,
             params.data['signal']['sampling_rate']
         )
 
-        audio_sn = tf.convert_to_tensor(audio_sn, dtype=tf.float32) 
+        audio_sn = tf.convert_to_tensor(audio_sn_np, dtype=tf.float32) 
         audio_sn = tf.expand_dims(audio_sn, axis=0)  # Add batch dimension
 
 
@@ -185,3 +187,25 @@ def evaluate(params: SKTaskParams):
 
         print(f"Saved vad signal to {save_path}")
         
+        # Silero VAD
+        print("Calculating silero vad")
+        vad_gt = get_vad(audio_sn_np, sampling_rate=16000) # silero vad
+        name = re.sub(r'(\.wav$|\.flac$)', '_vad_silero.wav', wavs[step])
+        save_path = f"{result_folder}/{name}"
+        sf.write(
+            save_path,
+            vad_gt,
+            params.data['signal']['sampling_rate'])
+
+        print(f"Saved silero vad (ground truth) VAD to {save_path}")
+
+
+        vad = audio_vad_np
+        vad_gt = vad_gt[:len(vad)]  # Ensure both arrays are the same length
+
+        vad = (vad > 0.1).astype(np.int16)
+        vad_gt = vad_gt.astype(np.int16)
+        fa, fr, fa_total, fr_total = calculate_vad_accuracy(vad, vad_gt)
+
+        print(f"False Alarms: {fa:.4f} (total: {fa_total})")
+        print(f"False Rejections: {fr:.4f} (total: {fr_total})")
