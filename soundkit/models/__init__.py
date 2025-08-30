@@ -6,11 +6,13 @@ import tensorflow as tf
 from .SimpleFC import SimpleFC
 from .crnn_new import CRNN, CRNNParams
 
-from .ccrnn import CCRNN, CCRNNParams
+from .ccrnn_new import CCRNN, CCRNNParams
 
 from .unet import unet
+from .cunet import cunet
 from .unet_sublayers import UNetParams
 
+from .crnn2d import crnn2d, CRNN2DParams
 # === Model Factory ===
 
 ModelType = Type[tf.keras.Model]
@@ -57,6 +59,9 @@ ModelFactory.register("crnn", CRNN)
 
 ModelFactory.register("ccrnn", CCRNN)
 ModelFactory.register("unet", unet)
+ModelFactory.register("cunet", cunet)
+ModelFactory.register("crnn2d", crnn2d)
+
 
 # Register parameter schemas
 ModelParamFactory.register("crnn", CRNNParams)
@@ -64,3 +69,5 @@ ModelParamFactory.register("crnn", CRNNParams)
 ModelParamFactory.register("ccrnn", CCRNNParams)
 
 ModelParamFactory.register("unet", UNetParams)
+
+ModelParamFactory.register("crnn2d", CRNN2DParams)

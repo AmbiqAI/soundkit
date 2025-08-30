@@ -17,6 +17,7 @@ corpus2path_map= {
     "vad_train-clean-360": "wavs/LibriSpeech/train-clean-360",
     "vad_train-other-500": "wavs/LibriSpeech/train-other-500",
     "vad_dev-clean": "wavs/LibriSpeech/dev-clean",
+    "vad_test-clean": "wavs/LibriSpeech/test-clean",
     "vad_thchs30": "wavs/data_thchs30",
     "musan": "wavs/noise/musan",
     "wham_noise": "wavs/noise/wham_noise",
@@ -24,6 +25,7 @@ corpus2path_map= {
     "ESC-50-master": "wavs/noise/ESC-50-master",
     "ESC-50": "wavs/noise/ESC-50-master",
     "rirs_noises": "wavs/noise/RIRS_NOISES",
+    "others": "wavs/noise_old",
 }
 
 def load_wav_label_csv(lst: str, filter=None) -> list:
@@ -106,22 +108,6 @@ def load_dev_clean(corpus: str) -> list:
             f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
 
     return get_wavefiles("wavs/LibriSpeech/dev-clean")
-
-
-def load_test_clean(corpus: str) -> list:
-    """
-    Load LibriSpeech test-clean corpus.
-    Args:
-        corpus (str): Path to the corpus.
-    Returns:
-        list: List of wave file paths.
-    """
-    path = corpus2path_map[corpus['name']]
-    if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
-
-    return get_wavefiles("wavs/LibriSpeech/test-clean")
 
 def load_thchs30(corpus: str) -> dict:
     """
@@ -218,6 +204,20 @@ def load_vad_train_other_500(corpus: str) -> list:
 
     return load_wav_label_csv('metadata/vad/libri_train_other_500.csv')
 
+def load_vad_test_clean(corpus: str) -> list:
+    """
+    Load LibriSpeech test-clean corpus for VAD.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        list: List of wave file paths.
+    """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
+
+    return load_wav_label_csv('metadata/vad/libri_test_clean.csv')
 
 def load_vad_dev_clean(corpus: str) -> list:
     """
@@ -329,7 +329,6 @@ def load_musan(corpus: str) -> dict:
         raise FileNotFoundError(
             f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
 
-
     music = get_wavefiles('wavs/noise/musan/music')
     noise = get_wavefiles('wavs/noise/musan/noise')
     lines = music + noise
@@ -337,8 +336,25 @@ def load_musan(corpus: str) -> dict:
     split = len(lines) // 5
     return {"train": lines[split:], "val": lines[:split]}
 
-# === Reverb Corpus ===
+def load_others(corpus: str) -> dict:
+    """
+    Load MUSAN corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
+    """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. Set data.force_download=true to download it.")
 
+    lines = get_wavefiles('wavs/noise_old')
+    # import pdb; pdb.set_trace()
+    random.shuffle(lines)
+    return {"train": lines}
+
+# === Reverb Corpus ===
 def load_rirs_noises(corpus: str) -> dict:
     """
     Load RIRS_NOISES corpus.

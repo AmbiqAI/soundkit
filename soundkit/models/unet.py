@@ -6,7 +6,8 @@ import tensorflow as tf
 from .unet_sublayers import UNetParams, get_unet_info
 from .unet_sublayers.encoder import encoder_unet
 from .unet_sublayers.decoder import decoder_unet
-
+from soundkit.models.layers.tcn import tcn
+            
 class unet(tf.keras.Model):
     """ UNet"""
     def __init__(
@@ -15,7 +16,7 @@ class unet(tf.keras.Model):
             **kwargs):
         super(unet,self).__init__(**kwargs)
         self.params = params
-
+        
         self.encoder = encoder_unet(
             params=params,)
         self.decoder = decoder_unet(
@@ -23,39 +24,57 @@ class unet(tf.keras.Model):
 
         self.freq_bins, self.pad_freq_bins = get_unet_info(
             params.num_chs,
+            kernel_size_freq=params.kernel_size_freq,
             dim_feat=params.dim_feat)
-        params.dim_out = params.dim_feat
+        # params.dim_out = params.dim_feat
 
         self.F=self.freq_bins[-1]
         self.chs=params.num_chs[-1]
         self.states = self.make_states()
-        self.rnn = tf.keras.layers.LSTM(
-            self.F * self.chs,
-            return_state=True,
-            stateful=False,
+        # if self.params.dropout > 0:
+        if 0:
+            self.dropout = tf.keras.layers.Dropout(
+                rate=self.params.dropout,
+                name='dropout')
+        else:
+            self.dropout = None
+        
+        if params.middle_net == 'lstm':
+            self.middle_net = tf.keras.layers.LSTM(
+                self.F * self.chs,
+                return_state=True,
+                stateful=False,
             unroll=params.unroll_rnn,
             return_sequences=True)
 
-        if params.num_chs[0] == 1: # real case
+        elif params.middle_net == 'tcn':
+            self.middle_net = tcn(
+                filters         = self.F * self.chs,
+                kernel_size     = params.kernel_size_tcn,
+                batchsize       = params.batchsize,
+                dim_feat        = self.F * self.chs,
+                dilations       = params.dilations,
+                dropout_rate    = params.dropout,
+                second_dropout  = True,
+                activation      = 'glu',
+                name            = "tcn_layer"
+            )
+
+        if self.params.output_activation == 'glu':
+            from soundkit.models.layers.activation_factory import glu
+            self.fc_real = tf.keras.layers.Dense(
+                params.dim_out * 2,
+                activation=glu,
+                name='fc_real')
+        else:
             self.fc_real = tf.keras.layers.Dense(
                 params.dim_out,
-                activation='sigmoid',
+                activation=params.output_activation,
                 name='fc_real')
-            self.complex=False
-        else: # complex case
-            self.fc_real = tf.keras.layers.Dense(
-                params.dim_out,
-                activation='tanh',
-                name='fc_real')
-            self.fc_imag = tf.keras.layers.Dense(
-                params.dim_out,
-                activation='tanh',
-                name='fc_imag')
-            self.complex=True
-        if params.dropout > 0:
-            self.dropout = tf.keras.layers.Dropout(
-                rate=params.dropout,
-                name='dropout')
+        # self.fc_real = tf.keras.layers.Dense(
+        #     params.dim_out,
+        #     activation=params.output_activation,
+        #     name='fc_real')
 
     def reset_states(self, zero_state=False):
         """ Reset states"""
@@ -74,39 +93,44 @@ class unet(tf.keras.Model):
                                 stddev=tf.sqrt(1 / self.F * self.chs)),
                             dtype = tf.float32,
                             trainable = False)
-        if zero_state:
-            self.states[0].assign(h_states * 0)
-            self.states[1].assign(c_states * 0)
-        else:
-            self.states[0].assign(h_states)
-            self.states[1].assign(c_states)
+        if self.params.middle_net == 'lstm':
+            if zero_state:
+                self.states[0].assign(h_states * 0)
+                self.states[1].assign(c_states * 0)
+            else:
+                self.states[0].assign(h_states)
+                self.states[1].assign(c_states)
 
-        self.encoder.reset_states()
-        self.decoder.reset_states()
+            self.encoder.reset_states()
+            self.decoder.reset_states()
+        elif  self.params.middle_net == 'tcn':
+            self.middle_net.reset_states()
 
     def make_states(self, zero_state=False):
         """ Make states"""
+        if self.params.middle_net == 'lstm':
+            h_states = tf.Variable(
+                                tf.random.uniform(
+                                    [self.params.batchsize, self.F * self.chs],
+                                    minval=-1,
+                                    maxval=1),
+                                dtype = tf.float32,
+                                trainable = False)
 
-        h_states = tf.Variable(
-                            tf.random.uniform(
-                                [self.params.batchsize, self.F * self.chs],
-                                minval=-1,
-                                maxval=1),
-                            dtype = tf.float32,
-                            trainable = False)
+            c_states = tf.Variable(
+                                tf.random.truncated_normal(
+                                    [self.params.batchsize, self.F * self.chs],
+                                    mean=0.0,
+                                    stddev=tf.sqrt(1 / self.F * self.chs)),
+                                dtype = tf.float32,
+                                trainable = False)
+            if zero_state:
+                h_states.assign(h_states * 0)
+                c_states.assign(c_states * 0)
 
-        c_states = tf.Variable(
-                            tf.random.truncated_normal(
-                                [self.params.batchsize, self.F * self.chs],
-                                mean=0.0,
-                                stddev=tf.sqrt(1 / self.F * self.chs)),
-                            dtype = tf.float32,
-                            trainable = False)
-        if zero_state:
-            h_states.assign(h_states * 0)
-            c_states.assign(c_states * 0)
-
-        return h_states, c_states
+            return h_states, c_states
+        else:
+            return None, None
 
     def call(
             self,
@@ -116,8 +140,7 @@ class unet(tf.keras.Model):
             training=False):
         """ Forward pass"""
 
-        if not self.complex:
-            inputs = tf.expand_dims(inputs, axis=-1)
+        inputs = tf.expand_dims(inputs, axis=-1)
 
         x = inputs
 
@@ -132,13 +155,21 @@ class unet(tf.keras.Model):
         out = tf.reshape(
             outputs[-1],
             (self.params.batchsize, timesteps, -1))
-        if self.params.dropout > 0:
-            out = self.dropout(out, training=training)
+        if self.params.middle_net == 'lstm':
+            if self.params.rnn_res:
+                out1, h_state, c_state = self.middle_net(out, initial_state=self.states)
+                out = out + out1
+            else:
+                out, h_state, c_state = self.middle_net(out, initial_state=self.states)
 
-        out, h_state, c_state = self.rnn(out, initial_state=self.states)
+            self.states[0].assign(h_state)
+            self.states[1].assign(c_state)
+            if self.dropout is not None:
+                out = self.dropout(out, training=training)
 
-        self.states[0].assign(h_state)
-        self.states[1].assign(c_state)
+        elif self.params.middle_net == 'tcn':
+            out = self.middle_net(out, training=training)
+
         input_dec = tf.reshape(
             out,
             (self.params.batchsize, timesteps, self.F, self.chs))
@@ -149,11 +180,8 @@ class unet(tf.keras.Model):
             outputs)
 
         # final projection
-        if not self.complex:
-            output = self.fc_real(output[...,0])
+        if 0:
+            output = self.fc_real(output[..., 0])
         else:
-            output_real = self.fc_real(output[...,0])
-            output_imag = self.fc_imag(output[...,1])
-            output = tf.complex(output_real, output_imag)
-
+            output = output[..., 0]
         return output

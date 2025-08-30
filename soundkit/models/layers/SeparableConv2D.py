@@ -14,18 +14,23 @@ class SeparableConv2D(tf.keras.layers.Layer):
             **kwargs):
         super(SeparableConv2D, self).__init__(**kwargs)
 
+        if activation == 'glu':
+            filters *= 2
+
         if normalization_layer in (None, 'None', 'none'):
             use_bias=True
         else:
             use_bias=False
+
+        kernel_initializer = "he_normal" if activation in ('relu', 'relu6', 'glu') else "glorot_uniform"
 
         self.depthwise = tf.keras.layers.Conv2D(
             filters=num_channels_in,
             kernel_size = kernel_size,
             strides=strides,
             groups = num_channels_in,
-            use_bias=False,
-            kernel_initializer='he_normal')
+            use_bias=True,
+            kernel_initializer=kernel_initializer)
 
         self.pointwise = tf.keras.layers.Conv2D(
             filters=filters,
@@ -33,7 +38,7 @@ class SeparableConv2D(tf.keras.layers.Layer):
             strides=(1, 1),
             padding='same',
             use_bias=use_bias,
-            kernel_initializer='he_normal',
+            kernel_initializer=kernel_initializer,
             )
 
         self.norm = NormalizationFactory(normalization_layer)

@@ -44,7 +44,7 @@ def url_download(
     print(f"Downloading {url}")
     # Sizes in bytes.
     total_size = int(response.headers.get("content-length", 0))
-    block_size = 1024  # 1 Kibibyte 
+    block_size = 1024  # 1 Kibibyte
     with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
         with open(target_name, "wb") as file:
             for data in response.iter_content(block_size):

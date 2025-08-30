@@ -1,0 +1,48 @@
+name: crnn_new
+units: 28
+stride_time: 1
+unroll_rnn: false
+layer_configs:
+  - type: dropout
+    rate: 0.1
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: dropout
+    rate: 0.2
+
+  - type: conv2d
+    filters: ${units}
+    kernel_size: [6, "${units}"]
+    strides: ["${stride_time}", 1]
+    activation: tanh
+
+  - type: dropout
+    rate: 0.2
+
+  - type: lstm
+    units: ${units}
+    activation: tanh
+    
+  - type: dropout
+    rate: 0.2
+  
+  - type: fc
+    units: ${units}
+    activation: relu
+  
+  - type: dropout
+    rate: 0.2
+  
+  - type: fc
+    units: ${units}
+    activation: relu
+  
+  - type: dropout
+    rate: 0.2
+
+  - type: fc
+    units: 2
+    activation: linear

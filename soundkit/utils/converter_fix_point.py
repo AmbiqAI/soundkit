@@ -49,6 +49,10 @@ def float2hex(val_in):
     return out
 
 def int2str_array(name, values, nbits=32):
+
+    if values is None:
+        return f"const int{nbits}_t {name}[] = {{}};"
+
     items_per_line = 8
     values = values.flatten()  # 👈 flatten to 1D     
     lines = []

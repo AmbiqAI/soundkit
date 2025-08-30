@@ -6,7 +6,10 @@ def tf_log10_eps(val, eps = 2.0**-15):
     """
     log10 with minimum eps
     """
-    return  tf.math.log(tf.maximum(val,eps)) / tf.math.log(10.0)
+    out = tf.math.log(tf.maximum(val,eps)) / tf.math.log(10.0)
+    # out = tf.math.log(val+eps) / tf.math.log(10.0)
+    
+    return out
 
 def tf_power_eps(val, pwr = 0.3, eps = 2.0**-15):
     """

@@ -1,0 +1,44 @@
+name: crnn
+units: 100
+len_time: 6
+
+layer_configs:
+  - type: dropout
+    rate: 0.1
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: conv2d
+    filters: ${units}
+    kernel_size: ["${len_time}", "${units}"]
+    strides: [1, 1]
+    activation: tanh
+
+  - type: dropout
+    rate: 0.2
+
+  - type: lstm
+    units: ${units}
+
+  - type: dropout
+    rate: 0.25
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: dropout
+    rate: 0.25
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: dropout
+    rate: 0.25
+
+  - type: fc
+    units: 65
+    activation: sigmoid

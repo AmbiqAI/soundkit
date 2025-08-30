@@ -364,6 +364,7 @@ def synthesize_audio_with_labels(
         is_short_segments_remove)
     noise = repeat_or_crop(noise, target_length)
     # if 0:
+    import pdb; pdb.set_trace()
     if rir is not None:
         samples_5ms = sample_rate * 0.005 # 5ms
 
@@ -404,24 +405,125 @@ def synthesize_audio_with_labels(
             onsets, offsets, y = remove_short_segments(
                 onsets, offsets, y, min_length=160*10)
         # print(y)
-        # import pdb; pdb.set_trace()
-        # import matplotlib.pyplot as plt
-        # plt.subplot(5,1,1)
-        # plt.plot(signal_s)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,2)
-        # plt.plot(y)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,3)
-        # plt.plot(vad)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,4)
-        # plt.plot(vad_rir)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,5)
-        # plt.plot(vad_update)
-        # plt.xlim([0, 16000 * 5])
-        # plt.show()
+
+        import matplotlib.pyplot as plt
+        plt.subplot(5,1,1)
+        plt.plot(signal_s)
+        plt.xlim([0, 16000 * 5])
+        plt.subplot(5,1,2)
+        plt.plot(y)
+        plt.xlim([0, 16000 * 5])
+        plt.subplot(5,1,3)
+        plt.plot(vad)
+        plt.xlim([0, 16000 * 5])
+        plt.subplot(5,1,4)
+        plt.plot(vad_rir)
+        plt.xlim([0, 16000 * 5])
+        plt.subplot(5,1,5)
+        plt.plot(vad_update)
+        plt.xlim([0, 16000 * 5])
+        plt.show()
+        
+    else:
+        y = signal_s.copy()
+        target = signal_s.copy()
+
+    # Compute clean and noise powers
+
+    clean_power=0
+    steps=0
+    for s,e in zip(onsets, offsets):
+        clean_power += np.sum(target[s:e]**2)
+        steps+=e-s+1
+    if steps > 0:
+        clean_power /= steps
+    if clean_power == 0:
+        pass
+    else:
+        noise_power = np.mean(noise**2) + 1e-9
+
+        # Scale noise to match desired SNR
+        desired_noise_power = clean_power / (10**(snr_db / 10))
+        scale = np.sqrt(desired_noise_power / noise_power)
+        noise = noise * scale
+
+    # Mix
+    signal_sn = y + noise
+
+    # Normalize to avoid clipping
+    peak = max(np.max(np.abs(signal_sn)), 1e-8)
+    gain = 1 / peak * np.random.uniform(min_amp, max_amp)
+    target *= gain
+    signal_sn *= gain
+    y *= gain
+    return signal_sn, target, onsets, offsets
+
+
+def synthesize_audio_with_labels_vad(
+        clean: np.ndarray,
+        noise: np.ndarray,
+        starts: np.ndarray,
+        ends: np.ndarray,
+        rir: np.ndarray,
+        snr_db: float,
+        min_amp: float = 0.01,
+        max_amp: float = 0.95,
+        target_length: int = 160*500,
+        sample_rate:int = 16000,
+        is_short_segments_remove=True) -> Tuple[np.ndarray, np.ndarray, int, int]:
+    """
+    Synthesize noisy audio from clean and noise with optional reverberation.
+
+    Args:
+        clean (np.ndarray): Clean speech audio
+        noise (np.ndarray): Noise audio
+        rir (np.ndarray): Room impulse response (can be None or empty)
+        snr_db (float): Target signal-to-noise ratio in dB
+        min_amp (float): Minimum peak amplitude
+        max_amp (float): Maximum peak amplitude
+        target_length (int): Target audio length
+        sample_rate (int): Sample rate of the audio
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, int, int]: 
+            (noisy_audio, clean_audio, start_index, end_index)
+    """
+    signal_s, onsets, offsets = pad_or_crop_with_labels(
+        clean, target_length,
+        starts, ends,
+        is_short_segments_remove)
+    noise = repeat_or_crop(noise, target_length)
+    # if 0:
+
+    if rir is not None:
+        idx = np.argmax(np.abs(rir))
+        idx = np.maximum(idx-20, 0)
+        h_aligned = rir[idx:]
+        y_full = fftconvolve(signal_s, h_aligned, mode="full")
+        y = y_full[: len(signal_s)]  # keep first T samples; discard late tail
+        target = y.copy()
+
+        if 0:
+            vad = np.zeros_like(signal_s, dtype=np.float32)
+            for ss, ee in zip(onsets, offsets):
+                vad[ss:ee] = 0.9
+            import matplotlib.pyplot as plt
+            plt.subplot(5,1,1)
+            plt.plot(signal_s)
+            plt.plot(vad)
+            # plt.xlim([0, 16000 * 5])
+            plt.subplot(5,1,2)
+            plt.plot(y)
+            plt.plot(vad)
+
+            plt.subplot(5,1,3)
+            plt.plot(rir)
+
+            plt.subplot(5,1,4)
+            plt.plot(h_aligned)
+            # plt.xlim([0, 16000 * 5])
+        
+            plt.show()
         
     else:
         y = signal_s.copy()

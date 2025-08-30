@@ -14,12 +14,15 @@ def gen_stft_win(
 
     # if win_size % hop != 0:
     #     raise ValueError("Window size must be a multiple of hop size")
-    win_size = tf.cast(win_size, tf.float32)
-    hop_div_fr = tf.cast(hop,tf.float32) / win_size
-    indices = tf.range(win_size, dtype=tf.float32)
+    if win_size == hop:
+        win =  tf.ones(win_size, dtype=tf.float32)
+    else:
+        win_size = tf.cast(win_size, tf.float32)
+        hop_div_fr = tf.cast(hop,tf.float32) / win_size
+        indices = tf.range(win_size, dtype=tf.float32)
 
-    win_square = hop_div_fr * (1.0 - tf.math.cos(2.0 * pi / win_size * indices ))
-    win = tf.sqrt(win_square)
+        win_square = hop_div_fr * (1.0 - tf.math.cos(2.0 * pi / win_size * indices ))
+        win = tf.sqrt(win_square)
 
     return win
 

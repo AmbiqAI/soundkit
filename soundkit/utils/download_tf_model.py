@@ -147,9 +147,11 @@ def build_model(
     if export:
         config_dict['unroll_rnn'] = True
 
-    Params_Cls = ModelParamFactory.get(model_name)
-    
-    params_net = Params_Cls(
+    if model_name == "cunet":
+        params_cls = ModelParamFactory.get("unet")
+    else:
+        params_cls = ModelParamFactory.get(model_name)
+    params_net = params_cls(
         dim_feat=dim_feat,
         batchsize=batchsize,
         time_steps=time_steps,
@@ -158,7 +160,7 @@ def build_model(
     model = ModelFactory.get(
         model_name,
         params=params_net)
-
+    
     if hasattr(model, 'complex'):
         if model.complex:
             inputs_x = tf.keras.Input(shape=[time_steps, dim_feat, 2], batch_size=batchsize, dtype=tf.float32, name="x_input")

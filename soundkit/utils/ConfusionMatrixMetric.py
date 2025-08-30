@@ -5,7 +5,7 @@ class ConfusionMatrixMetric(tf.keras.metrics.Metric):
         super().__init__(name=name, **kwargs)
         self.num_classes = num_classes
         self.conf_matrix = self.add_weight(
-            name="conf_matrix",    
+            name="conf_matrix",
             shape=(num_classes, num_classes),
             initializer="zeros",
             dtype=tf.int64,
@@ -16,6 +16,7 @@ class ConfusionMatrixMetric(tf.keras.metrics.Metric):
         y_pred: shape (batch, ..., num_classes)
         y_true: shape (batch, ...) with integer class labels
         """
+
         # Convert logits/probs to predicted class indices
         pred_labels = tf.argmax(y_pred, axis=-1, output_type=tf.int64)
 

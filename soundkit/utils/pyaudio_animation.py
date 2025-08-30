@@ -44,12 +44,12 @@ class AudioShowClass:
 
         self.num_blks = int(self.sample_rate / self.frame_size * self.record_seconds)
         self.data_buffer = np.zeros((self.sample_rate * self.record_seconds, 2), dtype=float)
-        self.data_trigger = np.zeros((self.sample_rate * self.record_seconds, 2), dtype=float)
         self.const_data_buffer = np.arange(self.sample_rate * self.record_seconds) / self.sample_rate
         self.counts_frames = 0
         self.lock_button = 0
         self.start_record = 0
         self.draw_lock = 0
+        self.replay_channel = 0  # 0 or 1
 
         self.fig, (ax_wave, ax_vad) = plt.subplots(nrows=2, figsize=(10, 6), sharex=True)
         self.fig.tight_layout(rect=[0, 0.25, 1, 0.95])
@@ -69,6 +69,7 @@ class AudioShowClass:
         ax_vad.set_ylabel("Processed")
         ax_vad.set_xlabel("Time (Seconds)")
         self.line_trig, = ax_vad.plot([], [], lw=0.5, color='red')
+        self.line_stop_vad, = ax_vad.plot([], [], lw=0.2, color='k')
 
         self.fig.canvas.mpl_connect('close_event', self.handle_close)
 
@@ -79,7 +80,7 @@ class AudioShowClass:
             button.on_clicked(callback_func)
             return button
 
-        num_buttons = 4
+        num_buttons = 5
         gap_ratio = 0.02
         button_width_ratio = (1.0 - (num_buttons + 1) * gap_ratio) / num_buttons
         button_height = 0.07
@@ -94,6 +95,7 @@ class AudioShowClass:
         self.button_record = make_button(positions[1], 'record', self.callback_record)
         self.button_stop   = make_button(positions[2], 'stop', self.callback_stop)
         self.button_replay = make_button(positions[3], 'replay', self.callback_replay)
+        self.button_toggle_channel = make_button(positions[4], 'channel: 0', self.callback_toggle_channel)
 
         plt.show()
 
@@ -106,10 +108,10 @@ class AudioShowClass:
         if self.reset_st is not None:
             self.reset_st()
         self.start_record = 0
-        
 
     def callback_stop(self, event):
         self.stop_recording()
+
         if hasattr(event, "inaxes") and event.inaxes is not None:
             event.inaxes.figure.canvas.draw_idle()
 
@@ -138,8 +140,18 @@ class AudioShowClass:
         if hasattr(event, "inaxes") and event.inaxes is not None:
             event.inaxes.figure.canvas.draw_idle()
 
+    def callback_toggle_channel(self, event):
+        self.replay_channel = 1 - self.replay_channel
+        self.button_toggle_channel.label.set_text(f'channel: {self.replay_channel}')
+        print(f"Replay channel set to: {self.replay_channel}")
+        if hasattr(event, "inaxes") and event.inaxes is not None:
+            event.inaxes.figure.canvas.draw_idle()
+
     def callback_record(self, event):
+        """Start recording audio and processing it."""
+
         if self.lock_button == 0:
+
             self.start_record = 1
             self.lock_button = 1
             if not self.wave_output_filename:
@@ -168,7 +180,7 @@ class AudioShowClass:
                 if self.proc_st:
                     processed = self.proc_st(data_fr)
                     self.data_buffer[start:start + self.frame_size, 1] = processed[:, 0]
-                    self.data_trigger[start:start + self.frame_size, 1] = processed[:, 0]
+
                 else:
                     self.data_buffer[start:start + self.frame_size, 1] = 0.0
 
@@ -179,7 +191,7 @@ class AudioShowClass:
                     if self.counts_frames == (self.num_blks - 1):
                         if self.non_stop:
                             self.data_buffer *= 0
-                            self.data_trigger *= 0
+
                             ret = (in_data, pyaudio.paContinue)
                         else:
                             self.start_record = 0
@@ -195,7 +207,7 @@ class AudioShowClass:
 
             self.stream = self.audio_handle.open(
                 format=pyaudio.paInt16,
-                channels=1,  # <-- record only mono
+                channels=1,
                 rate=self.sample_rate,
                 input=True,
                 frames_per_buffer=self.frame_size,
@@ -203,19 +215,21 @@ class AudioShowClass:
             )
 
             self.data_buffer *= 0
-            self.line_data.set_data(self.const_data_buffer, self.data_buffer[:, 0] * 0)
-            self.line_trig.set_data(self.const_data_buffer, self.data_trigger[:, 1] * 0)
+            self.line_data.set_data(self.const_data_buffer, self.data_buffer[:, 0])
+            self.line_trig.set_data(self.const_data_buffer, self.data_buffer[:, 1])
 
             self.stream.start_stream()
             while self.stream.is_active():
                 if self.draw_lock == 0:
                     self.line_data.set_data(self.const_data_buffer, self.data_buffer[:, 0])
-                    self.line_trig.set_data(self.const_data_buffer, self.data_trigger[:, 1])
+                    self.line_trig.set_data(self.const_data_buffer, self.data_buffer[:, 1])
                     ending = self.frame_time_record * self.counts_frames
                     self.line_stop.set_data([ending, ending], LINE_MINMAX)
+                    self.line_stop_vad.set_data([ending, ending], LINE_MINMAX)
                 plt.pause(self.frame_time_replay)
 
             self.line_stop.set_data([0, 0], LINE_MINMAX)
+            self.line_stop_vad.set_data([0, 0], LINE_MINMAX)
             self.stream.stop_stream()
             self.stream.close()
             self.audio_handle.terminate()
@@ -225,43 +239,80 @@ class AudioShowClass:
 
         if hasattr(event, "inaxes") and event.inaxes is not None:
             event.inaxes.figure.canvas.draw_idle()
+    
 
     def _playsound(self, wavname):
         event_obj = threading.Event()
+        replay_buffer = np.zeros((self.sample_rate * self.record_seconds, ), dtype=float)
         with sf.SoundFile(wavname) as wavefile:
             def callback_streamout(outdata, framesize, time, status):
                 self.draw_lock = 1
                 data = wavefile.buffer_read(framesize, dtype='float32')
-                if len(outdata) > len(data):
-                    outdata[:len(data)] = data
-                    outdata[len(data):] = b'\x00' * (len(outdata) - len(data))
+                data = np.frombuffer(data, dtype='float32').reshape(-1, wavefile.channels)
+
+                if data.shape[0] == 0:
                     raise sd.CallbackStop
-                outdata[:] = data
+
+                channel_data = data[:, self.replay_channel % wavefile.channels]
+
+                # Fill remaining buffer with zeros if data is too short
+                if channel_data.shape[0] < framesize:
+                    padded = np.zeros(framesize, dtype='float32')
+                    padded[:channel_data.shape[0]] = channel_data
+                    outdata[:] = padded.reshape(-1, 1)
+                    raise sd.CallbackStop  # Final frame
+                else:
+                    outdata[:] = channel_data.reshape(-1, 1)
+                
+                replay_buffer[self.counts_frames * self.frame_size:(self.counts_frames + 1) * self.frame_size] = channel_data
+                
+
+                if self.replay_channel == 0:
+                    line_draw = self.line_data
+                else:
+                    line_draw = self.line_trig
+                line_draw.set_data(self.const_data_buffer, replay_buffer)
+                
+
                 self.counts_frames += 1
+                if self.counts_frames == self.num_blks:
+                    self.counts_frames = 0
+                    self.line_data.set_data(self.const_data_buffer, replay_buffer*0)
+                    
+                    self.line_trig.set_data(self.const_data_buffer, replay_buffer*0)
+                    
+                
                 self.draw_lock = 0
 
             self.counts_frames = 0
             self.data_buffer *= 0
-            stream = sd.RawOutputStream(
+            stream = sd.OutputStream(
                 samplerate=wavefile.samplerate,
-                channels=wavefile.channels,
+                channels=1,
                 callback=callback_streamout,
                 blocksize=self.frame_size,
+                dtype='float32',
                 finished_callback=event_obj.set)
+
+            if self.replay_channel == 0:
+                lineStop_selected = self.line_stop
+            else:
+                lineStop_selected = self.line_stop_vad
 
             with stream:
                 while not event_obj.is_set():
                     if self.draw_lock == 0:
                         ending = self.frame_time_record * (self.counts_frames + 1)
-                        self.line_stop.set_data([ending, ending], LINE_MINMAX)
+                        lineStop_selected.set_data([ending, ending], LINE_MINMAX)
                     plt.pause(self.frame_time_replay)
-                self.line_stop.set_data([0, 0], LINE_MINMAX)
+                lineStop_selected.set_data([0, 0], LINE_MINMAX)
+
 
     def callback_replay(self, event):
         if self.lock_button == 0:
             self.lock_button = 1
             if os.path.exists(self.wave_output_filename):
-                print('Start playback...')
+                print(f'Start playback (channel {self.replay_channel})...')
                 self._playsound(self.wave_output_filename)
                 print('Playback finished.')
             self.lock_button = 0

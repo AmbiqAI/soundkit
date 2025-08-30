@@ -5,7 +5,7 @@ from .loss_utils import FramewiseMSE, FramewiseMAE, CompressedMSE
 
 from .loss_mrl import MultiResolutionSTFTLossFromSTFT
 from .loss_focal import FocalLoss
-
+from .loss_sisdr import SI_SDR
 
 class LossFactory:
     """Factory class for creating loss functions."""
@@ -32,3 +32,4 @@ LossFactory.register("compressed_mse", CompressedMSE)
 LossFactory.register("mrl_mse", MultiResolutionSTFTLossFromSTFT)
 LossFactory.register("focal", FocalLoss)
 LossFactory.register("cross_entropy", tf.keras.losses.SparseCategoricalCrossentropy)
+LossFactory.register("si_sdr", SI_SDR)

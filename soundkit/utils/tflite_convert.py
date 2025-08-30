@@ -58,36 +58,92 @@ def convert_model(
 def tflite_convert(
         model: tf.keras.Model,
         dtype: str = "int8",
-        path_tflite: str = "./tflite/nnse.tflite"):
+        qbit: int = 8,
+        path_tflite: str = "./tflite/nnse.tflite",
+        converter_with_reset: bool = True):
     """tflite converter"""
     os.makedirs('tflite', exist_ok=True)
+
     def dataset_example():
         shapes = model._feed_input_shapes
         shape_inputs = shapes[0]
         for i in range(100):
-            x = np.random.uniform(-32768 / 2**8, 32767 / 2**8, size=shape_inputs).astype(np.float32)
-            reset_value = 0.0 if i < 80 else 1.0  # 80% no-reset, 20% reset
-            reset = np.array([reset_value], dtype=np.float32)
-            yield {"x_input": x, "reset_input": reset}
+            x = np.random.uniform(
+                -32768 / 2**qbit, 32767 / 2**qbit,
+                size=shape_inputs).astype(np.float32)
+            if converter_with_reset:
+                reset_value = 0.0 if i < 80 else 1.0  # 80% no-reset, 20% reset
+                reset = np.array([reset_value], dtype=np.float32)
+                yield {"x_input": x, "reset_input": reset}
+            else:
+                yield {"x_input": x}
     model.summary()
 
     net_tflite = convert_model(
         model,
         dataset_example,
         dtype=dtype)
-    
+
     os.makedirs(os.path.dirname(path_tflite), exist_ok=True)
-    
+
     path_tflite_b=Path(path_tflite)
     path_tflite_b.write_bytes(net_tflite)
     os.system(f"xxd -i {path_tflite_b} > {os.path.dirname(path_tflite)}/model_data_{dtype}.c")
+
+    
+    file=open('soundkit/tasks/vad2/evb/src/input_output.cc', 'w')
+    file.write('#include <stdint.h>\n')
+    x = tf.random.uniform(model._feed_input_shapes[0], dtype=tf.float32)
+
+    interpreter = tf.lite.Interpreter(
+        model_content=net_tflite)
+    interpreter.allocate_tensors()  # Needed before execution!
+
+    # Get input and output tensors.
+    input_details = interpreter.get_input_details()[0]
+    output_details = interpreter.get_output_details()[0]
+
+    if dtype in ("int8", "int16"):
+        input_scale, input_zero_point = input_details["quantization"]
+        input_data = x.numpy() / input_scale + input_zero_point
+
+        if dtype == "int8":
+            input_data = input_data.astype(np.int8)
+            file.write('int8_t inputs[]={\n')
+
+        elif dtype == "int16":
+            input_data = input_data.astype(np.int16)
+            file.write('int16_t inputs[]={\n')
+
+        input_data_flat = input_data.flatten()
+        for d in input_data_flat:
+            file.write(f'{d}, ')
+        file.write('};\n')
+    print(input_data)
+    interpreter.set_tensor(
+            input_details['index'],
+            input_data)
+
+    interpreter.invoke()
+    output_data = interpreter.get_tensor(output_details['index'])
+
+    if dtype == "int8":
+        file.write('int8_t outputs[]={\n')
+    elif dtype == "int16":
+        file.write('int16_t outputs[]={\n')
+    for d in output_data.flatten():
+        file.write(f'{d}, ')
+    file.write('};\n')
+
+
     return net_tflite
 
 def warp_tf_model(
         model,
         dim_feat=257,
         time_steps=1,
-        batch_size=1):
+        batch_size=1,
+        converter_with_reset: bool = True):
     """ Convert the model to tflite format """
     # states = model.make_states(batchsize=1)
 
@@ -97,19 +153,26 @@ def warp_tf_model(
         shape=input_shape,
         batch_size=batch_size,
         name='x_input') # batch_size fixed to 1
-
-    reset_input = tf.keras.Input(
-        shape=(),
-        batch_size=batch_size,
-        dtype=tf.float32,
-        name='reset_input')
-    outputs= model(inputs_feat, reset_input=reset_input)
-
-    model_wrap = tf.keras.Model(
+    if converter_with_reset:
+        reset_input = tf.keras.Input(
+            shape=(),
+            batch_size=batch_size,
+            dtype=tf.float32,
+            name='reset_input')
+        outputs= model(inputs_feat, reset_input=reset_input)
+        model_wrap = tf.keras.Model(
         inputs=[
             inputs_feat,
             reset_input
             ],
+        outputs=[
+            outputs,
+            ])
+    else:
+        outputs = model(inputs_feat)
+        model_wrap = tf.keras.Model(
+        inputs=[
+            inputs_feat],
         outputs=[
             outputs,
             ])

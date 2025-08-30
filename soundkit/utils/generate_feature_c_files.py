@@ -5,8 +5,8 @@ def generate_feature_c_files(
     file_name: str,
     param_struct_name: str,
     dir: str,
-    feature_mean: np.ndarray,
-    feature_std: np.ndarray,
+    feature_mean: np.ndarray | None,
+    feature_std: np.ndarray | None,
     *,
     sampling_rate: int = 16000,
     fftsize: int = 512,
@@ -28,6 +28,7 @@ def generate_feature_c_files(
 
     else:
         filter_name_def = f"extern const int16_t {filterbank_name}[];"
+
 
     # === Generate .c file
 
@@ -53,17 +54,16 @@ PARAMS_NNSP {param_struct_name} = {{
     .num_mfltrBank = {num_mfltrBank},
     .num_dnsmpl = {num_dnsmpl},
     .pt_stft_win_coeff = {stft_win_coeff_name},
-    .p_melBanks = {filterbank_name},
+    // .p_melBanks = {filterbank_name},
     .start_bin = {start_bin},
     .is_dcrm = {is_dcrm},
     .pre_gain_q1 = {pre_gain_q1} << 1, // q1
 }};
 
-
 /*************stats***********/
-{int2str_array(f"feature_mean_{task}", feature_mean*32768, nbits=32)}
+{int2str_array(f"feature_mean_{task}", feature_mean*32768 if feature_mean is not None else None, nbits=32) }
 
-{int2str_array(f"feature_stdR_{task}", feature_std*32768, nbits=32)}
+{int2str_array(f"feature_stdR_{task}", feature_std*32768 if feature_std is not None else None, nbits=32) }
 """
     Path(f"{dir}/{file_name}.c").write_text(c_code)
     print(f"✅ Wrote {file_name}.c")
@@ -81,7 +81,7 @@ extern const int32_t feature_stdR_{task}[];
 
 #define NUM_LOOKAHEAD {lookahead}
 extern PARAMS_NNSP {param_struct_name};
-
+#define FEATURE_EXTRACTION {1 if num_mfltrBank > 0 else 0}
 #endif  // __DEF_NN3_SE__
 """
     Path(f"{dir}/{file_name}.h").write_text(h_code)

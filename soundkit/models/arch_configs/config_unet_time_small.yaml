@@ -1,0 +1,12 @@
+name: unet
+kernel_size_time: 2
+kernel_size_freq: 5
+num_chs: [1, 16, 16, 16, 16]
+# num_chs: [1, 8, 16, 32, 64]
+separable: true
+activation: glu
+unroll_rnn: false
+normalization_layer:
+dim_out: 320
+dropout: 0.0
+output_activation: linear

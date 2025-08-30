@@ -1,4 +1,4 @@
-name: se_nn_arch72_mel
+name: se_cmse
 project: se
 job_dir: ./soundkit/tasks/se
 
@@ -41,26 +41,32 @@ train:
   warmup_epochs: 5
   epoch_loaded: random
   loss_function: {
-    type: compressed_mse,
+    type: mrl_mse,
+    # type: compressed_mse,
     params: {exp: 0.6, eps: 1e-8}
     }
   path:
-    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
-    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
+    model_name: se_loss-${train.loss_function.type}
+    checkpoint_dir: ./soundkit/tasks/se/models_trained/${train.path.model_name}
+    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${train.path.model_name}
   num_lookahead: 0
 
   feature: 
-    frame_size: 480
-    hop_size: 160
-    fft_size: 512
-    type: mel
-    bins: 72
+    frame_size: 128
+    hop_size: 64
+    fft_size: 128
+    type: logpspec
+    bins: 65
   standardization: true
   
   model:
     config_dir: ./soundkit/models/arch_configs
-    config_file: config_se_nn_arch72_mel.yaml
-  
+    config_file: config_se_crnn.yaml
+    override:
+      units: 72
+      stride_time: 1
+      len_time: 6
+
   debug: false
 
 evaluate:

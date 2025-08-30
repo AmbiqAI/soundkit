@@ -7,18 +7,19 @@ from .sk_datasets import (
     load_vad_train_clean_360, # for vad
     load_vad_train_other_500, # for vad
     load_vad_dev_clean,       # for vad
+    load_vad_test_clean,      # for vad
     load_vad_thchs30,           # for vad
     load_train_galaxy, # for kws
     load_val_galaxy,   # for kws
     load_train_clean_360,
     load_dev_clean,
-    load_test_clean,
     load_thchs30,
     load_wham_noise,
     load_fsd50k,
     load_esc50,
     load_musan,
     load_rirs_noises,
+    load_others,
 )
 
 
@@ -52,11 +53,12 @@ SKDatasetFactory.register("vad_train-clean-100", load_vad_train_clean_100)
 SKDatasetFactory.register("vad_train-clean-360", load_vad_train_clean_360)
 SKDatasetFactory.register("vad_train-other-500", load_vad_train_other_500)
 SKDatasetFactory.register("vad_dev-clean", load_vad_dev_clean)
+SKDatasetFactory.register("vad_test-clean", load_vad_test_clean)
 SKDatasetFactory.register("vad_thchs30", load_vad_thchs30)
 
 SKDatasetFactory.register("train-clean-360", load_train_clean_360)
 SKDatasetFactory.register("dev-clean", load_dev_clean)
-SKDatasetFactory.register("test-clean", load_test_clean)
+# SKDatasetFactory.register("test-clean", load_test_clean)
 SKDatasetFactory.register("thchs30", load_thchs30)
 
 SKDatasetFactory.register("train-galaxy", load_train_galaxy)
@@ -66,6 +68,8 @@ SKDatasetFactory.register("wham_noise", load_wham_noise)
 SKDatasetFactory.register("FSD50K", load_fsd50k)
 SKDatasetFactory.register("ESC-50-master", load_esc50)
 SKDatasetFactory.register("musan", load_musan)
+SKDatasetFactory.register("others", load_others)
+
 
 # Reverb
 SKDatasetFactory.register("RIRS_NOISES", load_rirs_noises)

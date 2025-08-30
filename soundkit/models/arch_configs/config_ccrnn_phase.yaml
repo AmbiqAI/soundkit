@@ -1,0 +1,42 @@
+name: ccrnn
+units: 65
+len_time: 6
+dropout_rate_input: 0.1
+dropout_rate: 0.2
+stride_time: 1
+layer_configs:
+  - type: dropout
+    rate: ${dropout_rate_input}
+
+  - type: conv2d
+    filters: ${units}
+    kernel_size: ["${len_time}", 65]
+    strides: [1, 1]
+    activation: tanh
+
+  - type: dropout
+    rate: ${dropout_rate}
+
+  - type: lstm
+    units: ${units}
+
+  - type: dropout
+    rate: ${dropout_rate}
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: dropout
+    rate: ${dropout_rate}
+
+  - type: fc
+    units: ${units}
+    activation: tanh
+
+  - type: dropout
+    rate: ${dropout_rate}
+
+  - type: fc
+    units: 65
+    activation: tanh

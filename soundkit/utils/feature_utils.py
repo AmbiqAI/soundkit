@@ -78,10 +78,11 @@ class FeatureExtractor:
             self.window=gen_stft_win(
                 win_size=feat_params['frame_size'],
                 hop=feat_params['hop_size'])
+            self.dim_feat = feat_params['frame_size']
+            self.mel_filter = None
         else:
 
             dim_feat = (feat_params['fft_size'] // 2) + 1
-            
             self.mel_filter = tf.eye(
                 dim_feat)
             self.dim_feat = dim_feat
@@ -195,11 +196,6 @@ class FeatureExtractor:
             states: Union[tf.Tensor, None]) -> tf.Tensor:
         feat_params = self.params.train['feature']
 
-        __, spec = self._extract_spec(
-            audio_sn,
-            states=states,
-        )
-
         if states is None:
             states = tf.zeros(
                 (audio_sn.shape[0],
@@ -217,4 +213,6 @@ class FeatureExtractor:
 
         feat = frames * self.window
 
-        return feat, spec
+        feat1 = tf.identity(feat)
+
+        return feat, feat1

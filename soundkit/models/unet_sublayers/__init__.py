@@ -8,13 +8,25 @@ class UNetParams(BaseModel):
     time_steps: int = 1
     dim_feat: int = 257
     dim_out: int = 257
-    kernel_size_time: int = 3
+    kernel_size_time_en: int = 2
+    kernel_size_time_de: int = 2
+    kernel_size_freq: int = 3
     num_chs: List[int] = [1, 16, 16, 16, 16]
     separable: bool = False
     activation: str = 'relu'
     unroll_rnn: bool = False
     normalization_layer: str | None = None
     dropout: float = 0.0
+    output_activation: str = 'sigmoid'
+
+    middle_net: Optional[str] = 'tcn' # 'lstm' or 'tcn' or None
+
+    rnn_res: bool = False
+    skip_connection_type: str = 'concat'
+
+    kernel_size_tcn: int = 3
+    dilations: List[int] = [1, 2, 4, 8, 16, 32]
+
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

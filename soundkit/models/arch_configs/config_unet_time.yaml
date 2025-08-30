@@ -1,0 +1,18 @@
+name: unet
+kernel_size_time_en: 1
+kernel_size_time_de: 2
+
+kernel_size_freq: 5
+num_chs: [1, 8, 8, 16, 32, 32]
+# num_chs: [1, 8, 16, 32, 64]
+separable: false
+activation: glu
+unroll_rnn: false
+normalization_layer:
+dim_out: 320
+dropout: 0.0
+output_activation: linear
+middle_net: 'tcn' # 'lstm' or 'tcn' or None
+
+kernel_size_tcn: 3
+dilations: [1, 2, 4, 8, 16]

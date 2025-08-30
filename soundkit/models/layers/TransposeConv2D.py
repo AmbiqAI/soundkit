@@ -15,8 +15,9 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             normalization_layer=None,
             **kwargs):
         super(SeparableTransposeConv2D, self).__init__(**kwargs)
-
-        kernel_initializer = "he_normal" if activation in ('relu', 'relu6') else "glorot_uniform"
+        if activation == 'glu':
+            filters *= 2
+        kernel_initializer = "he_normal" if activation in ('relu', 'relu6', 'glu') else "glorot_uniform"
         len_filter_freq = kernel_size[1]
         self.kernel_size_time = kernel_size[0]
         self.upsampling2= tf.keras.layers.UpSampling2D(
@@ -36,7 +37,7 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             kernel_size=kernel_size,
             padding='valid',
             groups=num_channels_in,
-            use_bias=False,
+            use_bias=True,
             kernel_initializer=kernel_initializer)
         self.pointwise = tf.keras.layers.Conv2D(
             filters=filters,
@@ -60,6 +61,7 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
         """ Forward pass """
         # input shape = (B, T, F, C)
         # inputs_up = updsampling_by_2(inputs)
+
         inputs_up = self.upsampling2(inputs)
         inputs_up = inputs_up[:,:,:-1,:]
         inputs_up = tf.concat(
@@ -71,6 +73,7 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
         outputs = self.pointwise(outputs)
         outputs = self.norm(outputs)
         outputs = self.activation(outputs)
+
         return outputs
 
 class TransposeConv2D(tf.keras.layers.Layer):

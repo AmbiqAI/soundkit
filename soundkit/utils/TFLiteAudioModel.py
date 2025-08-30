@@ -28,17 +28,18 @@ class TFLiteAudioModel:
             dtype (str): Input/output precision, e.g., 'float32', 'int8', or 'int16'.
         """
         super().__init__(*args, **kwargs)
-        
+
         self.interpreter = interpreter
         self.dtype = dtype
 
         if len(interpreter.get_input_details()) == 1 :
             self.input_details = interpreter.get_input_details()[0]
             self.output_details = interpreter.get_output_details()[0]
+
         elif len(interpreter.get_input_details()) == 2:
             self.reset_details = interpreter.get_input_details()[0]
             self.input_details = interpreter.get_input_details()[1]
-            
+
             self.output_details = interpreter.get_output_details()[0]
 
     def __call__(self,
@@ -91,3 +92,4 @@ class TFLiteAudioModel:
         """Reset the TFLite model state."""
         # self.interpreter.reset_all_variables() # doesn't work
         self.interpreter.allocate_tensors()  # Reallocate tensors to reset state
+        print("Model state reset.")

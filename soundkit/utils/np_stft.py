@@ -1,6 +1,8 @@
 import numpy as np
 from soundkit.utils.tf_stft import gen_stft_win
 from numpy.lib.stride_tricks import sliding_window_view
+
+
 class  StreamingSTFT:
     """
     Stateful streaming STFT processor using overlap and windowing.
@@ -11,7 +13,8 @@ class  StreamingSTFT:
             frame_len=480,
             hop_len=160,
             fft_len=512,
-            stream=True):
+            stream=True,
+            skip_fft=False):
         """
         Args:
             frame_len (int): Length of each STFT frame in samples.
@@ -26,6 +29,8 @@ class  StreamingSTFT:
 
         self.buffer = np.zeros(self.frame_len - self.hop_len, dtype=np.float32)
         self.stream=stream
+
+        self.skip_fft = skip_fft
 
     def process(self, inputs):
         """
@@ -55,10 +60,14 @@ class  StreamingSTFT:
         self.buffer = np.concatenate([self.buffer, inputs])
         
         frame = self.buffer[:self.frame_len] * self.window
-        stft_frame = np.fft.rfft(frame, n=self.fft_len)
+        
+        if self.skip_fft:
+            stft_frames = frame
+        else:
+            stft_frames = np.fft.rfft(frame, n=self.fft_len)
         self.buffer = self.buffer[self.hop_len:]  # slide window
 
-        return stft_frame
+        return stft_frames
 
     def blk_process(
             self,
@@ -69,13 +78,15 @@ class  StreamingSTFT:
         # Apply stepping
         x_bk = windows[::self.hop_len]
         frames = x_bk * self.window
-        stft_frames = np.fft.rfft(frames, n=self.fft_len)
+        if self.skip_fft:
+            stft_frames = frames
+        else:
+            stft_frames = np.fft.rfft(frames, n=self.fft_len)
         return stft_frames
 
     def reset(self):
         """Reset the internal buffer."""
         self.buffer = self.buffer * 0
-
 
 class StreamingISTFT:
     """

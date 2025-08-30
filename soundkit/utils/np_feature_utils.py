@@ -25,11 +25,16 @@ class FeatureExtractor_np:
             mel_bins=72,
             stream=True):
 
+
+        skip_fft = True if feat_type in ("time") else False
+
         self.stft_exec = StreamingSTFT(
             frame_len,
             hop_len,
             fft_len,
-            stream=stream)
+            stream=stream,
+            skip_fft=skip_fft,
+            )
 
         self.sampling_rate = sampling_rate
         self.feat_type=feat_type
@@ -40,6 +45,7 @@ class FeatureExtractor_np:
             "logampspec": self._extract_logampspec,
             "mel": self._extract_mel,
             "hybrid": self._extract_logpspec_mel,
+            "time": self._extract_frames,
         }
 
         if feat_type == "mel":
@@ -49,6 +55,7 @@ class FeatureExtractor_np:
                     sample_rate     = sampling_rate,)
             self.mel_filter = fbanks.T
             self.dim_feat = mel_bins
+
         elif feat_type == "hybrid":
 
             fbanks = melspec_gen(
@@ -58,12 +65,23 @@ class FeatureExtractor_np:
                 thresh_mel=50)
             self.mel_filter = fbanks.T
             self.dim_feat = fbanks.shape[0]
-        else:
+
+        elif feat_type in ("spec", "pspec", "logpspec", "logampspec"):
+
             dim_feat = (fft_len // 2) + 1
 
             self.mel_filter = np.eye(
                 dim_feat)
             self.dim_feat = dim_feat
+
+        elif feat_type == "time":
+
+            self.mel_filter = None
+            self.dim_feat = frame_len
+
+        else:
+            raise ValueError(f"Unknown feature type: {feat_type}")
+
     @property
     def dim(self) -> int:
         """Return the number of feature dimensions."""
@@ -77,6 +95,14 @@ class FeatureExtractor_np:
         extractor= self._extractors[self.feat_type]
 
         return extractor(audio)
+    
+    def _extract_frames(
+            self,
+            audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+
+        spec = self.stft_exec.process(audio_sn)
+
+        return spec, spec.copy()
 
     def _extract_spec(
             self,
