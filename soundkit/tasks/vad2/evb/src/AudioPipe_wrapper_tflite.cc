@@ -15,15 +15,15 @@
 #include <math.h>
 extern int tflm_validator_model_init(ns_model_state_t *ms);
 #define FEATURE_QBIT 15 // Q-bit for feature extraction
-#define NN_DIM_OUT 2 // Number of output classes for the NN model
-#define NN_DIM_IN 160 // Number of input features for the NN model
+// #define NN_DIM_OUT 2 // Number of output classes for the NN model
+// #define NN_DIM_IN 160 // Number of input features for the NN modele
 // Feature class instance
-
+FeatureClass FEAT_INST;
+IIR_CLASS dcrm_inst;
 PARAMS_NNSP *pt_param = &params_nn1_nnvad;
 // TFLM Config
 static ns_model_state_t tflm;
-extern int16_t inputs[];
-extern int16_t outputs[];
+
 // TF Tensor Arena
 
 #if (TFLM_MODEL_LOCATION == NS_AD_PSRAM)
@@ -53,28 +53,45 @@ extern int16_t outputs[];
 #endif
 
 // Resource Variable Arena - always in TCM for now
-static constexpr int kVarArenaSize =
-    4 * (TFLM_VALIDATOR_MAX_RESOURCE_VARIABLES + 1) * sizeof(tflite::MicroResourceVariables);
+static constexpr int kVarArenaSize = 4096;
+    // 4 * (TFLM_VALIDATOR_MAX_RESOURCE_VARIABLES + 1) * sizeof(tflite::MicroResourceVariables);
 alignas(16) static uint8_t var_arena[kVarArenaSize];
-// Resource Variable Arena - always in TCM for now
-// static constexpr int kVarArenaSize = 4096;
-//     // 4 * (TFLM_VALIDATOR_MAX_RESOURCE_VARIABLES + 1) * sizeof(tflite::MicroResourceVariables);
-// alignas(16) static uint8_t var_arena[kVarArenaSize];
 // Validator Stuff
 
 volatile int example_status = 0; // Prevent the compiler from optimizing out while loops
 
+int8_t num_lookeahead = NUM_LOOKAHEAD;
+int32_t spec_buffer[514 * 4];
+
+float16_t nn_reset=0.0f;
 
 
 int16_t vad_trigger_counts=0;
-int16_t nn_dim_input = 1;
-int16_t nn_dim_output = 1;
+int16_t nn_dim_input;
+int16_t nn_dim_output;
 int AudioPipe_wrapper_init(void)
 { 
     ns_model_state_t *pt_tflm = &tflm;
-
+    nn_dim_input = 1;
+    nn_dim_output = 1;
+#if FEATURE_EXTRACTION==1
+        FeatureClass_construct(
+            &FEAT_INST,
+            (const int32_t*) feature_mean_vad2,
+            (const int32_t*) feature_stdR_vad2,
+            FEATURE_QBIT,
+            pt_param->num_mfltrBank, // FEATURE_NUM_MFC
+            pt_param->winsize_stft, // FEATURE_WINSIZE,
+            pt_param->hopsize_stft, // FEATURE_HOPSIZE,
+            pt_param->fftsize, // FEATURE_FFTSIZE,
+            pt_param->pt_stft_win_coeff,
+            pt_param->p_melBanks);
+#endif
+    if (pt_param->is_dcrm)
+        IIR_CLASS_init(&dcrm_inst);
+    
     // Initialize the model, get handle if successful
-
+    
     tflm.runtime = TFLM;
     tflm.model_array = mut_model;
     tflm.arena = tensor_arena;
@@ -106,7 +123,7 @@ int AudioPipe_wrapper_init(void)
         ns_lp_printf("input zero_point=%d\n", pt_tflm->interpreter->input(m)->params.zero_point);
 
         ns_lp_printf("input dims=%d\n", pt_tflm->interpreter->input(m)->dims->size);
-        nn_dim_input = 1;
+
         for (int i = 0; i < pt_tflm->interpreter->input(m)->dims->size; i++) {
             nn_dim_input *= pt_tflm->interpreter->input(m)->dims->data[i];
             ns_lp_printf("input dim[%d]=%d\n", i, pt_tflm->interpreter->input(m)->dims->data[i]);
@@ -115,29 +132,86 @@ int AudioPipe_wrapper_init(void)
     
     for (int m = 0; m < numOutputs; m++) {
         ns_lp_printf("Output tensor %d has %d bytes\n", m, pt_tflm->interpreter->output(m)->bytes);
-        nn_dim_output = 1;
+
         for (int i = 0; i < pt_tflm->interpreter->output(m)->dims->size; i++) {
             nn_dim_output *= pt_tflm->interpreter->output(m)->dims->data[i];
             ns_lp_printf("output dim[%d]=%d\n", i, pt_tflm->interpreter->output(m)->dims->data[i]);
         }
         // self->nn_dim_out = output_dim; // Set the number of output dimensions for the model
     }
-
-    TfLiteStatus invoke_status = tflm.interpreter->Invoke(); 
-    if (invoke_status != kTfLiteOk) {
-        while (1)
+    int input_idx;
+    float32_t input_scale;
+    int input_zero_point;
+    float32_t val;
+    int16_t input;
+    float32_t output_scale;
+    int output_zero_point;
+    if (0)
+    {
+        for (int m=0; m < 10; m++)
         {
-            example_status = NS_STATUS_FAILURE; // invoke failed, so hang
+            input_idx = 0;
+            input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+            input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+
+            nn_reset = 1.0f; // Reset the flag
+            val = (float32_t) nn_reset;
+            input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+            pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
+
+            input_idx=1;
+            input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+            input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+
+            for (int i =0; i < pt_param->num_mfltrBank; i++)
+            {
+                input = i * 20;
+                pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
+            }
+
+            // tflm.interpreter->Reset(); // Reset the interpreter state before invoking
+            TfLiteStatus invoke_status = tflm.interpreter->Invoke(); 
+            if (invoke_status != kTfLiteOk) {
+                while (1)
+                {
+                    example_status = NS_STATUS_FAILURE; // invoke failed, so hang
+                }
+            }
+            output_scale = tflm.model_output[0]->params.scale;
+            output_zero_point = tflm.model_output[0]->params.zero_point;
+
+
+            for (int i = 0; i < nn_dim_output; i++) {
+                ns_printf("%d ", tflm.model_output[0]->data.i16[i]);
+            }
+            ns_printf("\n");
+
+            ns_lp_printf("Model initialized\n");
         }
     }
-    ns_lp_printf("Inference success\n");
     return 0;
 }
 
 int AudioPipe_wrapper_reset(void)
 {
+    int32_t *pt_spec_buffer = spec_buffer;
+    if (num_lookeahead > 0)
+    {
+        for (int i = 0; i < (pt_param->fftsize+2) * num_lookeahead; i++)
+        {
+            pt_spec_buffer[i] = 0;
+        }
+    }
+    // tflm.interpreter->Reset();
+#if FEATURE_EXTRACTION==1
+    FeatureClass_setDefault(&FEAT_INST);
+#endif
     ns_model_state_t *pt_tflm = &tflm;
     pt_tflm->interpreter->Reset();
+    if (pt_param->is_dcrm)
+        IIR_CLASS_reset(&dcrm_inst);
+    nn_reset = 1.0f; // Reset the NN model state
+    vad_trigger_counts = 0;
     return 0;
 }
 
@@ -150,14 +224,104 @@ int AudioPipe_wrapper_frameProc(
     2. melspectrogram
     */
     ns_model_state_t *pt_tflm = &tflm;
-    ns_printf("dim input: %d, dim output: %d\n", nn_dim_input, nn_dim_output);
+    float32_t outputs[10];
+    int32_t *pt_spec = FEAT_INST.state_stftModule.spec;
+    int32_t *pt_spec_buffer = spec_buffer;
+    int32_t tmp_spec[514];
+
+    static int16_t tmp_16s[300];
+    static float scalar_norm = 1.0 / (float) (1 << FEATURE_QBIT);
+    int16_t *pt_input;
+    int32_t gain= (int32_t) pt_param->pre_gain_q1;
+    
+    if (gain != 2)
+    {
+        for (int i = 0; i < pt_param->hopsize_stft; i++)
+        {
+            int32_t tmp = (int32_t) pcm_input[i] * gain;
+            pcm_input[i] = (int16_t) MIN(MAX((tmp >> 1), -32768), 32767);
+        }
+
+    }
+
+    if (pt_param->is_dcrm)
+    {
+        IIR_CLASS_exec(&dcrm_inst, tmp_16s, pcm_input, pt_param->hopsize_stft);
+        pt_input = tmp_16s;
+    }
+    else
+    {
+        pt_input = pcm_input;
+        
+    }
+
+#if FEATURE_EXTRACTION==1
+    FeatureClass_execute(&FEAT_INST, pt_input);
+#endif
+    // move pt_spec to pt_spec_buffer
+    if (num_lookeahead > 0)
+    {
+        arm_memcpy_s8(
+            (int8_t*) tmp_spec,
+            (int8_t*) pt_spec,
+             (pt_param->fftsize+2)  * sizeof(int32_t));
+
+        arm_memcpy_s8(
+            (int8_t*) pt_spec_buffer,
+            (int8_t*) (pt_spec_buffer + (pt_param->fftsize+2) ),
+            (pt_param->fftsize+2)  * (num_lookeahead-1) * sizeof(int32_t));
+        
+        arm_memcpy_s8(
+            (int8_t*) (pt_spec_buffer + (pt_param->fftsize+2)  * (num_lookeahead-1)),
+            (int8_t*) pt_spec,
+            (pt_param->fftsize+2)  * sizeof(int32_t));
+
+        arm_memcpy_s8(
+            (int8_t*) pt_spec,
+            (int8_t*) tmp_spec,
+            (pt_param->fftsize+2)  * sizeof(int32_t));
+    }
+#if FEATURE_EXTRACTION==1
+    int16_t *ptfeat = FEAT_INST.normFeatContext;
+#else
+    int16_t *ptfeat = pcm_input;
+#endif
+    int input_idx=0;
+    float32_t input_scale;
+    int input_zero_point;
+
+    if (pt_tflm->interpreter->inputs_size() == 1)
+    {
+        input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+        input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+    }
+    else if (pt_tflm->interpreter->inputs_size() == 2)
+    {
+        input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+        input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+
+        float32_t val = ((float32_t) nn_reset );
+        int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+        pt_tflm->interpreter->input(input_idx)->data.i16[0] =  input;
+        nn_reset = 0.0f; // Reset the flag
+
+        input_idx=1;
+        float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
+        int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
+
+    }
+    else
+    {
+        while (1)
+            example_status = NS_STATUS_FAILURE; // hang, wrong number of inputs
+    }
+    
+
     for (int i =0; i < nn_dim_input; i++)
     {
-        pt_tflm->interpreter->input(0)->data.i16[i] = inputs[i];
-        if (i < 10)
-        {
-            ns_printf("input %d: %d\n", i, inputs[i]);
-        }
+        float32_t val = ((float32_t) ptfeat[i] ) * scalar_norm;
+        int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+        pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
     }
 
     TfLiteStatus invoke_status = tflm.interpreter->Invoke(); 
@@ -168,25 +332,40 @@ int AudioPipe_wrapper_frameProc(
         }
     }
 
-    int max_err = 0;
-    for (int i =0; i < nn_dim_output; i++)
-    {
-        int err = (int) pt_tflm->interpreter->output(0)->data.i16[i] - (int) outputs[i];
+    float32_t output_scale = tflm.model_output[0]->params.scale;
+    int output_zero_point = tflm.model_output[0]->params.zero_point;
 
-        if (err < 0) err = -err;
-
-        if (err > max_err) max_err = err;
-
-        if (i < MIN(10, nn_dim_output))
-        {
-            ns_printf("output %d: %d, %d (ref)\n",
-                 i,
-                 pt_tflm->interpreter->output(0)->data.i16[i],
-                 outputs[i]);
-        }
+    float32_t den=0.0f;
+    for (int i = 0; i < nn_dim_output; i++) {
+        float32_t out; 
+        out = (float32_t) (tflm.model_output[0]->data.i16[i] - output_zero_point);
+        out = out * output_scale;
+        outputs[i] = exp(out);
+        den += outputs[i];
     }
 
-    ns_printf("max err: %d\n", max_err);
+    int16_t trigger = 0;
+    outputs[1] /= den;
+    if (outputs[1] >= 0.5f) {
+        trigger = ((int16_t) 32767) >> 1; // trigger
+        vad_trigger_counts++;
+    }
+    else {
+        trigger = 0; // no trigger
+        vad_trigger_counts=0;
+    }
+
+    if (vad_trigger_counts == 180) {
+        // AudioPipe_wrapper_reset(); // Reset the vad trigger counts
+        // trigger=-32768 >> 1;
+        vad_trigger_counts=0; // Reset the vad trigger counts
+    }
+
+    
+    for (int i = 0; i < 160; i++) {
+        pcm_output[i] = (int16_t) trigger;
+    }
+
     return 0;
 }
 
