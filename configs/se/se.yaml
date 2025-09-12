@@ -79,7 +79,7 @@ demo:
   epoch_loaded: best
   platform: evb # or pc
   tflite_dir: ./soundkit/tasks/se/tflite
-  # evb_dir: ./soundkit/tasks/se/evb
-  evb_dir: ./soundkit/tasks/se/evb_webusb
+  evb_dir: ./soundkit/tasks/se/evb
+  # evb_dir: ./soundkit/tasks/se/evb_webusb
   
   pre_gain: 1

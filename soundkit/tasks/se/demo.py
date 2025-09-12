@@ -1,3 +1,4 @@
+""" DEMO for SE task"""
 import os
 import logging
 import subprocess
@@ -9,13 +10,17 @@ from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.tf_copy_model import copy_model_weights
-from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from soundkit.utils.basic_dsp import DCRemover
+from soundkit.utils.np_stft import StreamingISTFT
+from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.mel import gen_mel_c
 from .export import export
 
 logging.basicConfig(
@@ -31,6 +36,7 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
+
     if params.demo.platform == 'evb':
         demo_evb(params)
     elif params.demo.platform == 'pc':
@@ -73,8 +79,6 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -86,11 +90,7 @@ def demo_evb(params: SKTaskParams):
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
-
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.feature_utils import FeatureExtractor
-    from ...utils.mel import gen_mel_c
 
     filterbank_name='filter_banks'
 
@@ -113,6 +113,7 @@ def demo_evb(params: SKTaskParams):
             stats_name=stats_name)
     else:
         stats = None
+
     generate_feature_c_files(
         file_name="def_nn3_se",
         param_struct_name="params_nn3_se",
@@ -123,7 +124,7 @@ def demo_evb(params: SKTaskParams):
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_params['bins'],
+        num_mfltrBank=feat_extractor.dim_feat,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
@@ -222,8 +223,6 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-
-
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     batchsize_train = params.train['batchsize']
@@ -287,7 +286,7 @@ def demo_pc(params: SKTaskParams):
         interpreter=interpreter,
         dtype=dtype,
     )
-    from soundkit.utils.np_stft import StreamingISTFT
+
     class SEModel:
         """VAD model class in tflite for processing audio input and returning VAD output."""
         def __init__(
@@ -306,7 +305,7 @@ def demo_pc(params: SKTaskParams):
                 hop_len=params.train.feature.hop_size,
                 fft_len=params.train.feature.fft_size,
             )
-            self.reset_nn = 0.0
+
             if num_lookahead > 0:
                 _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(num_lookahead):
@@ -318,7 +317,6 @@ def demo_pc(params: SKTaskParams):
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
             """Process input audio signal and return VAD output."""
-            shape=inputs.shape
             inputs=inputs.flatten()
             if params.data['signal']['dc_removal']:
                 inputs = self.dc_remover.process(inputs)
@@ -330,17 +328,12 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            if self.reset_nn > 0.5:
-                reset_tensor = np.array([1.0], dtype=np.float32)
-                self.reset_nn = 0.0
-            else:
-                reset_tensor = np.array([0.0], dtype=np.float32)
-            tfmask = self.model_tflite(features, reset_tensor)
+
+            tfmask = self.model_tflite(features)
 
             tfmask = tfmask.flatten()
-            
+
             pcm_out = self.istft.process(spec * tfmask)
-            # outputs = outputs.reshape(shape)
 
             return pcm_out.reshape((-1,1))
 
@@ -349,20 +342,21 @@ def demo_pc(params: SKTaskParams):
             self.feat_extractor.reset()
             self.specs = []
             self.istft.reset()
-            self.reset_nn = 1
             if self.num_lookahead > 0:
                 _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(self.num_lookahead):
                     self.specs.append(z_spec.copy())
             if hasattr(self, 'dc_remover'):
                 self.dc_remover.reset()
+
+    # 4. Run the AudioShowClass
     se_model = SEModel(
         model_tflite=model_tflite,
         feat_extractor=feat_extractor,
         stats=stats,
         num_lookahead=params.train.num_lookahead
     )
-    
+
     aud_handle = AudioShowClass(
         record_seconds=15,
         non_stop=True,

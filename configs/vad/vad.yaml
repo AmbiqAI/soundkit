@@ -66,7 +66,7 @@ train:
   standardization: true
   
   model:
-    config_dir: ./zoo/vad
+    config_dir: ./soundkit/model/arch_configs
     config_file: config_crnn_vad.yaml
     override:
       units: 28

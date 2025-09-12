@@ -24,8 +24,10 @@ class unet(tf.keras.Model):
         self.freq_bins, self.pad_freq_bins = get_unet_info(
             params.num_chs,
             dim_feat=params.dim_feat)
-        params.dim_out = params.dim_feat
-
+        
+        # import pdb; pdb.set_trace()
+        # params.dim_out = params.dim_feat
+        
         self.F=self.freq_bins[-1]
         self.chs=params.num_chs[-1]
         self.states = self.make_states()
@@ -111,8 +113,6 @@ class unet(tf.keras.Model):
     def call(
             self,
             inputs,
-            reset_input=tf.constant([0.0], dtype=tf.float32),
-            # states=None,
             training=False):
         """ Forward pass"""
 

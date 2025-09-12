@@ -84,6 +84,7 @@ class DataServiceClass:
 
                 self.wavefile = None
                 print('Stop recording')
+                print("Recording wavs saved in audio_result/audio.wav, audio_raw.wav and audio_debug.wav")
         else:
             # The data 'block' (in C) is defined below:
             # static char msg_store[30] = "Audio16bPCM_to_WAV";

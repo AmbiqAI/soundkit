@@ -84,6 +84,8 @@ class DataServiceClass:
                 wavfile.write("audio_result/audio_se.wav", samplerate, sig2.astype(np.int16))
 
                 self.wavefile = None
+
+                print("Recording wavs saved in audio_result/audio.wav, audio_raw.wav and audio_se.wav")
                 print('Stop recording')
 
                 if self.playback:

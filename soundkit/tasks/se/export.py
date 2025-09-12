@@ -46,6 +46,7 @@ def export(params: SKTaskParams):
         model,
         time_steps=1,
         dim_feat=dim_feat)
+
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype='int16',

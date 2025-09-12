@@ -133,7 +133,7 @@ int AudioPipe_wrapper_init(void)
         }
         // self->nn_dim_out = output_dim; // Set the number of output dimensions for the model
     }
-    
+    pt_tflm->interpreter->Reset();
     return 0;
 }
 

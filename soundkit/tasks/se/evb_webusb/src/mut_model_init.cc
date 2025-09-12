@@ -82,26 +82,27 @@ int tflm_validator_model_init(ns_model_state_t *ms) {
     }
     ns_lp_printf("Model mapped.\n");
 #ifdef NS_TFSTRUCTURE_RECENT
-    static tflite::MicroMutableOpResolver<16> resolver;
+    static tflite::MicroMutableOpResolver<17> resolver;
 #else
-    static tflite::MicroMutableOpResolver<16> resolver(ms->error_reporter);
+    static tflite::MicroMutableOpResolver<17> resolver(ms->error_reporter);
 #endif
     resolver.AddCallOnce();
 resolver.AddVarHandle();
 resolver.AddReadVariable();
 resolver.AddFullyConnected();
-resolver.AddStridedSlice();
-resolver.AddSub();
-resolver.AddConcatenation();
 resolver.AddReshape();
+resolver.AddConcatenation();
 resolver.AddConv2D();
-resolver.AddTanh();
+resolver.AddStridedSlice();
+resolver.AddAssignVariable();
 resolver.AddUnpack();
 resolver.AddAdd();
 resolver.AddSplit();
 resolver.AddLogistic();
 resolver.AddMul();
-resolver.AddAssignVariable();
+resolver.AddTanh();
+resolver.AddResizeNearestNeighbor();
+resolver.AddQuantize();
 
 
     // Allocate ResourceVariable stuff if needed

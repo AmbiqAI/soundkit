@@ -81,5 +81,6 @@ export:
 demo:
   epoch_loaded: 0
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb
+  platform: pc
+  evb_dir: ${job_dir}/evb_webusb
   pre_gain: 1
