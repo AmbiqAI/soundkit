@@ -80,7 +80,7 @@ train:
 
 evaluate:
   epoch_loaded: 0
-
+  eval: true
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]

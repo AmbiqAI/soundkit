@@ -47,8 +47,8 @@ train:
     params: {}
     
   path:
-    full_name: Reset-${train.reset_every_batch}-${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
-    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
+    full_name: model
+    checkpoint_dir:  zoo/vad/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 0
   spec_aug: false
@@ -66,7 +66,7 @@ train:
   standardization: true
   
   model:
-    config_dir: ./soundkit/models/arch_configs
+    config_dir: ./zoo/vad
     config_file: config_crnn_vad.yaml
     override:
       units: 28
@@ -80,16 +80,16 @@ train:
 
 evaluate:
   epoch_loaded: best
-
+  eval: true
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:
-  dtype: int8
+  dtype: int16
   epoch_loaded: best
-  tflite_dir: ${job_dir}/tflite_${export.dtype}
+  tflite_dir: ${job_dir}/tflite
 
 demo:
   platform: pc # evb or pc

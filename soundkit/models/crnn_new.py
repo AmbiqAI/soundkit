@@ -144,10 +144,12 @@ class CRNN(tf.keras.Model):
             else:
                 c_state.assign(tf.random.truncated_normal(tf.shape(c_state), stddev=1/np.sqrt(tf.shape(c_state)[-1])))
 
-    def call(self, x, mask = 1.0, reset_input=tf.constant([0.0], dtype=tf.float32), training=False):
+    def call(
+            self,
+            x,
+            mask = 1.0,
+            training=False):
         """Forward pass through the CRNN model."""
-        
-        reset_input = reset_input[0]
 
         idx_cnn = 0
         idx_lstm = 0
@@ -160,7 +162,7 @@ class CRNN(tf.keras.Model):
                 x = tf.expand_dims(x, axis=-1)
                 x = layer(x, training=training)
                 x = x[:, :, 0, :]
-                self.cnn_states[idx_cnn].assign(state_update * (1 - reset_input))  # Update state
+                self.cnn_states[idx_cnn].assign(state_update)  # Update state
                 idx_cnn += 1
             elif config['type'] == 'lstm':
                 h_state, c_state = self.h_states[idx_lstm], self.c_states[idx_lstm]
@@ -168,8 +170,8 @@ class CRNN(tf.keras.Model):
                                 x,
                                 initial_state = (h_state, c_state),
                                 training = training)
-                h_state.assign(h_state_update * (1 - reset_input))
-                c_state.assign(c_state_update * (1 - reset_input))
+                h_state.assign(h_state_update)
+                c_state.assign(c_state_update)
                 idx_lstm += 1
             else:
                 x = layer(x, training=training)

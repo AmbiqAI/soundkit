@@ -1,22 +1,19 @@
+"""VAD Demo Script"""
 import os
 import logging
 import subprocess
 import shutil
 from pathlib import Path
-import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
-from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
-from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
-from soundkit.utils.basic_dsp import DCRemover
-from .export import export
+from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.mel import gen_mel_c
+from .export import export, build_vad_tflite
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,7 +48,7 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}.tflite"
+    tflite_filename_src = f"{params.name}_{params.export.dtype}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -74,8 +71,6 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -87,10 +82,7 @@ def demo_evb(params: SKTaskParams):
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
-
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.mel import gen_mel_c
 
     filterbank_name='filter_banks'
 
@@ -147,6 +139,8 @@ def demo_evb(params: SKTaskParams):
     log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
     params.export['epoch_loaded'] = params.demo['epoch_loaded']
     params.export['tflite_dir'] = params.demo['tflite_dir']
+
+    params.export.eval=False
     export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
@@ -228,7 +222,6 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    from .export import build_vad_tflite
     hop_size = params.train['feature']['hop_size']
     sample_rate = params.data['signal']['sampling_rate']
     vad_model = build_vad_tflite(params)

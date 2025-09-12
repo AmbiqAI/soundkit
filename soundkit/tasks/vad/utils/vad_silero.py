@@ -17,24 +17,20 @@ def get_vad(wav, sampling_rate=16000):
     if len(timestamps) != 0:
         starts = np.array([item['start'] for item in timestamps])
         ends = np.array([item['end'] for item in timestamps])
-        
+
         for s,e in zip(starts, ends):
             vad[s:e] = 1.0
     return vad
+
 def calculate_vad_accuracy(vad, vad_gt):
     # assert len(vad) == len(vad_gt), "VAD and ground truth must have the same length"
-    
-    
     error = vad != vad_gt
 
     error = error.astype(np.int64)
-
-
     mask = vad_gt == 0
     fa = error[mask].sum()  # False Alarms
     fa_total = mask.sum()
     fa = fa / fa_total
-    
 
     mask = vad_gt == 1
     fr = error[mask].sum()  # False Rejections

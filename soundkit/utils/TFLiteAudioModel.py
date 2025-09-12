@@ -32,18 +32,12 @@ class TFLiteAudioModel:
         self.interpreter = interpreter
         self.dtype = dtype
 
-        if len(interpreter.get_input_details()) == 1 :
-            self.input_details = interpreter.get_input_details()[0]
-            self.output_details = interpreter.get_output_details()[0]
-        elif len(interpreter.get_input_details()) == 2:
-            self.reset_details = interpreter.get_input_details()[0]
-            self.input_details = interpreter.get_input_details()[1]
-            
-            self.output_details = interpreter.get_output_details()[0]
-
-    def __call__(self,
-                input_tensor: np.ndarray,
-                reset_tensor: np.ndarray | None = None) -> np.ndarray:
+        self.input_details = interpreter.get_input_details()[0]
+        self.output_details = interpreter.get_output_details()[0]
+        
+    def __call__(
+            self,
+            input_tensor: np.ndarray) -> np.ndarray:
         """
         Runs the model on input audio.
 
@@ -53,9 +47,8 @@ class TFLiteAudioModel:
         Returns:
             np.ndarray: Model output reshaped to match input layout.
         """
-        
+
         # Handle quantized inputs
-        
         if self.dtype in ("int8", "int16"):
             scale, zero_point = self.input_details["quantization"]
             input_tensor = input_tensor / scale + zero_point
@@ -63,16 +56,7 @@ class TFLiteAudioModel:
         else:
             input_tensor = input_tensor.astype(np.float32)
         self.interpreter.set_tensor(self.input_details['index'], input_tensor)
-        # import pdb; pdb.set_trace()
-        
-        if reset_tensor is not None:
-            if self.dtype in ("int8", "int16"):
-                scale, zero_point = self.reset_details["quantization"]
-                reset_tensor = reset_tensor / scale + zero_point
-                reset_tensor = reset_tensor.astype(np.int8 if self.dtype == "int8" else np.int16)
-            else:
-                reset_tensor = reset_tensor.astype(np.float32)
-            self.interpreter.set_tensor(self.reset_details['index'], reset_tensor)
+
 
         # Inference
         self.interpreter.invoke()
