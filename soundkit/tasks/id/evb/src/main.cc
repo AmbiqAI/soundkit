@@ -253,7 +253,7 @@ int main(void) {
     float16_t corr[4];
     for (int i=0; i < 100; i++)
     {
-        nnidCntrlClass_exec(&nnidControl_inst, pcm_input, corr, &g_audioRecording);
+        nnidCntrlClass_exec(&nnidControl_inst, pcm_input, corr);
     }
     ns_printf("\n");
     ns_stop_perf_profiler();
@@ -269,7 +269,7 @@ int main(void) {
     tic();
     for (int i=0; i < 100; i++)
     {   
-        nnidCntrlClass_exec(&nnidControl_inst, pcm_input, corr, &g_audioRecording);
+        nnidCntrlClass_exec(&nnidControl_inst, pcm_input, corr);
     }
     elapsedTime = toc();
     ns_printf("Elapsed time: %d us\n", elapsedTime);
@@ -284,9 +284,11 @@ int main(void) {
     // USB. This gives the user a chance to start the server then
     // pressing the button to let the EVB it is ready to start RPCing.
 
-    ns_printf("Type $tools/python -m record_evb --tty <your tty>\n");
+    ns_printf("Open the other terminal\n");
+    ns_printf("Type $ soundkit -t id -m demo -c your_config.yaml demo.platform=evb --view\n");
 
     ns_printf("Start the PC-side server, then press Button 0 to get started\n");
+    
     while (g_intButtonPressed == 0) {
         ns_delay_us(1000);
     }
@@ -350,8 +352,7 @@ int main(void) {
                     detected = nnidCntrlClass_exec(
                         &nnidControl_inst,
                         pcm_input,
-                        corr,
-                        &g_audioRecording);
+                        corr);
                     
                     // prepare information and send to PC side
                     *pt_acc_utterances_enroll = (int16_t) nnidControl_inst.acc_utterances_enroll;

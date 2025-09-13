@@ -1,5 +1,5 @@
-#ifndef __DEF_NN3_SE__
-#define __DEF_NN3_SE__
+#ifndef __DEF_NN3_VAD__
+#define __DEF_NN3_VAD__
 
 #include <stdint.h>
 #include "neural_nets.h"

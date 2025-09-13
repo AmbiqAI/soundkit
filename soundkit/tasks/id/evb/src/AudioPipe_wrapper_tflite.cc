@@ -23,6 +23,10 @@ volatile int example_status = 0; // Prevent the compiler from optimizing out whi
 
 // int8_t num_lookeahead = NUM_LOOKAHEAD;
 // int32_t spec_buffer[514 * 4];
+
+int nn_input_dim;
+int nn_output_dim;
+
 int AudioPipe_wrapper_init(AudioTaskClass *self)
 { 
     
@@ -83,21 +87,21 @@ int AudioPipe_wrapper_init(AudioTaskClass *self)
         ns_lp_printf("input zero_point=%d\n", pt_tflm->interpreter->input(m)->params.zero_point);
 
         ns_lp_printf("input dims=%d\n", pt_tflm->interpreter->input(m)->dims->size);
-        int input_dim = 1;
+        nn_input_dim = 1;
         for (int i = 0; i < pt_tflm->interpreter->input(m)->dims->size; i++) {
-            input_dim *= pt_tflm->interpreter->input(m)->dims->data[i];
+            nn_input_dim *= pt_tflm->interpreter->input(m)->dims->data[i];
             ns_lp_printf("input dim[%d]=%d\n", i, pt_tflm->interpreter->input(m)->dims->data[i]);
         }
     }
     
     for (int m = 0; m < numOutputs; m++) {
         ns_lp_printf("Output tensor %d has %d bytes\n", m, pt_tflm->interpreter->output(m)->bytes);
-        int output_dim=1;
+        nn_output_dim = 1;
         for (int i = 0; i < pt_tflm->interpreter->output(m)->dims->size; i++) {
-            output_dim*= pt_tflm->interpreter->output(m)->dims->data[i];
+            nn_output_dim *= pt_tflm->interpreter->output(m)->dims->data[i];
             ns_lp_printf("output dim[%d]=%d\n", i, pt_tflm->interpreter->output(m)->dims->data[i]);
         }
-        self->nn_dim_out = output_dim; // Set the number of output dimensions for the model
+        self->nn_dim_out = nn_output_dim; // Set the number of output dimensions for the model
     }
 
     ns_lp_printf("Model initialized\n");
@@ -113,7 +117,7 @@ int AudioPipe_wrapper_reset(AudioTaskClass *self)
     PARAMS_NNSP* pt_param = (PARAMS_NNSP*) self->pt_param;
     FeatureClass_setDefault(pt_feat);
     IIR_CLASS_reset(pt_dcrm);
-    self->reset_nn = 0.0f; // Reset the reset flag
+
     pt_tflm->interpreter->Reset(); // Reset all tensors to default values
     return 0;
 }
@@ -168,14 +172,6 @@ int AudioPipe_wrapper_frameProc(
     int input_idx=0;
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
     int input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
-
-    int16_t reset = (int16_t) ((float32_t) self->reset_nn / (float32_t) input_scale + (float32_t) input_zero_point);
-    pt_tflm->interpreter->input(input_idx)->data.i16[0] =  reset;
-    self->reset_nn = 0.0f; // Reset the reset flag after use
-    
-    input_idx=1;
-    input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
-    input_zero_point = pt_tflm->interpreter->input(input_idx)->params.zero_point;
 
     for (int i =0; i < pt_param->num_mfltrBank; i++)
     {

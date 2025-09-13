@@ -151,8 +151,7 @@ void norm_then_ave(
 int16_t nnidCntrlClass_exec(
 			nnidCntrlClass* pt_inst,
 			int16_t *rawPCM,
-			float16_t *pt_corr,
-			volatile bool *g_audioRecording)
+			float16_t *pt_corr)
 {
 	static float16_t embd_sentences[REQUIRED_UTTERANCES_ENROLL * DIM_EMBD];
 	int16_t vad_detected;
@@ -177,7 +176,7 @@ int16_t nnidCntrlClass_exec(
 	// check if vad detected
 
 	pt_inst->count_vad_trigger = (vad_detected) ? pt_inst->count_vad_trigger + 1 : 0;
-
+	
 	if (pt_inst->count_vad_trigger == pt_inst->thresh_num_vad_trigger)
 	{
 		ns_printf("VAD detected!\n");
@@ -196,7 +195,6 @@ int16_t nnidCntrlClass_exec(
 			ns_printf("Identification phase!\n");
 		}
 
-		*g_audioRecording=false;
 		PcmBufClass_readFrame_init(
 			&pcmBuf_inst, 
 			pt_inst->thresh_num_vad_trigger);
@@ -244,7 +242,6 @@ int16_t nnidCntrlClass_exec(
 
 		}
 
-		*g_audioRecording=true;
 		AudioPipe_wrapper_reset(pt_vad);
 		AudioPipe_wrapper_reset(pt_id);
 

@@ -42,8 +42,7 @@ void nnidCntrlClass_init(nnidCntrlClass *pt_inst);
 int16_t nnidCntrlClass_exec(
 	nnidCntrlClass* pt_inst,
 	int16_t* rawPCM,
-	float16_t* pt_corr,
-	volatile bool *g_audioRecording);
+	float16_t* pt_corr);
 
 void norm_then_ave(
 	float16_t *outputs,

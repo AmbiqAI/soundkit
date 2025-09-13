@@ -82,20 +82,19 @@ int tflm_vad_validator_model_init(ns_model_state_t *ms) {
     }
     ns_lp_printf("Model mapped.\n");
 #ifdef NS_TFSTRUCTURE_RECENT
-    static tflite::MicroMutableOpResolver<17> resolver;
+    static tflite::MicroMutableOpResolver<16> resolver;
 #else
-    static tflite::MicroMutableOpResolver<17> resolver(ms->error_reporter);
+    static tflite::MicroMutableOpResolver<16> resolver(ms->error_reporter);
 #endif
     resolver.AddCallOnce();
 resolver.AddVarHandle();
 resolver.AddReadVariable();
 resolver.AddFullyConnected();
-resolver.AddStridedSlice();
-resolver.AddSub();
 resolver.AddTanh();
 resolver.AddConcatenation();
 resolver.AddReshape();
 resolver.AddConv2D();
+resolver.AddStridedSlice();
 resolver.AddUnpack();
 resolver.AddAdd();
 resolver.AddSplit();

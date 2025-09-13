@@ -1,3 +1,4 @@
+""" KWS Demo for EVB and PC"""
 import os
 import logging
 import subprocess
@@ -126,7 +127,7 @@ def demo_evb(params: SKTaskParams):
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_params['bins'],
+        num_mfltrBank=feat_extractor.dim_feat,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
@@ -149,7 +150,7 @@ def demo_evb(params: SKTaskParams):
     export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
-    
+
     log.info(f"📦 Copying TFLite to {dst_tflite_path}")
     tools_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(src_tflite_path, dst_tflite_path)
@@ -289,8 +290,6 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    
-
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
         dtype=dtype,
@@ -313,8 +312,8 @@ def demo_pc(params: SKTaskParams):
         def reset(self):
             """Reset the model state if needed."""
             # This is a no-op for TFLite models, but can be overridden if needed.
-            self.nn_reset=1.0
-            feat_extractor.reset()
+            self.feat_extractor.reset()
+            self.model_tflite.reset()
             if params.data.signal.dc_removal:
                 self.dc_remover.reset()
 
@@ -333,12 +332,7 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            if self.nn_reset > 0.5:
-                reset_tensor = np.array([1.0], dtype=np.float32) # reset tensor
-            else:
-                reset_tensor = np.array([0.0], dtype=np.float32)
-            self.nn_reset = 0.0
-            outputs = self.model_tflite(features, reset_tensor)
+            outputs = self.model_tflite(features)
             outputs = outputs.flatten()
             if outputs[0] < outputs[1]:
                 outputs = np.ones(160, dtype=np.float32)*0.95
@@ -359,29 +353,3 @@ def demo_pc(params: SKTaskParams):
         reset_st=kws_model.reset,
         title="KWS",
     )
-    if 0:
-        outputs = []
-        inputs = []
-        from soundkit.utils.audio import audio_read
-        sig = audio_read('wavs/kws/test_wavs/speech.wav', sample_rate=16000)
-        import time
-        start = time.time()
-        for i in range(len(sig)//160):
-            x = sig[i*160:(i+1)*160]
-            inputs.append(x)
-            y = model(x)
-            y = y.flatten()
-            if y[0] < y[1]:
-                outputs.append(np.ones(160))
-            else:
-                outputs.append(np.zeros(160))
-        print(f"Time taken: {time.time() - start:.2f} seconds")
-        print(f"average time per chunk: {(time.time() - start) / (len(sig)//160):.8f} seconds")
-        outputs = np.concatenate(outputs)
-        inputs = np.concatenate(inputs)
-
-        import matplotlib.pyplot as plt
-        plt.plot(inputs, label='Input Signal')
-        plt.plot(outputs, label='KWS Output')
-        plt.legend()
-        plt.show()
