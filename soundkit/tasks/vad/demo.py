@@ -90,11 +90,14 @@ def demo_evb(params: SKTaskParams):
         params=params,
     )
 
-    if feat_extractor.mel_filter is None:
-        fbanks=None
+    if hasattr(feat_extractor, "mel_filter"):
+        if feat_extractor.mel_filter is None:
+            fbanks=None
+        else:
+            fbanks = tf.identity(feat_extractor.mel_filter)
+            fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
     else:
-        fbanks = tf.identity(feat_extractor.mel_filter)
-        fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
+        fbanks=None
 
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
@@ -105,21 +108,21 @@ def demo_evb(params: SKTaskParams):
     # === Generate feature statstics ===
 
     stats_name = 'stats.pkl'
-    stats = load_feat_stats( \
-        dir=checkpoint_dir, \
+    stats = load_feat_stats(
+        dir=checkpoint_dir,
         stats_name=stats_name)
-
+    import numpy as np
     generate_feature_c_files(
         file_name=params.demo.filename,
         param_struct_name=params.demo.param_struct_name,
         dir=evb_src_tflm_dir,
-        feature_mean=stats['nMean_feat'],
-        feature_std=stats['nInvStd'],
+        feature_mean=stats['nMean_feat'] if stats is not None else np.array([0.0], dtype=np.float32),
+        feature_std=stats['nInvStd'] if stats is not None else np.array([1.0], dtype=np.float32),
         sampling_rate=params.data['signal']['sampling_rate'],
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_extractor.dim_feat,
+        num_mfltrBank=feat_extractor.dim_feat if fbanks is not None else -1,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],

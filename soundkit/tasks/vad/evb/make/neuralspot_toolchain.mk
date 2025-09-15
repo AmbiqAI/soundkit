@@ -56,8 +56,7 @@ CONLY_FLAGS+= -std=c99
 ifeq ($(GCC13_EXPERIMENTAL),1)
 CFLAGS+= -g -O2 -ffast-math
 else
-# CFLAGS+=  -Ofast
-CFLAGS+=  -g -O3 -ffast-math
+CFLAGS+= -g -O3 -ffast-math
 # CFLAGS+= -g -O0 -ffast-math
 endif
 # CFLAGS+= -g -O2 -ffast-math
@@ -182,7 +181,6 @@ endif
 ifneq ($(filter apollo5b apollo510,$(PART)),)
 DEFINES+= AM_PART_APOLLO5B
 DEFINES+= AM_PART_APOLLO510
-DEFINES+= ARMCM55
 ifeq ($(EVB),eb)
 DEFINES+= apollo5_eb
 else 

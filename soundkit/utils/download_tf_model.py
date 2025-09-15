@@ -114,6 +114,7 @@ def build_model(
         dim_feat: int = 72,
         time_steps: int = 1,
         export: bool = False) -> Tuple[tf.keras.Model, int]:
+
     """Download model weights from a remote server.
 
     Args:
@@ -134,7 +135,7 @@ def build_model(
     if "override" in params.train[model_config]:
         override_cfg = OmegaConf.create(params.train[model_config]["override"])
         config_dict = OmegaConf.merge(config_dict, override_cfg)
-    
+
     OmegaConf.resolve(config_dict)
 
     model_name=config_dict['name']
@@ -156,11 +157,14 @@ def build_model(
 
     if hasattr(model, 'complex'):
         if model.complex:
-            inputs_x = tf.keras.Input(shape=[time_steps, dim_feat, 2], batch_size=batchsize, dtype=tf.float32, name="x_input")
+            inputs_x = tf.keras.Input(
+                shape=[time_steps, dim_feat, 2], batch_size=batchsize, dtype=tf.float32, name="x_input")
         else:
-            inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+            inputs_x = tf.keras.Input(
+                shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
     else:
-        inputs_x = tf.keras.Input(shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+        inputs_x = tf.keras.Input(
+            shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
 
     model(inputs_x)
     model.summary()

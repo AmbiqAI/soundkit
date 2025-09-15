@@ -220,23 +220,27 @@ int main(void) {
 
 #if PERF_TEST==1
     ns_lp_printf("\n|------ MCPS Measurement: run 100 times of inference ------|\n");
-    
-    // -- Init the NNSE2 model
-    AudioPipe_wrapper_init();
-    AudioPipe_wrapper_reset();
+
     if (params_nn1_nnvad.samplingRate == 8000)
     {
         // Initialize the downsample instance
         DOWNSAMPLE_CLASS_init(&downsample_inst);
     }
-    
-    int16_t *pcm_input = (int16_t*) audioDataBuffer;
-    int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
-    
+
     static ns_perf_counters_t pp;
     ns_init_perf_profiler();
     ns_reset_perf_counters();
     ns_start_perf_profiler();
+
+
+    // -- Init the NNSE2 model
+    AudioPipe_wrapper_init();
+    
+    int16_t *pcm_input = (int16_t*) audioDataBuffer;
+    int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
+
+    AudioPipe_wrapper_reset();
+    ns_printf("Model initialization succeeds\n");
     for (int i=0; i < 100; i++)
     {
         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
@@ -253,10 +257,10 @@ int main(void) {
     ns_printf("\nElapsedtime measurement\n");
     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
     tic();
-    
+    AudioPipe_wrapper_reset(); // reset the Audio Pipe
     for (int i=0; i < 100; i++)
     {   
-        AudioPipe_wrapper_reset(); // reset the Audio Pipe
+        
         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
     }
     elapsedTime = toc();

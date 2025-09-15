@@ -1,4 +1,4 @@
-name: crnn
+name: cnn2d_cnn
 project: vad
 job_dir: ./soundkit/tasks/vad
 
@@ -8,10 +8,10 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 10000
-    val: 2000
+    train: 30000
+    val: 3000
   force_download: false
-  reverb_prob: 0.0
+  reverb_prob: 0.2
   num_processes: 8
   corpora:
     - {name: vad_train-clean-100, type: speech, split: train}
@@ -23,7 +23,9 @@ data:
     - {name: musan, type: noise, split: train-val}
     - {name: wham_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
+    
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
+  # snr_dbs: [100] # no noise
   # snr_dbs: [100]
   target_length_in_secs: 15
   min_amp: 0.01
@@ -31,13 +33,13 @@ data:
 
   signal:
     sampling_rate: 16000
-    dc_removal: true
+    dc_removal: false
   debug: false
 
 train:
   initial_lr: 4e-4
-  batchsize: 32
-  epochs: 300
+  batchsize: 100
+  epochs: 200
   warmup_epochs: 5
   epoch_loaded: random
   loss_function: 
@@ -47,40 +49,45 @@ train:
     params: {}
     
   path:
-    full_name: model
-    checkpoint_dir:  zoo/vad/${train.path.full_name}
+    full_name: ${name}
+    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
     tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
   num_lookahead: 0
   spec_aug: false
 
   feature:
-    frame_size: 480
+    frame_size: 160
     hop_size: 160
     fft_size: 512
-    type: logpspec
-    bins: 257
+    type: time
+
     # type: hybrid
     # bins_fft: 100
     # n_mels: 72
 
-  standardization: true
+  standardization: false
   
   model:
-    config_dir: ./zoo/vad
-    config_file: config_crnn_vad.yaml
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_cnn2d_vad.yaml
     override:
-      units: 28
-      dropout_rate_input: 0.1
-      dropout_rate: 0.25
-      stride_time: 1
-      len_time: 6
-
+      dropout: 0.2
+      rnn_res: false
+      normalization_layer:
+      dim_out_rnn: 64
+      activation: relu
+      channels: [1, 32, 32, 32, 32]
+      kernel_sizes: [[1,5], [1,5], [1,5], [1,5]]
+      time_net: tcn
+      kernel_size_tcn: 2
+      filters_tcn: 32
+      dilations: [1, 2, 4, 8, 16, 32]
   reset_every_batch: true
   debug: false
 
 evaluate:
-  epoch_loaded: 0
-  eval: true
+  epoch_loaded: best
+
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
@@ -88,12 +95,15 @@ evaluate:
 
 export:
   dtype: int16
-  epoch_loaded: 0
-  tflite_dir: ${job_dir}/tflite
+  run_test: true
+  qbit_input: 15
+  converter_with_reset: false
+  epoch_loaded: 180
+  tflite_dir: ${job_dir}/tflite_${export.dtype}
 
 demo:
   platform: pc # evb or pc
-  epoch_loaded: 0
+  epoch_loaded: 180
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1

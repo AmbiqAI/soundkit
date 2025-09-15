@@ -3,6 +3,7 @@ This module provides a `FeatureExtractor` class that can extract various types o
 from audio signals, such as spectrograms, mel spectrograms, and time-domain features.
 '''
 from typing import Union
+import numpy as np
 import tensorflow as tf
 from soundkit.utils.tf_stft import tf_stft
 from soundkit.utils.tf_stft import gen_stft_win
@@ -61,7 +62,6 @@ class FeatureExtractor:
             self.dim_feat = feat_params['bins']
 
         elif feat_params['type'] == "hybrid":
-
             if feat_params['bins_fft'] is None:
                 raise ValueError("bins_fft must be specified for hybrid feature extraction")
             if feat_params['n_mels'] is None:
@@ -74,14 +74,15 @@ class FeatureExtractor:
                 thresh_mel=feat_params['bins_fft'])
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
             self.dim_feat = fbanks.shape[0]
+
         elif feat_params['type'] == "time":
             self.window=gen_stft_win(
                 win_size=feat_params['frame_size'],
                 hop=feat_params['hop_size'])
-        else:
+            self.dim_feat = feat_params['frame_size']
 
+        else:
             dim_feat = (feat_params['fft_size'] // 2) + 1
-            
             self.mel_filter = tf.eye(
                 dim_feat)
             self.dim_feat = dim_feat
@@ -193,12 +194,14 @@ class FeatureExtractor:
             self,
             audio_sn: tf.Tensor,
             states: Union[tf.Tensor, None]) -> tf.Tensor:
+
         feat_params = self.params.train['feature']
 
-        __, spec = self._extract_spec(
-            audio_sn,
-            states=states,
-        )
+        if "fft_size" in feat_params:
+            fft_size = feat_params["fft_size"]
+        else:
+            exp = int(np.ceil(np.log2(feat_params["frame_size"])))
+            fft_size = 2 ** exp
 
         if states is None:
             states = tf.zeros(
@@ -210,11 +213,12 @@ class FeatureExtractor:
 
         frames = tf.signal.frame(
             audio_sn,
-            frame_length=feat_params["frame_size"] ,
-            frame_step=feat_params["hop_size"],
-            pad_end=False,
-            axis=-1)
+            frame_length = feat_params["frame_size"],
+            frame_step = feat_params["hop_size"],
+            pad_end = False,
+            axis = -1)
 
         feat = frames * self.window
+        spec = tf.signal.rfft(feat, [fft_size])
 
         return feat, spec

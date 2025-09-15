@@ -58,17 +58,25 @@ def convert_model(
 def tflite_convert(
         model: tf.keras.Model,
         dtype: str = "int8",
-        path_tflite: str = "./tflite/nnse.tflite"):
+        path_tflite: str = "./tflite/nnse.tflite",
+        nbits: int = 16,
+        qbits: int = 8):
     """tflite converter"""
 
     os.makedirs('tflite', exist_ok=True)
+
+    min_val = -2**(nbits-1) / 2**qbits
+    max_val = (2**(nbits-1) - 1) / 2**qbits
 
     def dataset_example():
         shapes = model._feed_input_shapes
         shape_inputs = shapes[0]
         for _ in range(100):
-            x = np.random.uniform(-32768 / 2**8, 32767 / 2**8, size=shape_inputs).astype(np.float32)
+            x = np.random.uniform(
+                min_val, max_val,
+                size=shape_inputs).astype(np.float32)
             yield {"x_input": x}
+
     model.summary()
 
     net_tflite = convert_model(

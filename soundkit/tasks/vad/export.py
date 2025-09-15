@@ -28,7 +28,11 @@ def build_vad_tflite(params: SKTaskParams):
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
     else:
-        mel_bins = params.train.feature.bins
+        if "bins" in params.train.feature:
+            mel_bins = params.train.feature.bins
+        else:
+            mel_bins = params.train.feature.frame_size
+
     feat_extractor = FeatureExtractor_np(
         feat_type=params.train.feature.type,
         frame_len=params.train.feature.frame_size,
@@ -106,8 +110,9 @@ def build_vad_tflite(params: SKTaskParams):
 
             self.counts_vad_trigger = 0
             self.feat_extractor.reset()
-            self.dc_remover.reset()
-            # self.model_tflite.reset()
+            if params.data.signal.dc_removal:
+                self.dc_remover.reset()
+            self.model_tflite.reset()
 
         def __call__(self,
                      inputs: np.ndarray,  # input from microphone

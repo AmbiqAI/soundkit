@@ -5,8 +5,8 @@ def generate_feature_c_files(
     file_name: str,
     param_struct_name: str,
     dir: str,
-    feature_mean: np.ndarray,
-    feature_std: np.ndarray,
+    feature_mean: np.ndarray | None,
+    feature_std: np.ndarray | None,
     *,
     sampling_rate: int = 16000,
     fftsize: int = 512,
@@ -22,6 +22,12 @@ def generate_feature_c_files(
     filterbank_name: str | None = "filter_banks",
     task: str = "se",
 ):
+    if num_mfltrBank < 0:
+        feature_extraction=0
+        feature_qbits=15
+    else:
+        feature_extraction=1
+        feature_qbits=8
     if filterbank_name is None:
         filter_name_def='\n'
         filterbank_name = '(const int16_t*)(void*)0'
@@ -80,6 +86,8 @@ extern const int32_t feature_mean_{task}[];
 extern const int32_t feature_stdR_{task}[];
 
 #define NUM_LOOKAHEAD {lookahead}
+#define FEATURE_EXTRACTION {feature_extraction}
+#define FEATURE_QBIT {feature_qbits}
 extern PARAMS_NNSP {param_struct_name};
 
 #endif  // __DEF_NN3_SE__

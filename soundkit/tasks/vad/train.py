@@ -1,3 +1,5 @@
+""" Voice Activity Detection (VAD) training script."""
+
 import os
 import datetime
 from pathlib import Path
@@ -5,20 +7,21 @@ from typing import Any
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from .datasets import create_dataset
-from ...defines import SKTaskParams
-from ...utils.download_tf_model import save_train_log, load_train_log
-from ...utils.download_tf_model import build_model, load_model_checkpoint
-from ...utils.feature_utils import FeatureExtractor
-from ...utils.losses import LossFactory
-from ...utils.calculate_feat_stats import feat_stats_estimator
-from ...utils.lookaheadBuffer import LookaheadBuffer
-from ...utils.WarmUpCosineDecay import WarmUpCosineDecay
-from ...utils.tf_complex_utils import complex_to_realarray
-from ...utils.plot_api import plot_spectrograms
-from ...utils.tf_basic_math import tf_log10_eps
-from ...utils.ConfusionMatrixMetric import ConfusionMatrixMetric
-from ...utils.calculate_feat_stats import mean_varinace_norm
-from ...utils.spec_aug import SpecAug
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import save_train_log, load_train_log
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.losses import LossFactory
+from soundkit.utils.calculate_feat_stats import feat_stats_estimator
+from soundkit.utils.lookaheadBuffer import LookaheadBuffer
+from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
+from soundkit.utils.tf_complex_utils import complex_to_realarray
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
+from soundkit.utils.calculate_feat_stats import mean_varinace_norm
+from soundkit.utils.spec_aug import SpecAug
+
 @tf.function
 def train_step(
         net: tf.keras.Model,
@@ -196,6 +199,10 @@ def run_epoch(
                     feat_sn = 10* feat_sn[idx].numpy()
                 elif params.train['feature']['type'] in ('pspec', 'spec'):
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
+                elif params.train['feature']['type'] == 'time':
+                    feat_sn = tf.signal.rfft(feat_sn, [stft_feat["fft_size"]])
+                    feat_sn = 20 * tf_log10_eps(tf.abs(feat_sn))[idx].numpy()
+
                 feat_sn = feat_sn[::model.stride_time]
 
                 fig = plot_spectrograms(
@@ -260,16 +267,17 @@ def train(params: SKTaskParams):
     # Load from YAML file
     is_complex = True if params_train['feature']['type'] =='spec' else False
 
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) // params.train.feature.hop_size
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,
-        complex_input=is_complex)
+        time_steps=time_steps,
+        )
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
-    
+
     # 3. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
@@ -279,7 +287,7 @@ def train(params: SKTaskParams):
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
         batchsize=batchsize,
-        hop_size = params.train.feature.hop_size,
+        hop_size=params.train.feature.hop_size,
         is_shuffle=True,
     )
     ds_val, batches_val = create_dataset(
