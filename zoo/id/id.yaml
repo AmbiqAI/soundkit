@@ -80,7 +80,7 @@ train:
   debug: false
 
 evaluate:
-  epoch_loaded: 140
+  epoch_loaded: 0
 
   threshold_id: 0.8 # threshold for id verification
 
@@ -90,14 +90,17 @@ evaluate:
     test_files: [test1.wav, test2.wav] # list of test files to evaluate
     
 export:
-  epoch_loaded: 140
-  tflite_dir: ${job_dir}/tflite
+  dtype: int16
+  eval: false
+  qbit_input: 8
+  epoch_loaded: 0
+  tflite_dir: zoo/id
 
 demo:
   num_utterances_registered: 4
   frames_vad_trigger_id: 180
   platform: pc # evb or pc
-  epoch_loaded: 140
+  epoch_loaded: 0
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1

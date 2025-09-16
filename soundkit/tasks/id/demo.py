@@ -1,3 +1,4 @@
+"""Demo script for deploying TFLite model to neuralSPOT EVB or running on PC."""
 import os
 import logging
 import subprocess
@@ -16,6 +17,9 @@ from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from soundkit.utils.basic_dsp import DCRemover
+from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.mel import gen_mel_c
 from .export import export
 
 logging.basicConfig(
@@ -50,7 +54,7 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}.tflite"
+    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -73,8 +77,7 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
+
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -86,10 +89,8 @@ def demo_evb(params: SKTaskParams):
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
-
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.mel import gen_mel_c
+
 
     filterbank_name='filter_banks'
 
@@ -228,9 +229,8 @@ def demo_pc(params_id: SKTaskParams):
         params (HKTaskParams): Task parameters
     """
     from ...cli import parse_config
-    
 
-    params_vad = parse_config("zoo/vad/vad.yaml")
+    params_vad = parse_config("zoo/vad/freq_model/vad.yaml")
 
     params_list={
         'id': params_id,
@@ -321,7 +321,6 @@ def demo_pc(params_id: SKTaskParams):
                 self.feat_extractors[key] = feat_extractor
                 self.stats_list[key] = stats
                 self.interpreters[key] = interpreter
-            
 
         def vad_reset(self):
             """Reset the model state."""
@@ -363,7 +362,7 @@ def demo_pc(params_id: SKTaskParams):
                 features = (features - stats['nMean_feat']) * stats['nInvStd']
 
             # input to the tflite model
-    
+
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
             outputs = model_tflite(features)
 

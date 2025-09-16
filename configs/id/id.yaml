@@ -90,6 +90,9 @@ evaluate:
     test_files: [test1.wav, test2.wav] # list of test files to evaluate
     
 export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
 

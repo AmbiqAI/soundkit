@@ -56,13 +56,15 @@ def export(params: SKTaskParams):
         export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
 
+    path_tflite = f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite'
     model_wrap = warp_tf_model(
         model,
         time_steps=1,
         dim_feat=dim_feat)
+
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype='int16',
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
-    
-    print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")
+        path_tflite=path_tflite)
+
+    print(f"Exported model to {path_tflite}")

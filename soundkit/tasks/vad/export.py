@@ -12,6 +12,63 @@ from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.audio import audio_read
 
+def export(params: SKTaskParams):
+    """
+    Export the VAD model to TFLite format.
+    """
+    hop_size = params.train['feature']['hop_size']
+    vad_model = build_vad_tflite(params)
+
+    corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
+    loader = SKDatasetFactory.get(corpus['name'])
+    samples = loader(corpus)
+
+
+    if params.export.eval:
+        cmat_acc = tf.zeros((2,2), dtype=tf.int64)
+        for idx_sample , sample in enumerate(samples):
+
+            print(f"\rProcessing {idx_sample+1}/{len(samples)}", end='')
+            vad_model.reset()
+            wav, label = sample
+
+            x = audio_read(wav)
+
+            outputs = []
+            for i in range(len(x)//hop_size):
+                start = i*hop_size
+                end = (i+1)*hop_size
+                out = vad_model(x[start:end])
+                outputs.append(out[0:1] > 0)
+
+            outputs = np.concatenate(outputs)
+            outputs = tf.convert_to_tensor(outputs, dtype=tf.int32)
+            starts = np.array([seg['start'] for seg in label])
+            ends = np.array([seg['end'] for seg in label])
+
+            num_frames = len(x) // hop_size
+            # Frame-level VAD label (vectorized scatter)
+            vad = tf.zeros((num_frames,), dtype=tf.int32)
+
+            # Create ragged index ranges
+            ragged_ranges = tf.ragged.range(starts // hop_size, ends // hop_size)
+            flat_indices = ragged_ranges.flat_values
+            updates = tf.ones_like(flat_indices, dtype=tf.int32)
+
+            indices = tf.expand_dims(flat_indices, axis=1)
+            vad = tf.tensor_scatter_nd_update(vad, indices, updates)
+            cmat = tf.math.confusion_matrix(
+                labels=vad,
+                predictions=outputs,
+                num_classes=2)
+
+            cmat = tf.cast(cmat, dtype=tf.int64)
+            # print(cmat)
+            cmat_acc += cmat
+        print("\nConfusion matrix (rows: true, cols: pred):")
+        cmat_acc = cmat_acc / tf.reduce_sum(cmat_acc, axis=-1, keepdims=True)
+        print(cmat_acc.numpy())
+
 def build_vad_tflite(params: SKTaskParams):
     """Export VAD task model with given parameters.
 
@@ -68,10 +125,13 @@ def build_vad_tflite(params: SKTaskParams):
         time_steps=1,
         dim_feat=dim_feat)
 
+    path_tflite = f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite'
+
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype=params.export.dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite',)
+        path_tflite=path_tflite)
+    print(f"Exported model to {path_tflite}")
 
     interpreter = tf.lite.Interpreter(
         model_content=tflite_fp16_model)
@@ -158,60 +218,3 @@ def build_vad_tflite(params: SKTaskParams):
         stats=stats,
     )
     return vad_model
-
-def export(params: SKTaskParams):
-    """
-    Export the VAD model to TFLite format.
-    """
-    hop_size = params.train['feature']['hop_size']
-    vad_model = build_vad_tflite(params)
-
-    corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
-    loader = SKDatasetFactory.get(corpus['name'])
-    samples = loader(corpus)
-
-
-    if params.export.eval:
-        cmat_acc = tf.zeros((2,2), dtype=tf.int64)
-        for idx_sample , sample in enumerate(samples):
-
-            print(f"\rProcessing {idx_sample+1}/{len(samples)}", end='')
-            vad_model.reset()
-            wav, label = sample
-
-            x = audio_read(wav)
-
-            outputs = []
-            for i in range(len(x)//hop_size):
-                start = i*hop_size
-                end = (i+1)*hop_size
-                out = vad_model(x[start:end])
-                outputs.append(out[0:1] > 0)
-
-            outputs = np.concatenate(outputs)
-            outputs = tf.convert_to_tensor(outputs, dtype=tf.int32)
-            starts = np.array([seg['start'] for seg in label])
-            ends = np.array([seg['end'] for seg in label])
-
-            num_frames = len(x) // hop_size
-            # Frame-level VAD label (vectorized scatter)
-            vad = tf.zeros((num_frames,), dtype=tf.int32)
-
-            # Create ragged index ranges
-            ragged_ranges = tf.ragged.range(starts // hop_size, ends // hop_size)
-            flat_indices = ragged_ranges.flat_values
-            updates = tf.ones_like(flat_indices, dtype=tf.int32)
-
-            indices = tf.expand_dims(flat_indices, axis=1)
-            vad = tf.tensor_scatter_nd_update(vad, indices, updates)
-            cmat = tf.math.confusion_matrix(
-                labels=vad,
-                predictions=outputs,
-                num_classes=2)
-
-            cmat = tf.cast(cmat, dtype=tf.int64)
-            # print(cmat)
-            cmat_acc += cmat
-        print("\nConfusion matrix (rows: true, cols: pred):")
-        cmat_acc = cmat_acc / tf.reduce_sum(cmat_acc, axis=-1, keepdims=True)
-        print(cmat_acc.numpy())
