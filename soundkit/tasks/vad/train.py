@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from .datasets import create_dataset
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import save_train_log, load_train_log
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
@@ -21,6 +20,8 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from soundkit.utils.spec_aug import SpecAug
+from soundkit.utils.plot_api import fig_to_image
+from .datasets import create_dataset
 
 @tf.function
 def train_step(
@@ -116,8 +117,9 @@ def run_epoch(
 
         audio_sn, _, vad = batch
 
-        if model.stride_time > 1:
-            vad = vad[:,::model.stride_time]
+        if hasattr(model, 'stride_time'):
+            if model.stride_time > 1:
+                vad = vad[:,::model.stride_time]
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
@@ -203,7 +205,9 @@ def run_epoch(
                     feat_sn = tf.signal.rfft(feat_sn, [stft_feat["fft_size"]])
                     feat_sn = 20 * tf_log10_eps(tf.abs(feat_sn))[idx].numpy()
 
-                feat_sn = feat_sn[::model.stride_time]
+                if hasattr(model, 'stride_time'):
+                    if model.stride_time > 1:
+                        feat_sn = feat_sn[::model.stride_time]
 
                 fig = plot_spectrograms(
                     images=[pspec_sn.T, feat_sn.T],
@@ -216,7 +220,7 @@ def run_epoch(
                 plt.plot(mask * 200)
                 plt.plot(vad[idx] * 200)
                 # plt.show()
-                from ...utils.plot_api import fig_to_image
+                
                 # Convert fig to image
                 tf_image = fig_to_image(fig)
 
@@ -224,6 +228,7 @@ def run_epoch(
                 if train_summary_writer is not None:
                     with train_summary_writer.as_default():
                         tf.summary.image("spectrograms", tf_image, step=epoch)
+
     # Final summary for the epoch
     print(
         f"  [{train_tag}] |\n"

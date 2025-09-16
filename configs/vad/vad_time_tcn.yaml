@@ -25,8 +25,6 @@ data:
     - {name: rirs_noises, type: reverb, split: train-val}
     
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
-  # snr_dbs: [100] # no noise
-  # snr_dbs: [100]
   target_length_in_secs: 15
   min_amp: 0.01
   max_amp: 0.95
@@ -95,15 +93,14 @@ evaluate:
 
 export:
   dtype: int16
-  run_test: true
+  eval: true
   qbit_input: 15
-  converter_with_reset: false
-  epoch_loaded: 180
+  epoch_loaded: best
   tflite_dir: ${job_dir}/tflite_${export.dtype}
 
 demo:
   platform: pc # evb or pc
-  epoch_loaded: 180
+  epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1

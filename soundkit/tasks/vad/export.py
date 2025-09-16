@@ -174,11 +174,11 @@ def export(params: SKTaskParams):
     if params.export.eval:
         cmat_acc = tf.zeros((2,2), dtype=tf.int64)
         for idx_sample , sample in enumerate(samples):
-            
+
             print(f"\rProcessing {idx_sample+1}/{len(samples)}", end='')
             vad_model.reset()
             wav, label = sample
-            
+
             x = audio_read(wav)
 
             outputs = []

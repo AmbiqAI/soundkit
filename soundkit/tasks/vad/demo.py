@@ -4,6 +4,7 @@ import logging
 import subprocess
 import shutil
 from pathlib import Path
+import numpy as np
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
 from soundkit.utils.feature_utils import FeatureExtractor
@@ -111,7 +112,7 @@ def demo_evb(params: SKTaskParams):
     stats = load_feat_stats(
         dir=checkpoint_dir,
         stats_name=stats_name)
-    import numpy as np
+
     generate_feature_c_files(
         file_name=params.demo.filename,
         param_struct_name=params.demo.param_struct_name,

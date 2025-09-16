@@ -15,9 +15,6 @@ from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
-from .datasets import create_raw_tfrecord
-from .datasets import create_dataset
-
 from .utils.vad_silero import get_vad, calculate_vad_accuracy
 
 def evaluate(params: SKTaskParams):
@@ -122,8 +119,10 @@ def evaluate(params: SKTaskParams):
         prob = out[...,1]
         vad = tf.cast(prob > 0.5, dtype=tf.int32)
 
-        stride = model.stride_time
-
+        if hasattr(model, 'stride_time'):
+            stride = model.stride_time
+        else:
+            stride = 1
         hop_size = feat_params['hop_size']
 
 
@@ -134,9 +133,11 @@ def evaluate(params: SKTaskParams):
         if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
             logpfeat_sn = (10 * feat_sn).numpy()[0].T
         elif params.train['feature']['type'] in ('pspec'):
-            logpfeat_sn = 10*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+            logpfeat_sn = 10*tf_log10_eps( tf.abs(feat_sn[0])).numpy().T
         elif params.train['feature']['type'] in ('spec'):
-            logpfeat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+            logpfeat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy().T
+        elif params.train['feature']['type'] in ('time'):
+            logpfeat_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy().T
         logpspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn)).numpy()[0].T
 
         plot_spectrograms(
@@ -159,6 +160,7 @@ def evaluate(params: SKTaskParams):
 
         plt.plot(vad*250)
         plt.plot(prob*250)
+        plt.legend(['VAD outputs', 'Prob of speech'])
         plt.savefig(save_path, format="pdf", bbox_inches="tight")
         print(f"Saved figure to {save_path}")
 

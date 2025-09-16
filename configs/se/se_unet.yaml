@@ -19,9 +19,9 @@ data:
     - {name: dev-clean, type: speech, split: val,}
     - {name: thchs30, type: speech, split: train-val}
     - {name: ESC-50-master, type: noise, split: train-val}
-    - {name: FSD50K, type: noise, split: train-val}
-    - {name: musan, type: noise, split: train-val}
-    - {name: wham_noise, type: noise, split: train-val}
+    # - {name: FSD50K, type: noise, split: train-val}
+    # - {name: musan, type: noise, split: train-val}
+    # - {name: wham_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
   target_length_in_secs: 5
@@ -67,7 +67,7 @@ train:
   debug: false
 
 evaluate:
-  epoch_loaded: 151
+  epoch_loaded: best
 
   data: 
     dir: "./wavs/se/test_wavs"
@@ -75,11 +75,14 @@ evaluate:
     result_folder: ${job_dir}/test_results/${name}
 
 export:
-  epoch_loaded: 151
+  dtype: int16
+  eval: false
+  qbit_input: 8
+  epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
 
 demo:
-  epoch_loaded: 151
+  epoch_loaded: best
   platform: evb # or pc
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb_webusb

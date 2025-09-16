@@ -75,8 +75,11 @@ evaluate:
     result_folder: ${job_dir}/test_results/${name}
 
 export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
   epoch_loaded: 0
-  tflite_dir: ${job_dir}/tflite
+  tflite_dir: zoo/se/unet
 
 demo:
   epoch_loaded: 0

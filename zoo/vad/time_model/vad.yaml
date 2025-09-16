@@ -95,11 +95,10 @@ evaluate:
 
 export:
   dtype: int16
-  run_test: true
+  eval: false
   qbit_input: 15
-  converter_with_reset: false
   epoch_loaded: 0
-  tflite_dir: ${job_dir}/tflite_${export.dtype}
+  tflite_dir: zoo/vad/time_model
 
 demo:
   platform: pc # evb or pc

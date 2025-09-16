@@ -47,9 +47,11 @@ def export(params: SKTaskParams):
         time_steps=1,
         dim_feat=dim_feat)
 
+    path_tflite=f'{params.export["tflite_dir"]}/{params.name}_{params.export["dtype"]}.tflite'
+
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype='int16',
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+        path_tflite=path_tflite)
 
-    print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")
+    print(f"Exported model to {path_tflite}")

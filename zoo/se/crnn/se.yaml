@@ -73,8 +73,11 @@ evaluate:
     result_folder: ${job_dir}/test_results/${name}
 
 export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
   epoch_loaded: 0
-  tflite_dir: ./soundkit/tasks/se/tflite
+  tflite_dir: zoo/se/crnn
 
 demo:
   epoch_loaded: 0

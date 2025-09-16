@@ -80,7 +80,6 @@ train:
 
 evaluate:
   epoch_loaded: 0
-  eval: true
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
@@ -88,8 +87,10 @@ evaluate:
 
 export:
   dtype: int16
+  eval: false
   epoch_loaded: 0
-  tflite_dir: ${job_dir}/tflite
+  qbit_input: 8
+  tflite_dir: zoo/vad/freq_model
 
 demo:
   platform: pc # evb or pc
