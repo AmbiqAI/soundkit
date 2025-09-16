@@ -174,7 +174,9 @@ You can directly try on already trained model on your PC.
 - vad
 
     ```bash
-    soundkit -t vad -m demo -c zoo/vad/vad.yaml demo.platform=pc 
+    soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc # frequency domain input
+    # or
+    soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc # time domain input (end-to-end model)
     ```
 
 - kws
