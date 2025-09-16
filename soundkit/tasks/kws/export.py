@@ -34,10 +34,6 @@ def export(params: SKTaskParams):
     load_model_checkpoint(
         model_train, params_export['epoch_loaded'], checkpoint_dir)
 
-    for v in model_train.trainable_variables:
-        z = v.numpy().flatten()
-        print(v.name, v.shape, z[1:5])
-
     model = build_model(
         params,
         batchsize=batchsize,
@@ -50,9 +46,12 @@ def export(params: SKTaskParams):
         model,
         time_steps=1,
         dim_feat=dim_feat)
+
+    path_tflite = f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite'
+
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype='int16',
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
+        path_tflite=path_tflite)
 
-    print(f"Exported model to {params.export['tflite_dir']}/{params.name}.tflite")
+    print(f"Exported model to {path_tflite}")

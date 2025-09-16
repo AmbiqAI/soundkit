@@ -87,6 +87,9 @@ evaluate:
     result_folder: ${job_dir}/test_results/${train.path.full_name}
 
 export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
 
