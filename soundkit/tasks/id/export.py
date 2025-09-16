@@ -64,7 +64,7 @@ def export(params: SKTaskParams):
 
     tflite_fp16_model = tflite_convert(
         model_wrap,
-        dtype='int16',
+        dtype=params.export.dtype,
         path_tflite=path_tflite)
 
     print(f"Exported model to {path_tflite}")
