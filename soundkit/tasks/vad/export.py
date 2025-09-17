@@ -19,12 +19,10 @@ def export(params: SKTaskParams):
     hop_size = params.train['feature']['hop_size']
     vad_model = build_vad_tflite(params)
 
-    corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
-    loader = SKDatasetFactory.get(corpus['name'])
-    samples = loader(corpus)
-
-
     if params.export.eval:
+        corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
+        loader = SKDatasetFactory.get(corpus['name'])
+        samples = loader(corpus)
         cmat_acc = tf.zeros((2,2), dtype=tf.int64)
         for idx_sample , sample in enumerate(samples):
 

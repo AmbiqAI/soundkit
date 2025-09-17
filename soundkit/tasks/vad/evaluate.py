@@ -15,7 +15,6 @@ from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
-from .utils.vad_silero import get_vad, calculate_vad_accuracy
 
 def evaluate(params: SKTaskParams):
     """Evaluate VAD task model with given parameters.
@@ -24,6 +23,7 @@ def evaluate(params: SKTaskParams):
         params (HKTaskParams): Task parameters
 
     """
+    from .utils.vad_silero import get_vad, calculate_vad_accuracy
     print(f"Evaluating VAD model with params: {params} and more")
 
     params_evaluate = params.evaluate

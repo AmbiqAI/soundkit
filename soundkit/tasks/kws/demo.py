@@ -60,7 +60,7 @@ def demo_evb(params: SKTaskParams):
 
     # === Download neuralSPOT ===
     repo_url = "https://github.com/AmbiqAI/neuralSPOT.git"
-    neuralSPOT = "neuralSPOT"
+    neuralSPOT = "neuralSPOT_autodeploy"
     neuralspot_path = Path(f"../{neuralSPOT}").resolve()
     if not os.path.exists(neuralspot_path):
         subprocess.run(["git", "clone", repo_url, neuralspot_path], check=True)
@@ -160,9 +160,11 @@ def demo_evb(params: SKTaskParams):
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
+    subprocess.run(["uv", "sync"], check=True)
+    # subprocess.run(["python", "-m", "venv", ".venv"], check=True)
+    # subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
+    # subprocess.run([".venv/bin/pip", "install", "."], check=True)
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
