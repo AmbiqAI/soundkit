@@ -8,8 +8,8 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 10000
-    val: 2000
+    train: 1000
+    val: 250
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
@@ -66,7 +66,7 @@ train:
   standardization: true
   
   model:
-    config_dir: ./soundkit/model/arch_configs
+    config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
     override:
       units: 28

@@ -192,16 +192,17 @@ def data(params: SKTaskParams) -> None:
                 noise_type2list[name] = {'val': files}
             else:
                 raise ValueError(f"Unknown split type: {split} for corpus {name}")
-        elif ctype == 'reverb' and params_data['reverb_prob'] > 0:
-            if split == "train":
-                reverb_list['train'].extend(files)
-            elif split == "val":
-                reverb_list['val'].extend(files)
-            elif split == "train-val":
-                reverb_list['train'].extend(files['train'])
-                reverb_list['val'].extend(files['val'])
-            else:
-                raise ValueError(f"Unknown split type: {split} for corpus {name}")
+        elif ctype == 'reverb':
+            if params_data['reverb_prob'] > 0:
+                if split == "train":
+                    reverb_list['train'].extend(files)
+                elif split == "val":
+                    reverb_list['val'].extend(files)
+                elif split == "train-val":
+                    reverb_list['train'].extend(files['train'])
+                    reverb_list['val'].extend(files['val'])
+                else:
+                    raise ValueError(f"Unknown split type: {split} for corpus {name}")
         else:
             raise ValueError(f"Unknown corpus type: {ctype} for corpus {name}")
 

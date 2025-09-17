@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __MUT_MODEL_METADATA_H
 #define __MUT_MODEL_METADATA_H
 #include "ns_ambiqsuite_harness.h"
@@ -10,11 +11,11 @@
 
 #define TFLM_MODEL_LOCATION NS_AD_TCM
 #define TFLM_ARENA_LOCATION NS_AD_TCM
+#define NS_AD_AOT           0   /* 0 = TFLM, 1 = AOT */
+#define AOT_NUM_LAYERS      0
+#define AOT_LAST_IDENTIFIER 0
 
 #define TFLM_VALIDATOR_MAC_ESTIMATE_COUNT 44
-const uint32_t tflm_validator_mac_estimates[TFLM_VALIDATOR_MAC_ESTIMATE_COUNT] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16384, 0, 257, 0, 0, 0, 0, 24576, 0, 0, 0, 16384, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 64, 64, 0, 0};
-const int tflm_validator_number_of_estimates = TFLM_VALIDATOR_MAC_ESTIMATE_COUNT;
 
 #ifdef AM_PART_APOLLO5B
 #define NS_PROFILER_PMU_EVENT_0 ARM_PMU_MVE_INST_RETIRED

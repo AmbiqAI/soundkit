@@ -8,8 +8,8 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 10000
-    val: 2500
+    train: 1000
+    val: 250
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
@@ -24,7 +24,7 @@ data:
     # - {name: wham_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
-  target_length_in_secs: 5
+  target_length_in_secs: 15
   min_amp: 0.01
   max_amp: 0.95
 

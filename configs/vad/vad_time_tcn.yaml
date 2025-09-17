@@ -8,8 +8,8 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 30000
-    val: 3000
+    train: 1000
+    val: 250
   force_download: false
   reverb_prob: 0.2
   num_processes: 8
