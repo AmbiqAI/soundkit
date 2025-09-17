@@ -1,23 +1,25 @@
+"""Train keyword spotting model with given parameters."""
 import os
 import datetime
 from pathlib import Path
 from typing import Any
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import save_train_log, load_train_log
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.losses import LossFactory
+from soundkit.utils.calculate_feat_stats import feat_stats_estimator
+from soundkit.utils.lookaheadBuffer import LookaheadBuffer
+from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
+from soundkit.utils.tf_complex_utils import complex_to_realarray
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
+from soundkit.utils.calculate_feat_stats import mean_varinace_norm
+
 from .datasets import create_dataset
-from ...defines import SKTaskParams
-from ...utils.download_tf_model import save_train_log, load_train_log
-from ...utils.download_tf_model import build_model, load_model_checkpoint
-from ...utils.feature_utils import FeatureExtractor
-from ...utils.losses import LossFactory
-from ...utils.calculate_feat_stats import feat_stats_estimator
-from ...utils.lookaheadBuffer import LookaheadBuffer
-from ...utils.WarmUpCosineDecay import WarmUpCosineDecay
-from ...utils.tf_complex_utils import complex_to_realarray
-from ...utils.plot_api import plot_spectrograms
-from ...utils.tf_basic_math import tf_log10_eps
-from ...utils.ConfusionMatrixMetric import ConfusionMatrixMetric
-from ...utils.calculate_feat_stats import mean_varinace_norm
 
 @tf.function
 def train_step(
@@ -92,14 +94,18 @@ def run_epoch(
     acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
     loss_metric = tf.keras.metrics.Mean()
     confused_metric = ConfusionMatrixMetric(num_classes=2)
-    # Initialize left-over state buffers for streaming STFT
-    states_audio_sn = tf.random.uniform(
-        [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-        minval=-1.0,
-        maxval=1.0,
-        dtype=tf.float32
-    )
-    model.reset_states()
+    
+    def reset_nn_states(model: tf.keras.Model):
+        """Reset the model states."""
+        states_audio_sn = tf.random.uniform(
+            [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
+            minval=-1.0,
+            maxval=1.0,
+            dtype=tf.float32
+        )* 10**-5
+        model.reset_states()
+        return states_audio_sn
+    states_audio_sn = reset_nn_states(model)
     for step, batch in enumerate(dataset):
 
         audio_sn, _, kws = batch
@@ -111,13 +117,8 @@ def run_epoch(
             audio_sn, states=states_audio_sn)
         if params.train.reset_every_batch:
             # Reset the state buffer for the next batch
-            states_audio_sn = tf.random.uniform(
-                [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-                minval=-1.0,
-                maxval=1.0,
-                dtype=tf.float32
-            )
-            model.reset_states()
+            states_audio_sn = reset_nn_states(model)
+
         if params.train['standardization']:
             # Standardize features
             feat_sn_norm = mean_varinace_norm(feat_sn, stats['nMean_feat'], stats['nInvStd'])
@@ -198,7 +199,6 @@ def run_epoch(
                     show_fig=False       # set False if only saving
                 )
 
-                
                 plt.plot(mask * 200)
                 plt.plot(kws[idx] * 200)
                 # plt.show()
@@ -231,7 +231,17 @@ def train(params: SKTaskParams):
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
-
+    if batchsize < 8:
+        print(
+            "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
+            "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
+            "    train:\n"
+            "      batchsize: 32\n\n"
+            "   or \n\n"
+            "     soundkit -t se -m train -c configs/se/se.yaml train.batchsize=32\n\n"
+            "Or set it to a value that fits your GPU memory.\n"
+            "Or choose the highest value that fits within your available memory.\n"
+        )
     # 1. Define feature extractor
     feat_extractor = FeatureExtractor(
         params=params,
@@ -248,7 +258,7 @@ def train(params: SKTaskParams):
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100,
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,
         complex_input=is_complex)
 
     _, epoch_loaded_1 = load_model_checkpoint(

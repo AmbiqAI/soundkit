@@ -5,6 +5,7 @@ from .sk_datasets import (
     load_train_clean_100,
     load_vad_train_clean_100, # for vad
     load_vad_train_clean_360, # for vad
+    load_vad_train_other_500, # for vad
     load_vad_dev_clean,       # for vad
     load_vad_thchs30,           # for vad
     load_train_galaxy, # for kws
@@ -49,6 +50,7 @@ SKDatasetFactory.register("train-clean-100", load_train_clean_100)
 
 SKDatasetFactory.register("vad_train-clean-100", load_vad_train_clean_100)
 SKDatasetFactory.register("vad_train-clean-360", load_vad_train_clean_360)
+SKDatasetFactory.register("vad_train-other-500", load_vad_train_other_500)
 SKDatasetFactory.register("vad_dev-clean", load_vad_dev_clean)
 SKDatasetFactory.register("vad_thchs30", load_vad_thchs30)
 

@@ -379,7 +379,7 @@ void Reset_Handler(void) {
           "        cmp     r1, r2\n"
           "        blt     copy_loop_sram\n");
     //
-    // Zero fill the bss TCM segment.
+    // Zero fill the bss segment.
     //
     __asm("    ldr     r0, =_sbss\n"
           "    ldr     r1, =_ebss\n"
@@ -389,18 +389,6 @@ void Reset_Handler(void) {
           "        it      lt\n"
           "        strlt   r2, [r0], #4\n"
           "        blt     zero_loop");
-
-   //
-   // Zero fill the shared‐SRAM BSS region.
-   //
-   __asm("    ldr     r0, =_ssram_bss\n"
-         "    ldr     r1, =_esram_bss\n"
-         "    mov     r2, #0\n"
-         "zero_sram_loop:\n"
-         "        cmp     r0, r1\n"
-         "        it      lt\n"
-         "        strlt   r2, [r0], #4\n"
-         "        blt     zero_sram_loop\n");         
           
     // Call CPP constructor init
     __libc_init_array();

@@ -1,3 +1,4 @@
+""" KWS Demo for EVB and PC"""
 import os
 import logging
 import subprocess
@@ -15,6 +16,7 @@ from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
+from soundkit.utils.basic_dsp import DCRemover
 from .export import export
 
 logging.basicConfig(
@@ -49,7 +51,7 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}.tflite"
+    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -58,7 +60,7 @@ def demo_evb(params: SKTaskParams):
 
     # === Download neuralSPOT ===
     repo_url = "https://github.com/AmbiqAI/neuralSPOT.git"
-    neuralSPOT = "neuralSPOT"
+    neuralSPOT = "neuralSPOT_autodeploy"
     neuralspot_path = Path(f"../{neuralSPOT}").resolve()
     if not os.path.exists(neuralspot_path):
         subprocess.run(["git", "clone", repo_url, neuralspot_path], check=True)
@@ -125,12 +127,13 @@ def demo_evb(params: SKTaskParams):
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_params['bins'],
+        num_mfltrBank=feat_extractor.dim_feat,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        task=params.project
     )
 
     # === Define Key Paths ===
@@ -147,7 +150,7 @@ def demo_evb(params: SKTaskParams):
     export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
-    
+
     log.info(f"📦 Copying TFLite to {dst_tflite_path}")
     tools_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(src_tflite_path, dst_tflite_path)
@@ -157,9 +160,11 @@ def demo_evb(params: SKTaskParams):
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
+    subprocess.run(["uv", "sync"], check=True)
+    # subprocess.run(["python", "-m", "venv", ".venv"], check=True)
+    # subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
+    # subprocess.run([".venv/bin/pip", "install", "."], check=True)
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
@@ -231,9 +236,20 @@ def demo_pc(params: SKTaskParams):
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
+
+    if params.train.feature.type=='hybrid':
+        mel_bins = params.train.feature.n_mels
+    else:
+        mel_bins = params.train.feature.bins
+
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+        mel_bins=mel_bins,
+    )
     dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
@@ -242,7 +258,7 @@ def demo_pc(params: SKTaskParams):
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,)
 
     load_model_checkpoint(
         model_train, params_export['epoch_loaded'], checkpoint_dir)
@@ -276,14 +292,6 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
-
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
         dtype=dtype,
@@ -299,6 +307,17 @@ def demo_pc(params: SKTaskParams):
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
+            if params.data.signal.dc_removal:
+                self.dc_remover = DCRemover()
+            self.reset()
+
+        def reset(self):
+            """Reset the model state if needed."""
+            # This is a no-op for TFLite models, but can be overridden if needed.
+            self.feat_extractor.reset()
+            self.model_tflite.reset()
+            if params.data.signal.dc_removal:
+                self.dc_remover.reset()
 
         def __call__(self,
                      inputs: np.ndarray # input from microphone
@@ -306,6 +325,8 @@ def demo_pc(params: SKTaskParams):
             """Process input audio signal and return VAD output."""
             shape=inputs.shape
             inputs=inputs.flatten()
+            if params.data.signal.dc_removal:
+                inputs = self.dc_remover.process(inputs)
             features,_ = self.feat_extractor(inputs)
 
             if self.stats is not None:
@@ -331,31 +352,6 @@ def demo_pc(params: SKTaskParams):
         record_seconds=15,
         non_stop=True,
         proc_st=kws_model,
+        reset_st=kws_model.reset,
         title="KWS",
     )
-    if 0:
-        outputs = []
-        inputs = []
-        from soundkit.utils.audio import audio_read
-        sig = audio_read('wavs/kws/test_wavs/speech.wav', sample_rate=16000)
-        import time
-        start = time.time()
-        for i in range(len(sig)//160):
-            x = sig[i*160:(i+1)*160]
-            inputs.append(x)
-            y = model(x)
-            y = y.flatten()
-            if y[0] < y[1]:
-                outputs.append(np.ones(160))
-            else:
-                outputs.append(np.zeros(160))
-        print(f"Time taken: {time.time() - start:.2f} seconds")
-        print(f"average time per chunk: {(time.time() - start) / (len(sig)//160):.8f} seconds")
-        outputs = np.concatenate(outputs)
-        inputs = np.concatenate(inputs)
-
-        import matplotlib.pyplot as plt
-        plt.plot(inputs, label='Input Signal')
-        plt.plot(outputs, label='KWS Output')
-        plt.legend()
-        plt.show()

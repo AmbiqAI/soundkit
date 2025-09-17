@@ -31,7 +31,7 @@
 #include "def_AudioSystem.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 #include "downsample.h"
-#define RECORD_10S 1
+#define GUI_ON 1
 #define AUDIO_ON 1
 #define PERF_TEST 1
 
@@ -57,7 +57,11 @@ volatile bool static g_audioReady = false;
 volatile bool static g_audioRecording = false;
 
 #if NUM_CHANNELS == 1
+#if GUI_ON==0
 int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1]; // incoming PCM audio data
+#else
+int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // incoming PCM audio data
+#endif
 #else
 int32_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1];
 #endif
@@ -117,7 +121,7 @@ static uint8_t my_cdc_tx_ff_buf[MY_USB_TX_BUFSIZE];
 
 int16_t buf_downsample[160];
 DOWNSAMPLE_CLASS downsample_inst;
-
+extern 
 int main(void) {
     ns_core_config_t ns_core_cfg = {.api = &ns_core_V1_0_0};
 
@@ -216,23 +220,27 @@ int main(void) {
 
 #if PERF_TEST==1
     ns_lp_printf("\n|------ MCPS Measurement: run 100 times of inference ------|\n");
-    
-    // -- Init the NNSE2 model
-    AudioPipe_wrapper_init();
-    AudioPipe_wrapper_reset();
+
     if (params_nn1_nnvad.samplingRate == 8000)
     {
         // Initialize the downsample instance
         DOWNSAMPLE_CLASS_init(&downsample_inst);
     }
-    
-    int16_t *pcm_input = (int16_t*) audioDataBuffer;
-    int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
-    
+
     static ns_perf_counters_t pp;
     ns_init_perf_profiler();
     ns_reset_perf_counters();
     ns_start_perf_profiler();
+
+
+    // -- Init the NNSE2 model
+    AudioPipe_wrapper_init();
+    
+    int16_t *pcm_input = (int16_t*) audioDataBuffer;
+    int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
+
+    AudioPipe_wrapper_reset();
+    ns_printf("Model initialization succeeds\n");
     for (int i=0; i < 100; i++)
     {
         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
@@ -249,8 +257,10 @@ int main(void) {
     ns_printf("\nElapsedtime measurement\n");
     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
     tic();
+    AudioPipe_wrapper_reset(); // reset the Audio Pipe
     for (int i=0; i < 100; i++)
-    {
+    {   
+        
         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
     }
     elapsedTime = toc();
@@ -266,7 +276,8 @@ int main(void) {
     // USB. This gives the user a chance to start the server then
     // pressing the button to let the EVB it is ready to start RPCing.
 
-    ns_printf("Type $tools/python -m record_evb --tty <your tty>\n");
+    ns_printf("Open the other terminal\n");
+    ns_printf("Type $ soundkit -t vad -m demo -c your_config.yaml demo.platform=evb --view\n");
 
     ns_printf("Start the PC-side server, then press Button 0 to get started\n");
     while (g_intButtonPressed == 0) {
@@ -281,9 +292,8 @@ int main(void) {
     // interfaces. Any incoming RPC calls will result in calls to the
     // RPC handler functions defined above.
 
-#if RECORD_10S==0
-    // -- Init the NNSE2 model
-    ns_printf("Type $tools/python audioview_se.py\n");
+#if GUI_ON==1
+    
 #if PERF_TEST==0
     AudioPipe_wrapper_init();
 #endif

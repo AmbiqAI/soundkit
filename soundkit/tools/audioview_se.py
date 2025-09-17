@@ -9,12 +9,13 @@ import multiprocessing
 from multiprocessing import Process, Array, Lock
 import time
 import erpc
-import GenericDataOperations_EvbToPc
+from . import GenericDataOperations_EvbToPc
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, Slider
 import scipy.io.wavfile as wavfile
 import pyaudio
+from .usb_utils import find_tinyusb_port
 # Define the RPC service handlers - one for each EVB-to-PC RPC function
 
 FRAMES_TO_SHOW  = 500
@@ -83,6 +84,8 @@ class DataServiceClass:
                 wavfile.write("audio_result/audio_se.wav", samplerate, sig2.astype(np.int16))
 
                 self.wavefile = None
+
+                print("Recording wavs saved in audio_result/audio.wav, audio_raw.wav and audio_se.wav")
                 print('Stop recording')
 
                 if self.playback:
@@ -217,7 +220,7 @@ class VisualDataClass:
         secs2show = FRAMES_TO_SHOW * HOP_SIZE/SAMPLING_RATE
         self.xdata = np.arange(FRAMES_TO_SHOW * HOP_SIZE) / SAMPLING_RATE
         self.fig, self.ax_handle = plt.subplots(2,1)
-        self.ax_handle[0].title.set_text("Speech Enhancement Viewer")
+        self.ax_handle[0].title.set_text("Soundkit Viewer")
         self.fig.canvas.mpl_connect(
             'close_event',
             self.handle_close)
@@ -492,6 +495,8 @@ def main(args):
     # choose the channel to playback
     ch_select       = Array('i', [1]) # 0: raw data, 1: enhanced data
 
+    
+    tty = find_tinyusb_port()
     # we use two multiprocesses to handle real-time visualization and recording
     # 1. proc_draw   : to visualize
     # 2. proc_evb2pc : to capture data from evb and recording
@@ -506,7 +511,7 @@ def main(args):
                               gain_play_db))
     proc_evb2pc = Process(
                     target = target_proc_evb2pc,
-                    args   = (  args.tty,
+                    args   = (  tty,
                                 args.baud,
                                 databuf_raw,
                                 databuf_enhance,
@@ -528,17 +533,18 @@ def main(args):
             sys.exit(1)
         time.sleep(0.5)
 
+
 if __name__ == "__main__":
 
     # parse cmd parameters
     argParser = argparse.ArgumentParser(description="NeuralSPOT GenericData RPC Demo")
 
-    argParser.add_argument(
-        "-w",
-        "--tty",
-        default = "/dev/tty.usbmodem1234561" , #  "/dev/serial/by-id/usb-TinyUSB_TinyUSB_Device_123457-if00"
-        help    = "Serial device (default value is None)",
-    )
+    # argParser.add_argument(
+    #     "-w",
+    #     "--tty",
+    #     default = "/dev/serial/by-id/usb-TinyUSB_TinyUSB_Device_123457-if00",
+    #     help    = "Serial device (default value is None)",
+    # )
 
     argParser.add_argument(
         "-pb",

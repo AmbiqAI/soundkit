@@ -7,13 +7,12 @@ from .export import export
 from .demo import demo
 
 class SeTask(SKTask):
-    """HeartKit Beat Task"""
+    """SoundKit SE Task"""
 
     @staticmethod
     def description() -> str:
         return (
-            "This task is used to train, evaluate, and export beat models."
-            "Beat includes normal, pac, pvc, and other beats."
+            "This task is used to train, evaluate, and export se models."
         )
 
     @staticmethod
@@ -21,7 +20,7 @@ class SeTask(SKTask):
         """ Data preparation for se task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         data(params)
 
@@ -30,7 +29,7 @@ class SeTask(SKTask):
         """Train model for se task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         train(params)
 
@@ -39,7 +38,7 @@ class SeTask(SKTask):
         """Evaluate beat se model
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         evaluate(params)
 
@@ -48,7 +47,7 @@ class SeTask(SKTask):
         """Export model for se task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         export(params)
 
@@ -57,6 +56,6 @@ class SeTask(SKTask):
         """Run demo on se task model
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         demo(params)

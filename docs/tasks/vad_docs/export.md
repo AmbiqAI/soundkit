@@ -7,7 +7,7 @@ This page explains how to export a trained Voice Activity Detection (VAD) model 
 ## 🔧 Run `export` Mode
 
 ```bash
-soundkit -t vad -m export -c vad.yaml
+soundkit -t vad -m export -c configs/vad/vad.yaml
 ```
 
 This command loads a trained model checkpoint and converts it into deployable formats like TFLite or embedded C source files.

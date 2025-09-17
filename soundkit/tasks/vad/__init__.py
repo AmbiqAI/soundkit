@@ -7,56 +7,55 @@ from .export import export
 from .demo import demo
 
 class VadTask(SKTask):
-    """HeartKit Beat Task"""
+    """SoundKit VAD Task"""
 
     @staticmethod
     def description() -> str:
         return (
-            "This task is used to train, evaluate, and export beat models."
-            "Beat includes normal, pac, pvc, and other beats."
+            "This task is used to train, evaluate, and export vad models."
         )
 
     @staticmethod
     def data(params: SKTaskParams):
-        """ Data preparation for se task
+        """ Data preparation for vad task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         data(params)
 
     @staticmethod
     def train(params: SKTaskParams):
-        """Train model for se task
+        """Train model for vad task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         train(params)
 
     @staticmethod
     def evaluate(params: SKTaskParams):
-        """Evaluate beat se model
+        """Evaluate beat vad model
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         evaluate(params)
 
     @staticmethod
     def export(params: SKTaskParams):
-        """Export model for se task
+        """Export model for vad task
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         export(params)
 
     @staticmethod
     def demo(params: SKTaskParams):
-        """Run demo on se task model
+        """Run demo on vad task model
 
         Args:
-            params (HKTaskParams): Task parameters
+            params (SKTaskParams): Task parameters
         """
         demo(params)

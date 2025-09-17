@@ -10,7 +10,7 @@ The evaluation step in **SoundKit** for KWS allows you to assess model performan
 To evaluate your trained KWS model on a set of test audio files:
 
 ```bash
-soundkit -t kws -m evaluate -c configs/kws.yaml
+soundkit -t kws -m evaluate -c configs/kws/kws.yaml
 ```
 
 This will output prediction visualizations and save results to the configured folder.

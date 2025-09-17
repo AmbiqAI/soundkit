@@ -20,7 +20,7 @@ Optimized for edge deployment on [Ambiq's ultra-low power SoCs](https://ambiq.co
 - Real-time processing for embedded or browser-based use  
 - Modular architecture: use or extend CRNN-based backbones  
 - TFLite and C-array export for low-power MCUs  
-- Seamless EVB and WebUSB demo support
+- Seamless PC or EVB demo support
 
 ---
 
@@ -135,7 +135,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
         Prepare training and validation examples by mixing speech and noise with controlled SNRs and reverb.
 
         ```bash
-        soundkit -t vad -m data -c configs/vad.yaml
+        soundkit -t vad -m data -c configs/vad/vad.yaml
         ```
         See [Data](./vad_docs/data.md) for details.
 
@@ -143,13 +143,13 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
         Train the VAD model with your prepared dataset and configuration.
 
         ```bash
-        soundkit -t vad -m train -c configs/vad.yaml
+        soundkit -t vad -m train -c configs/vad/vad.yaml
         ```
 
         Start TensorBoard in a separate terminal:
 
         ```bash
-        soundkit -t vad -m train --tensorboard -c configs/vad.yaml
+        soundkit -t vad -m train --tensorboard -c configs/vad/vad.yaml
         ```
 
         See [Train](./vad_docs/train.md) for guidance.
@@ -158,7 +158,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
         Evaluate the model on real recordings to visualize predicted voice activity.
 
         ```bash
-        soundkit -t vad -m evaluate -c configs/vad.yaml
+        soundkit -t vad -m evaluate -c configs/vad/vad.yaml
         ```
         See [Evaluate](./vad_docs/evaluate.md) for results.
 
@@ -166,14 +166,17 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
         Convert model to embedded-friendly formats (TFLite, C headers) for deployment.
 
         ```bash
-        soundkit -t vad -m export -c configs/vad.yaml
+        soundkit -t vad -m export -c configs/vad/vad.yaml
         ```
         See [Export](./vad_docs/export.md) for format descriptions.
 
     === "Demo"
-        Test the model in real-time either using EVB hardware via WebUSB in browser:
+        Test the model in real-time either using PC or EVB hardware. We suggest to run on your PC first and try on EVB later:
 
         ```bash
-        soundkit -t vad -m demo -c configs/vad.yaml
+        soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=pc
+        # or 
+        soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb
+        
         ```
         See [Demo](./vad_docs/demo.md) to get started.

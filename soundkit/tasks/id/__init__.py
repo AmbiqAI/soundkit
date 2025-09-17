@@ -1,0 +1,61 @@
+from ..task import SKTask
+from ...defines import SKTaskParams
+from .data import data
+from .train import train
+from .evaluate import evaluate
+from .export import export
+from .demo import demo
+
+class IdTask(SKTask):
+    """SoundKit ID Task"""
+
+    @staticmethod
+    def description() -> str:
+        return (
+            "This task is used to train, evaluate, and export id models."
+        )
+
+    @staticmethod
+    def data(params: SKTaskParams):
+        """ Data preparation for id task
+
+        Args:
+            params (SKTaskParams): Task parameters
+        """
+        data(params)
+
+    @staticmethod
+    def train(params: SKTaskParams):
+        """Train model for id task
+
+        Args:
+            params (SKTaskParams): Task parameters
+        """
+        train(params)
+
+    @staticmethod
+    def evaluate(params: SKTaskParams):
+        """Evaluate id model
+
+        Args:
+            params (SKTaskParams): Task parameters
+        """
+        evaluate(params)
+
+    @staticmethod
+    def export(params: SKTaskParams):
+        """Export model for id task
+
+        Args:
+            params (SKTaskParams): Task parameters
+        """
+        export(params)
+
+    @staticmethod
+    def demo(params: SKTaskParams):
+        """Run demo on id task model
+
+        Args:
+            params (SKTaskParams): Task parameters
+        """
+        demo(params)

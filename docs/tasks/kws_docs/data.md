@@ -18,7 +18,7 @@ The `data` mode prepares TFRecord datasets by:
 Run with:
 
 ```bash
-soundkit -t kws -m data -c configs/kws.yaml
+soundkit -t kws -m data -c configs/kws/kws.yaml
 ```
 
 ---

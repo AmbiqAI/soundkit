@@ -1,22 +1,20 @@
 ''' prepare tfrecords data for SE task '''
-import os
 import random
 import re
 import multiprocessing
-from tqdm import tqdm
 from pathlib import Path
 import numpy as np
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from ...utils.tf_stft import tf_stft
-from ...utils.tf_basic_math import tf_log10_eps
-from ...utils.audio import pad_or_crop
+from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.defines import SKTaskParams
+from soundkit.utils.basic_dsp import dc_remove
+from soundkit.utils.download_api import corpus_download
+from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels_vad
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.feature_utils import FeatureExtractor
 from .datasets import create_raw_tfrecord
-from ...defines import SKTaskParams
-from ...utils.basic_dsp import dc_remove
-from ...utils.download_api import corpus_download
-from ...utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
-from ...utils.plot_api import plot_spectrograms
 from ...datasets import SKDatasetFactory
 
 class FeatMultiProcsClass(multiprocessing.Process):
@@ -60,7 +58,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         for idx, sample in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
             # load clean speech
             wavname, label = sample
-            
+
             clean = audio_read(
                 wavname,
                 sample_rate=target_sample_rate)
@@ -75,12 +73,29 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 pass
             else:
                 raise ValueError(f"Unsupported sample rate: {target_sample_rate}")
-            rn = np.random.uniform(0, 1)
-            if rn < 0.25:
-                clean=clean*0
-                starts= np.array([])
-                ends = np.array([])
             
+            rn = np.random.uniform(0, 1)
+            if rn < 0.25: # create short segments
+                id = np.random.randint(0, len(starts))
+                start = starts[id]
+                end = ends[id]
+                # clean = clean[start:end]
+                zeros = np.zeros_like(clean)
+
+                sr = self.params.data.signal.sampling_rate
+
+                rn0 = np.random.uniform(0, 1)
+                if rn0 < 0.5: # create short segments
+                    len_s = np.random.randint(sr * 0.5, sr * 1.5)
+                    end = np.min([start + len_s, end])
+                zeros[start:end] = clean[start:end]
+                clean=zeros
+                starts= np.array([start])
+                ends = np.array([end])
+            elif rn < 0.35: # create no segments
+                clean*=0
+                starts = np.array([])
+                ends = np.array([])
             # load noise
             noise = random_load_audio_from_list(
                 self.noise_list,
@@ -99,7 +114,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
             snr_db = snr_dbs[np.random.randint(0,len(snr_dbs))]
 
             # repeat or crop clean and noise to target length
-            audio_sn, audio_s, starts, ends  = synthesize_audio_with_labels(
+            audio_sn, audio_s, starts, ends  = synthesize_audio_with_labels_vad(
                 clean,
                 noise,
                 starts,
@@ -109,29 +124,8 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 min_amp=self.params.data['min_amp'],
                 max_amp=self.params.data['max_amp'],
                 target_length=target_length,
-                sample_rate=target_sample_rate)
-
-            # vad = np.zeros_like(audio_sn, dtype=np.float32)
-            # vad[start:end] = 1.0  # Mark the valid region
-            
-            # import matplotlib.pyplot as plt
-            # plt.figure(figsize=(10, 4))
-            # plt.subplot(3, 1, 1)
-            # plt.plot(audio_sn, label='Clean Speech')
-            # plt.plot(vad)
-            # plt.title(f"Clean Speech Waveform - {wavname}")
-            # plt.ylim(-1.1, 1.1)
-            
-            # plt.subplot(3, 1, 2)
-            # plt.plot(audio_s, label='Clean Speech')
-            # plt.plot(vad)
-            # plt.title(f"Clean Speech Waveform - {wavname}")
- 
-            
-            # plt.subplot(3, 1, 3)
-            # plt.plot(audio_reverb, label='Noisy Speech')
-            # plt.plot(vad)
-            # plt.show()
+                sample_rate=target_sample_rate,
+                is_short_segments_remove=False)
             
             if is_dc_removal:
                 audio_sn = dc_remove(audio_sn)
@@ -162,12 +156,11 @@ class FeatMultiProcsClass(multiprocessing.Process):
         Plot the audio signals and 
         their spectrograms for debugging.
         """
-
-        from ...utils.feature_utils import FeatureExtractor
+        fftsize = self.params.train['feature']['fft_size']
+        
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
-
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             tf.constant([audio_sn], dtype=tf.float32))
         feat_s, spec_s, states_audio_s = feat_extractor(
@@ -176,17 +169,23 @@ class FeatMultiProcsClass(multiprocessing.Process):
         vad = np.zeros(feat_sn.shape[1], dtype=np.float32)
         for ss, ee in zip(label[0], label[1]):
             vad[ss:ee] = 1
-        
-        # spec_sn = tf_stft([audio_sn], frame_size, hop_size, fft_size)
-        # spec_s = tf_stft([audio_s], frame_size, hop_size, fft_size)
+
         logspec_sn = 20 * tf_log10_eps(tf.abs(spec_sn[0])).numpy()
         logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
-        logmel_sn = 10 * feat_sn[0].numpy()
 
+        if feat_extractor.feat_type == "time":
+            
+            feat_sn_id = feat_sn[0].numpy()
+            vmin_feat = feat_sn_id.min()
+            vmax_feat = feat_sn_id.max()
+        else:
+            feat_sn_id = 10 * feat_sn[0].numpy()
+            vmin_feat = vmin
+            vmax_feat = vmax
         plot_spectrograms(
-            images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
+            images=[logspec_sn.T, logspec_s.T, feat_sn_id.T],
             titles=[f"noisy logspec {snr_db}dB", "clean logspec", "noisy feat"],
-            vmin_vmax=[(vmin, vmax), (vmin, vmax), (vmin, vmax)],
+            vmin_vmax=[(vmin, vmax), (vmin, vmax), (vmin_feat, vmax_feat)],
             show_colorbar=True,
             cmap="pink_r",  # or your preferred colormap
             show_fig=False   # set to False if you just want to save
@@ -270,7 +269,7 @@ def data(params: SKTaskParams) -> None:
         speech_list_split = np.array_split(
             lst,
             params_data['num_processes'])
-        
+
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
             print(f"Processing [{train_set}] set with [{noise_type}] noise")

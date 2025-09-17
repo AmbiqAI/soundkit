@@ -116,26 +116,21 @@ def corpus_download(
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
-        case 'ESC-50':
+        case 'ESC-50-master' | 'ESC-50':
             target_name = f'master.zip'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://github.com/karoldvl/ESC-50/archive/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
-            if corpus == 'ESC-50':
-                shutil.copyfile(
-                    'data/ESC-50-master/non_speech.csv',
-                    'wavs/noise/ESC-50-master/non_speech.csv')
-            else:
-                shutil.copyfile(
-                    'data/FSD50K/non_speech.csv',
-                    'wavs/noise/FSD50K/non_speech.csv')
+            shutil.copyfile(
+                'metadata/ESC-50-master/non_speech.csv',
+                'wavs/noise/ESC-50-master/non_speech.csv')
 
         case 'rirs_noises':
             target_name = f'{corpus}.zip'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://www.openslr.org/resources/28/{target_name}'
-            # url_download(url, target_path )
+            url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
         case 'FSD50K':
@@ -148,10 +143,10 @@ def corpus_download(
                 "FSD50K.dev_audio.zip",
             ]
             for fname in fsd50_lst:
-                url = f'https://zenodo.org/record/4060432/files/{fname}?download=1"'
-                url_download(url, f"../{tmp_download}/{fname}")
+                url = f'https://zenodo.org/record/4060432/files/{fname}?download=1'
+                url_download(url, f"./{tmp_download}/{fname}")
             os.system(f"zip -s 0 ./{tmp_download}/FSD50K.dev_audio.zip --out ./{tmp_download}/unsplit.zip")
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
             shutil.copyfile(
-                'data/non_speech_fsd50k.csv',
+                'metadata/non_speech_fsd50k.csv',
                 'wavs/noise/FSD50K/non_speech.csv')

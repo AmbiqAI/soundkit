@@ -131,15 +131,15 @@ def create_tfrecords_pipeline(
                 cycle_length       = batchsize,
                 block_length       = 1,
                 deterministic      = True,
-                num_parallel_calls = tf.data.AUTOTUNE)
+                num_parallel_calls = 4)
     dataset = dataset.map(
                 mapping,
-                num_parallel_calls = tf.data.AUTOTUNE,
+                num_parallel_calls = 4,
                 deterministic = True)
     dataset = dataset.batch(
                     batchsize,
                     drop_remainder=True,
-                    num_parallel_calls = tf.data.AUTOTUNE)
+                    num_parallel_calls = 4)
     dataset = dataset.prefetch(buffer_size = 1)
     iterator = iter(dataset)
     return iterator, dataset

@@ -1,26 +1,26 @@
+"""Evaluate SE task model with given parameters."""
 import re
 import os
-from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
-import torch
 import soundfile as sf
+import torch
 from torchmetrics.functional.audio.dnsmos import deep_noise_suppression_mean_opinion_score
+from soundkit.defines import SKTaskParams
+from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.calculate_feat_stats import feat_stats_estimator
+from soundkit.utils.lookaheadBuffer import LookaheadBuffer
+from soundkit.utils.tf_stft import tf_istft
+from soundkit.utils.tf_complex_utils import polar_to_complex
+from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.basic_dsp import dc_remove
+from soundkit.utils.audio import audio_read
+from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.tf_basic_math import tf_log10_eps
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
-from ...defines import SKTaskParams
-from ...utils.download_tf_model import build_model, load_model_checkpoint
-from ...utils.feature_utils import FeatureExtractor
-from ...utils.calculate_feat_stats import feat_stats_estimator
-from ...utils.lookaheadBuffer import LookaheadBuffer
-from ...utils.tf_stft import tf_istft
-from ...utils.tf_complex_utils import polar_to_complex
-from ...utils.tf_copy_model import copy_model_weights
-from ...utils.basic_dsp import dc_remove
-from ...utils.audio import audio_read
-from ...utils.plot_api import plot_spectrograms
-from ...utils.tf_basic_math import tf_log10_eps
 
 def evaluate(params: SKTaskParams):
     """Evaluate SE task model with given parameters.
@@ -29,7 +29,6 @@ def evaluate(params: SKTaskParams):
         params (HKTaskParams): Task parameters
     """
     print(f"Evaluating SE model with params: {params} and more")
-
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']
@@ -95,7 +94,7 @@ def evaluate(params: SKTaskParams):
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     # load weights from the checkpoint
 
@@ -263,6 +262,7 @@ def evaluate(params: SKTaskParams):
             scores[key][type_s] /= (batches * batchsize)
 
     # Print results
+    print("\nAveraged Evaluation Results:")
     for metric in metrics:
         val_sn = scores[metric]['sn']
         val_en = scores[metric]['en']

@@ -1,23 +1,24 @@
 # Quickstart Guide
 
+
 ## **Install SoundKit**
 
 !!! note "SE Mode Selection"
-
-    === "From PyPI"
-
-        ```bash
-        pip install soundkit
-        ```
 
     === "From GitHub (Development Mode)"
 
         ```bash
         git clone https://github.com/AmbiqAI/soundkit.git
         cd soundkit
-        pip install -e .
+        python -m venv .venv         # Create virtual environment
+        source .venv/bin/activate    # Activate it
+        ./install.sh
         ```
+    === "From PyPI"
 
+        ```bash
+        pip install soundkit
+        ```
 ---
 
 ## **Requirements**
@@ -31,17 +32,6 @@
 
 ---
 
-## **Setup Virtual Environment**
-
-Its best to isolate your dependencies:
-
-```bash
-python -m venv .venv         # Create virtual environment
-source .venv/bin/activate    # Activate it (use `.venv\Scripts\activate` on Windows)
-```
-
----
-
 ## **Use SoundKit with CLI**
 
 SoundKit provides a unified CLI for handling various ML tasks.
@@ -52,7 +42,7 @@ SoundKit provides a unified CLI for handling various ML tasks.
     soundkit --task [TASK] --mode [MODE] --config [CONFIG]
     ```
 
-- **TASK**  One of: `se`, `vad`, `kws`  
+- **TASK**  One of: `se`, `vad`, `kws`, `id`  
 - **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`  
 - **CONFIG**  Path to your YAML config
 
@@ -65,19 +55,19 @@ SoundKit provides a unified CLI for handling various ML tasks.
     === "Data"
 
         ```bash
-        soundkit -t se -m data -c configs/se.yaml
+        soundkit -t se -m data -c configs/se/se.yaml
         ```
 
     === "Train"
 
         ```bash
-        soundkit -t se -m train -c configs/se.yaml
+        soundkit -t se -m train -c configs/se/se.yaml
         ```
 
         Open TensorBoard in another terminal:
 
         ```bash
-        soundkit -t se -m train --tensorboard -c configs/se.yaml
+        soundkit -t se -m train --tensorboard -c configs/se/se.yaml
         ```
 
         Visit [http://localhost:6006](http://localhost:6006)
@@ -85,20 +75,20 @@ SoundKit provides a unified CLI for handling various ML tasks.
     === "Evaluate"
 
         ```bash
-        soundkit -t se -m evaluate -c configs/se.yaml
+        soundkit -t se -m evaluate -c configs/se/se.yaml
         ```
 
     === "Export"
 
         ```bash
-        soundkit -t se -m export -c configs/se.yaml
+        soundkit -t se -m export -c configs/se/se.yaml
         ```
 
     === "Demo"
 
         ```bash
-        soundkit -t se -m demo -c configs/se.yaml demo.platform=evb # for amibiq evb deployment
-        soundkit -t se -m demo -c configs/se.yaml demo.platform=pc # for pc deployment
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb # for amibiq evb deployment
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # for pc deployment
         
         ```
 
@@ -111,7 +101,7 @@ Understand key settings in your SoundKit YAML config for SE tasks:
 ### **Top-Level**
 
 - `name`: Name of the experiment (used in folder names)
-- `project`: Task type, e.g., `se`, `kws`, `vad`
+- `project`: Task type, e.g., `se`, `kws`, `vad`, `id`
 - `job_dir`: Where outputs (models, logs) are saved
 
 ### **Data (`data`)**
@@ -131,7 +121,7 @@ Understand key settings in your SoundKit YAML config for SE tasks:
 - `epochs`: Total number of epochs
 - `loss_function`: Type of loss and its parameters (e.g., `mrl_mse`)
 - `feature`: Feature extraction settings (e.g., `type`, `frame_size`)
-- `model.config_file`: Model architecture YAML (e.g., `config_crnn.yaml`)
+- `model.config_file`: NN Model architecture YAML (e.g., `config_crnn.yaml`)
 
 ### **Evaluation (`evaluate`)**
 
@@ -146,11 +136,10 @@ Understand key settings in your SoundKit YAML config for SE tasks:
 
 ### **Demo (`demo`)**
 
+- `epoch_loaded`: Which model checkpoint to export
 - `platform`: `pc` or `evb` (Evaluation Board)
 - `evb_dir`: Output directory for EVB firmware
-- `filename`: Name of generated firmware
 - `param_struct_name`: Struct name for exported parameters
-
 ---
 
 ## **Overriding Config Values via OmegaConf**
@@ -168,3 +157,36 @@ soundkit -t se -m demo -c configs/se.yaml demo.platform=evb
 ```bash
 soundkit -t se -m train -c configs/se.yaml train.batchsize=64
 ```
+
+
+## **Model Zoo**
+
+You can directly try on already trained model on your PC.
+
+- se:
+
+    ```bash
+    soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc # crnn
+    # or
+    soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc # unet
+    ```
+
+- vad
+
+    ```bash
+    soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc # frequency domain input
+    # or
+    soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc # time domain input (end-to-end model)
+    ```
+
+- kws
+
+    ```bash
+    soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
+    ```
+
+- id
+
+    ```bash
+    soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
+    ```

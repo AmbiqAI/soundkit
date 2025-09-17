@@ -11,9 +11,9 @@ def gen_stft_win(
     """
     STFT window generator
     """
+    if win_size == hop:
+        return tf.ones([win_size], dtype=tf.float32)
 
-    # if win_size % hop != 0:
-    #     raise ValueError("Window size must be a multiple of hop size")
     win_size = tf.cast(win_size, tf.float32)
     hop_div_fr = tf.cast(hop,tf.float32) / win_size
     indices = tf.range(win_size, dtype=tf.float32)
@@ -42,7 +42,7 @@ def tf_stft(
         frame_step: int,
         fft_length: int,
         states=None,):
-    
+
     """ Calculate the STFT of a batch of signals"""
     def my_win(frame_length, dtype=tf.float32):
         return window_fn(frame_length, tf.constant(frame_step),dtype=dtype)

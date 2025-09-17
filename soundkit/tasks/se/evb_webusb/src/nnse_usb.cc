@@ -381,6 +381,11 @@ int main(void) {
     data.platform = 0;
     #endif
 
+    ns_printf("Starting Neural Network Speech Enhancement Demo\n");
+    ns_printf("EVB with WebUSB\n");
+    ns_printf("Turn on the web browser on https://ambiqai.github.io/web-ble-dashboards/nnse-usb/\n");
+    ns_printf("Press Button 0 to toggle SE on/off\n");
+
     // initialize neural nets controller
      // -- Init the NNSE2 model
     AudioPipe_wrapper_init();

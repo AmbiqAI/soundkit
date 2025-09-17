@@ -1,3 +1,4 @@
+""" DEMO for SE task"""
 import os
 import logging
 import subprocess
@@ -9,12 +10,17 @@ from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.tf_copy_model import copy_model_weights
-from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
+from soundkit.utils.basic_dsp import DCRemover
+from soundkit.utils.np_stft import StreamingISTFT
+from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.utils.mel import gen_mel_c
 from .export import export
 
 logging.basicConfig(
@@ -30,6 +36,7 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
+
     if params.demo.platform == 'evb':
         demo_evb(params)
     elif params.demo.platform == 'pc':
@@ -49,7 +56,7 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}.tflite"
+    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -58,7 +65,7 @@ def demo_evb(params: SKTaskParams):
 
     # === Download neuralSPOT ===
     repo_url = "https://github.com/AmbiqAI/neuralSPOT.git"
-    neuralSPOT = "neuralSPOT"
+    neuralSPOT = "neuralSPOT_autodeploy"
     neuralspot_path = Path(f"../{neuralSPOT}").resolve()
     if not os.path.exists(neuralspot_path):
         subprocess.run(["git", "clone", repo_url, neuralspot_path], check=True)
@@ -72,8 +79,6 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -85,11 +90,7 @@ def demo_evb(params: SKTaskParams):
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
-
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.feature_utils import FeatureExtractor
-    from ...utils.mel import gen_mel_c
 
     filterbank_name='filter_banks'
 
@@ -112,6 +113,7 @@ def demo_evb(params: SKTaskParams):
             stats_name=stats_name)
     else:
         stats = None
+
     generate_feature_c_files(
         file_name="def_nn3_se",
         param_struct_name="params_nn3_se",
@@ -122,7 +124,7 @@ def demo_evb(params: SKTaskParams):
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_params['bins'],
+        num_mfltrBank=feat_extractor.dim_feat,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
@@ -154,9 +156,8 @@ def demo_evb(params: SKTaskParams):
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
+    subprocess.run(["uv", "sync"], check=True)
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
@@ -221,15 +222,23 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    params_export = params.export
-
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     batchsize_train = params.train['batchsize']
     batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
+
+    if params.train.feature.type=='hybrid':
+        mel_bins = params.train.feature.n_mels
+    else:
+        mel_bins = params.train.feature.bins
+    feat_extractor = FeatureExtractor_np(
+        feat_type=params.train.feature.type,
+        frame_len=params.train.feature.frame_size,
+        hop_len=params.train.feature.hop_size,
+        fft_len=params.train.feature.fft_size,
+        sampling_rate=params.data.signal.sampling_rate,
+        mel_bins=mel_bins,
+    )
     dim_feat = feat_extractor.dim_feat
     hop_size = params.train.feature.hop_size
     # 1.1. Build the model
@@ -238,10 +247,10 @@ def demo_pc(params: SKTaskParams):
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
+        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train, params.demo['epoch_loaded'], checkpoint_dir)
 
     model = build_model(
         params,
@@ -272,19 +281,11 @@ def demo_pc(params: SKTaskParams):
     else:
         stats = None
 
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
-
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
         dtype=dtype,
     )
-    from soundkit.utils.np_stft import StreamingISTFT
+
     class SEModel:
         """VAD model class in tflite for processing audio input and returning VAD output."""
         def __init__(
@@ -293,6 +294,7 @@ def demo_pc(params: SKTaskParams):
                 feat_extractor: FeatureExtractor_np,
                 stats: dict | None = None,
                 num_lookahead: int = 0):
+            self.num_lookahead = num_lookahead
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
@@ -302,17 +304,21 @@ def demo_pc(params: SKTaskParams):
                 hop_len=params.train.feature.hop_size,
                 fft_len=params.train.feature.fft_size,
             )
+
             if num_lookahead > 0:
                 _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(num_lookahead):
-                    self.specs.append(z_spec.copy())       
+                    self.specs.append(z_spec.copy())
+            if params.data['signal']['dc_removal']:
+                self.dc_remover = DCRemover()
             
         def __call__(self,
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
             """Process input audio signal and return VAD output."""
-            shape=inputs.shape
             inputs=inputs.flatten()
+            if params.data['signal']['dc_removal']:
+                inputs = self.dc_remover.process(inputs)
             features,spec_update = self.feat_extractor(inputs)
             self.specs.append(spec_update)
             spec = self.specs.pop(0)
@@ -321,51 +327,41 @@ def demo_pc(params: SKTaskParams):
 
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
+
             tfmask = self.model_tflite(features)
+
             tfmask = tfmask.flatten()
-            
+
             pcm_out = self.istft.process(spec * tfmask)
-            # outputs = outputs.reshape(shape)
 
             return pcm_out.reshape((-1,1))
 
+        def reset(self):
+            """Reset the internal state of the model."""
+            self.feat_extractor.reset()
+            self.specs = []
+            self.istft.reset()
+            if self.num_lookahead > 0:
+                _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+                for i in range(self.num_lookahead):
+                    self.specs.append(z_spec.copy())
+            if hasattr(self, 'dc_remover'):
+                self.dc_remover.reset()
+
+    # 4. Run the AudioShowClass
     se_model = SEModel(
         model_tflite=model_tflite,
         feat_extractor=feat_extractor,
         stats=stats,
         num_lookahead=params.train.num_lookahead
     )
-    se_model(np.random.randn(64))
-    
-    from soundkit.utils.audio import audio_read
-    sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
-    
-    
-    # import time
-    
-    # inputs = []
-    # outputs = []
-    
-    # start = time.time()
-    # for i in range(len(sig)//hop_size):
-    #     x = sig[i*hop_size:(i+1)*hop_size]
-    #     inputs.append(x)
-    #     y = se_model(x)
-    #     y = y.flatten()
-    #     outputs.append(y)
 
-    # print(f"Time taken: {time.time() - start:.2f} seconds")
-    # print(f"average time per chunk: {(time.time() - start) / (len(sig)//hop_size):.8f} seconds")
-    # outputs = np.concatenate(outputs)
-    # inputs = np.concatenate(inputs)
-
-    # import pdb; pdb.set_trace()
-    
-    
     aud_handle = AudioShowClass(
         record_seconds=15,
         non_stop=True,
         proc_st=se_model,
+        reset_st=se_model.reset,
         frame_size=hop_size,
+        title="SoundKit SE Demo",
     )
-    
+     

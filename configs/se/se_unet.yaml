@@ -1,0 +1,89 @@
+name: unet_relu_noncausal_sep_specmel_th50
+project: se
+job_dir: ./soundkit/tasks/se
+
+data:
+  path_tfrecord: ${job_dir}/tfrecords
+  tfrecord_datalist_name: # list of saved tfrecords
+    train: train_tfrecord.csv 
+    val: val_tfrecord.csv
+  num_samples_per_noise:
+    train: 1000
+    val: 250
+  force_download: false
+  reverb_prob: 0.2
+  num_processes: 8
+  corpora:
+    - {name: train-clean-360, type: speech, split: train}
+    - {name: train-clean-100, type: speech, split: train}
+    - {name: dev-clean, type: speech, split: val,}
+    - {name: thchs30, type: speech, split: train-val}
+    - {name: ESC-50-master, type: noise, split: train-val}
+    # - {name: FSD50K, type: noise, split: train-val}
+    # - {name: musan, type: noise, split: train-val}
+    # - {name: wham_noise, type: noise, split: train-val}
+    - {name: rirs_noises, type: reverb, split: train-val}
+  snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
+  target_length_in_secs: 15
+  min_amp: 0.01
+  max_amp: 0.95
+
+  signal:
+    sampling_rate: 16000
+    dc_removal: true
+  
+  debug: false
+
+train:
+  initial_lr: 4e-4
+  batchsize: 8
+  epochs: 160
+  warmup_epochs: 5
+  epoch_loaded: random
+  loss_function: {
+    type: compressed_mse,
+    params: {exp: 0.6, eps: 1e-8}
+    }
+  path:
+    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
+    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
+
+  num_lookahead: 1
+
+  feature: 
+    frame_size: 480
+    hop_size: 160
+    fft_size: 512
+    type: hybrid
+    bins_fft: 50
+    n_mels: 32
+
+  standardization: true
+  
+  model:
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_unet_relu_noncausal_sep_specmel_th50.yaml
+
+  debug: false
+
+evaluate:
+  epoch_loaded: best
+
+  data: 
+    dir: "./wavs/se/test_wavs"
+    files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    result_folder: ${job_dir}/test_results/${name}
+
+export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
+  epoch_loaded: best
+  tflite_dir: ${job_dir}/tflite
+
+demo:
+  epoch_loaded: best
+  platform: evb # or pc
+  tflite_dir: ${job_dir}/tflite
+  evb_dir: ${job_dir}/evb_webusb
+  pre_gain: 1

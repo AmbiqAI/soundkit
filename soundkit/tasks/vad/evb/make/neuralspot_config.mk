@@ -129,7 +129,7 @@ ifndef EXAMPLE
 EXAMPLE     := all
 endif
 ifndef TARGET
-TARGET      := basic_tf_stub
+TARGET      := nnvad_tflm
 endif
 NESTCOMP    := extern/AmbiqSuite
 NESTEGG := nnvad_tflm

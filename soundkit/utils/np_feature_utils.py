@@ -22,8 +22,18 @@ class FeatureExtractor_np:
             hop_len=160,
             fft_len=512,
             sampling_rate=16000,
-            mel_bins=72):
-        self.stft_exec = StreamingSTFT(frame_len, hop_len, fft_len)
+            mel_bins=72,
+            stream=True):
+        bypass_stft=False
+        if feat_type =="time":
+            bypass_stft=True
+        self.stft_exec = StreamingSTFT(
+            frame_len,
+            hop_len,
+            fft_len,
+            stream=stream,
+            bypass_stft=bypass_stft
+        )
 
         self.sampling_rate = sampling_rate
         self.feat_type=feat_type
@@ -34,6 +44,7 @@ class FeatureExtractor_np:
             "logampspec": self._extract_logampspec,
             "mel": self._extract_mel,
             "hybrid": self._extract_logpspec_mel,
+            "time": self._extract_time,
         }
 
         if feat_type == "mel":
@@ -52,9 +63,11 @@ class FeatureExtractor_np:
                 thresh_mel=50)
             self.mel_filter = fbanks.T
             self.dim_feat = fbanks.shape[0]
+        elif feat_type == "time":
+            self.dim_feat = frame_len
         else:
             dim_feat = (fft_len // 2) + 1
-            
+
             self.mel_filter = np.eye(
                 dim_feat)
             self.dim_feat = dim_feat
@@ -62,7 +75,9 @@ class FeatureExtractor_np:
     def dim(self) -> int:
         """Return the number of feature dimensions."""
         return self.dim_feat
-
+    def reset(self):
+        """Reset the internal state of the feature extractor."""
+        self.stft_exec.reset()
     def __call__(
             self,
             audio: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -77,7 +92,7 @@ class FeatureExtractor_np:
         spec = self.stft_exec.process(audio_sn)
 
         return spec, spec.copy()
-    
+
     def _extract_pspec(
             self,
             audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -139,3 +154,11 @@ class FeatureExtractor_np:
         mel_spec = log10_eps(mel_spec)
 
         return mel_spec, spec
+
+    def _extract_time(
+            self,
+            audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+
+        frames = self.stft_exec.process(audio_sn)
+        spec = np.fft.rfft(frames, n=self.stft_exec.fft_len)
+        return frames, spec

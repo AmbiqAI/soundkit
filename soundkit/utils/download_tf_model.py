@@ -75,8 +75,6 @@ def load_model_checkpoint(
 
     return epoch_loaded, epoch_loaded + 1
 
-
-
 def save_train_log(train_log: List[Dict[str, Any]], filepath: str) -> None:
     """
     Save training log to a JSON file.
@@ -85,7 +83,6 @@ def save_train_log(train_log: List[Dict[str, Any]], filepath: str) -> None:
         train_log: A list of dictionaries (one per epoch).
         filepath: Where to save the JSON log.
     """
-    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, "w") as f:
         json.dump(train_log, f, indent=2)
@@ -116,27 +113,27 @@ def build_model(
         batchsize: int = 32,
         dim_feat: int = 72,
         time_steps: int = 1,
-        export: bool = False,
-        complex_input: bool=False) -> Tuple[tf.keras.Model, int]:
+        export: bool = False) -> Tuple[tf.keras.Model, int]:
+
     """Download model weights from a remote server.
 
     Args:
         params (SKTaskParams): Task parameters
     """
     print(f"Downloading model weights for {params.name} to {params.job_dir}")
-
+    model_config="model"
 
     # 1.1. Build the model
 
     # Load from YAML file
 
-    config_path = f"{params.train['model']['config_dir']}/{params.train['model']['config_file']}"
+    config_path = f"{params.train[model_config]['config_dir']}/{params.train[model_config]['config_file']}"
 
     config_dict = OmegaConf.load(config_path)
 
     # Apply model override from vad.yaml if present
-    if "override" in params.train["model"]:
-        override_cfg = OmegaConf.create(params.train["model"]["override"])
+    if "override" in params.train[model_config]:
+        override_cfg = OmegaConf.create(params.train[model_config]["override"])
         config_dict = OmegaConf.merge(config_dict, override_cfg)
 
     OmegaConf.resolve(config_dict)
@@ -158,11 +155,18 @@ def build_model(
         model_name,
         params=params_net)
 
-    if complex_input:
-        shape = (None, time_steps, dim_feat, 2)
+    if hasattr(model, 'complex'):
+        if model.complex:
+            inputs_x = tf.keras.Input(
+                shape=[time_steps, dim_feat, 2], batch_size=batchsize, dtype=tf.float32, name="x_input")
+        else:
+            inputs_x = tf.keras.Input(
+                shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
     else:
-        shape = (None, time_steps, dim_feat)
-    model.build(
-        input_shape=shape)
+        inputs_x = tf.keras.Input(
+            shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
+
+    model(inputs_x)
     model.summary()
+
     return model

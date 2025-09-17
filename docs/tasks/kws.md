@@ -51,7 +51,7 @@ Use the `soundkit` CLI to run KWS tasks through different modes using a configur
         Prepares training and validation samples by injecting keywords into a diverse background of speech and noise at different SNR levels.
 
         ```bash
-        soundkit -t kws -m data -c configs/kws.yaml
+        soundkit -t kws -m data -c configs/kws/kws.yaml
         ```
 
         See [Data](./kws_docs/data.md) for dataset setup details.
@@ -60,13 +60,13 @@ Use the `soundkit` CLI to run KWS tasks through different modes using a configur
         Trains a keyword spotting model with CRNN architecture, focal loss, and SNR-augmented training.
 
         ```bash
-        soundkit -t kws -m train -c configs/kws.yaml
+        soundkit -t kws -m train -c configs/kws/kws.yaml
         ```
 
         Optional: run TensorBoard for live monitoring:
 
         ```bash
-        soundkit -t kws -m train --tensorboard -c configs/kws.yaml
+        soundkit -t kws -m train --tensorboard -c configs/kws/kws.yaml
         ```
 
         See [Train](./kws_docs/train.md) for training methodology.
@@ -75,7 +75,7 @@ Use the `soundkit` CLI to run KWS tasks through different modes using a configur
         Evaluates model performance on sample audio files, producing keyword activity predictions.
 
         ```bash
-        soundkit -t kws -m evaluate -c configs/kws.yaml
+        soundkit -t kws -m evaluate -c configs/kws/kws.yaml
         ```
 
         See [Evaluate](./kws_docs/evaluate.md) for usage details.
@@ -84,16 +84,19 @@ Use the `soundkit` CLI to run KWS tasks through different modes using a configur
         Converts the trained model into TFLite and C-format for deployment on Ambiq EVB or other embedded targets.
 
         ```bash
-        soundkit -t kws -m export -c configs/kws.yaml
+        soundkit -t kws -m export -c configs/kws/kws.yaml
         ```
 
         See [Export](./kws_docs/export.md) for model format options.
 
     === "Demo"
-        Runs a real-time keyword detection demo on PC or EVB using the exported model.
+        Test the model in real-time either using PC or EVB hardware. We suggest to run on your PC first and try on EVB later:
 
         ```bash
-        soundkit -t kws -m demo -c configs/kws.yaml
+        soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=pc
+        # or 
+        soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=evb
+        
         ```
 
         See [Demo](./kws_docs/demo.md) to test live detection.

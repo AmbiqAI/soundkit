@@ -30,7 +30,7 @@
 #include "AudioPipe_wrapper.h"
 #include "def_AudioSystem.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
-#define RECORD_10S 1
+#define GUI_ON 1
 #define AUDIO_ON 1
 #define PERF_TEST 1
 static uint32_t elapsedTime = 0;
@@ -55,7 +55,11 @@ volatile bool static g_audioReady = false;
 volatile bool static g_audioRecording = false;
 
 #if NUM_CHANNELS == 1
+#if GUI_ON==0
 int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1]; // incoming PCM audio data
+#else
+int16_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // incoming PCM audio data
+#endif
 #else
 int32_t static audioDataBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2+1];
 #endif
@@ -255,7 +259,8 @@ int main(void) {
     // USB. This gives the user a chance to start the server then
     // pressing the button to let the EVB it is ready to start RPCing.
 
-    ns_printf("Type $tools/python -m record_evb --tty <your tty>\n");
+    ns_printf("Open the other terminal\n");
+    ns_printf("Type $ soundkit -t se -m demo -c your_config.yaml demo.platform=evb --view\n");
 
     ns_printf("Start the PC-side server, then press Button 0 to get started\n");
     while (g_intButtonPressed == 0) {
@@ -270,7 +275,7 @@ int main(void) {
     // interfaces. Any incoming RPC calls will result in calls to the
     // RPC handler functions defined above.
 
-#if RECORD_10S==0
+#if GUI_ON==1
     // -- Init the NNSE2 model
     ns_printf("Type $tools/python audioview_se.py\n");
 #if PERF_TEST==0

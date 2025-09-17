@@ -1,3 +1,4 @@
+"""VAD Demo Script"""
 import os
 import logging
 import subprocess
@@ -5,17 +6,15 @@ import shutil
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
-from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
-from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
-from .export import export
+from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.mel import gen_mel_c
+from .export import export, build_vad_tflite
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,7 +34,8 @@ def demo(params: SKTaskParams):
     elif params.demo.platform == 'pc':
         demo_pc(params)
     else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
 
 def demo_evb(params: SKTaskParams):
     """
@@ -49,7 +49,7 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}.tflite"
+    tflite_filename_src = f"{params.name}_{params.export.dtype}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -58,7 +58,7 @@ def demo_evb(params: SKTaskParams):
 
     # === Download neuralSPOT ===
     repo_url = "https://github.com/AmbiqAI/neuralSPOT.git"
-    neuralSPOT = "neuralSPOT"
+    neuralSPOT = "neuralSPOT_autodeploy"
     neuralspot_path = Path(f"../{neuralSPOT}").resolve()
     if not os.path.exists(neuralspot_path):
         subprocess.run(["git", "clone", repo_url, neuralspot_path], check=True)
@@ -72,8 +72,6 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -85,10 +83,7 @@ def demo_evb(params: SKTaskParams):
     c_code = '#include <stdint.h>\n\n' + c_code
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
-
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.mel import gen_mel_c
 
     filterbank_name='filter_banks'
 
@@ -96,12 +91,15 @@ def demo_evb(params: SKTaskParams):
         params=params,
     )
 
-    if feat_extractor.mel_filter is None:
-        fbanks=None
+    if hasattr(feat_extractor, "mel_filter"):
+        if feat_extractor.mel_filter is None:
+            fbanks=None
+        else:
+            fbanks = tf.identity(feat_extractor.mel_filter)
+            fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
     else:
-        fbanks = tf.identity(feat_extractor.mel_filter)
-    
-        fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
+        fbanks=None
+
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
         filterbank_name,
@@ -111,26 +109,27 @@ def demo_evb(params: SKTaskParams):
     # === Generate feature statstics ===
 
     stats_name = 'stats.pkl'
-    stats = load_feat_stats( \
-        dir=checkpoint_dir, \
+    stats = load_feat_stats(
+        dir=checkpoint_dir,
         stats_name=stats_name)
 
     generate_feature_c_files(
         file_name=params.demo.filename,
         param_struct_name=params.demo.param_struct_name,
         dir=evb_src_tflm_dir,
-        feature_mean=stats['nMean_feat'],
-        feature_std=stats['nInvStd'],
+        feature_mean=stats['nMean_feat'] if stats is not None else np.array([0.0], dtype=np.float32),
+        feature_std=stats['nInvStd'] if stats is not None else np.array([1.0], dtype=np.float32),
         sampling_rate=params.data['signal']['sampling_rate'],
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
         hopsize_stft=feat_params['hop_size'],
-        num_mfltrBank=feat_params['bins'],
+        num_mfltrBank=feat_extractor.dim_feat if fbanks is not None else -1,
         is_dcrm=int(params.data['signal']['dc_removal']),
         pre_gain_q1=params.demo['pre_gain'],
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        task=params.project,
     )
 
     # === Define Key Paths ===
@@ -144,10 +143,11 @@ def demo_evb(params: SKTaskParams):
     log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
     params.export['epoch_loaded'] = params.demo['epoch_loaded']
     params.export['tflite_dir'] = params.demo['tflite_dir']
+
+    params.export.eval=False
     export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
-    
     log.info(f"📦 Copying TFLite to {dst_tflite_path}")
     tools_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(src_tflite_path, dst_tflite_path)
@@ -157,9 +157,8 @@ def demo_evb(params: SKTaskParams):
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
+    subprocess.run(["uv", "sync"], check=True)
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
@@ -225,136 +224,15 @@ def demo_pc(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    params_export = params.export
+    hop_size = params.train['feature']['hop_size']
+    sample_rate = params.data['signal']['sampling_rate']
+    vad_model = build_vad_tflite(params)
 
-    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-
-    batchsize_train = params.train['batchsize']
-    batchsize = 1
-    feat_extractor = FeatureExtractor(
-        params=params,
-        )
-    dim_feat = feat_extractor.dim_feat
-
-    # 1.1. Build the model
-    # Load from YAML file
-    model_train = build_model(
-        params,
-        batchsize=batchsize_train,
-        dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * 100)
-
-    load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
-
-    model = build_model(
-        params,
-        batchsize=batchsize,
-        dim_feat=dim_feat,
-        time_steps=1,
-        export=True)
-    copy_model_weights(model_dst=model, model_src=model_train)
-
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat)
-
-    dtype='float32'
-
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
-
-    interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
-    interpreter.allocate_tensors()  # Needed before execution!
-
-    if params.train.standardization:
-        stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
-    else:
-        stats = None
-
-    feat_extractor = FeatureExtractor_np(
-        feat_type=params.train.feature.type,
-        frame_len=params.train.feature.frame_size,
-        hop_len=params.train.feature.hop_size,
-        fft_len=params.train.feature.fft_size,
-        sampling_rate=params.data.signal.sampling_rate,
-    )
-
-    model_tflite = TFLiteAudioModel(
-        interpreter=interpreter,
-        dtype=dtype,
-    )
-
-    class VADModel:
-        """VAD model class in tflite for processing audio input and returning VAD output."""
-        def __init__(
-                self,
-                model_tflite: TFLiteAudioModel,
-                feat_extractor: FeatureExtractor_np,
-                stats: dict | None = None):
-            self.model_tflite = model_tflite
-            self.stats = stats
-            self.feat_extractor = feat_extractor
-
-        def __call__(self,
-                     inputs: np.ndarray # input from microphone
-                    ) -> np.ndarray: # output to AudioShowClass
-            """Process input audio signal and return VAD output."""
-            shape=inputs.shape
-            inputs=inputs.flatten()
-            features,_ = self.feat_extractor(inputs)
-
-            if self.stats is not None:
-                features = (features - self.stats['nMean_feat']) * self.stats['nInvStd']
-
-            # input to the tflite model
-            features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            outputs = self.model_tflite(features)
-            outputs = outputs.flatten()
-            if outputs[0] < outputs[1]:
-                outputs = np.ones(160, dtype=np.float32)*0.95
-            else:
-                outputs = np.zeros(160, dtype=np.float32)
-            outputs = outputs.reshape(shape)
-            return outputs
-
-    vad_model = VADModel(
-        model_tflite=model_tflite,
-        feat_extractor=feat_extractor,
-        stats=stats,
-    )
     aud_handle = AudioShowClass(
+        frame_size=hop_size,
+        sample_rate=sample_rate,
         record_seconds=15,
         non_stop=True,
-        proc_st=vad_model
+        proc_st=vad_model,
+        reset_st=vad_model.reset,  # Reset function for the model
     )
-    if 0:
-        outputs = []
-        inputs = []
-        from soundkit.utils.audio import audio_read
-        sig = audio_read('wavs/vad/test_wavs/speech.wav', sample_rate=16000)
-        import time
-        start = time.time()
-        for i in range(len(sig)//160):
-            x = sig[i*160:(i+1)*160]
-            inputs.append(x)
-            y = model(x)
-            y = y.flatten()
-            if y[0] < y[1]:
-                outputs.append(np.ones(160))
-            else:
-                outputs.append(np.zeros(160))
-        print(f"Time taken: {time.time() - start:.2f} seconds")
-        print(f"average time per chunk: {(time.time() - start) / (len(sig)//160):.8f} seconds")
-        outputs = np.concatenate(outputs)
-        inputs = np.concatenate(inputs)
-
-        import matplotlib.pyplot as plt
-        plt.plot(inputs, label='Input Signal')
-        plt.plot(outputs, label='VAD Output')
-        plt.legend()
-        plt.show()

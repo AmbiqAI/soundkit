@@ -4,11 +4,14 @@ import tensorflow as tf
 
 # === Import model classes ===
 from .SimpleFC import SimpleFC
-from .crnn import CRNN, CRNNParams
+from .crnn_new import CRNN, CRNNParams
+from .cnn2d import CNN2D, CNN2DParams
+
 from .ccrnn import CCRNN, CCRNNParams
 
 from .unet import unet
 from .unet_sublayers import UNetParams
+
 
 # === Model Factory ===
 
@@ -53,11 +56,15 @@ class ModelParamFactory:
 
 # Register models
 ModelFactory.register("crnn", CRNN)
+ModelFactory.register("cnn2d", CNN2D)
+
 ModelFactory.register("ccrnn", CCRNN)
 ModelFactory.register("unet", unet)
 
 # Register parameter schemas
 ModelParamFactory.register("crnn", CRNNParams)
+ModelParamFactory.register("cnn2d", CNN2DParams)
+
 ModelParamFactory.register("ccrnn", CCRNNParams)
 
 ModelParamFactory.register("unet", UNetParams)

@@ -1,0 +1,108 @@
+name: librispeech
+project: id
+job_dir: ./soundkit/tasks/${project}
+
+data:
+  path_tfrecord: ${job_dir}/tfrecords
+  tfrecord_datalist_name: # list of saved tfrecords
+    train: train_tfrecord.yaml 
+    val: val_tfrecord.yaml
+  num_samples_per_noise:
+    train:
+    val:
+  force_download: false
+  reverb_prob: 0.0
+  num_processes: 8
+  corpora:
+    - {name: vad_train-clean-100, type: speech, split: train}
+    - {name: vad_train-clean-360, type: speech, split: train}
+    - {name: vad_train-other-500, type: speech, split: train}
+    - {name: vad_dev-clean, type: speech, split: val}
+    - {name: ESC-50-master, type: noise, split: train-val}
+    - {name: FSD50K, type: noise, split: train-val}
+    - {name: musan, type: noise, split: train-val}
+    - {name: wham_noise, type: noise, split: train-val}
+    - {name: rirs_noises, type: reverb, split: train-val}
+  snr_dbs: [5, 10, 15, 20, 40] # mixture of signal-to-noise ratios
+  # snr_dbs: [100]
+  target_length_in_secs: 1.8
+  min_amp: 0.05
+  max_amp: 0.95
+
+  signal:
+    sampling_rate: 16000
+    dc_removal: true
+  num_sentences: 10
+  ppls_per_group: 8
+  debug: false
+
+train:
+  initial_lr: 4e-4
+  lr_schedule: cos
+  batchsize: 80
+  epochs: 150
+  warmup_epochs: 5
+  epoch_loaded: random
+  
+  # only cross_entropy in this task
+  loss_function: 
+    type: cross_entropy # or cross_entropy
+    params: {} # for cross_entropy
+
+  path:
+    full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
+    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
+    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+  num_lookahead: 0
+  
+  feature:
+    frame_size: 480
+    hop_size: 160
+    fft_size: 512
+    type: mel
+    bins: 40
+    # type: hybrid
+    # bins_fft: 100
+    # n_mels: 72
+
+  standardization: true
+  
+  model:
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_crnn_id.yaml
+    override:
+      units: 100
+      dropout_rate_input: 0.1
+      dropout_rate: 0.25
+      stride_time: 1
+      len_time: 6
+  reset_every_batch: true
+  debug: false
+
+evaluate:
+  epoch_loaded: best
+
+  threshold_id: 0.8 # threshold for id verification
+
+  data: 
+    dir: "./wavs/id/test_wavs"
+    reg_files: [registration1.wav, registration2.wav, registration3.wav, registration4.wav] # list of registration files
+    test_files: [test1.wav, test2.wav] # list of test files to evaluate
+    
+export:
+  dtype: int16
+  eval: false
+  qbit_input: 8
+  epoch_loaded: best
+  tflite_dir: ${job_dir}/tflite
+
+demo:
+  num_utterances_registered: 4
+  frames_vad_trigger_id: 180
+  platform: pc # evb or pc
+  epoch_loaded: best
+  tflite_dir: ${job_dir}/tflite
+  evb_dir: ${job_dir}/evb
+  pre_gain: 1
+  filename: def_nn2_nnid
+  param_struct_name: params_def_nn2_nnid

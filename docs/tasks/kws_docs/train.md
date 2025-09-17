@@ -12,13 +12,13 @@ This module supports focal or cross-entropy loss, dynamic SNR data mixing, and T
 Use the following command to start training:
 
 ```bash
-soundkit -t kws -m train -c configs/kws.yaml
+soundkit -t kws -m train -c configs/kws/kws.yaml
 ```
 
 To monitor training with TensorBoard:
 
 ```bash
-soundkit -t kws -m train --tensorboard -c configs/kws.yaml
+soundkit -t kws -m train --tensorboard -c configs/kws/kws.yaml
 ```
 
 ---
