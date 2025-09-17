@@ -262,13 +262,12 @@ def train(params: SKTaskParams):
     is_complex = True if params_train['feature']['type'] =='spec' else False
 
 
-    target_length_frames= params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size
+    target_length_frames= int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = target_length_frames,
-        complex_input=is_complex)
+        time_steps = target_length_frames)
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
