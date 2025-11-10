@@ -67,8 +67,10 @@ class LossFunctionConfig:
             "mae",
             "compressed_mse",
             "mrl_mse",
+            "log_mse",
             "focal",
             "cross_entropy",
+            "si_sdr",
         }
         if self.type not in allowed_types:
             raise ValueError(

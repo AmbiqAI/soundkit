@@ -23,6 +23,7 @@ import tensorflow as tf
 
 # === SoundKit Core Imports ===
 from soundkit.defines import SKTaskParams
+from soundkit.utils.tf_stft import tf_istft
 from soundkit.utils.download_tf_model import (
     save_train_log,
     load_train_log,
@@ -41,6 +42,17 @@ from soundkit.utils.plot_api import (
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.tf_complex_utils import polar_to_complex
 from .datasets import create_dataset
+    
+@tf.function
+def inspect_waveform(wav_s, name="signal"):
+    tf.print("dtype:", wav_s.dtype)
+    tf.print("is_complex:", tf.as_dtype(wav_s.dtype).is_complex)
+    tf.print("finite:", tf.reduce_all(tf.math.is_finite(wav_s)))
+    tf.print("NaN count:", tf.math.count_nonzero(tf.math.is_nan(wav_s)))
+    tf.print("Inf count:", tf.math.count_nonzero(tf.math.is_inf(wav_s)))
+    tf.print("max:", tf.reduce_max(tf.abs(tf.math.real(wav_s))))
+    tf.print("min:", tf.reduce_min(tf.math.real(wav_s)))
+
 
 @tf.function
 def train_step(
@@ -68,14 +80,17 @@ def train_step(
     """
 
     feat_sn = batch["feat_sn"]
-    complex_mask = False
-    if feat_sn.dtype == tf.complex64:
-        feat_sn = tf.stack([tf.math.real(feat_sn), tf.math.imag(feat_sn)], axis=-1)
-        complex_mask = True
 
+    if feat_sn.dtype == tf.complex64:
+        inputs = tf.stack(
+            [tf.math.real(feat_sn),
+             tf.math.imag(feat_sn)],
+            axis=-1)
+    else:
+        inputs = feat_sn
     with tf.GradientTape() as tape:
-        est = net(feat_sn, training=training)
-        if complex_mask:
+        est = net(inputs, training=training)
+        if feat_sn.dtype == tf.complex64:
             est_real = est[..., 0]
             est_imag = est[..., 1]
             est = tf.complex(
@@ -85,20 +100,58 @@ def train_step(
         else:
             est = tf.complex(est, 0.0)
 
-        if complex_mask:
+        if feat_sn.dtype == tf.complex64:
             spec_en_delay = est * batch["spec_sn_delay"]
             spec_en = spec_en_delay
-            loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
+
+            if loss_fn.name=="si_sdr_loss":
+                wav_en = tf_istft(
+                    spec_en_delay,
+                    frame_length=480,
+                    frame_step=160,
+                    fft_length=512,
+                )
+                wav_s = tf_istft(
+                    batch["spec_s_delay"],
+                    frame_length=480,
+                    frame_step=160,
+                    fft_length=512,
+                )
+
+                # tf.print("=== wav_s diagnostics ===")
+                # inspect_waveform(wav_s, name="wav_s")
+                
+                # tf.print("=== wav_en diagnostics ===")
+                # inspect_waveform(wav_en, name="wav_en")
+                loss = loss_fn(wav_s, wav_en)
+            else:
+                loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
             spec_en_delay = est * batch["spec_sn_delay"]
-            phase_sn_delay = tf.math.angle(batch["spec_sn_delay"])
+
             spec_s_delay = polar_to_complex(
                 tf.abs(batch["spec_s_delay"]),
-                phase_sn_delay,
+                tf.math.angle(batch["spec_sn_delay"]),
             )
 
             spec_en = spec_en_delay
-            loss = loss_fn(spec_s_delay, spec_en_delay)
+            if loss_fn.name=="si_sdr_loss":
+                wav_en = tf_istft(
+                    spec_en_delay,
+                    frame_length=480,
+                    frame_step=160,
+                    fft_length=512,
+                    )
+                wav_s = tf_istft(
+                    batch["spec_s_delay"],
+                    frame_length=480,
+                    frame_step=160,
+                    fft_length=512,
+                    )
+
+                loss = loss_fn(wav_s, wav_en)
+            else:
+                loss = loss_fn(spec_s_delay, spec_en_delay)
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)

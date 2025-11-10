@@ -1,4 +1,4 @@
-""""""
+"""Complex number utilities for TensorFlow."""
 import tensorflow as tf
 
 def complex_magnitude(
@@ -9,6 +9,7 @@ def complex_magnitude(
 
     Args:
         complex_tensor: Complex-valued tensor
+        eps: Small value to avoid sqrt(0)
 
     Returns:
         Real-valued tensor representing the magnitude of the complex tensor
@@ -23,11 +24,14 @@ def complex_angle(
 
     Args:
         complex_tensor: Complex-valued tensor
+        eps: Small value to avoid division by zero
 
     Returns:
         Real-valued tensor representing the angle (phase) of the complex tensor
     """
-    return tf.math.atan2(tf.math.imag(complex_tensor), tf.math.real(complex_tensor)+ eps)
+    return tf.math.atan2(
+        tf.math.imag(complex_tensor),
+        tf.math.real(complex_tensor)+ eps)
 
 def polar_to_complex(
         magnitude: tf.Tensor,

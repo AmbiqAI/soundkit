@@ -121,13 +121,13 @@ def evaluate(params: SKTaskParams):
                  'en': np.zeros( (1, 4), dtype=np.float64),}
     stoi_hyp = {'sn': np.zeros( (1, 1), dtype=np.float64),
                  'en': np.zeros( (1, 1), dtype=np.float64),}
-    
+
     pesq_hyp = {'sn': np.zeros( (1, ), dtype=np.float64),
                  'en': np.zeros( (1,), dtype=np.float64),}
     si_sdr_hyp = {'sn': np.zeros( (1,), dtype=np.float64),
                  'en': np.zeros( (1,), dtype=np.float64),}
 
-    
+
     for step, batch in enumerate(dataset):
         print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
 
@@ -175,7 +175,9 @@ def evaluate(params: SKTaskParams):
         tfmask = model(inputs_nn, training=False)
 
         if feat_sn_norm.dtype == tf.complex64: # complex mask
-            tfmask = tf.complex(tfmask[..., 0], tfmask[..., 1])
+            tfmask = tf.complex(
+                tfmask[..., 0],
+                tfmask[..., 1])
             spec_en_delay = tfmask * spec_sn_delay
         else: # real mask
             pspec_sn_delay = tf.abs(spec_sn_delay)
@@ -251,7 +253,7 @@ def evaluate(params: SKTaskParams):
             print(f"Saved enhanced audio to {save_path}")
 
         objective_model = SQUIM_OBJECTIVE.get_model()
-        
+
         # stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(torch.from_numpy(audio_sn.numpy()))
 
         for type_s in ['sn', 'en']:
@@ -293,10 +295,8 @@ def evaluate(params: SKTaskParams):
     for metric in metrics:
         val_sn = scores[metric]['sn']
         val_en = scores[metric]['en']
-        
+
         if metric == 'DNSMOS':
             print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
         else:
             print(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
-    
-  

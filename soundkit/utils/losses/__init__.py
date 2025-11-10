@@ -2,8 +2,11 @@
 from typing import Type, Any
 import tensorflow as tf
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
-from .loss_utils import FramewiseMSE, FramewiseMAE, CompressedMSE
-
+from .loss_utils import (FramewiseMSE,
+                         FramewiseMAE,
+                         CompressedMSE,
+                         LogFramewiseMSE,
+                         SISDRLoss)
 from .loss_mrl import MultiResolutionSTFTLossFromSTFT
 from .loss_focal import FocalLoss
 
@@ -27,7 +30,9 @@ class LossFactory:
 # Register classes directly
 LossFactory.register("mse", FramewiseMSE)
 LossFactory.register("mae", FramewiseMAE)
+LossFactory.register("log_mse", LogFramewiseMSE)
 LossFactory.register("compressed_mse", CompressedMSE)
 LossFactory.register("mrl_mse", MultiResolutionSTFTLossFromSTFT)
 LossFactory.register("focal", FocalLoss)
+LossFactory.register("si_sdr", SISDRLoss)
 LossFactory.register("cross_entropy", tf.keras.losses.SparseCategoricalCrossentropy)
