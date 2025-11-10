@@ -260,10 +260,10 @@ def synthesize_audio(
     # if 0:
     if rir is not None:
         if 1:
-            samples_5ms = sample_rate * 0.050 # 5ms
+            samples_50ms = sample_rate * 0.050 # 50ms
 
             idx_late_reverb = np.minimum(
-                np.argmax(np.abs(rir)) + samples_5ms,
+                np.argmax(np.abs(rir)) + samples_50ms,
                 rir.size-1).astype(np.int64)
 
             # rt60 = 1
@@ -276,7 +276,7 @@ def synthesize_audio(
             # exponent = np.clip(exponent, -700, 0)  # adjust bounds as needed
             # decay = 10 ** exponent
 
-            decay = np.arange(rir.size)
+            decay = np.ones(rir.size)
             decay[:idx_late_reverb] = 1
             decay[idx_late_reverb:] = 0
 

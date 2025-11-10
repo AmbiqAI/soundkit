@@ -39,15 +39,9 @@ class FeatureExtractor:
             self.feat_type = feat_params['type']
         self._extract_fn = self._extractors[feat_params['type']]
 
-        if feat_params["frame_size"] < feat_params["hop_size"]:
-            raise ValueError(
-                f"Frame size must be greater than or equal to hop size. "
-                f"Got frame_size={feat_params['frame_size']} and hop_size={feat_params['hop_size']}"
-            )
-
         if feat_params["frame_size"] % feat_params["hop_size"] != 0:
             raise ValueError(
-                f"Frame size and hop size must be non-zero and equal to each other. "
+                 f"Frame size must be divisible by hop size. "
                 f"Got frame_size={feat_params['frame_size']} and hop_size={feat_params['hop_size']}"
             )
 

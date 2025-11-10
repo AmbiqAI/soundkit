@@ -13,7 +13,6 @@ import tensorflow as tf
 from soundkit.utils.tf_complex_utils import (
     polar_to_complex,
     complex_angle,
-    complex_to_realarray,
     complex_magnitude,
 )
 from soundkit.utils.tf_stft import (

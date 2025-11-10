@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import soundfile as sf
 import torch
+from torchaudio.pipelines import SQUIM_OBJECTIVE
 from torchmetrics.functional.audio.dnsmos import deep_noise_suppression_mean_opinion_score
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
@@ -19,7 +20,7 @@ from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
-from torchaudio.pipelines import SQUIM_OBJECTIVE
+
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
 

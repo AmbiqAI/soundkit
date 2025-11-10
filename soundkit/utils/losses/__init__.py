@@ -1,7 +1,6 @@
 """Losses module for soundkit."""
 from typing import Type, Any
 import tensorflow as tf
-from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from .loss_utils import (FramewiseMSE,
                          FramewiseMAE,
                          CompressedMSE,

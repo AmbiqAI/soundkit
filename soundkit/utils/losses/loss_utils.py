@@ -66,8 +66,8 @@ class LogFramewiseMSE(tf.keras.losses.Loss):
             raise ValueError("Input tensors must be of complex dtype.")
         steps = tf.shape(y_true)[0] * tf.shape(y_true)[1]
 
-        true_abs = 10 * tf_log10_eps(tf.abs(y_pred)**2, self.eps)
         pred_abs = 10 * tf_log10_eps(tf.abs(y_true)**2, self.eps)
+        true_abs = 10 * tf_log10_eps(tf.abs(y_pred)**2, self.eps)
 
         err = tf.abs(pred_abs - true_abs)
     

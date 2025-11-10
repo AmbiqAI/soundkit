@@ -1,6 +1,5 @@
 import sys
-from typing import Union, List, Dict, Any, Literal, get_args
-from pathlib import Path
+from typing import List, Dict, Any, get_args
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -117,7 +116,7 @@ class FeatureConfig:
             )
         if self.frame_size % self.hop_size != 0:
             raise ValueError(
-                f"Frame size and hop size must be non-zero and equal to each other. "
+                f"Frame size must be divisible by hop size. "
                 f"Got frame_size={self.frame_size} and hop_size={self.hop_size}"
             )
         if self.fft_size < self.frame_size:
@@ -150,7 +149,7 @@ class TrainConfig:
     debug: bool = False
     def __post_init__(self):
         if self.initial_lr < 0.0:
-            raise ValueError("initial_lr must be > 0")
+            raise ValueError("initial_lr must be >= 0")
         if self.num_lookahead < 0:
             raise ValueError("num_lookahead must be >= 0")
         if self.epochs <= 0:
@@ -227,7 +226,6 @@ class SKTaskParams:
     export: ExportConfig = field(default_factory=ExportConfig)
     demo: DemoConfig = field(default_factory=DemoConfig)
 
-@dataclass
 class SKMode(StrEnum):
     """SoundKit execution modes."""
     data: str = "data"

@@ -16,8 +16,7 @@ def parse_config(
         path: str,
         overrides: list[str] = None) -> DictConfig:
     """ 
-    Parse YAML configuration file with 
-    optional overrides. 
+    Parse YAML configuration file with optional overrides. 
     """
 
     if not os.path.exists(path):

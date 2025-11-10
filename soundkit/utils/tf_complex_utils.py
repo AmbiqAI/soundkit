@@ -31,7 +31,7 @@ def complex_angle(
     """
     return tf.math.atan2(
         tf.math.imag(complex_tensor),
-        tf.math.real(complex_tensor)+ eps)
+        tf.math.real(complex_tensor) + eps)
 
 def polar_to_complex(
         magnitude: tf.Tensor,

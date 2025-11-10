@@ -167,6 +167,9 @@ class unet(tf.keras.Model):
                 out = self.dropout(out, training=training)
             out = self.rnn(out)  # (B, F, T, C)
             input_dec = out
+        else:
+            raise ValueError(
+                f"Unsupported bottleneck type: {self.params.bottleneck}")
         # decoder
         output = self.decoder(
             input_dec,

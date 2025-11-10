@@ -75,7 +75,7 @@ def train_step(
     Returns:
         tuple:
             - loss (tf.Tensor): Computed loss for the batch.
-            - complex est (tf.Tensor): Model output (mask or enhancement).
+            - est (tf.Tensor): Model output (estimate mask, it is complex valued).
             - spec_en (tf.Tensor): Enhanced spectrogram output.
     """
 
@@ -155,7 +155,7 @@ def train_step(
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
-        gradients_clips = [  tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
+        gradients_clips = [ tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
                             for grad in gradients ]
 
         optimizer.apply_gradients(
