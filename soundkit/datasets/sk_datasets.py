@@ -24,6 +24,7 @@ corpus2path_map= {
     "ESC-50-master": "wavs/noise/ESC-50-master",
     "ESC-50": "wavs/noise/ESC-50-master",
     "rirs_noises": "wavs/noise/RIRS_NOISES",
+    "dns_challenge": "wavs/noise/DNS-Challenge",
 }
 ERROR_CORPUS_NOT_FOUND = (
     "❌ Corpus not found.\n"
@@ -282,6 +283,28 @@ def load_wham_noise(corpus: str) -> dict:
     files['val'] = get_wavefiles('wavs/noise/wham_noise/cv')
     return files
 
+def load_dns_challenge_noise(corpus: str) -> dict:
+    """
+    Load DNS-Challenge noise corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        dict: Dictionary with 'train' and 'val' keys containing lists of wave file paths.
+    """
+
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
+
+    wavs = get_wavefiles('wavs/noise/DNS-Challenge')
+    random.shuffle(wavs)
+    split = len(wavs) // 5
+
+    files = {}
+    files['train'] = wavs[split:]
+    files['val'] = wavs[:split]
+    return files
 
 def load_fsd50k(corpus: str) -> dict:
     """

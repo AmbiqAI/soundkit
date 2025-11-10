@@ -318,14 +318,20 @@ def train(params: SKTaskParams):
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
         params=params.train["loss_function"]["params"])
-
-    lr_schedule = WarmUpCosineDecay(
-        initial_lr = float(params_train['initial_lr']),
-        total_steps = params_train['epochs'] * batches_train,
-        warmup_steps =params_train['warmup_epochs'] * batches_train,
-        alpha=1e-5,
-        initial_step=epoch_loaded_1 * batches_train,)
-
+    # 6. Define learning rate schedule
+    if params.train.lr_schedule=='cosine':
+        lr_schedule = WarmUpCosineDecay(
+            initial_lr = float(params_train['initial_lr']),
+            total_steps = params_train['epochs'] * batches_train,
+            warmup_steps =params_train['warmup_epochs'] * batches_train,
+            alpha=1e-5,
+            initial_step=epoch_loaded_1 * batches_train,)
+    elif params.train.lr_schedule=='constant':
+        lr_schedule=float(params_train['initial_lr'])
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -342,18 +348,6 @@ def train(params: SKTaskParams):
         spec_aug = SpecAug()
     else:
         spec_aug = None
-
-
-    # import pickle    
-    # # Load
-    # with open('array_list.pkl', 'rb') as f:
-    #     reloaded_list = pickle.load(f)
-    # for u in reloaded_list:
-    #     print(u.shape, u.dtype)
-    # for u, v in zip(reloaded_list, model.trainable_variables):
-    #     v.assign(u)
-    # epoch=0
-    # import pdb; pdb.set_trace()  # pylint: disable=forgotten-debug-statement
 
 
     for epoch in range(epoch_loaded_1, params_train['epochs']):

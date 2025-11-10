@@ -15,6 +15,7 @@ from .sk_datasets import (
     load_test_clean,
     load_thchs30,
     load_wham_noise,
+    load_dns_challenge_noise,
     load_fsd50k,
     load_esc50,
     load_musan,
@@ -63,6 +64,7 @@ SKDatasetFactory.register("train-galaxy", load_train_galaxy)
 SKDatasetFactory.register("val-galaxy", load_val_galaxy)
 # Noise
 SKDatasetFactory.register("wham_noise", load_wham_noise)
+SKDatasetFactory.register("dns_challenge", load_dns_challenge_noise)
 SKDatasetFactory.register("FSD50K", load_fsd50k)
 SKDatasetFactory.register("ESC-50-master", load_esc50)
 SKDatasetFactory.register("musan", load_musan)

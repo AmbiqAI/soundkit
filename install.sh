@@ -27,6 +27,4 @@ pip install --upgrade pip
 echo "📦 Installing Python dependencies..."
 pip install -e . --extra-index-url https://download.pytorch.org/whl/cu118
 
-
-
 echo "✅ Installation complete. Activate your environment with: source .venv/bin/activate"

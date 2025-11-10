@@ -64,11 +64,12 @@ def evaluate(params: SKTaskParams):
     # 2. Build model architecture
     # Load Model architecture from YAML file
 
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps=time_steps)
 
     # load weights from the checkpoint
 

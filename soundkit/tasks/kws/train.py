@@ -179,37 +179,37 @@ def run_epoch(
                 f"  Confusion Matrix (row-normalized):\n{conf_matrix}\n",
                 flush=True)
 
-        if not training:
-            if step == 0:
-                idx = 10
-                mask = pred[idx,:,1]
-                pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[idx])).numpy()
 
-                if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
-                    feat_sn = 10* feat_sn[idx].numpy()
-                elif params.train['feature']['type'] in ('pspec', 'spec'):
-                    feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
-                feat_sn = feat_sn[::model.stride_time]
+        if step % 100 == 0:
+            idx = 10
+            mask = pred[idx,:,1]
+            pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[idx])).numpy()
 
-                fig = plot_spectrograms(
-                    images=[pspec_sn.T, feat_sn.T],
-                    titles=[ "noisy logspec", "feat"],
-                    vmin_vmax=[(-80, 10), (-80, 10)],
-                    show_colorbar=True,
-                    show_fig=False       # set False if only saving
-                )
+            if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
+                feat_sn = 10* feat_sn[idx].numpy()
+            elif params.train['feature']['type'] in ('pspec', 'spec'):
+                feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
+            feat_sn = feat_sn[::model.stride_time]
 
-                plt.plot(mask * 200)
-                plt.plot(kws[idx] * 200)
-                # plt.show()
-                from ...utils.plot_api import fig_to_image
-                # Convert fig to image
-                tf_image = fig_to_image(fig)
+            fig = plot_spectrograms(
+                images=[pspec_sn.T, feat_sn.T],
+                titles=[ "noisy logspec", "feat"],
+                vmin_vmax=[(-80, 10), (-80, 10)],
+                show_colorbar=True,
+                show_fig=False       # set False if only saving
+            )
 
-                # Write to TensorBoard
-                if train_summary_writer is not None:
-                    with train_summary_writer.as_default():
-                        tf.summary.image("spectrograms", tf_image, step=epoch)
+            plt.plot(mask * 200)
+            plt.plot(kws[idx] * 200)
+            # plt.show()
+            from ...utils.plot_api import fig_to_image
+            # Convert fig to image
+            tf_image = fig_to_image(fig)
+
+            # Write to TensorBoard
+            if train_summary_writer is not None:
+                with train_summary_writer.as_default():
+                    tf.summary.image("spectrograms", tf_image, step=epoch)
     # Final summary for the epoch
     print(
         f"  [{train_tag}] |\n"
@@ -252,26 +252,17 @@ def train(params: SKTaskParams):
 
     # Load from YAML file
 
-    is_complex = True if params_train['feature']['type'] =='spec' else False
-
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,
-        complex_input=is_complex)
+        time_steps=time_steps)
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
 
-    # import pickle
-    # with open('array_list.pkl', 'rb') as f:
-    #         reloaded_list = pickle.load(f)
-    # for u, v in zip(model.trainable_variables, reloaded_list):
-    #     u.assign(v)
-    #     print(u.shape, v.shape)
 
-    # 3. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
@@ -308,13 +299,20 @@ def train(params: SKTaskParams):
         params.train["loss_function"]["type"],
         params=params.train["loss_function"]["params"])
 
-    lr_schedule = WarmUpCosineDecay(
-        initial_lr = float(params_train['initial_lr']),
-        total_steps = params_train['epochs'] * batches_train,
-        warmup_steps =params_train['warmup_epochs'] * batches_train,
-        alpha=1e-5,
-        initial_step=epoch_loaded_1 * batches_train,)
-
+    # 6. Define learning rate schedule
+    if params.train.lr_schedule=='cosine':
+        lr_schedule = WarmUpCosineDecay(
+            initial_lr = float(params_train['initial_lr']),
+            total_steps = params_train['epochs'] * batches_train,
+            warmup_steps =params_train['warmup_epochs'] * batches_train,
+            alpha=1e-5,
+            initial_step=epoch_loaded_1 * batches_train,)
+    elif params.train.lr_schedule=='constant':
+        lr_schedule=float(params_train['initial_lr'])
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,

@@ -1,6 +1,10 @@
 import tensorflow as tf
-from ..tf_complex_utils import polar_to_complex
-
+from soundkit.utils.tf_complex_utils import (
+    complex_to_realarray,
+    polar_to_complex,
+    complex_angle,
+    complex_magnitude
+)
 class FramewiseMSE(tf.keras.losses.Loss):
     """
     Framewise Mean Squared Error computed across [B, T, ...] flattened.
@@ -83,20 +87,34 @@ class CompressedMSE(tf.keras.losses.Loss):
         Returns:
             Scalar tensor loss
         """
-        mag_x = tf.abs(x) + self.eps
-        mag_y = tf.abs(y) + self.eps
 
-        if tf.as_dtype(x.dtype).is_complex:
+        # if self.exp != 1.0:
+        #     x = x + tf.complex(self.eps, 0.0)
+        #     y = y + tf.complex(self.eps, 0.0)
 
-            phase_x = tf.math.angle(x)
-            phase_y = tf.math.angle(y)
-            x_comp = polar_to_complex(mag_x ** self.exp, phase_x)
-            y_comp = polar_to_complex(mag_y ** self.exp, phase_y)
-        else:
-            x_comp = (mag_x ** self.exp) * tf.sign(x)
-            y_comp = (mag_y ** self.exp) * tf.sign(y)
+        mag_x = tf.pow(
+            complex_magnitude(x, self.eps),
+            self.exp)
+        mag_y = tf.pow(
+            complex_magnitude(y, self.eps),
+            self.exp)
+        # # Check for NaNs immediately after magnitude compression
+        # tf.print("mag_x_comp has NaNs:", tf.reduce_any(tf.math.is_nan(mag_x)))
+        # tf.print("mag_y_comp has NaNs:", tf.reduce_any(tf.math.is_nan(mag_y)))
+
+        x_comp = complex_to_realarray(
+            polar_to_complex(mag_x, complex_angle(x, self.eps))
+        )
+        y_comp = complex_to_realarray(
+            polar_to_complex(mag_y, complex_angle(y, self.eps))
+        )
+
+        # # Check for NaNs after reconstruction
+        # tf.print("x_comp has NaNs:", tf.reduce_any(tf.math.is_nan(x_comp)))
+        # tf.print("y_comp has NaNs:", tf.reduce_any(tf.math.is_nan(y_comp)))
 
         steps = tf.shape(x)[0] * tf.shape(x)[1]
-        loss = tf.reduce_sum(tf.square(x_comp - y_comp)) / tf.cast(steps, tf.float32)
+        err = tf.abs(x_comp - y_comp)
+        loss = tf.reduce_sum(tf.square(err)) / tf.cast(steps, tf.float32)
         return loss
-
+    

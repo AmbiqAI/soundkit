@@ -24,13 +24,13 @@ class FeatureExtractor:
         self.params = params
         feat_params = self.params.train['feature']
         self._extractors = {
-            "spec": self._extract_spec,
-            "pspec": self._extract_pspec,
-            "logpspec": self._extract_logpspec,
-            "logampspec": self._extract_logampspec,
-            "mel": self._extract_mel,
-            "hybrid": self._extract_logpspec_mel,
-            "time": self._extract_time,
+            "spec": self._extract_spec, # spectrogram
+            "pspec": self._extract_pspec, # power spectrogram
+            "logpspec": self._extract_logpspec, # log power spectrogram
+            "logampspec": self._extract_logampspec, # log amplitude spectrogram
+            "mel": self._extract_mel, # log mel spectrogram
+            "hybrid": self._extract_logpspec_mel, # hybrid spectrogram
+            "time": self._extract_time, # time-domain features
         }
 
         if feat_params['type'] not in self._extractors:
@@ -38,6 +38,12 @@ class FeatureExtractor:
         else:
             self.feat_type = feat_params['type']
         self._extract_fn = self._extractors[feat_params['type']]
+
+        if feat_params["frame_size"] < feat_params["hop_size"]:
+            raise ValueError(
+                f"Frame size must be greater than or equal to hop size. "
+                f"Got frame_size={feat_params['frame_size']} and hop_size={feat_params['hop_size']}"
+            )
 
         if feat_params["frame_size"] % feat_params["hop_size"] != 0:
             raise ValueError(
@@ -73,6 +79,8 @@ class FeatureExtractor:
                 n_mels=feat_params['n_mels'],
                 thresh_mel=feat_params['bins_fft'])
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
+            self.mel_filter_inv = tf.linalg.pinv(self.mel_filter)
+
             self.dim_feat = fbanks.shape[0]
 
         elif feat_params['type'] == "time":

@@ -259,25 +259,38 @@ def synthesize_audio(
     noise = repeat_or_crop(noise, target_length)
     # if 0:
     if rir is not None:
-        samples_5ms = sample_rate * 0.005 # 5ms
+        if 1:
+            samples_5ms = sample_rate * 0.050 # 5ms
 
-        idx_late_reverb = np.minimum(
-            np.argmax(np.abs(rir)) + samples_5ms,
-            rir.size-1).astype(np.int64)
+            idx_late_reverb = np.minimum(
+                np.argmax(np.abs(rir)) + samples_5ms,
+                rir.size-1).astype(np.int64)
 
-        rt60 = 1
-        dt = 1 / sample_rate
-        rt60_level = 10.0**(-60.0 / 5.0)
-        tau = -rt60 / np.log10(rt60_level)
-        n = np.arange(rir.size)
+            # rt60 = 1
+            # dt = 1 / sample_rate
+            # rt60_level = 10.0**(-60.0 / 5.0)
+            # tau = -rt60 / np.log10(rt60_level)
+            # n = np.arange(rir.size)
 
-        exponent = -(n - idx_late_reverb) * dt / tau
-        exponent = np.clip(exponent, -700, 0)  # adjust bounds as needed
-        decay = 10 ** exponent
+            # exponent = -(n - idx_late_reverb) * dt / tau
+            # exponent = np.clip(exponent, -700, 0)  # adjust bounds as needed
+            # decay = 10 ** exponent
 
-        decay[:idx_late_reverb] = 1
+            decay = np.arange(rir.size)
+            decay[:idx_late_reverb] = 1
+            decay[idx_late_reverb:] = 0
 
-        rir_target = decay * rir
+            rir_target = decay * rir
+        else:
+            idx = np.minimum(
+                np.argmax(np.abs(rir)),
+                rir.size-1).astype(np.int64)
+            
+            
+            rir = rir[idx:]
+            rir_target = rir*0
+            rir_target[0]=rir[0]
+        
         y = fftconvolve(signal_s, rir,'full')
         y = y[:len(signal_s)]
         target = fftconvolve(signal_s, rir_target, 'full')
@@ -296,17 +309,14 @@ def synthesize_audio(
         # plt.subplot(4,1,4)
         # plt.plot(decay)
         # plt.xlim([0, 16000 * 5])
-        
         # plt.show()
-    
     else:
         y = signal_s.copy()
         target = signal_s.copy()
 
     # Compute clean and noise powers
     clean_power = np.mean(target**2)
-    
-    
+
     if clean_power == 0:
         pass
     else:

@@ -19,6 +19,7 @@ from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
+from torchaudio.pipelines import SQUIM_OBJECTIVE
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
 
@@ -90,11 +91,13 @@ def evaluate(params: SKTaskParams):
     # 2. Build model architecture
     # Load Model architecture from YAML file
 
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
+
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps=time_steps)
 
     # load weights from the checkpoint
 
@@ -139,6 +142,7 @@ def evaluate(params: SKTaskParams):
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
         # Apply lookahead
+        buffer_sn.reset()
         spec_sn_delay = buffer_sn.apply(spec_sn)
 
         if params.train['standardization']:
@@ -150,55 +154,81 @@ def evaluate(params: SKTaskParams):
             feat_sn_norm = feat_sn
 
         time_steps = feat_sn_norm.shape[1]
-        if 0:
-            tfmask = []
-            for f in range(time_steps):
-                print(f"\rframe {f}/{time_steps}, ", end='')
-                feat = feat_sn_norm[:, f:f+1, :]
-                m = model(feat, training=False)
-                tfmask+= [m]
-            tfmask = tf.concat(tfmask, axis=1)
 
+        model = build_model(
+            params,
+            batchsize=batchsize,
+            dim_feat=dim_feat,
+            time_steps=time_steps)
+
+        copy_model_weights(
+            model_dst=model,
+            model_src=model_train)
+
+        if feat_sn_norm.dtype == tf.complex64:
+            inputs_nn = tf.stack(
+                [tf.math.real(feat_sn_norm),
+                    tf.math.imag(feat_sn_norm)],
+                axis=-1)
         else:
-            model = build_model(
-                params,
-                batchsize=batchsize,
-                dim_feat=dim_feat,
-                time_steps=time_steps)
+            inputs_nn = feat_sn_norm
+        tfmask = model(inputs_nn, training=False)
 
-            copy_model_weights(
-                model_dst=model,
-                model_src=model_train)
+        if feat_sn_norm.dtype == tf.complex64: # complex mask
+            tfmask = tf.complex(tfmask[..., 0], tfmask[..., 1])
+            spec_en_delay = tfmask * spec_sn_delay
+        else: # real mask
+            pspec_sn_delay = tf.abs(spec_sn_delay)
+            phase_sn_delay = tf.math.angle(spec_sn_delay)
 
-            tfmask = model(feat_sn_norm, training=False)
-        pspec_sn_delay = tf.abs(spec_sn_delay)
-        phase_sn_delay = tf.math.angle(spec_sn_delay)
+            pspec_en_delay = tfmask * pspec_sn_delay
 
-        pspec_en_delay = tfmask * pspec_sn_delay
-
-        spec_en_delay = polar_to_complex(
-            pspec_en_delay, phase_sn_delay)
+            spec_en_delay = polar_to_complex(
+                pspec_en_delay, phase_sn_delay)
 
         audio_en = tf_istft(
             spec_en_delay,
             feat_params['frame_size'],
             feat_params['hop_size'],
             feat_params['fft_size'])
+
         if step < 10:
             # draw spectrograms and tfmask
             name = re.sub(r'(\.wav$|\.flac$)', '.pdf', wavs[step])
             save_path = f"{result_folder}/{name}"
-
-            plot_spectrograms(
-                images=[
-                    20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
-                    tfmask.numpy()[0].T,
-                    20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
-                ],
-                titles=["Noisy logspec", "TFMask", "Enhanced logspec"],
-                vmin_vmax=[(-80, 10), (0, 1), (-80, 10)],
-                save_path=save_path,
-            )
+            if feat_sn_norm.dtype == tf.complex64: # complex mask
+                pspec_sn_delay = tf.abs(spec_sn_delay)
+                pspec_en_delay = tf.abs(spec_en_delay)
+                tfmask_real = tf.math.real(tfmask)
+                tfmask_imag = tf.math.imag(tfmask)
+                rng_mask_real = (
+                    tf.reduce_min(tfmask_real).numpy(),
+                    tf.reduce_max(tfmask_real).numpy())
+                rng_mask_imag = (
+                    tf.reduce_min(tfmask_imag).numpy(),
+                    tf.reduce_max(tfmask_imag).numpy())
+                plot_spectrograms(
+                    images=[
+                        20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
+                        tfmask_real.numpy()[0].T,
+                        tfmask_imag.numpy()[0].T,
+                        20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
+                    ],
+                    titles=["Noisy logspec", "TFMask Real", "TFMask Imag", "Enhanced logspec"],
+                    vmin_vmax=[(-80, 10), rng_mask_real, rng_mask_imag, (-80, 10)],
+                    save_path=save_path,
+                )
+            else: # real mask
+                plot_spectrograms(
+                    images=[
+                        20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
+                        tfmask.numpy()[0].T,
+                        20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
+                    ],
+                    titles=["Noisy logspec", "TFMask", "Enhanced logspec"],
+                    vmin_vmax=[(-80, 10), (0, 1), (-80, 10)],
+                    save_path=save_path,
+                )
 
             # Save noisy audio
             name = re.sub(r'(\.wav$|\.flac$)', '_sn.wav', wavs[step])
@@ -219,12 +249,11 @@ def evaluate(params: SKTaskParams):
                 audio_en_np,
                 params.data['signal']['sampling_rate'])
             print(f"Saved enhanced audio to {save_path}")
-        from torchaudio.pipelines import SQUIM_OBJECTIVE
+
         objective_model = SQUIM_OBJECTIVE.get_model()
         
         # stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(torch.from_numpy(audio_sn.numpy()))
-        
-        
+
         for type_s in ['sn', 'en']:
             if type_s == 'sn':
                 audio = audio_sn
@@ -232,9 +261,7 @@ def evaluate(params: SKTaskParams):
                 audio = audio_en
 
             # Calculate DNSMOS score
-            
-          
-            
+
             torch_tensor = torch.from_numpy(audio.numpy())
             scores = deep_noise_suppression_mean_opinion_score(
                 torch_tensor,

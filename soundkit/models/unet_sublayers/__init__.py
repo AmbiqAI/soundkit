@@ -15,6 +15,7 @@ class UNetParams(BaseModel):
     unroll_rnn: bool = False
     normalization_layer: str | None = None
     dropout: float = 0.0
+    bottleneck: str = 'lstm'  # options: 'dpgrnn', 'lstm', 'none'
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

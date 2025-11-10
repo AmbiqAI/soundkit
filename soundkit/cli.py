@@ -12,7 +12,14 @@ extra_overrides: list[str] = []
 
 parser = ArgParser()
 
-def parse_config(path: str, overrides: list[str] = None) -> DictConfig:
+def parse_config(
+        path: str,
+        overrides: list[str] = None) -> DictConfig:
+    """ 
+    Parse YAML configuration file with 
+    optional overrides. 
+    """
+
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config file not found: {path}")
     raw = OmegaConf.load(path)
@@ -21,11 +28,21 @@ def parse_config(path: str, overrides: list[str] = None) -> DictConfig:
     if overrides:
         override_cfg = OmegaConf.from_dotlist(overrides)
         cfg = OmegaConf.merge(cfg, override_cfg)
+    OmegaConf.set_struct(cfg, True)  # <--- Enforce struct mode for safety
     OmegaConf.resolve(cfg)
+    OmegaConf.to_object(cfg)
+
+
     return cfg
 
 # === Real logic (can be called from anywhere) ===
-def run_task(mode: str, task: str, config: str, tensorboard: bool, view: bool = False):
+def run_task(
+        mode: str,
+        task: str,
+        config: str,
+        tensorboard: bool,
+        view: bool = False):
+
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
 
@@ -53,7 +70,7 @@ def run_task(mode: str, task: str, config: str, tensorboard: bool, view: bool = 
                     script="audioview_se"
                 elif task == "id":
                     script="audioview_nnid"
-    
+
                 if params.demo.platform == "evb":
                     print("🔌 Running EVB demo...")
                     os.system(f"python -m soundkit.tools.{script}")

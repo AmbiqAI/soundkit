@@ -1,18 +1,45 @@
+
+"""
+SoundKit SE Training Script
+--------------------------
+Organized main training loop for Speech Enhancement (SE) task using TensorFlow/Keras.
+Features:
+    - Config-driven training
+    - Feature extraction and normalization
+    - Custom loss functions
+    - Model checkpointing and TensorBoard logging
+    - Streaming STFT and lookahead buffer support
+    - Modular function organization
+"""
+
+# === Standard Library Imports ===
 import os
 import datetime
 from pathlib import Path
 from typing import Any
+
+# === Third-Party Imports ===
 import tensorflow as tf
+
+# === SoundKit Core Imports ===
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import save_train_log, load_train_log
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.download_tf_model import (
+    save_train_log,
+    load_train_log,
+    build_model,
+    load_model_checkpoint,
+)
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
-from soundkit.utils.plot_api import plot_spectrograms
+from soundkit.utils.plot_api import (
+    plot_spectrograms,
+    fig_to_image
+)
 from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.tf_complex_utils import polar_to_complex
 from .datasets import create_dataset
 
 @tf.function
@@ -22,37 +49,66 @@ def train_step(
         loss_fn: Any,
         batch: dict[str, tf.Tensor],
         training: bool = True,
-        loss_type: str = "mse",):
-    """Perform a single training step."""
+        ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    """
+    Executes a single training or validation step for the SE model.
+
+    Args:
+        net (tf.keras.Model): The neural network model to train.
+        optimizer (tf.keras.optimizers.Optimizer): Optimizer for updating model weights.
+        loss_fn (Callable): Loss function to compute training loss.
+        batch (dict[str, tf.Tensor]): Batch of input features and targets.
+        training (bool): If True, applies gradients and updates weights.
+
+    Returns:
+        tuple:
+            - loss (tf.Tensor): Computed loss for the batch.
+            - complex est (tf.Tensor): Model output (mask or enhancement).
+            - spec_en (tf.Tensor): Enhanced spectrogram output.
+    """
 
     feat_sn = batch["feat_sn"]
+    complex_mask = False
     if feat_sn.dtype == tf.complex64:
         feat_sn = tf.stack([tf.math.real(feat_sn), tf.math.imag(feat_sn)], axis=-1)
-    
-    else:
-        pspec_sn_delay = tf.abs(batch["spec_sn_delay"])
-        pspec_s_delay = tf.abs(batch["spec_s_delay"])
+        complex_mask = True
 
     with tf.GradientTape() as tape:
         est = net(feat_sn, training=training)
-        if loss_type == "mrl_mse":
+        if complex_mask:
+            est_real = est[..., 0]
+            est_imag = est[..., 1]
+            est = tf.complex(
+                est_real,
+                est_imag,
+            )
+        else:
+            est = tf.complex(est, 0.0)
+
+        if complex_mask:
             spec_en_delay = est * batch["spec_sn_delay"]
             spec_en = spec_en_delay
-            loss = loss_fn(spec_en_delay, batch["spec_s_delay"])
-
+            loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
-            pspec_en_delay = tf.abs(est) * pspec_sn_delay
-            spec_en = pspec_en_delay
-            loss = loss_fn(pspec_en_delay, pspec_s_delay)
+            spec_en_delay = est * batch["spec_sn_delay"]
+            phase_sn_delay = tf.math.angle(batch["spec_sn_delay"])
+            spec_s_delay = polar_to_complex(
+                tf.abs(batch["spec_s_delay"]),
+                phase_sn_delay,
+            )
+
+            spec_en = spec_en_delay
+            loss = loss_fn(spec_s_delay, spec_en_delay)
+
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
-        gradients_clips = [ grad
+        gradients_clips = [  tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
                             for grad in gradients ]
 
         optimizer.apply_gradients(
                     zip(gradients_clips,
                         net.trainable_variables))
-        
+
     return loss, est, spec_en
 
 def run_epoch(
@@ -62,24 +118,16 @@ def run_epoch(
     epoch: int = 0,
 ) -> tuple[tf.keras.metrics.Mean, tf.keras.metrics.SparseCategoricalAccuracy]:
     """
-    Run a single training or evaluation epoch.
+    Executes one full training or validation epoch over the provided dataset.
 
     Args:
-        config (dict): Configuration dictionary containing:
-            - model: tf.keras.Model
-            - optimizer: tf.keras.optimizers.Optimizer
-            - loss_fn: Callable loss function
-            - signal: dict with 'frame_size' and 'hop_size'
-            - batchsize: int
-            - feat_extractor: callable feature extraction module
-            - total_batches: dict with 'train' and 'val' counts
-        dataset (tf.data.Dataset): The dataset to iterate over.
-        training (bool): Whether this is a training epoch (True) or validation (False).
+        config (dict): Contains model, optimizer, loss function, feature extractor, batch counts, and other parameters.
+        dataset (tf.data.Dataset): Input data for the epoch.
+        training (bool): If True, runs training; if False, runs validation.
+        epoch (int): Current epoch number (for logging and scheduling).
 
     Returns:
-        tuple:
-            - tf.keras.metrics.Mean: Average loss across the epoch
-            - tf.keras.metrics.SparseCategoricalAccuracy: Accuracy metric (unused here)
+        tf.keras.metrics.Mean: Mean loss for the epoch.
     """
     model = config["model"]
     optimizer = config["optimizer"]
@@ -101,34 +149,41 @@ def run_epoch(
     loss_metric = tf.keras.metrics.Mean()
 
     # Initialize left-over state buffers for streaming STFT
-    states_audio_sn = tf.zeros(
-        [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-        dtype=tf.float32
-    )
-    states_audio_s = tf.zeros(
-        [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
-        dtype=tf.float32
-    )
     num_fft_bins = stft_feat["fft_size"] // 2 + 1
 
     buffer_sn = LookaheadBuffer(
-        num_lookahead=num_lookahead,
-        feature_dim=num_fft_bins,
-        batchsize=batchsize)
+            num_lookahead=num_lookahead,
+            feature_dim=num_fft_bins,
+            batchsize=batchsize)
     buffer_s = LookaheadBuffer(
         num_lookahead=num_lookahead,
         feature_dim=num_fft_bins,
         batchsize=batchsize)
 
-    for step, batch in enumerate(dataset):
-        audio_sn, audio_s, _ = batch
+    def reset_states():
+        states_audio_sn = tf.zeros(
+            [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
+            dtype=tf.float32
+        )
+        states_audio_s = tf.zeros_like(states_audio_sn)
 
+        buffer_sn.reset()
+        buffer_s.reset()
+
+        model.reset_states()
+        return states_audio_sn, states_audio_s
+
+    for step, batch in enumerate(dataset):
+        if params.train['reset_states_every_batch']:
+            states_audio_sn, states_audio_s = reset_states()
+
+        audio_sn, audio_s, _ = batch
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-        feat_s, spec_s, states_audio_s = feat_extractor(
+        _, spec_s, states_audio_s = feat_extractor(
             audio_s, states=states_audio_s)
- 
+
         # Apply lookahead
         spec_sn_delay = buffer_sn.apply(spec_sn)
         spec_s_delay = buffer_s.apply(spec_s)
@@ -157,7 +212,7 @@ def run_epoch(
             loss_fn,
             batch_data,
             training=training,
-            loss_type=params.train['loss_function']['type'],)
+            )
 
         loss_metric.update_state(loss)
         # acc_metric.update_state(y_batch, logits)  # accuracy not computed yet
@@ -180,27 +235,40 @@ def run_epoch(
             flush=True
         )
 
-        if not training:
-            if step == 0:
+        if step % 100 == 0:
 
-                spec_en = tf.abs(spec_en)
-                pspec_en = 20*tf_log10_eps( tf.abs(spec_en[0])).numpy()
+            spec_en = tf.abs(spec_en)
+            pspec_en = 20*tf_log10_eps( tf.abs(spec_en[0])).numpy()
 
-                if logits.dtype == tf.complex64:
-                    logits = tf.math.real(logits)
-                    mask_range=(-1, 1)
-                else:
-                    mask_range=(0, 1)
+            if feat_sn_norm.dtype == tf.complex64:
+                logits_real = tf.math.real(logits)
+                logits_imag = tf.math.imag(logits)
+                mask_real = logits_real[0].numpy()
+                mask_imag = logits_imag[0].numpy()
+                mask_real_range=(mask_real.min(), mask_real.max())
+                mask_imag_range=(mask_imag.min(), mask_imag.max())
+            else:
+                logits = tf.abs(logits)
+                mask_range=(0, 1)
                 mask = logits[0].numpy()
 
-                pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
-                pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
+            pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
+            pspec_s = 20*tf_log10_eps( tf.abs(spec_s[0])).numpy()
 
-                if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
-                    feat_sn = 10* feat_sn[0].numpy()
-                elif params.train['feature']['type'] in ('pspec', 'spec'):
-                    feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
-
+            if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
+                feat_sn = 10* feat_sn[0].numpy()
+            elif params.train['feature']['type'] in ('pspec', 'spec'):
+                feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+            if feat_sn_norm.dtype == tf.complex64:
+                fig = plot_spectrograms(
+                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask_real.T, mask_imag.T],
+                    titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask real", "mask imag"],
+                    vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_real_range, mask_imag_range],
+                    show_colorbar=True,
+                    show_fig=False       # set False if only saving
+                )
+                
+            else:
                 fig = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask.T],
                     titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask"],
@@ -209,14 +277,13 @@ def run_epoch(
                     show_fig=False       # set False if only saving
                 )
 
-                from ...utils.plot_api import fig_to_image
-                # Convert fig to image
-                tf_image = fig_to_image(fig)
+            # Convert fig to image
+            tf_image = fig_to_image(fig)
 
-                # Write to TensorBoard
-                if train_summary_writer is not None:
-                    with train_summary_writer.as_default():
-                        tf.summary.image("spectrograms", tf_image, step=epoch)
+            # Write to TensorBoard
+            if train_summary_writer is not None:
+                with train_summary_writer.as_default():
+                    tf.summary.image("spectrograms", tf_image, step=epoch)
     # Final summary for the epoch
     print(
         f"  [{train_tag}] |\n"
@@ -260,11 +327,13 @@ def train(params: SKTaskParams):
 
     # Load from YAML file
 
+    timesteps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,)
+        time_steps=timesteps)
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
@@ -303,13 +372,18 @@ def train(params: SKTaskParams):
         params.train["loss_function"]["type"],
         params=params.train["loss_function"]["params"])
 
-    lr_schedule = WarmUpCosineDecay(
-        initial_lr = float(params_train['initial_lr']),
-        total_steps = params_train['epochs'] * batches_train,
-        warmup_steps =params_train['warmup_epochs'] * batches_train,
-        alpha=1e-5,
-        initial_step=epoch_loaded_1 * batches_train,)
-
+    if params_train['lr_schedule'] == "cosine":
+        lr_schedule = WarmUpCosineDecay(
+            initial_lr = float(params_train['initial_lr']),
+            total_steps = params_train['epochs'] * batches_train,
+            warmup_steps =params_train['warmup_epochs'] * batches_train,
+            alpha=1e-5,
+            initial_step=epoch_loaded_1 * batches_train,)
+    elif params_train['lr_schedule'] == "constant":
+        lr_schedule = params_train['initial_lr']
+    else:
+        raise ValueError(f"Unknown lr_schedule: {params_train['lr_schedule']}")
+    
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -331,7 +405,10 @@ def train(params: SKTaskParams):
             'model': model,
             'optimizer': optimizer,
             'loss_fn': loss_fn,
-            'total_batches': {'train': batches_train, 'val': batches_val},
+            'total_batches': {
+                'train': batches_train,
+                'val': batches_val,
+                },
             'train_summary_writer': train_summary_writer,
             }
         print(f"Epoch {epoch}/{params_train['epochs']}\n")

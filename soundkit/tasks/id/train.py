@@ -259,8 +259,6 @@ def train(params: SKTaskParams):
     # 2. Build the model
 
     # Load from YAML file
-    is_complex = True if params_train['feature']['type'] =='spec' else False
-
 
     target_length_frames= int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model = build_model(
@@ -320,16 +318,19 @@ def train(params: SKTaskParams):
         raise ValueError(
             f"Loss function {params.train.loss_function['type']} is not supported for KWS task. Use 'cross_entropy' instead."
         )
-    if params.train.lr_schedule=='cos':
+    if params.train.lr_schedule=='cosine':
         lr_schedule = WarmUpCosineDecay(
             initial_lr = float(params_train['initial_lr']),
             total_steps = params_train['epochs'] * batches_train,
             warmup_steps =params_train['warmup_epochs'] * batches_train,
             alpha=1e-5,
             initial_step=epoch_loaded_1 * batches_train,)
-    elif params.train.lr_schedule=='const':
+    elif params.train.lr_schedule=='constant':
         lr_schedule=float(params_train['initial_lr'])
-
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,

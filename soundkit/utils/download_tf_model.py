@@ -131,7 +131,7 @@ def build_model(
 
     config_dict = OmegaConf.load(config_path)
 
-    # Apply model override from vad.yaml if present
+    # Apply model override
     if "override" in params.train[model_config]:
         override_cfg = OmegaConf.create(params.train[model_config]["override"])
         config_dict = OmegaConf.merge(config_dict, override_cfg)
