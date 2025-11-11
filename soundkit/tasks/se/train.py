@@ -1,4 +1,3 @@
-
 """
 SoundKit SE Training Script
 --------------------------
@@ -17,6 +16,7 @@ import os
 import datetime
 from pathlib import Path
 from typing import Any
+import logging
 
 # === Third-Party Imports ===
 import tensorflow as tf
@@ -42,15 +42,10 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.tf_complex_utils import polar_to_complex
 from .datasets import create_dataset
 
-@tf.function
-def inspect_waveform(wav_s, name="signal"):
-    tf.print("dtype:", wav_s.dtype)
-    tf.print("is_complex:", tf.as_dtype(wav_s.dtype).is_complex)
-    tf.print("finite:", tf.reduce_all(tf.math.is_finite(wav_s)))
-    tf.print("NaN count:", tf.math.count_nonzero(tf.math.is_nan(wav_s)))
-    tf.print("Inf count:", tf.math.count_nonzero(tf.math.is_inf(wav_s)))
-    tf.print("max:", tf.reduce_max(tf.abs(tf.math.real(wav_s))))
-    tf.print("min:", tf.reduce_min(tf.math.real(wav_s)))
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+log = logging.getLogger(__name__)
 
 
 @tf.function
@@ -321,15 +316,11 @@ def train(params: SKTaskParams):
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     if batchsize < 8:
-        print(
-            "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
-            "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
-            "    train:\n"
-            "      batchsize: 32\n\n"
-            "   or \n\n"
-            "     soundkit -t se -m train -c configs/se/se.yaml train.batchsize=32\n\n"
-            "Or set it to a value that fits your GPU memory.\n"
-            "Or choose the highest value that fits within your available memory.\n"
+        log.warning(
+            "Batch size is very small. This may lead to slow training and unstable gradients. "
+            "Consider increasing the batch size in your config.yaml file for better performance. "
+            "Or set it to a value that fits your GPU memory. "
+            "Or choose the highest value that fits within your available memory."
         )
 
     # 1. Define feature extractor

@@ -28,16 +28,21 @@ This will open TensorBoard with logs from the specified training run. Visit http
 | Parameter | Description |
 |-----------|-------------|
 | `initial_lr` | Initial learning rate for the optimizer. Uses cosine decay schedule |
+| `lr_schedule` | Learning rate schedule configuration. Supports options: cosine, constant|
 | `batchsize` | Mini-batch size used during training |
 | `epochs` | Total number of training epochs |
 | `warmup_epochs` | Number of warm-up epochs for linear learning rate ramp-up |
 | `epoch_loaded` | You can continue to train your model if your training procedure was interrupted for any reason. One of: <br>• `random`: start from scratch <br>• `latest`: resume from last checkpoint <br>• `best`: resume from best-performing checkpoint <br>• `<int>`: resume from a specific epoch |
+| `reset_states_every_batch` | If true, resets model states (e.g., for RNNs) at the start of every batch. Useful for non-causal or stateful models. |
 | `loss_function.type` | Loss function type: [mse](../../loss.md) or [compressed_mse](../../loss.md) |
 | `loss_function.params.exp` | Exponent for [compressed_mse](../../loss.md)  (e.g., 0.6) |
 | `loss_function.params.eps` | Epsilon to avoid division by zero in magnitude computation (see [compressed_mse](../../loss.md))  |
 | `path.checkpoint_dir` | Path to save model checkpoints |
 | `path.tensorboard_dir` | Path to save TensorBoard logs |
 | `num_lookahead` | Lookahead frames used during training (0 for causal models) |
+| `feature` | Feature extraction settings: frame size, hop size, FFT size, type, bins, etc. Must match TFRecord generation. |
+| `standardization` | If true, applies mean and variance normalization to features during training. |
+| `model` | Model architecture configuration. Specify config directory and file for the network definition. |
 
 
 ---
@@ -60,8 +65,6 @@ feature:
 | `frame_size` | Window size in samples |
 | `hop_size` | Hop length in samples |
 | `fft_size` | FFT length used for STFT |
-
-These settings must match those used during TFRecord generation.
 
 ---
 

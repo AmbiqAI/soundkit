@@ -1,10 +1,15 @@
 """Export SE task model with given parameters."""
+import logging
 from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 def export(params: SKTaskParams):
     """Export SE task model with given parameters.
 
@@ -61,4 +66,4 @@ def export(params: SKTaskParams):
         dtype=params.export.dtype,
         path_tflite=path_tflite)
 
-    print(f"Exported model to {path_tflite}")
+    log.info(f"Exported model to {path_tflite}")

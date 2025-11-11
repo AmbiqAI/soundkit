@@ -1,9 +1,10 @@
 ''' prepare tfrecords data for SE task '''
+import logging
+from pathlib import Path
 import random
 import re
 import multiprocessing
 from tqdm import tqdm
-from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from soundkit.utils.tf_basic_math import tf_log10_eps
@@ -13,8 +14,15 @@ from soundkit.utils.download_api import corpus_download
 from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.datasets import SKDatasetFactory
-
+from soundkit.utils.feature_utils import FeatureExtractor
 from .datasets import create_raw_tfrecord
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
+
 class FeatMultiProcsClass(multiprocessing.Process):
     """
     A worker process for parallel feature extraction.
@@ -113,14 +121,10 @@ class FeatMultiProcsClass(multiprocessing.Process):
         their spectrograms for debugging.
         """
 
-        from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
 
-        frame_size = self.params.train['feature']['frame_size']
-        hop_size = self.params.train['feature']['hop_size']
-        fft_size = self.params.train['feature']['fft_size']
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             tf.constant([audio_sn], dtype=tf.float32))
         feat_s, spec_s, states_audio_s = feat_extractor(
@@ -223,7 +227,7 @@ def data(params: SKTaskParams) -> None:
             params_data['num_processes'])
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

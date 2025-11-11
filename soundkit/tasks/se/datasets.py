@@ -4,12 +4,18 @@
     2 create tfrecord pipeline
 
 '''
+import logging
 import os
 from pathlib import Path
 from typing import List, Tuple, Iterator
 import tensorflow as tf
 import numpy as np
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 def create_raw_tfrecord(
         fname: str,
         audio_sn: np.ndarray,
@@ -122,7 +128,7 @@ def create_dataset(
                 lines = file.readlines()
 
             except:# pylint: disable=bare-except
-                print(f'Can not find the list {tfrecords}')
+                log.warning('Can not find the list %s', tfrecords)
             else:
                 
                 total_batches = len(lines) // batchsize

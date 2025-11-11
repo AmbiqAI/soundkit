@@ -15,9 +15,11 @@ soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # or evb
 | Parameter | Description |
 |-----------|-------------|
 | `epoch_loaded` | Model checkpoint to use for inference (`best`, `latest`, or a specific integer) |
+| `platform` | Target platform for demo execution. Options: `pc` (run on local machine) or `evb` (run on embedded board). |
 | `tflite_dir` | Directory containing the exported `.tflite` model |
 | `evb_dir` | Path to embedded board (EVB) project directory (used for firmware build/deploy) |
 | `pre_gain` | Optional gain factor applied before inference (for debugging or level adjustment) |
+
 
 Example:
 

@@ -1,6 +1,7 @@
 """Evaluate SE task model with given parameters."""
 import re
 import os
+import logging
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
@@ -24,13 +25,19 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    )
+log = logging.getLogger(__name__)
+
 def evaluate(params: SKTaskParams):
     """Evaluate SE task model with given parameters.
 
     Args:
         params (HKTaskParams): Task parameters
     """
-    print(f"Evaluating SE model with params: {params} and more")
+    logging.info(f"Evaluating SE model with params: {params} and more")
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']
@@ -241,7 +248,7 @@ def evaluate(params: SKTaskParams):
                 save_path,
                 audio_sn_np,
                 params.data['signal']['sampling_rate'])
-            print(f"Saved noisy audio to {save_path}")
+            logging.info(f"Saved noisy audio to {save_path}")
 
             # save enhanced audio
             name = re.sub(r'(\.wav$|\.flac$)', '_en.wav', wavs[step])
@@ -251,7 +258,7 @@ def evaluate(params: SKTaskParams):
                 save_path,
                 audio_en_np,
                 params.data['signal']['sampling_rate'])
-            print(f"Saved enhanced audio to {save_path}")
+            logging.info(f"Saved enhanced audio to {save_path}")
 
         objective_model = SQUIM_OBJECTIVE.get_model()
 
@@ -298,6 +305,6 @@ def evaluate(params: SKTaskParams):
         val_en = scores[metric]['en']
 
         if metric == 'DNSMOS':
-            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
+            logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
         else:
-            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
+            logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
