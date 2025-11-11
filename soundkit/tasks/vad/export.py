@@ -1,4 +1,5 @@
 """VAD task model export function."""
+import logging
 import numpy as np
 import tensorflow as tf
 from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
@@ -11,6 +12,11 @@ from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.audio import audio_read
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 def export(params: SKTaskParams):
     """
@@ -131,7 +137,7 @@ def build_vad_tflite(params: SKTaskParams):
         model_wrap,
         dtype=params.export.dtype,
         path_tflite=path_tflite)
-    print(f"Exported model to {path_tflite}")
+    log.info(f"Exported model to {path_tflite}")
 
     interpreter = tf.lite.Interpreter(
         model_content=tflite_fp16_model)

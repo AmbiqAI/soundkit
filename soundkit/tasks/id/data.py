@@ -1,5 +1,6 @@
 ''' prepare tfrecords data for SE task '''
 import os
+import logging
 import re
 import multiprocessing
 from pathlib import Path
@@ -9,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from soundkit.utils.tf_basic_math import tf_log10_eps
+from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.defines import SKTaskParams
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.download_api import corpus_download
@@ -18,6 +20,12 @@ from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from .datasets import create_tfrecord
 from .utils.sort import grouping_spks_sentences
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -175,8 +183,6 @@ class FeatMultiProcsClass(multiprocessing.Process):
         Plot the audio signals and 
         their spectrograms for debugging.
         """
-
-        from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
@@ -322,7 +328,7 @@ def data(params: SKTaskParams) -> None:
 
         # for noise_type in list(noise_type2list.keys()):
         #     for snr_db in params_data['snr_dbs']:
-        print(f"Processing [{train_set}] set with ")
+        log.info(f"Processing [{train_set}] set with ")
         # noise_list = noise_type2list[noise_type][train_set]
         manager = multiprocessing.Manager()
         success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

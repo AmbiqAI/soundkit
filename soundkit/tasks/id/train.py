@@ -1,4 +1,6 @@
+"""Train ID task model."""
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +18,11 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_dataset
 from .utils.nnid_utils import gen_target_nnid, get_corr_fast, cross_entropy_nnid
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 @tf.function
 def train_step(
@@ -241,7 +248,7 @@ def train(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    print(f"Training VAD model with params: {params} and more")
+    log.info(f"Training VAD model with params: {params} and more")
 
     params_train = params.train
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
@@ -357,7 +364,7 @@ def train(params: SKTaskParams):
             'train_summary_writer': train_summary_writer,
             "target" : target,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

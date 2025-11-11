@@ -1,4 +1,6 @@
+"""Evaluate KWS task model."""
 import re
+import logging
 import os
 from tqdm import tqdm
 import numpy as np
@@ -18,14 +20,20 @@ from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
+
 def evaluate(params: SKTaskParams):
     """Evaluate KWS task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
 
     """
-    print(f"Evaluating KWS model with params: {params} and more")
+    log.info(f"Evaluating KWS model with params: {params} and more")
 
     params_evaluate = params.evaluate
     feat_params = params.train['feature']
@@ -83,7 +91,7 @@ def evaluate(params: SKTaskParams):
         stats_name='stats.pkl')
 
     for step, wavs_path in enumerate(wavs_path):
-        print(f"\rEvaluating {wavs_path}, ", end='')
+        log.info(f"Evaluating {wavs_path}, ")
         # Read audio file
         audio_sn = audio_read(
             wavs_path,
@@ -157,7 +165,7 @@ def evaluate(params: SKTaskParams):
         plt.plot(vad*250)
         plt.plot(prob*250)
         plt.savefig(save_path, format="pdf", bbox_inches="tight")
-        print(f"Saved figure to {save_path}")
+        log.info(f"Saved figure to {save_path}")
 
         # Save noisy audio
         sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
@@ -171,7 +179,7 @@ def evaluate(params: SKTaskParams):
             save_path,
             audio_sn_np,
             params.data['signal']['sampling_rate'])
-        print(f"Saved original audio to {save_path}")
+        log.info(f"Saved original audio to {save_path}")
 
         # save enhanced audio
         name = re.sub(r'(\.wav$|\.flac$)', '_kws.wav', wavs[step])
@@ -182,5 +190,5 @@ def evaluate(params: SKTaskParams):
             audio_vad_np,
             params.data['signal']['sampling_rate'])
 
-        print(f"Saved kws signal to {save_path}")
+        log.info(f"Saved kws signal to {save_path}")
         

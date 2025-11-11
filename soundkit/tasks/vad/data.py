@@ -1,4 +1,5 @@
 ''' prepare tfrecords data for SE task '''
+import logging
 import random
 import re
 import multiprocessing
@@ -18,8 +19,14 @@ from soundkit.utils.audio import (
     )
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.datasets import SKDatasetFactory
 from .datasets import create_raw_tfrecord
-from ...datasets import SKDatasetFactory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -276,7 +283,7 @@ def data(params: SKTaskParams) -> None:
 
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

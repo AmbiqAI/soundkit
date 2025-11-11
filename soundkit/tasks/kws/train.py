@@ -1,5 +1,6 @@
 """Train keyword spotting model with given parameters."""
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,12 @@ from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 
 from .datasets import create_dataset
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
+
 
 @tf.function
 def train_step(
@@ -223,7 +230,7 @@ def train(params: SKTaskParams):
     Args:
         params (HKTaskParams): Task parameters
     """
-    print(f"Training KWS model with params: {params} and more")
+    log.info(f"Training KWS model with params: {params} and more")
 
     params_train = params.train
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
@@ -232,7 +239,7 @@ def train(params: SKTaskParams):
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     if batchsize < 8:
-        print(
+        log.warning(
             "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
             "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
             "    train:\n"
@@ -337,7 +344,7 @@ def train(params: SKTaskParams):
             'total_batches': {'train': batches_train, 'val': batches_val},
             'train_summary_writer': train_summary_writer,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

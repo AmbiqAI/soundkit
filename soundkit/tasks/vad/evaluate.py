@@ -1,3 +1,5 @@
+""" VAD task evaluation script """
+import logging
 import re
 import os
 from tqdm import tqdm
@@ -16,6 +18,12 @@ from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
+
 def evaluate(params: SKTaskParams):
     """Evaluate VAD task model with given parameters.
 
@@ -24,7 +32,7 @@ def evaluate(params: SKTaskParams):
 
     """
     from .utils.vad_silero import get_vad, calculate_vad_accuracy
-    print(f"Evaluating VAD model with params: {params} and more")
+    log.info(f"Evaluating VAD model with params: {params} and more")
 
     params_evaluate = params.evaluate
     feat_params = params.train['feature']
@@ -162,7 +170,7 @@ def evaluate(params: SKTaskParams):
         plt.plot(prob*250)
         plt.legend(['VAD outputs', 'Prob of speech'])
         plt.savefig(save_path, format="pdf", bbox_inches="tight")
-        print(f"Saved figure to {save_path}")
+        log.info(f"Saved figure to {save_path}")
 
         # Save noisy audio
         sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
@@ -176,7 +184,7 @@ def evaluate(params: SKTaskParams):
             save_path,
             audio_sn_np,
             params.data['signal']['sampling_rate'])
-        print(f"Saved original audio to {save_path}")
+        log.info(f"Saved original audio to {save_path}")
 
         # save enhanced audio
         name = re.sub(r'(\.wav$|\.flac$)', '_vad.wav', wavs[step])
@@ -187,10 +195,10 @@ def evaluate(params: SKTaskParams):
             audio_vad_np,
             params.data['signal']['sampling_rate'])
 
-        print(f"Saved vad signal to {save_path}")
+        log.info(f"Saved vad signal to {save_path}")
         
         # Silero VAD
-        print("Calculating silero vad")
+        log.info("Calculating silero vad")
         vad_gt = get_vad(audio_sn_np, sampling_rate=16000) # silero vad
         name = re.sub(r'(\.wav$|\.flac$)', '_vad_silero.wav', wavs[step])
         save_path = f"{result_folder}/{name}"
@@ -199,7 +207,7 @@ def evaluate(params: SKTaskParams):
             vad_gt,
             params.data['signal']['sampling_rate'])
 
-        print(f"Saved silero vad (ground truth) VAD to {save_path}")
+        log.info(f"Saved silero vad (ground truth) VAD to {save_path}")
 
 
         vad = audio_vad_np
@@ -209,5 +217,5 @@ def evaluate(params: SKTaskParams):
         vad_gt = vad_gt.astype(np.int16)
         fa, fr, fa_total, fr_total = calculate_vad_accuracy(vad, vad_gt)
 
-        print(f"False Alarms: {fa:.4f} (total: {fa_total})")
-        print(f"False Rejections: {fr:.4f} (total: {fr_total})")
+        log.info(f"False Alarms: {fa:.4f} (total: {fa_total})")
+        log.info(f"False Rejections: {fr:.4f} (total: {fr_total})")

@@ -1,6 +1,7 @@
 """ Voice Activity Detection (VAD) training script."""
 
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,11 @@ from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from soundkit.utils.spec_aug import SpecAug
 from soundkit.utils.plot_api import fig_to_image
 from .datasets import create_dataset
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 @tf.function
 def train_step(
@@ -251,7 +257,7 @@ def train(params: SKTaskParams):
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     if batchsize < 8:
-        print(
+        log.warning(
             "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
             "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
             "    train:\n"
@@ -363,7 +369,7 @@ def train(params: SKTaskParams):
             'train_summary_writer': train_summary_writer,
             'spec_aug': spec_aug,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

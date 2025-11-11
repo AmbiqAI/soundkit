@@ -1,4 +1,6 @@
+"""Evaluate ID task model with given parameters."""
 import os
+import logging
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
@@ -9,6 +11,13 @@ from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.audio import audio_read
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+log = logging.getLogger(__name__)
+
+
 def evaluate(params: SKTaskParams):
     """Evaluate ID task model with given parameters.
 
@@ -16,7 +25,7 @@ def evaluate(params: SKTaskParams):
         params (HKTaskParams): Task parameters
 
     """
-    print(f"Evaluating ID model with params: {params} and more")
+    log.info(f"Evaluating ID model with params: {params} and more")
 
     params_evaluate = params.evaluate
 
@@ -27,7 +36,7 @@ def evaluate(params: SKTaskParams):
 
     # generate tfrecords for test files
     if params.data.signal.dc_removal:
-        print("DC removal is enabled. Initializing DCRemover...")
+        log.info("DC removal is enabled. Initializing DCRemover...")
         # Initialize DCRemover if DC removal is enabled
         dc_remover = DCRemover()
     else:
@@ -111,7 +120,7 @@ def evaluate(params: SKTaskParams):
 
 
     # 4. Evaluate registration files
-    print("Calculate the characteristics of registration files")
+    log.info("Calculate the characteristics of registration files")
     d_vecs = []
     for step, wav_reg in enumerate(wavs_reg):
         print(f"\rEvaluating {wav_reg}, ", end='')
@@ -148,6 +157,6 @@ def evaluate(params: SKTaskParams):
         score = cos_sim(spk_reg, d_vec)
 
         if score < params_evaluate['threshold_id']:
-            print(f"Test file {wav_test} is NOT recognized as registered speaker. (score={score.numpy():.4f} < threshold={params_evaluate['threshold_id']})")
+            log.info(f"Test file {wav_test} is NOT recognized as registered speaker. (score={score.numpy():.4f} < threshold={params_evaluate['threshold_id']})")
         else:
-            print(f"Test file {wav_test} is recognized as registered speaker. (score={score.numpy():.4f} >= threshold={params_evaluate['threshold_id']})")
+            log.info(f"Test file {wav_test} is recognized as registered speaker. (score={score.numpy():.4f} >= threshold={params_evaluate['threshold_id']})")

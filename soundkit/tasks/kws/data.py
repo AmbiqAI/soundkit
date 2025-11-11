@@ -1,22 +1,33 @@
 ''' prepare tfrecords data for KWS task '''
+import logging
 import random
 import re
 import multiprocessing
-from tqdm import tqdm
 from pathlib import Path
+from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from soundkit.utils.tf_stft import tf_stft
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.audio import pad_or_crop
 from soundkit.defines import SKTaskParams
+from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.download_api import corpus_download
-from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
+from soundkit.utils.audio import (
+        audio_read,
+        random_load_audio_from_list,
+        synthesize_audio_with_labels,
+    )
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.datasets import SKDatasetFactory
 from .datasets import create_raw_tfrecord
+
+logging.basicConfig(   
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -244,7 +255,6 @@ class FeatMultiProcsClass(multiprocessing.Process):
         their spectrograms for debugging.
         """
 
-        from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
@@ -371,7 +381,7 @@ def data(params: SKTaskParams) -> None:
         
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})
