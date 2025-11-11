@@ -111,21 +111,6 @@ class FeatureConfig:
             if self.bins <= 0:
                 raise ValueError("For type 'mel', bins must be set and non-zero.")
 
-        if self.frame_size < self.hop_size:
-            raise ValueError(
-                f"Frame size must be greater than or equal to hop size. "
-                f"Got frame_size={self.frame_size} and hop_size={self.hop_size}"
-            )
-        if self.frame_size % self.hop_size != 0:
-            raise ValueError(
-                f"Frame size must be divisible by hop size. "
-                f"Got frame_size={self.frame_size} and hop_size={self.hop_size}"
-            )
-        if self.fft_size < self.frame_size:
-            raise ValueError(
-                f"FFT size must be greater than or equal to frame size. "
-                f"Got fft_size={self.fft_size} and frame_size={self.frame_size}"
-            )
 @dataclass
 class ModelConfig:
     """Model configuration parameters."""
@@ -162,9 +147,11 @@ class TrainConfig:
             raise ValueError("lr_schedule must be 'cosine' or 'constant'")
         # Check epoch_loaded
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
-            raise ValueError("epoch_loaded must be >= 0 if it is an int")
+            raise ValueError(
+                "epoch_loaded must be >= 0 if it is an int")
         if isinstance(self.epoch_loaded, str) and self.epoch_loaded not in ("best", "random", "latest"):
-            raise ValueError("epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
+            raise ValueError(
+                "epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
 
 @dataclass
 class EvaluateDataConfig:
@@ -181,9 +168,11 @@ class EvaluateConfig:
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
-            raise ValueError("epoch_loaded must be >= 0 if it is an int")
+            raise ValueError(
+                "epoch_loaded must be >= 0 if it is an int")
         if isinstance(self.epoch_loaded, str) and self.epoch_loaded not in ("best", "random", "latest"):
-            raise ValueError("epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
+            raise ValueError(
+                "epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
 
 @dataclass
 class ExportConfig:
@@ -196,9 +185,11 @@ class ExportConfig:
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
-            raise ValueError("epoch_loaded must be >= 0 if it is an int")
+            raise ValueError(
+                "epoch_loaded must be >= 0 if it is an int")
         if isinstance(self.epoch_loaded, str) and self.epoch_loaded not in ("best", "random", "latest"):
-            raise ValueError("epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
+            raise ValueError(
+                "epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
 
 @dataclass
 class DemoConfig:
@@ -211,11 +202,15 @@ class DemoConfig:
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
-            raise ValueError("epoch_loaded must be >= 0 if it is an int")
+            raise ValueError(
+                "epoch_loaded must be >= 0 if it is an int")
         if isinstance(self.epoch_loaded, str) and self.epoch_loaded not in ("best", "random", "latest"):
-            raise ValueError("epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
+            raise ValueError(
+                "epoch_loaded must be 'best', 'random', 'latest', or a non-negative integer")
         if self.platform not in ("pc", "evb"):
-            raise ValueError("platform must be 'pc' or 'evb'")
+            raise ValueError(
+                "platform must be 'pc' or 'evb'")
+
 @dataclass
 class SKTaskParams:
     """SoundKit task parameters."""

@@ -46,7 +46,9 @@ train:
   loss_function: 
     type: focal # or cross_entropy
     # params: {} # for cross_entropy
-    params: {gamma: 2.0, alpha: 0.75} # for focal loss
+    params: 
+      gamma: 2.0
+      alpha: 0.75 # for focal loss
 
   path:
     full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}

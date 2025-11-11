@@ -40,10 +40,12 @@ train:
   epochs: 160
   warmup_epochs: 5
   epoch_loaded: 0
-  loss_function: {
-    type: compressed_mse,
-    params: {exp: 0.6, eps: 1e-8}
-    }
+  loss_function:
+    type: compressed_mse
+    params: 
+      exp: 0.6
+      eps: 1e-8
+
   path:
     checkpoint_dir: zoo/se/unet/model
     tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
