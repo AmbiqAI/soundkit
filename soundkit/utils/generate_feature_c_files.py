@@ -16,7 +16,7 @@ def generate_feature_c_files(
     num_dnsmpl: int = 1,
     start_bin: int = 0,
     is_dcrm: int = 1,
-    pre_gain_q1: int = 8,
+    pre_gain_q1: float = 8.0,
     lookahead: int = 1,
     stft_win_coeff_name: str = "stft_win_coeff_w480_h160",
     filterbank_name: str | None = "filter_banks",
@@ -62,7 +62,7 @@ PARAMS_NNSP {param_struct_name} = {{
     .p_melBanks = {filterbank_name},
     .start_bin = {start_bin},
     .is_dcrm = {is_dcrm},
-    .pre_gain_q1 = {pre_gain_q1} << 1, // q1
+    .pre_gain_q1 = {int(pre_gain_q1 * 2)}, // q1
 }};
 
 

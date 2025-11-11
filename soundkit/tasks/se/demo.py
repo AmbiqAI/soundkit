@@ -243,11 +243,12 @@ def demo_pc(params: SKTaskParams):
     hop_size = params.train.feature.hop_size
     # 1.1. Build the model
     # Load from YAML file
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps = time_steps)
 
     load_model_checkpoint(
         model_train, params.demo['epoch_loaded'], checkpoint_dir)
@@ -259,11 +260,16 @@ def demo_pc(params: SKTaskParams):
         time_steps=1,
         export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
+    if params.train.feature.type == "spec":
+        is_complex = True
+    else:
+        is_complex = False
 
     model_wrap = warp_tf_model(
         model,
         time_steps=1,
-        dim_feat=dim_feat)
+        dim_feat=dim_feat,
+        is_complex=is_complex)
 
     dtype='float32'
 
@@ -306,12 +312,13 @@ def demo_pc(params: SKTaskParams):
             )
 
             if num_lookahead > 0:
-                _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+                _, z_spec = feat_extractor(
+                    np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(num_lookahead):
                     self.specs.append(z_spec.copy())
             if params.data['signal']['dc_removal']:
                 self.dc_remover = DCRemover()
-            
+           
         def __call__(self,
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
@@ -328,7 +335,12 @@ def demo_pc(params: SKTaskParams):
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
 
+            if np.iscomplexobj(features):
+                features = np.stack(
+                    (features.real, features.imag), axis=-1)  # reshape to (batch_size, time_steps, dim_feat, 2) for complex input
             tfmask = self.model_tflite(features)
+            if np.iscomplexobj(spec):
+                tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
 
             tfmask = tfmask.flatten()
 
@@ -342,7 +354,8 @@ def demo_pc(params: SKTaskParams):
             self.specs = []
             self.istft.reset()
             if self.num_lookahead > 0:
-                _, z_spec = feat_extractor(np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+                _, z_spec = feat_extractor(
+                    np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
                 for i in range(self.num_lookahead):
                     self.specs.append(z_spec.copy())
             if hasattr(self, 'dc_remover'):

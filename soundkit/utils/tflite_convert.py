@@ -95,11 +95,14 @@ def warp_tf_model(
         model,
         dim_feat=257,
         time_steps=1,
-        batch_size=1):
+        batch_size=1,
+        is_complex=False):
     """ Convert the model to tflite format """
     # states = model.make_states(batchsize=1)
-
-    input_shape=(time_steps, dim_feat)
+    if is_complex:
+        input_shape = (time_steps, dim_feat, 2)
+    else:   
+        input_shape=(time_steps, dim_feat)
 
     inputs_feat = tf.keras.Input(
         shape=input_shape,

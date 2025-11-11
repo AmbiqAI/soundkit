@@ -44,11 +44,15 @@ def export(params: SKTaskParams):
         export=True)
 
     copy_model_weights(model_dst=model, model_src=model_train)
-
+    if params.train.feature.type == 'spec':
+        is_complex = True
+    else:
+        is_complex = False
     model_wrap = warp_tf_model(
         model,
         time_steps=1,
-        dim_feat=dim_feat)
+        dim_feat=dim_feat,
+        is_complex=is_complex)
 
     path_tflite=f'{params.export["tflite_dir"]}/{params.name}_{params.export["dtype"]}.tflite'
 
