@@ -1,5 +1,5 @@
+"""SoundKit Task base class module."""
 import abc # abstract base class
-import os
 
 from ..defines import SKTaskParams
 

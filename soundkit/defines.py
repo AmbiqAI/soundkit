@@ -1,5 +1,6 @@
+""""SoundKit configuration definitions."""
 import sys
-from typing import List, Dict, Any, get_args
+from typing import List, Dict, Any
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -70,6 +71,7 @@ class LossFunctionConfig:
             "focal",
             "cross_entropy",
             "si_sdr",
+            "compound_loss",
         }
         if self.type not in allowed_types:
             raise ValueError(

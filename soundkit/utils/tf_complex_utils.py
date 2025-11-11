@@ -1,4 +1,6 @@
-"""Complex number utilities for TensorFlow."""
+"""
+Complex number utilities for TensorFlow.
+"""
 import tensorflow as tf
 
 def complex_magnitude(

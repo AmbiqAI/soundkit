@@ -42,7 +42,7 @@ from soundkit.utils.plot_api import (
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.tf_complex_utils import polar_to_complex
 from .datasets import create_dataset
-    
+
 @tf.function
 def inspect_waveform(wav_s, name="signal"):
     tf.print("dtype:", wav_s.dtype)
@@ -104,28 +104,7 @@ def train_step(
             spec_en_delay = est * batch["spec_sn_delay"]
             spec_en = spec_en_delay
 
-            if loss_fn.name=="si_sdr_loss":
-                wav_en = tf_istft(
-                    spec_en_delay,
-                    frame_length=480,
-                    frame_step=160,
-                    fft_length=512,
-                )
-                wav_s = tf_istft(
-                    batch["spec_s_delay"],
-                    frame_length=480,
-                    frame_step=160,
-                    fft_length=512,
-                )
-
-                # tf.print("=== wav_s diagnostics ===")
-                # inspect_waveform(wav_s, name="wav_s")
-                
-                # tf.print("=== wav_en diagnostics ===")
-                # inspect_waveform(wav_en, name="wav_en")
-                loss = loss_fn(wav_s, wav_en)
-            else:
-                loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
+            loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
             spec_en_delay = est * batch["spec_sn_delay"]
 
@@ -135,23 +114,7 @@ def train_step(
             )
 
             spec_en = spec_en_delay
-            if loss_fn.name=="si_sdr_loss":
-                wav_en = tf_istft(
-                    spec_en_delay,
-                    frame_length=480,
-                    frame_step=160,
-                    fft_length=512,
-                    )
-                wav_s = tf_istft(
-                    batch["spec_s_delay"],
-                    frame_length=480,
-                    frame_step=160,
-                    fft_length=512,
-                    )
-
-                loss = loss_fn(wav_s, wav_en)
-            else:
-                loss = loss_fn(spec_s_delay, spec_en_delay)
+            loss = loss_fn(spec_s_delay, spec_en_delay)
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)

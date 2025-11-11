@@ -6,6 +6,7 @@ from .loss_utils import (FramewiseMSE,
                          CompressedMSE,
                          LogFramewiseMSE,
                          SISDRLoss)
+from .compound_loss import CompoundLoss
 from .loss_mrl import MultiResolutionSTFTLossFromSTFT
 from .loss_focal import FocalLoss
 
@@ -24,7 +25,10 @@ class LossFactory:
         if name not in cls._registry:
             raise ValueError(f"Loss '{name}' is not registered.")
         params = params or {}
-        return cls._registry[name](**params)
+        if name == "compound_loss":
+            return CompoundLoss(params["losses"])
+        else:
+            return cls._registry[name](**params)
 
 # Register classes directly
 LossFactory.register("mse", FramewiseMSE)
@@ -34,4 +38,5 @@ LossFactory.register("compressed_mse", CompressedMSE)
 LossFactory.register("mrl_mse", MultiResolutionSTFTLossFromSTFT)
 LossFactory.register("focal", FocalLoss)
 LossFactory.register("si_sdr", SISDRLoss)
+LossFactory.register("compound_loss", CompoundLoss)
 LossFactory.register("cross_entropy", tf.keras.losses.SparseCategoricalCrossentropy)

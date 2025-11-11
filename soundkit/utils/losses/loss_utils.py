@@ -7,6 +7,7 @@ Includes:
     - SISDRLoss: Scale-Invariant Signal-to-Distortion Ratio Loss.
 """
 import tensorflow as tf
+from soundkit.utils.tf_stft import tf_istft
 from soundkit.utils.tf_complex_utils import (
     complex_to_realarray,
     polar_to_complex,
@@ -70,7 +71,7 @@ class LogFramewiseMSE(tf.keras.losses.Loss):
         true_abs = 10 * tf_log10_eps(tf.abs(y_pred)**2, self.eps)
 
         err = tf.abs(pred_abs - true_abs)
-    
+
         return tf.reduce_sum(tf.square(err)) / tf.cast(steps, tf.float32)
 
 class FramewiseMAE(tf.keras.losses.Loss):
@@ -167,36 +168,63 @@ class SISDRLoss(tf.keras.losses.Loss):
     Can be used directly in model.compile(loss=SISDRLoss()).
     """
 
-    def __init__(self, eps=1e-8, name="si_sdr_loss", **kwargs):
+    def __init__(
+            self,
+            eps=1e-8,
+            fft_size=512,
+            frame_size=480,
+            hop_size=128,
+            name="si_sdr_loss",
+            **kwargs):
+
+        """ Initialize SI-SDR Loss."""
         super().__init__(name=name)
         self.eps = eps
+        self.fft_size = fft_size
+        self.frame_size = frame_size
+        self.hop_size = hop_size
 
     def call(self, y_true, y_pred):
         """
         Args:
-            y_true: Tensor of shape [batch, time], reference/clean signal.
-            y_pred: Tensor of shape [batch, time], estimated signal.
-
+            if complex:
+                y_true: Tensor of shape [batch, timesteps, freq_bins], reference/clean signal.
+                y_pred: Tensor of shape [batch, timesteps, freq_bins], estimated signal.
+            else: # real
+                y_true: Tensor of shape [batch, time_samples], reference/clean signal.
+                y_pred: Tensor of shape [batch, time_samples], estimated signal.
         Returns:
             Scalar tensor: mean negative SI-SDR over batch.
         """
         # --- Input validation ---
-        if y_true.dtype is not tf.float32:
-            raise ValueError("Input tensors must be of float32 dtype.")
-        if y_pred.dtype is not tf.float32:
-            raise ValueError("Input tensors must be of float32 dtype.")
-
-        # Ensure signals are real-valued
-        # if not tf.reduce_all(tf.math.is_finite(y_true)):
-        #     raise ValueError("y_true contains non-finite or complex values.")
-        # if not tf.reduce_all(tf.math.is_finite(y_pred)):
-        #     raise ValueError("y_pred contains non-finite or complex values.")
-
-        if y_true.shape.rank != 2 or y_pred.shape.rank != 2:
-            raise ValueError(
-                f"Inputs must have shape [batch, time], got {y_true.shape} and {y_pred.shape}"
+        if y_true.dtype == tf.complex64:
+            if y_pred.dtype != tf.complex64:
+                raise ValueError("If y_true is complex, y_pred must also be complex.")
+            if y_true.shape.rank != 3 or y_pred.shape.rank != 3:
+                raise ValueError(
+                    f"Inputs must have shape [batch, timesteps, freq_bins], got {y_true.shape} and {y_pred.shape}"
+                )
+        else: # real
+            if y_pred.dtype != tf.float32:
+                raise ValueError("If y_true is real, y_pred must also be real.")
+            if y_true.shape.rank != 2 or y_pred.shape.rank != 2:
+                raise ValueError(
+                    f"Inputs must have shape [batch, time_samples], got {y_true.shape} and {y_pred.shape}"
+                )
+        # Convert complex STFT to time-domain waveforms
+        if y_true.dtype == tf.complex64:
+            y_true = tf_istft(
+                y_true,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
             )
-
+            y_pred = tf_istft(
+                y_pred,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
+            )
         # --- Zero-mean normalization ---
         y_true -= tf.reduce_mean(y_true, axis=1, keepdims=True)
         y_pred -= tf.reduce_mean(y_pred, axis=1, keepdims=True)
@@ -211,10 +239,12 @@ class SISDRLoss(tf.keras.losses.Loss):
         noise = y_pred - target
 
         # --- Compute SI-SDR in dB ---
-        ratio = tf.reduce_sum(target ** 2, axis=1) / (
-            tf.reduce_sum(noise ** 2, axis=1) + self.eps
+        power_target = tf.reduce_sum(target ** 2, axis=1)
+        power_noise = tf.reduce_sum(noise ** 2, axis=1)
+        ratio = power_target / (
+            power_noise + self.eps
         )
-        si_sdr = 10 * tf.math.log(ratio + self.eps) / tf.math.log(10.0)
+        si_sdr = 10 * tf_log10_eps(ratio, eps = self.eps)
 
         # Return negative mean (as loss to minimize)
         return -tf.reduce_mean(si_sdr)
