@@ -135,7 +135,7 @@ def run_epoch(
 
         feat_sn, _, _, end_frames, mask = batch
 
-        if params.train.reset_every_batch:
+        if params.train.reset_states_every_batch:
             # Reset the state buffer for the next batch
             states_audio_sn = reset_nn_states(model, zero_state=training)
 
@@ -246,7 +246,7 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     log.info(f"Training VAD model with params: {params} and more")
 

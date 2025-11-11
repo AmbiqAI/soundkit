@@ -220,7 +220,7 @@ def demo_pc(params: SKTaskParams):
     """Export se task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 

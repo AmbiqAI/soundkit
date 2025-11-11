@@ -305,7 +305,7 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     print(f"Training SE model with params: {params} and more")
 

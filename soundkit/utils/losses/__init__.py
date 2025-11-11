@@ -27,6 +27,8 @@ class LossFactory:
         params = params or {}
         if name == "compound_loss":
             return CompoundLoss(params["losses"])
+        elif name == "cross_entropy":
+            return cls._registry[name]()
         else:
             return cls._registry[name](**params)
 

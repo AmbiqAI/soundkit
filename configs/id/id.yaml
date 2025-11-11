@@ -38,7 +38,7 @@ data:
 
 train:
   initial_lr: 4e-4
-  lr_schedule: cos
+  lr_schedule: cosine
   batchsize: 80
   epochs: 150
   warmup_epochs: 5
@@ -50,9 +50,8 @@ train:
     params: {} # for cross_entropy
 
   path:
-    full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
-    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
-    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+    checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
   
   feature:
@@ -76,7 +75,7 @@ train:
       dropout_rate: 0.25
       stride_time: 1
       len_time: 6
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:

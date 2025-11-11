@@ -2,7 +2,6 @@
 import logging
 import re
 import os
-from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import soundfile as sf
@@ -12,7 +11,6 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.tf_copy_model import copy_model_weights
-from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
@@ -28,7 +26,7 @@ def evaluate(params: SKTaskParams):
     """Evaluate VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
 
     """
     from .utils.vad_silero import get_vad, calculate_vad_accuracy
@@ -70,12 +68,12 @@ def evaluate(params: SKTaskParams):
 
     # 2. Build model architecture
     # Load Model architecture from YAML file
-
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps = time_steps)
 
     # load weights from the checkpoint
 

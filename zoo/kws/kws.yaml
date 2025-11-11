@@ -77,7 +77,7 @@ train:
       dropout_rate: 0.25
       stride_time: 1
       len_time: 6
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:

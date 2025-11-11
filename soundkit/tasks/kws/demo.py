@@ -228,7 +228,7 @@ def demo_pc(params: SKTaskParams):
     """Export VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     params_export = params.export
 
@@ -254,11 +254,12 @@ def demo_pc(params: SKTaskParams):
 
     # 1.1. Build the model
     # Load from YAML file
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,)
+        time_steps = time_steps,)
 
     load_model_checkpoint(
         model_train, params_export['epoch_loaded'], checkpoint_dir)

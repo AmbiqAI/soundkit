@@ -65,7 +65,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         is_dc_removal = self.params.data['signal']["dc_removal"]
         revert_prob = self.params.data["reverb_prob"]
         path_tfrecord=self.params.data['path_tfrecord']
-        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
+        target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
         target_frames_extension= self.params.data['target_frames_extension']
         hop_size = self.params.train['feature']['hop_size']

@@ -28,7 +28,7 @@ This will open TensorBoard with logs from the specified training run. Visit http
 | Parameter | Description |
 |-----------|-------------|
 | `initial_lr` | Initial learning rate for the optimizer. Uses cosine decay schedule |
-| `lr_schedule` | Learning rate schedule configuration. Supports options: cosine, constant|
+| `lr_schedule` | Learning rate schedule configuration. Supports options: `cosine`, `constant`|
 | `batchsize` | Mini-batch size used during training |
 | `epochs` | Total number of training epochs |
 | `warmup_epochs` | Number of warm-up epochs for linear learning rate ramp-up |

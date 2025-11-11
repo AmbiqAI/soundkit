@@ -222,7 +222,7 @@ def demo_pc(params: SKTaskParams):
     """Export VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     hop_size = params.train['feature']['hop_size']
     sample_rate = params.data['signal']['sampling_rate']

@@ -63,7 +63,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         is_dc_removal = self.params.data['signal']["dc_removal"]
         revert_prob = self.params.data["reverb_prob"]
         path_tfrecord=self.params.data['path_tfrecord']
-        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
+        target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
 
         for idx, sample in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):

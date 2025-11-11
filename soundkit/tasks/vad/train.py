@@ -13,7 +13,6 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
-from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
 from soundkit.utils.plot_api import plot_spectrograms
@@ -130,7 +129,7 @@ def run_epoch(
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
 
-        if params.train.reset_every_batch:
+        if params.train.reset_states_every_batch:
             states_audio_sn = reset_nn_states(model)
 
         if params.train['standardization']:
@@ -246,7 +245,7 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     print(f"Training VAD model with params: {params} and more")
 

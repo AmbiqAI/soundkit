@@ -228,7 +228,7 @@ def demo_pc(params_id: SKTaskParams):
     """Export ID task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     from ...cli import parse_config
 

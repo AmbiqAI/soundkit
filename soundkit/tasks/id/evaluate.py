@@ -22,7 +22,7 @@ def evaluate(params: SKTaskParams):
     """Evaluate ID task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
 
     """
     log.info(f"Evaluating ID model with params: {params} and more")

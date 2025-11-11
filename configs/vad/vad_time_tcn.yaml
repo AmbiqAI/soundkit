@@ -47,9 +47,8 @@ train:
     params: {}
     
   path:
-    full_name: ${name}
-    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
-    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+    checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
   spec_aug: false
 
@@ -80,7 +79,7 @@ train:
       kernel_size_tcn: 2
       filters_tcn: 32
       dilations: [1, 2, 4, 8, 16, 32]
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:
@@ -89,7 +88,7 @@ evaluate:
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
-    result_folder: ${job_dir}/test_results/${train.path.full_name}
+    result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
 
 export:
   dtype: int16

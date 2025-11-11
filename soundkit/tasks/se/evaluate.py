@@ -35,7 +35,7 @@ def evaluate(params: SKTaskParams):
     """Evaluate SE task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     logging.info(f"Evaluating SE model with params: {params} and more")
     params_evaluate = params.evaluate

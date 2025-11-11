@@ -1,6 +1,6 @@
 """Export ID task model with given parameters.
 Args:
-    params (HKTaskParams): Task parameters
+    params (SKTaskParams): Task parameters
 """
 import logging
 from soundkit.defines import SKTaskParams
@@ -18,7 +18,7 @@ def export(params: SKTaskParams):
     """Export ID task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     params_export = params.export
 

@@ -33,6 +33,7 @@ class DataConfig:
     min_amp: float = 0.05
     max_amp: float = 0.95
     signal: SignalConfig = field(default_factory=SignalConfig)
+    target_frames_extension: int = 10 # for kws
     debug: bool = False
 
     def __post_init__(self):
@@ -40,18 +41,21 @@ class DataConfig:
             raise ValueError("num_processes must be > 0")
 
         if not (0.0 <= self.reverb_prob <= 1.0):
-            raise ValueError("reverb_prob must be between 0.0 and 1.0")
+            raise ValueError(
+                "reverb_prob must be between 0.0 and 1.0")
 
         if self.target_length_in_secs <= 0.0:
             raise ValueError("target_length_in_secs must be > 0.0")
 
         if not (0.0 <= self.min_amp < self.max_amp <= 1.0):
-            raise ValueError("min_amp and max_amp must satisfy 0.0 <= min_amp < max_amp <= 1.0")
+            raise ValueError(
+                "min_amp and max_amp must satisfy 0.0 <= min_amp < max_amp <= 1.0")
 
         required_keys = {"train", "val"}
         if not required_keys.issubset(self.num_samples_per_noise):
             missing = required_keys - self.num_samples_per_noise.keys()
-            raise ValueError(f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
+            raise ValueError(
+                f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
         for k in required_keys:
             v = self.num_samples_per_noise[k]
             if not isinstance(v, int) or v <= 0:
@@ -116,13 +120,14 @@ class ModelConfig:
     """Model configuration parameters."""
     config_dir: str = ""
     config_file: str = ""
-
+    override: Any = None
 @dataclass
 class TrainConfig:
     """Training configuration parameters."""
     initial_lr: float = 0.0
     lr_schedule: str = "cosine"
     batchsize: int = 8
+    spec_aug: bool = False
     epochs: int = 10
     warmup_epochs: int = 0
     epoch_loaded: Any = "random"
@@ -164,6 +169,7 @@ class EvaluateDataConfig:
 class EvaluateConfig:
     """Evaluation configuration parameters."""
     epoch_loaded: Any = "random"
+    eval: bool = False
     data: EvaluateDataConfig = field(default_factory=EvaluateDataConfig)
     # Check epoch_loaded
     def __post_init__(self):
@@ -199,6 +205,8 @@ class DemoConfig:
     tflite_dir: str = ""
     evb_dir: str = ""
     pre_gain: float = 1.0
+    filename: str = ""
+    param_struct_name: str = "model_params"
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:

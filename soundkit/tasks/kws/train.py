@@ -12,21 +12,19 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
-from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
-
+from soundkit.utils.plot_api import fig_to_image
 from .datasets import create_dataset
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
-
 
 @tf.function
 def train_step(
@@ -101,7 +99,7 @@ def run_epoch(
     acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
     loss_metric = tf.keras.metrics.Mean()
     confused_metric = ConfusionMatrixMetric(num_classes=2)
-    
+
     def reset_nn_states(model: tf.keras.Model):
         """Reset the model states."""
         states_audio_sn = tf.random.uniform(
@@ -122,7 +120,7 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-        if params.train.reset_every_batch:
+        if params.train.reset_states_every_batch:
             # Reset the state buffer for the next batch
             states_audio_sn = reset_nn_states(model)
 
@@ -188,7 +186,7 @@ def run_epoch(
 
 
         if step % 100 == 0:
-            idx = 10
+            idx = 0
             mask = pred[idx,:,1]
             pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[idx])).numpy()
 
@@ -209,7 +207,7 @@ def run_epoch(
             plt.plot(mask * 200)
             plt.plot(kws[idx] * 200)
             # plt.show()
-            from ...utils.plot_api import fig_to_image
+
             # Convert fig to image
             tf_image = fig_to_image(fig)
 
@@ -228,7 +226,7 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     log.info(f"Training KWS model with params: {params} and more")
 

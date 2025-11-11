@@ -14,7 +14,7 @@ def export(params: SKTaskParams):
     """Export SE task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     params_export = params.export
 

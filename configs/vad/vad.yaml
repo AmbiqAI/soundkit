@@ -40,6 +40,7 @@ train:
   epochs: 300
   warmup_epochs: 5
   epoch_loaded: random
+  spec_aug: false
   loss_function: 
     # type: focal
     # params: {gamma: 2.0, alpha: 0.75} # for focal loss
@@ -47,11 +48,9 @@ train:
     params: {}
     
   path:
-    full_name: model
-    checkpoint_dir:  zoo/vad/${train.path.full_name}
-    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+    checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
-  spec_aug: false
 
   feature:
     frame_size: 480
@@ -68,14 +67,8 @@ train:
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
-    override:
-      units: 28
-      dropout_rate_input: 0.1
-      dropout_rate: 0.25
-      stride_time: 1
-      len_time: 6
 
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:
@@ -84,7 +77,7 @@ evaluate:
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
-    result_folder: ${job_dir}/test_results/${train.path.full_name}
+    result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
 
 export:
   dtype: int16
