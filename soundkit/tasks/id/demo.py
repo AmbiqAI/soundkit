@@ -70,7 +70,9 @@ def demo_evb(params: SKTaskParams):
         log.info(f"📦 Cloned {neuralSPOT} to {neuralspot_path}")
     else:
         log.info(f"✅ {neuralSPOT} already exists at {neuralspot_path}")
-
+    # === Checkout specific commit ===
+    subprocess.run(["git", "checkout", "14c29b246"], cwd=neuralspot_path, check=True)
+    log.info(f"🔄 Checked out neuralSPOT commit 14c29b246")
     # === Generate Feature C Files ===
     log.info("🧪 Generating feature C files")
 
