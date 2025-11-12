@@ -39,6 +39,7 @@ data:
 train:
   initial_lr: 4e-4
   lr_schedule: cosine
+  batchsize: 80
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
@@ -78,7 +79,7 @@ train:
   debug: false
 
 evaluate:
-  epoch_loaded: best
+  epoch_loaded: 0
 
   threshold_id: 0.8 # threshold for id verification
 

@@ -1,4 +1,5 @@
 import os
+import logging
 import argparse
 from pathlib import Path
 from argdantic import ArgField, ArgParser
@@ -6,6 +7,12 @@ from omegaconf import OmegaConf, DictConfig
 from .defines import SKTaskParams, SKMode
 
 from .tasks import TaskFactory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 # === Global to pass dotlist overrides ===
 extra_overrides: list[str] = []
@@ -47,6 +54,12 @@ def run_task(
 
     params = parse_config(config, overrides=extra_overrides)
     task_handler = TaskFactory.get(task)
+    if task == "id":
+        if params.train.batchsize != params.data.ppls_per_group * params.data.num_sentences:
+            params.train.batchsize = params.data.ppls_per_group * params.data.num_sentences
+            log.warning(
+                f"Adjusted train batchsize to {params.train.batchsize} based on ppls_per_group and num_sentences."
+                )
 
     match mode:
         case SKMode.data:

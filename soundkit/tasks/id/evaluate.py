@@ -46,6 +46,7 @@ def evaluate(params: SKTaskParams):
 
     wavs_test = [os.path.join(dir, f) for f in params.evaluate['data']['test_files']]
 
+    params.train['batchsize'] = params.data['ppls_per_group'] * params.data['num_sentences']
     batchsize_train = params.train['batchsize']
 
 
