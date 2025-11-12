@@ -3,7 +3,8 @@ import sys
 from typing import List, Dict, Any
 from dataclasses import dataclass, field
 from enum import Enum
-
+import tempfile
+from pathlib import Path
 # Backport StrEnum for Python < 3.11
 if sys.version_info >= (3, 11):
     from enum import StrEnum
@@ -22,8 +23,7 @@ class DataConfig:
     """Data configuration for training and evaluation."""
     path_tfrecord: str = ""
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
-    num_samples_per_noise: Dict[str, int] | None = field(
-        default_factory=lambda: {"train": 10000, "val": 2500})
+    num_samples_per_noise: Any = None
     force_download: bool = False
     reverb_prob: float = 0.0
     num_processes: int = 1
@@ -53,12 +53,12 @@ class DataConfig:
             raise ValueError(
                 "min_amp and max_amp must satisfy 0.0 <= min_amp < max_amp <= 1.0")
 
-        required_keys = {"train", "val"}
-        if self.num_samples_per_noise is not None:
-            if not required_keys.issubset(self.num_samples_per_noise):
-                missing = required_keys - self.num_samples_per_noise.keys()
-                raise ValueError(
-                    f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
+        # required_keys = {"train", "val"}
+        # if self.num_samples_per_noise is not None:
+        #     if not required_keys.issubset(self.num_samples_per_noise):
+        #         missing = required_keys - self.num_samples_per_noise.keys()
+        #         raise ValueError(
+        #             f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
 @dataclass
 class LossFunctionConfig:
     """Configuration for loss function."""
@@ -227,9 +227,11 @@ class DemoConfig:
 @dataclass
 class SKTaskParams:
     """SoundKit task parameters."""
-    name: str = ""
-    project: str = ""
-    job_dir: str = ""
+    name: str = "experiment"
+    project: str = "soundkit"
+    job_dir: Path = field(default_factory=tempfile.gettempdir)
+
+    # Task-specific arguments
     data: DataConfig = field(default_factory=DataConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
     evaluate: EvaluateConfig = field(default_factory=EvaluateConfig)

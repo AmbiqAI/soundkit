@@ -211,8 +211,8 @@ def create_dataset(
             except:# pylint: disable=bare-except
                 log.error(f'Can not find the list {tfrecords}')
             else:
-                num_ppls = len(fnames[0])
-                tot_sentences = (num_ppls * num_utterances_in_sentence)
+                num_ppls = len(fnames)
+                tot_sentences = (num_ppls * num_sentences * num_utterances_in_sentence)
                 total_batches = tot_sentences // (ppls_per_group* num_sentences)
 
     else:

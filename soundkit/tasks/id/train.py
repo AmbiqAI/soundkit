@@ -24,7 +24,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
 
-# @tf.function
+@tf.function
 def train_step(
         net: tf.keras.Model,
         optimizer: tf.keras.optimizers.Optimizer,
@@ -254,6 +254,7 @@ def train(params: SKTaskParams):
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
+    params.train.batchsize = params.data.num_sentences * params.data.ppls_per_group
     batchsize = params.train['batchsize']
 
     # 1. Define feature extractor

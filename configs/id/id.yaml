@@ -7,16 +7,16 @@ data:
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.yaml 
     val: val_tfrecord.yaml
-  # num_samples_per_noise:
-  #   train:
-  #   val:
+  num_samples_per_noise:
+    train:
+    val:
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
   corpora:
     - {name: vad_train-clean-100, type: speech, split: train}
-    - {name: vad_train-clean-360, type: speech, split: train}
-    - {name: vad_train-other-500, type: speech, split: train}
+    # - {name: vad_train-clean-360, type: speech, split: train}
+    # - {name: vad_train-other-500, type: speech, split: train}
     - {name: vad_dev-clean, type: speech, split: val}
     - {name: ESC-50-master, type: noise, split: train-val}
     - {name: FSD50K, type: noise, split: train-val}
@@ -33,13 +33,12 @@ data:
     sampling_rate: 16000
     dc_removal: true
   num_sentences: 10
-  ppls_per_group: 64
+  ppls_per_group: 8
   debug: false
 
 train:
   initial_lr: 4e-4
   lr_schedule: cosine
-  batchsize: 640
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
