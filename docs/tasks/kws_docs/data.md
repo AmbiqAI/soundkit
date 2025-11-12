@@ -79,7 +79,6 @@ data:
 | `signal.sampling_rate`    | Audio sampling rate in Hz                                | `16000`                                              |
 | `signal.dc_removal`       | Apply DC offset removal if `true`                        | `true`                                               |
 | `target_frames_extension` | Number of frames to extend ground truth target span      | `30`                                                 |
-| `debug`                   | Enable debug mode                                        | `false`                                              |
 
 ---
 

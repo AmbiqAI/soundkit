@@ -36,6 +36,7 @@ data:
 
 train:
   initial_lr: 4e-4
+  lr_schedule: cosine
   batchsize: 32
   epochs: 150
   warmup_epochs: 5
@@ -59,6 +60,8 @@ train:
     bins: 72
   standardization: true
   
+  reset_states_every_batch: true
+
   model:
     config_dir: zoo/se/crnn
     # config_dir: ./soundkit/models/arch_configs

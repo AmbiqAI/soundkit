@@ -7,9 +7,9 @@ data:
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.yaml 
     val: val_tfrecord.yaml
-  num_samples_per_noise:
-    train:
-    val:
+  # num_samples_per_noise:
+  #   train:
+  #   val:
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
@@ -37,12 +37,12 @@ data:
   debug: false
 
 train:
-  initial_lr: 4e-4
-  lr_schedule: cos
+  initial_lr: 4e-10
+  lr_schedule: cosine
   batchsize: 640
   epochs: 150
   warmup_epochs: 5
-  epoch_loaded: random
+  epoch_loaded: 0
   
   # only cross_entropy in this task
   loss_function: 

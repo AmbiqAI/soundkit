@@ -63,12 +63,12 @@ train:
       len_time: 6
 
   reset_every_batch: false
-  debug: false
 ```
 ## Training Parameters 
 | Parameter                    | Description                                              | Value / Example |
 | ---------------------------- | -------------------------------------------------------- | --------------- |
 | `initial_lr`                 | Initial learning rate                                    | `4e-4`          |
+| `lr_schedule`                | Learning rate scheduling strategy (e.g., cosine, step)   | `cosine`        |
 | `batchsize`                  | Batch size used during training                          | `128`           |
 | `epochs`                     | Number of training epochs                                | `150`           |
 | `warmup_epochs`              | Number of warmup epochs for LR scheduler                 | `5`             |
@@ -76,6 +76,12 @@ train:
 | `loss_function.type`         | Loss function type                                       | `focal`         |
 | `loss_function.params.gamma` | Focal loss focusing parameter                            | `3.0`           |
 | `loss_function.params.alpha` | Focal loss balancing factor                              | `0.75`          |
+| `path`                      | Dictionary of output paths for checkpoints and logs      | See below       |
+| `num_lookahead`              | Number of lookahead frames (0 = causal inference)        | `0`             |
+| `feature`                    | Feature extraction settings (type, bins, frame size, etc.)| See below       |
+| `standardization`            | Enables per-feature mean-variance normalization          | `true`          |
+| `model`                      | Model architecture configuration (directory, config, overrides) | See below |
+| `reset_states_every_batch`   | If `true`, resets model states after each batch          | `false`         |
 
 ## Paths
 | Parameter              | Description                                        | Value / Example                                     |

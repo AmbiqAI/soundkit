@@ -7,9 +7,9 @@ data:
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.yaml 
     val: val_tfrecord.yaml
-  num_samples_per_noise:
-    train:
-    val:
+  # num_samples_per_noise:
+  #   train:
+  #   val:
   force_download: false
   reverb_prob: 0.0
   num_processes: 8
@@ -33,13 +33,13 @@ data:
     sampling_rate: 16000
     dc_removal: true
   num_sentences: 10
-  ppls_per_group: 8
+  ppls_per_group: 64
   debug: false
 
 train:
   initial_lr: 4e-4
   lr_schedule: cosine
-  batchsize: 80
+  batchsize: 640
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random

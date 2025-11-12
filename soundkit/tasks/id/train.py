@@ -24,7 +24,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
 
-@tf.function
+# @tf.function
 def train_step(
         net: tf.keras.Model,
         optimizer: tf.keras.optimizers.Optimizer,
@@ -58,7 +58,6 @@ def train_step(
         corr = tf.math.abs(net.weight_cos + 10**-5) * corr + net.bias_cos
 
         est_target = tf.math.softmax(corr, axis=-1)
-
         loss, steps = cross_entropy_nnid(
                                 target,
                                 est_target)
@@ -283,24 +282,21 @@ def train(params: SKTaskParams):
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
     }
 
-    count = 0
-    for v in params.data.corpora:
-        if v['type'] == 'noise':
-            count+=1
+    counts = sum(1 for v in params.data.corpora if v['type'] == 'noise')
 
-    num_augment = len(params.data.snr_dbs) * count
+    num_augmentation = len(params.data.snr_dbs) * counts
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
         num_sentences=params.data.num_sentences,
         ppls_per_group=params.data.ppls_per_group,
-        num_utterances_in_sentence=num_augment,
+        num_utterances_in_sentence=num_augmentation,
         hop_size = params.train.feature.hop_size,
     )
     ds_val, batches_val = create_dataset(
         tfrecord_list['val'],
         num_sentences=params.data.num_sentences,
         ppls_per_group=params.data.ppls_per_group,
-        num_utterances_in_sentence=num_augment,
+        num_utterances_in_sentence=num_augmentation,
         hop_size = params.train.feature.hop_size,
     )
 

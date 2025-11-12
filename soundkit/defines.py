@@ -22,7 +22,7 @@ class DataConfig:
     """Data configuration for training and evaluation."""
     path_tfrecord: str = ""
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
-    num_samples_per_noise: Dict[str, int] = field(
+    num_samples_per_noise: Dict[str, int] | None = field(
         default_factory=lambda: {"train": 10000, "val": 2500})
     force_download: bool = False
     reverb_prob: float = 0.0
@@ -34,6 +34,8 @@ class DataConfig:
     max_amp: float = 0.95
     signal: SignalConfig = field(default_factory=SignalConfig)
     target_frames_extension: int = 10 # for kws
+    num_sentences: int = 10  # for id
+    ppls_per_group: int = 8  # for id
     debug: bool = False
 
     def __post_init__(self):
@@ -52,14 +54,11 @@ class DataConfig:
                 "min_amp and max_amp must satisfy 0.0 <= min_amp < max_amp <= 1.0")
 
         required_keys = {"train", "val"}
-        if not required_keys.issubset(self.num_samples_per_noise):
-            missing = required_keys - self.num_samples_per_noise.keys()
-            raise ValueError(
-                f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
-        for k in required_keys:
-            v = self.num_samples_per_noise[k]
-            if not isinstance(v, int) or v <= 0:
-                raise ValueError(f"num_samples_per_noise['{k}'] must be an integer > 0, got {v}")
+        if self.num_samples_per_noise is not None:
+            if not required_keys.issubset(self.num_samples_per_noise):
+                missing = required_keys - self.num_samples_per_noise.keys()
+                raise ValueError(
+                    f"num_samples_per_noise must have keys {required_keys}, missing: {missing}")
 @dataclass
 class LossFunctionConfig:
     """Configuration for loss function."""
@@ -84,6 +83,7 @@ class LossFunctionConfig:
 @dataclass
 class PathConfig:
     """Path configuration for training."""
+    full_name: str = ""
     checkpoint_dir: str = ""
     tensorboard_dir: str = ""
 
@@ -163,6 +163,8 @@ class EvaluateDataConfig:
     """Data configuration for evaluation."""
     dir: str = ""
     files: List[str] = field(default_factory=list)
+    reg_files: List[str] = field(default_factory=list)
+    test_files: List[str] = field(default_factory=list)
     result_folder: str = ""
 
 @dataclass
@@ -170,6 +172,7 @@ class EvaluateConfig:
     """Evaluation configuration parameters."""
     epoch_loaded: Any = "random"
     eval: bool = False
+    threshold_id: float = 0.8  # threshold for id verification
     data: EvaluateDataConfig = field(default_factory=EvaluateDataConfig)
     # Check epoch_loaded
     def __post_init__(self):
@@ -207,6 +210,8 @@ class DemoConfig:
     pre_gain: float = 1.0
     filename: str = ""
     param_struct_name: str = "model_params"
+    num_utterances_registered: int = 4 # number of registered utterances for VAD ID
+    frames_vad_trigger_id: int = 180 # number of frames to trigger VAD for ID
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
