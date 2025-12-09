@@ -30,7 +30,7 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
                  stft_configs=None,
                  fft_size=512,
                  frame_size=480,
-                 hop_length=128,
+                 hop_length=160,
                  exp = 0.6,
                  eps=1e-8,
                  name="multi_resolution_stft_loss",
@@ -40,8 +40,8 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
         if stft_configs is None:
             stft_configs = [
                 {"n_fft": 256, "hop_length": 80, "win_length": 240},    # 5ms
-                {"n_fft": 512, "hop_length": 160, "win_length": 320},   # 10ms
-                {"n_fft": 1024, "hop_length": 320, "win_length": 640},  # 20ms
+                {"n_fft": 512, "hop_length": 160, "win_length": 480},   # 10ms
+                {"n_fft": 1024, "hop_length": 320, "win_length": 960},  # 20ms
                 {"n_fft": 2048, "hop_length": 640, "win_length": 1920}, # 40ms
             ]
         self.exp = exp  # Exponent for magnitude scaling

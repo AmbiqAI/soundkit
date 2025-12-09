@@ -197,7 +197,7 @@ void set_se_mode(bool enable) {
     data.type = SET_SE_MODE;
     data.length = 1;
     data.data[0] = enable ? 1 : 0;
-    webusb_send_data((uint8_t *)&data, 5);
+    webusb_send_data((uint8_t *) &data, 5);
 }
 
 void send_se_latency(uint32_t latency) {

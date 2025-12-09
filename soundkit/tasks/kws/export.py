@@ -41,7 +41,10 @@ def export(params: SKTaskParams):
         time_steps = time_steps)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train,
+        params_export['epoch_loaded'],
+        checkpoint_dir,
+        criterion_epoch="val_acc")
 
     model = build_model(
         params,

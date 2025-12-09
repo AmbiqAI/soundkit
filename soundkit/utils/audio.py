@@ -260,10 +260,10 @@ def synthesize_audio(
     # if 0:
     if rir is not None:
         if 1:
-            samples_50ms = sample_rate * 0.050 # 50ms
+            samples_75ms = sample_rate * 0.075 # 75ms
 
             idx_late_reverb = np.minimum(
-                np.argmax(np.abs(rir)) + samples_50ms,
+                np.argmax(np.abs(rir)) + samples_75ms,
                 rir.size-1).astype(np.int64)
 
             # rt60 = 1
@@ -374,78 +374,28 @@ def synthesize_audio_with_labels(
         is_short_segments_remove)
     noise = repeat_or_crop(noise, target_length)
     # if 0:
+
     if rir is not None:
-        samples_5ms = sample_rate * 0.005 # 5ms
-
-        idx_late_reverb = np.minimum(
-            np.argmax(np.abs(rir)) + samples_5ms,
-            rir.size-1).astype(np.int64)
-
-        rt60 = 1
-        dt = 1 / sample_rate
-        rt60_level = 10.0**(-60.0 / 5.0)
-        tau = -rt60 / np.log10(rt60_level)
-        n = np.arange(rir.size)
-
-        exponent = -(n - idx_late_reverb) * dt / tau
-        exponent = np.clip(exponent, -700, 0)  # adjust bounds as needed
-        decay = 10 ** exponent
-
-        decay[:idx_late_reverb] = 1
-
-        rir_target = decay * rir
+        samples_50ms = int(sample_rate * 0.05) # 50ms
         y = fftconvolve(signal_s, rir,'full')
         y = y[:len(signal_s)]
-        target = fftconvolve(signal_s, rir_target, 'full')
-        target = target[:len(signal_s)]
-        vad = np.zeros_like(signal_s, dtype=np.int32)
-        for ss, ee in zip(onsets, offsets):
-            vad[ss:ee] = 1
+        delay = np.argmax(np.abs(rir)) + samples_50ms
+        onsets[0] = np.minimum(onsets[0]+delay, len(signal_s)-1)
+        offsets[0] = np.minimum(offsets[0]+delay, len(signal_s)-1)
 
-        rir_amp = np.abs(rir)**2 / np.mean(np.abs(rir)**2)
-        vad_rir = fftconvolve(vad, rir_amp,'full')
-        vad_rir = vad_rir[:len(signal_s)]
-
-        vad_update = (vad_rir > 5000).astype(np.float32)
-
-        # import pdb; pdb.set_trace()
-        offsets, onsets = get_labels(vad_update)
-        if is_short_segments_remove:
-            onsets, offsets, y = remove_short_segments(
-                onsets, offsets, y, min_length=160*10)
-        # print(y)
-        # import pdb; pdb.set_trace()
-        # import matplotlib.pyplot as plt
-        # plt.subplot(5,1,1)
-        # plt.plot(signal_s)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,2)
-        # plt.plot(y)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,3)
-        # plt.plot(vad)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,4)
-        # plt.plot(vad_rir)
-        # plt.xlim([0, 16000 * 5])
-        # plt.subplot(5,1,5)
-        # plt.plot(vad_update)
-        # plt.xlim([0, 16000 * 5])
-        # plt.show()
-        
     else:
         y = signal_s.copy()
-        target = signal_s.copy()
 
     # Compute clean and noise powers
 
-    clean_power=0
-    steps=0
-    for s,e in zip(onsets, offsets):
-        clean_power += np.sum(target[s:e]**2)
-        steps+=e-s+1
-    if steps > 0:
-        clean_power /= steps
+    clean_power=np.mean(y**2)
+ 
+    # steps=0
+    # for s,e in zip(onsets, offsets):
+    #     clean_power += np.sum(target[s:e]**2)
+    #     steps+=e-s+1
+    # if steps > 0:
+    #     clean_power /= steps
     if clean_power == 0:
         pass
     else:
@@ -462,10 +412,10 @@ def synthesize_audio_with_labels(
     # Normalize to avoid clipping
     peak = max(np.max(np.abs(signal_sn)), 1e-8)
     gain = 1 / peak * np.random.uniform(min_amp, max_amp)
-    target *= gain
-    signal_sn *= gain
     y *= gain
-    return signal_sn, target, onsets, offsets
+    signal_sn *= gain
+
+    return signal_sn, y, onsets, offsets
 
 def synthesize_audio_with_labels_vad(
         clean: np.ndarray,

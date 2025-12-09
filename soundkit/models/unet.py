@@ -15,7 +15,7 @@ class unet(tf.keras.Model):
             **kwargs):
         super(unet,self).__init__(**kwargs)
         self.params = params
-
+        self.output_scaling = params.output_scaling
         self.encoder = encoder_unet(
             params=params,)
         self.decoder = decoder_unet(
@@ -44,33 +44,31 @@ class unet(tf.keras.Model):
                 num_chs=self.chs,
                 num_freqs=self.F)
 
-        if params.num_chs[0] == 1: # real case
-            # import numpy as np
-            # np.load("inv_mel_filter.npy")
-            # self.fc_real = tf.keras.layers.Dense(
-            #     params.dim_out,
-            #     kernel_initializer = tf.keras.initializers.Constant(
-            #         np.load("trans_hybrid_mat.npy")),
-            #     activation='sigmoid',
-            #     name='fc_real',
-            #     trainable=False)
+        if not params.bypass_last_fc:
+            if params.num_chs[0] == 1: # real case
 
-            self.fc_real = tf.keras.layers.Dense(
-                params.dim_out,
-                activation='sigmoid',
-                name='fc_real')
+                self.fc_real = tf.keras.layers.Dense(
+                    params.dim_out,
+                    activation='sigmoid',
+                    name='fc_real')
 
-            self.complex=False
-        else: # complex case
-            self.fc_real = tf.keras.layers.Dense(
-                params.dim_out,
-                activation='tanh',
-                name='fc_real')
-            self.fc_imag = tf.keras.layers.Dense(
-                params.dim_out,
-                activation='tanh',
-                name='fc_imag')
-            self.complex=True
+                self.complex=False
+            else: # complex case
+                self.fc_real = tf.keras.layers.Dense(
+                    params.dim_out,
+                    activation='tanh',
+                    name='fc_real')
+                self.fc_imag = tf.keras.layers.Dense(
+                    params.dim_out,
+                    activation='tanh',
+                    name='fc_imag')
+                self.complex=True
+        else:
+            if params.num_chs[0] == 1:
+                self.complex=False
+            else:
+                self.complex=True
+
         if params.dropout > 0:
             self.dropout = tf.keras.layers.Dropout(
                 rate=params.dropout,
@@ -132,7 +130,6 @@ class unet(tf.keras.Model):
             inputs,
             training=False):
         """ Forward pass"""
-
         if not self.complex:
             inputs = tf.expand_dims(inputs, axis=-1)
 
@@ -176,13 +173,14 @@ class unet(tf.keras.Model):
             outputs)
 
         # final projection
-        if not self.complex:
-            output = self.fc_real(output[...,0])
-        else:
-            output_real = self.fc_real(output[...,0])
-            output_imag = self.fc_imag(output[...,1])
-            output = tf.stack(
-                [output_real, output_imag],
-                axis=-1)
+        if not self.params.bypass_last_fc:
+            if self.complex:
+                output_real = self.fc_real(output[...,0])
+                output_imag = self.fc_imag(output[...,1])
+                output = tf.stack(
+                    [output_real, output_imag],
+                    axis=-1)
+            else:
+                output = self.fc_real(output[...,0])
 
-        return output
+        return output * self.output_scaling # scale output

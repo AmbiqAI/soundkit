@@ -112,7 +112,11 @@ def run_epoch(
         return states_audio_sn
     states_audio_sn = reset_nn_states(model)
     for step, batch in enumerate(dataset):
-
+        # if params.train.reset_states_every_batch:
+        rn = tf.random.uniform([], minval=0, maxval=1)
+        if rn < 0.5:
+            # Reset the state buffer for the next batch
+            states_audio_sn = reset_nn_states(model)
         audio_sn, _, kws = batch
 
         if model.stride_time > 1:
@@ -120,9 +124,7 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-        if params.train.reset_states_every_batch:
-            # Reset the state buffer for the next batch
-            states_audio_sn = reset_nn_states(model)
+        
 
         if params.train['standardization']:
             # Standardize features
@@ -196,7 +198,7 @@ def run_epoch(
                 feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
             feat_sn = feat_sn[::model.stride_time]
 
-            fig = plot_spectrograms(
+            fig,axes = plot_spectrograms(
                 images=[pspec_sn.T, feat_sn.T],
                 titles=[ "noisy logspec", "feat"],
                 vmin_vmax=[(-80, 10), (-80, 10)],
@@ -204,8 +206,8 @@ def run_epoch(
                 show_fig=False       # set False if only saving
             )
 
-            plt.plot(mask * 200)
-            plt.plot(kws[idx] * 200)
+            plt.plot(mask * feat_extractor.dim_feat)
+            plt.plot(kws[idx] * feat_extractor.dim_feat)
             # plt.show()
 
             # Convert fig to image

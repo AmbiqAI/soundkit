@@ -1,6 +1,6 @@
 """"SoundKit configuration definitions."""
 import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import tempfile
@@ -75,6 +75,7 @@ class LossFunctionConfig:
             "cross_entropy",
             "si_sdr",
             "compound_loss",
+            "time_smooth_mae"
         }
         if self.type not in allowed_types:
             raise ValueError(
@@ -99,7 +100,16 @@ class FeatureConfig:
     n_mels: int = 32
     def __post_init__(self):
         allowed_types = {
-            "spec", "pspec", "logpspec", "logampspec", "mel", "hybrid", "time"
+            "spec",
+            "pspec",
+            "logpspec",
+            "logampspec",
+            "mel",
+            "hybrid",
+            "hybrid_mag",
+            "time",
+            "erb_complex",
+            "erb_mag",
         }
         if self.type not in allowed_types:
             raise ValueError(
@@ -125,6 +135,10 @@ class ModelConfig:
 class TrainConfig:
     """Training configuration parameters."""
     initial_lr: float = 0.0
+    num_per_epoch_files: Dict[str, Optional[int]] = field(
+        default_factory=lambda: {"train": None, "val": None}
+    )
+    truncate_time: Optional[float] = None
     lr_schedule: str = "cosine"
     batchsize: int = 8
     spec_aug: bool = False
@@ -137,6 +151,7 @@ class TrainConfig:
     num_lookahead: int = 0
     feature: FeatureConfig = field(default_factory=FeatureConfig)
     standardization: bool = False
+    standardization_type: str = "mve"
     model: ModelConfig = field(default_factory=ModelConfig)
     debug: bool = False
     def __post_init__(self):
@@ -150,6 +165,8 @@ class TrainConfig:
             raise ValueError("batchsize must be > 0")
         if self.lr_schedule not in ("cosine", "constant"):
             raise ValueError("lr_schedule must be 'cosine' or 'constant'")
+        if self.standardization_type not in ("mve", "mean"):
+            raise ValueError("standardization_type must be 'mve' or 'mean'")
         # Check epoch_loaded
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
             raise ValueError(

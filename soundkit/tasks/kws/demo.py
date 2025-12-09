@@ -265,7 +265,10 @@ def demo_pc(params: SKTaskParams):
         time_steps = time_steps,)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train,
+        params_export['epoch_loaded'],
+        checkpoint_dir,
+        criterion_epoch="val_acc")
 
     model = build_model(
         params,
@@ -314,6 +317,7 @@ def demo_pc(params: SKTaskParams):
             if params.data.signal.dc_removal:
                 self.dc_remover = DCRemover()
             self.reset()
+            self.trigger_counts = 0
 
         def reset(self):
             """Reset the model state if needed."""
@@ -340,10 +344,18 @@ def demo_pc(params: SKTaskParams):
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
             outputs = self.model_tflite(features)
             outputs = outputs.flatten()
-            if outputs[0] < outputs[1]:
-                outputs = np.ones(160, dtype=np.float32)*0.95
-            else:
-                outputs = np.zeros(160, dtype=np.float32)
+            if 0:
+                if outputs[0] < outputs[1]:
+                    outputs = np.ones(160, dtype=np.float32)*0.95
+                else:
+                    outputs = np.zeros(160, dtype=np.float32)
+                
+            else: # softmax
+                sum_exp = np.exp(outputs[0]) + np.exp(outputs[1])
+                outputs[0] = np.exp(outputs[0]) / sum_exp
+                outputs[1] = np.exp(outputs[1]) / sum_exp
+                outputs = np.ones(160, dtype=np.float32)*outputs[1]
+            
             outputs = outputs.reshape(shape)
             return outputs
 

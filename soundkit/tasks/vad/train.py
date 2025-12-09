@@ -214,7 +214,7 @@ def run_epoch(
                     if model.stride_time > 1:
                         feat_sn = feat_sn[::model.stride_time]
 
-                fig = plot_spectrograms(
+                fig, axes = plot_spectrograms(
                     images=[pspec_sn.T, feat_sn.T],
                     titles=[ "noisy logspec", "feat"],
                     vmin_vmax=[(-80, 10), (-80, 10)],

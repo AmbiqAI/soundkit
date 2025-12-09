@@ -5,7 +5,8 @@ from .loss_utils import (FramewiseMSE,
                          FramewiseMAE,
                          CompressedMSE,
                          LogFramewiseMSE,
-                         SISDRLoss)
+                         SISDRLoss,
+                         TimeSmoothMAELoss)
 from .compound_loss import CompoundLoss
 from .loss_mrl import MultiResolutionSTFTLossFromSTFT
 from .loss_focal import FocalLoss
@@ -40,5 +41,6 @@ LossFactory.register("compressed_mse", CompressedMSE)
 LossFactory.register("mrl_mse", MultiResolutionSTFTLossFromSTFT)
 LossFactory.register("focal", FocalLoss)
 LossFactory.register("si_sdr", SISDRLoss)
+LossFactory.register("time_smooth_mae", TimeSmoothMAELoss)
 LossFactory.register("compound_loss", CompoundLoss)
 LossFactory.register("cross_entropy", tf.keras.losses.SparseCategoricalCrossentropy)

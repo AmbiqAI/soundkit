@@ -73,7 +73,7 @@ def plot_spectrograms(
         print(f"Saved figure to {save_path}")
     if show_fig:
         plt.show()
-    return fig
+    return fig, axes
 
 import io
 import tensorflow as tf

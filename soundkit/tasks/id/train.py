@@ -215,7 +215,7 @@ def run_epoch(
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
                 # feat_sn = feat_sn[::model.stride_time]
 
-                fig = plot_spectrograms(
+                fig, axies = plot_spectrograms(
                     images=[feat_sn.T],
                     titles=[ "feat"],
                     vmin_vmax=[(-80, 10)],

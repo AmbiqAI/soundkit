@@ -34,12 +34,19 @@ from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
+from soundkit.utils.spec_aug import SpecAug
 from soundkit.utils.plot_api import (
     plot_spectrograms,
     fig_to_image
 )
+from soundkit.utils.erb import ERB
 from soundkit.utils.tf_basic_math import tf_log10_eps
-from soundkit.utils.tf_complex_utils import polar_to_complex
+from soundkit.utils.tf_complex_utils import (
+    polar_to_complex,
+    complex_magnitude,
+    complex_angle,
+)
+
 from .datasets import create_dataset
 
 logging.basicConfig(
@@ -47,6 +54,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 log = logging.getLogger(__name__)
 
+erb = ERB(erb_subband_1=65, erb_subband_2=64)
 
 @tf.function
 def train_step(
@@ -55,6 +63,7 @@ def train_step(
         loss_fn: Any,
         batch: dict[str, tf.Tensor],
         training: bool = True,
+        feat_type: str = "mel",
         ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     """
     Executes a single training or validation step for the SE model.
@@ -85,26 +94,31 @@ def train_step(
     with tf.GradientTape() as tape:
         est = net(inputs, training=training)
         if feat_sn.dtype == tf.complex64:
+
+            if feat_type == "erb_complex":
+                est = tf.transpose(est, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
+                est = erb.bs(est)
+                est = tf.transpose(est, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
+
             est_real = est[..., 0]
             est_imag = est[..., 1]
             est = tf.complex(
                 est_real,
                 est_imag,
             )
-        else:
-            est = tf.complex(est, 0.0)
-
-        if feat_sn.dtype == tf.complex64:
             spec_en_delay = est * batch["spec_sn_delay"]
             spec_en = spec_en_delay
 
             loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
+            if feat_type == "erb_mag":
+                est = erb.bs(est)
+            est = tf.complex(est, 0.0)
             spec_en_delay = est * batch["spec_sn_delay"]
 
             spec_s_delay = polar_to_complex(
-                tf.abs(batch["spec_s_delay"]),
-                tf.math.angle(batch["spec_sn_delay"]),
+                complex_magnitude(batch["spec_s_delay"]),
+                complex_angle(batch["spec_sn_delay"]),
             )
 
             spec_en = spec_en_delay
@@ -170,6 +184,9 @@ def run_epoch(
         feature_dim=num_fft_bins,
         batchsize=batchsize)
 
+    if params.train['spec_aug']:
+        specAug_inst = SpecAug()
+
     def reset_states():
         states_audio_sn = tf.zeros(
             [batchsize, stft_feat["frame_size"] - stft_feat["hop_size"]],
@@ -188,6 +205,7 @@ def run_epoch(
             states_audio_sn, states_audio_s = reset_states()
 
         audio_sn, audio_s, _ = batch
+
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
@@ -198,12 +216,20 @@ def run_epoch(
         spec_sn_delay = buffer_sn.apply(spec_sn)
         spec_s_delay = buffer_s.apply(spec_s)
 
+        if params.train['spec_aug'] and training:
+            feat_sn = specAug_inst(
+                feat_sn,
+            )
+
         if params.train['standardization']:
             # Standardize features
-
+            
             mean_stats = stats['nMean_feat']
             inv_std_stats = stats['nInvStd']
-            feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
+            if params.train['standardization_type'] == "mean":
+                feat_sn_norm = feat_sn - mean_stats
+            else: # "mve"
+                feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
         else:
             # No standardization, use raw features
             feat_sn_norm = feat_sn
@@ -215,12 +241,12 @@ def run_epoch(
             "mask": 1.0
         }
 
-        # Perform one training or val step
         loss, logits, spec_en = train_step(
             model,
             optimizer,
             loss_fn,
             batch_data,
+            feat_type=stft_feat['type'],
             training=training,
             )
 
@@ -259,7 +285,8 @@ def run_epoch(
                 mask_imag_range=(mask_imag.min(), mask_imag.max())
             else:
                 logits = tf.abs(logits)
-                mask_range=(0, 1)
+                mask_range=(
+                    logits[0].numpy().min(), logits[0].numpy().max())
                 mask = logits[0].numpy()
 
             pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[0])).numpy()
@@ -267,10 +294,10 @@ def run_epoch(
 
             if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
                 feat_sn = 10* feat_sn[0].numpy()
-            elif params.train['feature']['type'] in ('pspec', 'spec'):
+            elif params.train['feature']['type'] in ('pspec', 'spec', "erb_complex", "hybrid_mag", "erb_mag"):
                 feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
             if feat_sn_norm.dtype == tf.complex64:
-                fig = plot_spectrograms(
+                fig, axes = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask_real.T, mask_imag.T],
                     titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask real", "mask imag"],
                     vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_real_range, mask_imag_range],
@@ -279,7 +306,7 @@ def run_epoch(
                 )
                 
             else:
-                fig = plot_spectrograms(
+                fig, axes = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask.T],
                     titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask"],
                     vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_range],
@@ -333,7 +360,15 @@ def train(params: SKTaskParams):
 
     # Load from YAML file
 
-    timesteps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    if params.train["truncate_time"] >= params.data["target_length_in_secs"]:
+        raise ValueError(
+            f"truncate_time {params.train['truncate_time']} cannot be greater than target_length_in_secs {params.data['target_length_in_secs']}"
+        )
+
+    if params.train['truncate_time'] is not None:
+        timesteps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    else:
+        timesteps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     model = build_model(
         params,
@@ -349,16 +384,19 @@ def train(params: SKTaskParams):
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
     }
-
+    truncate_samples = int(params.train['truncate_time'] * params.data.signal.sampling_rate) if params.train['truncate_time'] is not None else None
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
         batchsize=batchsize,
         is_shuffle=True,
+        num_per_epoch_files=params.train.num_per_epoch_files.train,
+        truncate_samples=truncate_samples,
     )
     ds_val, batches_val = create_dataset(
         tfrecord_list['val'],
         batchsize=batchsize,
         is_shuffle=False,
+        truncate_samples=truncate_samples,
     )
 
     # 4. Compute feature statistics for standardization
@@ -444,7 +482,10 @@ def train(params: SKTaskParams):
             with train_summary_writer.as_default():
                 tf.summary.scalar(f"val/loss", loss.result(), step=epoch)
 
-        train_log[epoch] = log_epoch
+        try:
+            train_log[epoch] = log_epoch
+        except:
+            train_log.append(log_epoch)
 
         save_train_log(train_log, log_path)
 

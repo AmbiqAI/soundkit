@@ -173,7 +173,7 @@ class SISDRLoss(tf.keras.losses.Loss):
             eps=1e-8,
             fft_size=512,
             frame_size=480,
-            hop_size=128,
+            hop_size=160,
             name="si_sdr_loss",
             **kwargs):
 
@@ -248,3 +248,197 @@ class SISDRLoss(tf.keras.losses.Loss):
 
         # Return negative mean (as loss to minimize)
         return -tf.reduce_mean(si_sdr)
+class SISMAELoss(tf.keras.losses.Loss):
+    """
+    Scale-Invariant Signal-to-Distortion Ratio (SI-SDR) Loss.
+
+    Computes the negative SI-SDR (so lower = worse, higher = better).
+    Can be used directly in model.compile(loss=SISDRLoss()).
+    """
+
+    def __init__(
+            self,
+            eps=1e-8,
+            fft_size=512,
+            frame_size=480,
+            hop_size=160,
+            name="si_mae_loss",
+            **kwargs):
+
+        """ Initialize SI-SDR Loss."""
+        super().__init__(name=name)
+        self.eps = eps
+        self.fft_size = fft_size
+        self.frame_size = frame_size
+        self.hop_size = hop_size
+
+    def call(self, y_true, y_pred):
+        """
+        Args:
+            if complex:
+                y_true: Tensor of shape [batch, timesteps, freq_bins], reference/clean signal.
+                y_pred: Tensor of shape [batch, timesteps, freq_bins], estimated signal.
+            else: # real
+                y_true: Tensor of shape [batch, time_samples], reference/clean signal.
+                y_pred: Tensor of shape [batch, time_samples], estimated signal.
+        Returns:
+            Scalar tensor: mean negative SI-SDR over batch.
+        """
+        # --- Input validation ---
+        if y_true.dtype == tf.complex64:
+            if y_pred.dtype != tf.complex64:
+                raise ValueError("If y_true is complex, y_pred must also be complex.")
+            if y_true.shape.rank != 3 or y_pred.shape.rank != 3:
+                raise ValueError(
+                    f"Inputs must have shape [batch, timesteps, freq_bins], got {y_true.shape} and {y_pred.shape}"
+                )
+        else: # real
+            if y_pred.dtype != tf.float32:
+                raise ValueError("If y_true is real, y_pred must also be real.")
+            if y_true.shape.rank != 2 or y_pred.shape.rank != 2:
+                raise ValueError(
+                    f"Inputs must have shape [batch, time_samples], got {y_true.shape} and {y_pred.shape}"
+                )
+        # Convert complex STFT to time-domain waveforms
+        if y_true.dtype == tf.complex64:
+            y_true = tf_istft(
+                y_true,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
+            )
+            y_pred = tf_istft(
+                y_pred,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
+            )
+        # --- Zero-mean normalization ---
+        y_true -= tf.reduce_mean(y_true, axis=1, keepdims=True)
+        y_pred -= tf.reduce_mean(y_pred, axis=1, keepdims=True)
+
+        # --- Target projection (scale-invariant) ---
+        dot = tf.reduce_sum(y_true * y_pred, axis=1, keepdims=True)
+        ref_energy = tf.reduce_sum(y_true ** 2, axis=1, keepdims=True) + self.eps
+        scaling = dot / ref_energy
+        target = scaling * y_true
+
+        # --- Compute residual noise ---
+        noise = y_pred - target
+
+        # --- Compute SI-SDR in dB ---
+        power_target = tf.reduce_sum(target ** 2, axis=1)
+        power_noise = tf.reduce_sum(noise ** 2, axis=1)
+        ratio = power_target / (
+            power_noise + self.eps
+        )
+        si_sdr = 10 * tf_log10_eps(ratio, eps = self.eps)
+
+        # Return negative mean (as loss to minimize)
+        return -tf.reduce_mean(si_sdr)
+class TimeSmoothMAELoss(tf.keras.losses.Loss):
+    """
+    Time-domain smooth MAE:
+        loss = sqrt((x - y)^2 + eps^2)
+    Works for real waveforms or complex STFT inputs (auto iSTFT).
+    """
+
+    def __init__(
+            self,
+            eps=1e-12,
+            power_law_exp=0.3,
+            fft_size=512,
+            frame_size=480,
+            hop_size=160,
+            is_norm=False,
+            scalar_invariant=False,
+            name="time_smooth_mae_loss",
+            **kwargs):
+
+        super().__init__(name=name)
+        self.eps = eps
+        self.is_norm = is_norm
+        self.fft_size = fft_size
+        self.frame_size = frame_size
+        self.hop_size = hop_size
+        self.scalar_invariant = scalar_invariant
+        self.p = power_law_exp
+    def call(self, y_true, y_pred):
+
+        # --- Input validation ---
+        if y_true.dtype == tf.complex64:
+            if y_pred.dtype != tf.complex64:
+                raise ValueError("If y_true is complex, y_pred must also be complex.")
+            if y_true.shape.rank != 3:
+                raise ValueError("Complex inputs must be [batch, frames, freq].")
+        else:
+            if y_pred.dtype != tf.float32:
+                raise ValueError("If y_true is real, y_pred must also be real.")
+            if y_true.shape.rank != 2:
+                raise ValueError("Real inputs must be [batch, samples].")
+
+        # --- If STFT → convert to waveform ---
+        if y_true.dtype == tf.complex64:
+            y_true = tf_istft(
+                y_true,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
+            )
+            y_pred = tf_istft(
+                y_pred,
+                frame_length=self.frame_size,
+                frame_step=self.hop_size,
+                fft_length=self.fft_size,
+            )
+
+        # --- (Optional) Normalize energy ---
+        if self.is_norm:
+            # rms_true = tf.sqrt(tf.reduce_mean(y_true**2, axis=1, keepdims=True) + self.eps)
+            # rms_pred = tf.sqrt(tf.reduce_mean(y_pred**2, axis=1, keepdims=True) + self.eps)
+            if self.scalar_invariant:
+                # --- Zero-mean normalization ---
+                y_true -= tf.reduce_mean(y_true, axis=1, keepdims=True)
+                y_pred -= tf.reduce_mean(y_pred, axis=1, keepdims=True)
+
+                # --- Target projection (scale-invariant) ---
+                dot = tf.reduce_sum(y_true * y_pred, axis=1, keepdims=True)
+                ref_energy = tf.reduce_sum(y_true ** 2, axis=1, keepdims=True) + self.eps
+                scaling = dot / ref_energy
+                y_true = scaling * y_true
+
+            max_true = tf.reduce_max(
+                tf.abs(y_true), axis=1, keepdims=True)
+
+            eps = 1e-7
+            max_true_safe = tf.where(max_true > eps, max_true, tf.ones_like(max_true))
+            y_true_norm = tf.where(max_true > eps, y_true / max_true_safe, y_true)
+            y_pred_norm = tf.where(max_true > eps, y_pred / max_true_safe, y_pred)
+
+            # import pdb; pdb.set_trace()
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(y_true_norm[0,:].numpy(), label='true')
+            # plt.plot(y_pred_norm[0,:].numpy(), label='pred')
+            # plt.legend()
+            # plt.show()  
+
+
+        else:
+            y_true_norm = y_true
+            y_pred_norm = y_pred
+
+        def power_law_compress(x, p=self.p, eps=1e-12):
+            return tf.sign(x) * tf.pow(tf.sqrt(x**2+eps**2), p)
+
+        # --- Smooth MAE ---
+        if self.p == 1.0:
+            diff = tf.abs(y_true_norm - y_pred_norm)
+            loss = tf.sqrt(diff * diff + self.eps * self.eps) - self.eps
+            return tf.reduce_mean(loss)
+
+        diff = power_law_compress(y_true_norm, self.p) - power_law_compress(y_pred_norm, self.p)
+        loss = tf.sqrt(diff * diff + self.eps * self.eps) - self.eps
+
+        # mean over batch + time
+        return tf.reduce_mean(loss)

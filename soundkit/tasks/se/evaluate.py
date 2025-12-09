@@ -27,7 +27,8 @@ from .datasets import create_dataset
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    filename="se_evaluate.log",
     )
 log = logging.getLogger(__name__)
 
@@ -99,7 +100,15 @@ def evaluate(params: SKTaskParams):
     # 2. Build model architecture
     # Load Model architecture from YAML file
 
-    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
+    if params.train["truncate_time"] >= params.data["target_length_in_secs"]:
+        raise ValueError(
+            f"truncate_time {params.train['truncate_time']} cannot be greater than target_length_in_secs {params.data['target_length_in_secs']}"
+        )
+
+    if params.train['truncate_time'] is not None:
+        time_steps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    else:
+        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     model_train = build_model(
         params,
@@ -135,7 +144,10 @@ def evaluate(params: SKTaskParams):
     si_sdr_hyp = {'sn': np.zeros( (1,), dtype=np.float64),
                  'en': np.zeros( (1,), dtype=np.float64),}
 
-
+    # open a file result.txt to save final results
+    result_file_path = os.path.join(result_folder, "result.txt")
+    result_file = open(result_file_path, "w")
+    
     for step, batch in enumerate(dataset):
         print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
 
@@ -157,7 +169,10 @@ def evaluate(params: SKTaskParams):
             # Standardize features
             mean_stats = stats['nMean_feat']
             inv_std_stats = stats['nInvStd']
-            feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
+            if params.train['standardization_type'] == 'mean':
+                feat_sn_norm = feat_sn - mean_stats
+            else:
+                feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
         else:
             feat_sn_norm = feat_sn
 
@@ -167,7 +182,7 @@ def evaluate(params: SKTaskParams):
             params,
             batchsize=batchsize,
             dim_feat=dim_feat,
-            time_steps=time_steps)
+            time_steps=1500)
 
         copy_model_weights(
             model_dst=model,
@@ -180,9 +195,51 @@ def evaluate(params: SKTaskParams):
                 axis=-1)
         else:
             inputs_nn = feat_sn_norm
-        tfmask = model(inputs_nn, training=False)
+    
+
+        T = inputs_nn.shape[1]
+        blks = int(np.ceil(T / 1500))
+
+        tfmask_list = []
+        for b in range(blks):
+            start = b * 1500
+            end = min((b + 1) * 1500, T)
+            inputs_nn_blk = inputs_nn[:, start:end]
+
+            rank = tf.rank(inputs_nn_blk)
+
+            if rank == 4:
+                inputs_nn_blk = tf.pad(
+                inputs_nn_blk,
+                paddings=[[0, 0],
+                          [0, 1500 - (end - start)],
+                          [0, 0],
+                          [0, 0]],
+                mode='CONSTANT',
+                constant_values=0)
+            else:
+                inputs_nn_blk = tf.pad(
+                inputs_nn_blk,
+                paddings=[[0, 0],
+                          [0, 1500 - (end - start)],
+                          [0, 0]],
+                mode='CONSTANT',
+                constant_values=0)
+
+
+            tfmask_blk = model(inputs_nn_blk, training=False)
+            tfmask_blk = tfmask_blk[:, :end - start, ...]
+            tfmask_list.append(tfmask_blk)
+        tfmask = tf.concat(tfmask_list, axis=1)
 
         if feat_sn_norm.dtype == tf.complex64: # complex mask
+            if params.train.feature.type == 'erb_complex':
+                from soundkit.utils.erb import ERB
+                erb = ERB(erb_subband_1=65, erb_subband_2=64)
+                tfmask = tf.transpose(tfmask, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
+                tfmask = erb.bs(tfmask)
+                tfmask = tf.transpose(tfmask, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
+
             tfmask = tf.complex(
                 tfmask[..., 0],
                 tfmask[..., 1])
@@ -190,9 +247,15 @@ def evaluate(params: SKTaskParams):
         else: # real mask
             pspec_sn_delay = tf.abs(spec_sn_delay)
             phase_sn_delay = tf.math.angle(spec_sn_delay)
-
+            if params.train.feature.type == 'hybrid_mag':
+                mat_inv = feat_extractor.mel_filter_inv
+                tfmask = tf.matmul(tfmask, mat_inv)
+            elif params.train.feature.type == 'erb_mag':
+                from soundkit.utils.erb import ERB
+                erb = ERB(erb_subband_1=65, erb_subband_2=64)
+                tfmask = erb.bs(tfmask)
             pspec_en_delay = tfmask * pspec_sn_delay
-
+            
             spec_en_delay = polar_to_complex(
                 pspec_en_delay, phase_sn_delay)
 
@@ -300,11 +363,15 @@ def evaluate(params: SKTaskParams):
 
     # Print results
     print("\nAveraged Evaluation Results:")
+    
+    result_file.write(f"Epoch {params.evaluate.epoch_loaded}: Averaged Evaluation Results:\n")
     for metric in metrics:
         val_sn = scores[metric]['sn']
         val_en = scores[metric]['en']
 
         if metric == 'DNSMOS':
-            logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
+            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]\n")
+            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
         else:
+            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en}\n")
             logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")

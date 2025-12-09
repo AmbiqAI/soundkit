@@ -30,7 +30,10 @@ def export(params: SKTaskParams):
     # 1.1. Build the model
     # Load from YAML file
 
-    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
+    if params.train['truncate_time'] is not None:
+        time_steps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    else:
+        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
 
     model_train = build_model(
         params,
@@ -49,7 +52,7 @@ def export(params: SKTaskParams):
         export=True)
 
     copy_model_weights(model_dst=model, model_src=model_train)
-    if params.train.feature.type == 'spec':
+    if params.train.feature.type in ('spec','erb_complex'):
         is_complex = True
     else:
         is_complex = False

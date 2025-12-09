@@ -11,7 +11,7 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.mel import gen_mel_bank
 from soundkit.utils.mel_spec_gen import melspec_gen
 from soundkit.defines import SKTaskParams
-
+from soundkit.utils.erb import ERB
 class FeatureExtractor:
     """
     Feature extractor for audio signals using a dispatch map.
@@ -20,7 +20,7 @@ class FeatureExtractor:
     def __init__(
             self,
             params: SKTaskParams):
-
+        
         self.params = params
         feat_params = self.params.train['feature']
         self._extractors = {
@@ -31,6 +31,8 @@ class FeatureExtractor:
             "mel": self._extract_mel, # log mel spectrogram
             "hybrid": self._extract_logpspec_mel, # hybrid spectrogram
             "time": self._extract_time, # time-domain features
+            "erb_complex": self._extract_erb_complex, # ERB complex spectrogram
+            "erb_mag": self._extract_erb_mag, # ERB magnitude spectrogram
         }
 
         if feat_params['type'] not in self._extractors:
@@ -73,7 +75,12 @@ class FeatureExtractor:
                 n_mels=feat_params['n_mels'],
                 thresh_mel=feat_params['bins_fft'])
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
-            self.mel_filter_inv = tf.linalg.pinv(self.mel_filter)
+            # self.mel_filter = self.mel_filter / tf.sqrt(
+            #     tf.reduce_sum(self.mel_filter**2, axis=0, keepdims=True))
+            
+            self.mel_filter_inv = tf.constant(fbanks, dtype=tf.float32)
+            self.mel_filter_inv = self.mel_filter_inv / tf.sqrt(
+                tf.reduce_sum(self.mel_filter_inv**2, axis=0, keepdims=True))
 
             self.dim_feat = fbanks.shape[0]
 
@@ -82,7 +89,16 @@ class FeatureExtractor:
                 win_size=feat_params['frame_size'],
                 hop=feat_params['hop_size'])
             self.dim_feat = feat_params['frame_size']
-
+        elif feat_params['type'] == "erb_complex":
+            self.erb = ERB(
+                erb_subband_1=65,
+                erb_subband_2=64)
+            self.dim_feat = 129
+        elif feat_params['type'] == "erb_mag":
+            self.erb = ERB(
+                erb_subband_1=65,
+                erb_subband_2=64)
+            self.dim_feat = 129
         else:
             dim_feat = (feat_params['fft_size'] // 2) + 1
             self.mel_filter = tf.eye(
@@ -119,6 +135,35 @@ class FeatureExtractor:
         )
 
         return spec, tf.identity(spec)
+
+    def _extract_erb_complex(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+
+        spec =  self.stft_exec(
+            audio_sn,
+            states=states,
+        )
+        spec_real = tf.math.real(spec)
+        spec_imag = tf.math.imag(spec)
+        spec_combined = tf.stack([spec_real, spec_imag], axis=1)
+        erb_spec = self.erb.bm(spec_combined)
+        erb_spec = tf.transpose(erb_spec, perm=[0,2,3,1])  # (B, T, F_erb, 2)
+        erb_complex = tf.complex(erb_spec[...,0], erb_spec[...,1])
+        return erb_complex, spec
+
+    def _extract_erb_mag(
+            self,
+            audio_sn: tf.Tensor,
+            states: Union[tf.Tensor, None]) -> tf.Tensor:
+
+        spec =  self.stft_exec(
+            audio_sn,
+            states=states,
+        )
+        erb_mag = self.erb.bm(tf.abs(spec))
+        return erb_mag, spec
 
     def _extract_pspec(
             self,

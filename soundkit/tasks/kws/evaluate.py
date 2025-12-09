@@ -82,7 +82,10 @@ def evaluate(params: SKTaskParams):
     # load weights from the checkpoint
 
     load_model_checkpoint(
-        model_train, params_evaluate['epoch_loaded'], checkpoint_dir)
+        model_train,
+        params_evaluate['epoch_loaded'],
+        checkpoint_dir,
+        criterion_epoch="val_acc")
 
     # 3. Compute feature statistics for standardization
     

@@ -53,6 +53,7 @@ def run_task(
     print(f"🛠️  Overrides: {extra_overrides}")
 
     params = parse_config(config, overrides=extra_overrides)
+
     task_handler = TaskFactory.get(task)
     if task == "id":
         if params.train.batchsize != params.data.ppls_per_group * params.data.num_sentences:

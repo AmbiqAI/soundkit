@@ -21,12 +21,18 @@ from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.mel import gen_mel_c
+from soundkit.utils.erb import ERB
 from .export import export
+erb = ERB(
+    erb_subband_1=65,
+    erb_subband_2=64,
+    platform="numpy")
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
+
 log = logging.getLogger(__name__)
 
 def demo(params: SKTaskParams):
@@ -240,12 +246,17 @@ def demo_pc(params: SKTaskParams):
         fft_len=params.train.feature.fft_size,
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
+        platform="numpy"
     )
     dim_feat = feat_extractor.dim_feat
     hop_size = params.train.feature.hop_size
     # 1.1. Build the model
     # Load from YAML file
-    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
+    if params.train['truncate_time'] is not None:
+        time_steps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    else:
+        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+
     model_train = build_model(
         params,
         batchsize=batchsize_train,
@@ -262,7 +273,7 @@ def demo_pc(params: SKTaskParams):
         time_steps=1,
         export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
-    if params.train.feature.type == "spec":
+    if params.train.feature.type in ("spec", "erb_complex"):
         is_complex = True
     else:
         is_complex = False
@@ -312,6 +323,9 @@ def demo_pc(params: SKTaskParams):
                 hop_len=params.train.feature.hop_size,
                 fft_len=params.train.feature.fft_size,
             )
+            
+            if params.train.feature.type == 'erb_complex':
+                self.erb = erb
 
             if num_lookahead > 0:
                 _, z_spec = feat_extractor(
@@ -320,7 +334,7 @@ def demo_pc(params: SKTaskParams):
                     self.specs.append(z_spec.copy())
             if params.data['signal']['dc_removal']:
                 self.dc_remover = DCRemover()
-           
+
         def __call__(self,
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
@@ -341,14 +355,39 @@ def demo_pc(params: SKTaskParams):
                 features = np.stack(
                     (features.real, features.imag), axis=-1)  # reshape to (batch_size, time_steps, dim_feat, 2) for complex input
             tfmask = self.model_tflite(features)
+
+            pcm_out = self.post_procsessing(tfmask, spec)
+
+            return pcm_out.reshape((-1,1))
+
+        def post_procsessing(
+                self,
+                tfmask: np.ndarray,
+                spec: np.ndarray) -> np.ndarray:
+            """
+            post processing after getting mask from tflite model
+            Args:
+                tfmask (np.ndarray): output mask from tflite model
+                spec (np.ndarray): input complex spectrogram
+            Returns:
+                np.ndarray: time-domain waveform after ISTFT
+            """
             if np.iscomplexobj(spec):
+                if params.train.feature.type == 'erb_complex':
+                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2])
+                    tfmask = erb.bs(tfmask)
+                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
+                
+                # print(tfmask.shape)
+                # print(type(tfmask))
+                # import pdb; pdb.set_trace()
                 tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
 
             tfmask = tfmask.flatten()
 
             pcm_out = self.istft.process(spec * tfmask)
 
-            return pcm_out.reshape((-1,1))
+            return pcm_out
 
         def reset(self):
             """Reset the internal state of the model."""
