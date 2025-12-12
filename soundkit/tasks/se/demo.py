@@ -291,9 +291,9 @@ def demo_pc(params: SKTaskParams):
         dtype=dtype,
         path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
-    interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
-    interpreter.allocate_tensors()  # Needed before execution!
+    # interpreter = tf.lite.Interpreter(
+    #     model_content=tflite_fp16_model)
+    # interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
         stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
@@ -301,7 +301,7 @@ def demo_pc(params: SKTaskParams):
         stats = None
 
     model_tflite = TFLiteAudioModel(
-        interpreter=interpreter,
+        model_content=tflite_fp16_model,
         dtype=dtype,
     )
 
