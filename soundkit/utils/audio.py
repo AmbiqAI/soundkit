@@ -215,7 +215,8 @@ def repeat_or_crop(x: np.ndarray, target_length: int) -> np.ndarray:
 
 def random_load_audio_from_list(
         audio_list: list,
-        sample_rate: int) -> Tuple[np.ndarray, int, int]:
+        sample_rate: int,
+        id: None | int = None) -> Tuple[np.ndarray, int, int]:
     """Randomly load audio from a list of audio files
 
     Args:
@@ -225,8 +226,12 @@ def random_load_audio_from_list(
     Returns:
         np.ndarray: loaded audio data
     """
-    idx = np.random.randint(0, len(audio_list))
-    audio = audio_read(audio_list[idx], sample_rate = sample_rate)
+    
+    if id is None:
+        wav = np.random.choice(audio_list)
+    else:
+        wav = audio_list[id]
+    audio = audio_read(wav, sample_rate = sample_rate)
     return audio
 
 def synthesize_audio(

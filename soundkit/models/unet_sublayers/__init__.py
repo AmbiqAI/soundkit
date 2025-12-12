@@ -19,6 +19,9 @@ class UNetParams(BaseModel):
     bypass_last_fc: bool = False
     output_scaling: float = 1.0
     bottleneck: str = 'lstm'  # options: 'dpgrnn', 'lstm', 'none'
+    dilations: List[int] = [1, 2, 4, 8, 16, 32]
+    filters_tcn: int = 64
+    kernel_size_tcn: int = 2
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

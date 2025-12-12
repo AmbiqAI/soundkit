@@ -8,12 +8,12 @@ data:
     train: train_tfrecord.csv 
     val: val_tfrecord.csv
   num_samples_per_noise:
-    train: 600000
-    val: 2000
+    train: 720000
+    val: 10000
   force_download: false
-  reverb_prob: 0.2
+  reverb_prob: 0.3
 
-  num_processes: 8
+  num_processes: 20
   corpora:
     - {name: train-clean-360, type: speech, split: train}
     - {name: train-clean-100, type: speech, split: train}
@@ -23,7 +23,9 @@ data:
     # - {name: FSD50K, type: noise, split: train-val}
     # - {name: musan, type: noise, split: train-val}
     # - {name: wham_noise, type: noise, split: train-val}
-    # - {name: dns_challenge, type: noise, split: train-val}
+    - {name: dns_challenge_train, type: speech, split: train}
+    # - {name: dns_challenge_val, type: speech, split: val}0
+    - {name: dns_challenge_noise, type: noise, split: train-val}
     # - {name: wind_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
   snr_dbs: [-9, -6, -3, 0, 3, 6, 9, 12, 15] # mixture of signal-to-noise ratios
@@ -123,7 +125,7 @@ train:
   debug: false
 
 evaluate:
-  epoch_loaded: 100
+  epoch_loaded: best
 
   data: 
     dir: "./wavs/se/test_wavs"

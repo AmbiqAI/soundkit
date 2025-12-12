@@ -17,9 +17,15 @@ import datetime
 from pathlib import Path
 from typing import Any
 import logging
+import time
 
 # === Third-Party Imports ===
 import tensorflow as tf
+try:
+    import pynvml
+    _NVML_AVAILABLE = True
+except Exception:
+    _NVML_AVAILABLE = False
 
 # === SoundKit Core Imports ===
 from soundkit.defines import SKTaskParams
@@ -65,7 +71,7 @@ def train_step(
         training: bool = True,
         feat_type: str = "mel",
         ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
-    """
+    """throughput_
     Executes a single training or validation step for the SE model.
 
     Args:
@@ -171,6 +177,7 @@ def run_epoch(
     train_tag = "train" if training else "val"
 
     loss_metric = tf.keras.metrics.Mean()
+    step_time_metric = tf.keras.metrics.Mean()
 
     # Initialize left-over state buffers for streaming STFT
     num_fft_bins = stft_feat["fft_size"] // 2 + 1
@@ -205,6 +212,7 @@ def run_epoch(
             states_audio_sn, states_audio_s = reset_states()
 
         audio_sn, audio_s, _ = batch
+        step_start = time.perf_counter()
 
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
@@ -261,6 +269,29 @@ def run_epoch(
                         'learning_rate',
                         optimizer.learning_rate,
                         step=total_steps)
+
+        # Running average step time (ms)
+        step_time_ms = (time.perf_counter() - step_start) * 1000.0
+        step_time_metric.update_state(step_time_ms)
+        if train_summary_writer is not None:
+            with train_summary_writer.as_default():
+                tf.summary.scalar(f'{train_tag}/step_time_ms', step_time_metric.result(), step=total_steps)
+
+        # GPU metrics every 10 steps (if NVML available)
+        if _NVML_AVAILABLE and (step % 10 == 0) and train_summary_writer is not None:
+            try:
+                pynvml.nvmlInit()
+                device_count = pynvml.nvmlDeviceGetCount()
+                with train_summary_writer.as_default():
+                    for idx in range(device_count):
+                        handle = pynvml.nvmlDeviceGetHandleByIndex(idx)
+                        util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+                        mem = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                        tf.summary.scalar(f'gpu/{idx}/utilization_percent', util.gpu, step=total_steps)
+                        mem_used_pct = (mem.used / max(mem.total, 1)) * 100.0
+                        tf.summary.scalar(f'gpu/{idx}/memory_used_percent', mem_used_pct, step=total_steps)
+            except Exception:
+                pass
 
         total_steps += 1
         # Print inline batch progress

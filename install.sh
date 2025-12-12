@@ -4,22 +4,34 @@ set -e  # Exit on error
 
 echo "🔧 Installing system dependencies..."
 sudo apt update
+
 sudo apt install -y python3-tk python3-pyqt5
 sudo apt install -y python3.10-dev portaudio19-dev
 
-#=== Install uv (Universal Virtualenv) ===
-# install uv to ~/.local/bin and update your shell PATH
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Ensure curl is installed
+if ! command -v curl >/dev/null 2>&1; then
+	echo "Installing curl..."
+	sudo apt install -y curl
+fi
 
-# make sure ~/.local/bin is on PATH for this session
-export PATH="$HOME/.local/bin:$PATH"
+#=== Install uv (Universal Virtualenv) ===
+
+# Install uv if not present
+if ! command -v uv >/dev/null 2>&1; then
+	echo "Installing uv (Universal Virtualenv)..."
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+	# make sure ~/.local/bin is on PATH for this session
+	export PATH="$HOME/.local/bin:$PATH"
+fi
 
 # verify
 uv --version
 
 # enable Bash completions (use zsh/fish/etc. if that's your shell)
-echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
-source ~/.bashrc
+if command -v uv >/dev/null 2>&1; then
+	echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
+	source ~/.bashrc
+fi
 
 echo "📦 Upgrading pip..."
 pip install --upgrade pip

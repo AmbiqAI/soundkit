@@ -17,6 +17,8 @@ from .sk_datasets import (
     load_test_clean,
     load_thchs30,
     load_wham_noise,
+    load_dns_challenge_train,
+    load_dns_challenge_val,
     load_dns_challenge_noise,
     load_wind_noise,
     load_fsd50k,
@@ -70,7 +72,12 @@ SKDatasetFactory.register("train-coros", load_train_coros)
 SKDatasetFactory.register("val-coros", load_val_coros)
 # Noise
 SKDatasetFactory.register("wham_noise", load_wham_noise)
-SKDatasetFactory.register("dns_challenge", load_dns_challenge_noise)
+
+SKDatasetFactory.register("dns_challenge_train", load_dns_challenge_train)
+SKDatasetFactory.register("dns_challenge_val", load_dns_challenge_val)
+SKDatasetFactory.register("dns_challenge_noise", load_dns_challenge_noise)
+
+
 SKDatasetFactory.register("FSD50K", load_fsd50k)
 SKDatasetFactory.register("ESC-50-master", load_esc50)
 SKDatasetFactory.register("musan", load_musan)

@@ -26,7 +26,9 @@ corpus2path_map= {
     "ESC-50-master": "wavs/noise/ESC-50-master",
     "ESC-50": "wavs/noise/ESC-50-master",
     "rirs_noises": "wavs/noise/RIRS_NOISES",
-    "dns_challenge": "wavs/noise/DNS-Challenge",
+    "dns_challenge_noise": "wavs/noise/DNS-Challenge/datasets_fullband/noise_fullband",
+    "dns_challenge_train": "wavs/noise/DNS-Challenge/datasets/clean",
+    "dns_challenge_val": "wavs/noise/DNS-Challenge/datasets/dev_testset",
     "wind_noise": "wavs/noise/wind_noise",
     "all_noises": "wavs/noise/",
 }
@@ -71,8 +73,9 @@ def get_wavefiles(
     lst = []
     for root, _, files in os.walk(f'{path_folder}'):
         for file in files:
-            if re.search(r'(wav$|flac$)', file):
-                lst += [os.path.join(root, file.strip())]
+            if not os.path.basename(file).startswith('._'):
+                if re.search(r'(wav$|flac$)', file):
+                    lst += [os.path.join(root, file.strip())]
     return lst
 
 # === Train/Val Corpora ===
@@ -335,8 +338,6 @@ def load_dns_challenge_noise(corpus: str) -> dict:
     wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets_fullband/noise_fullband')
     wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
     
-
-
     random.shuffle(wavs)
     split = len(wavs) // 5
 
@@ -344,6 +345,50 @@ def load_dns_challenge_noise(corpus: str) -> dict:
     files['train'] = wavs[split:] + wavs_wind_train
     files['val'] = wavs[:split]
     return files
+
+def load_dns_challenge_train(corpus: str) -> dict:
+    """
+    Load DNS-Challenge train (clean) corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        dict: Dictionary with 'train' containing lists of wave file paths.
+    """
+
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
+
+    wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets/clean')
+    # wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
+    
+    random.shuffle(wavs)
+    # split = len(wavs) // 5
+
+    return wavs
+
+def load_dns_challenge_val(corpus: str) -> dict:
+    """
+    Load DNS-Challenge val corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        dict: Dictionary with 'val' containing lists of wave file paths.
+    """
+
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
+
+    wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets/dev_testset')
+    # wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
+    
+    random.shuffle(wavs)
+    # split = len(wavs) // 5
+
+    return wavs
 
 def load_fsd50k(corpus: str) -> dict:
     """

@@ -60,10 +60,9 @@ class FeatMultiProcsClass(multiprocessing.Process):
         path_tfrecord=self.params.data['path_tfrecord']
         target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
-
-        for wavname in tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False):
+        random.shuffle(self.noise_list)
+        for id_clean, wavname in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
             # load clean speech
-
             clean = audio_read(
                 wavname,
                 sample_rate=target_sample_rate)
@@ -71,7 +70,9 @@ class FeatMultiProcsClass(multiprocessing.Process):
             # load noise
             noise = random_load_audio_from_list(
                 self.noise_list,
-                sample_rate=target_sample_rate)
+                sample_rate=target_sample_rate,
+                id = id_clean % len(self.noise_list)
+            )
 
             # load room impulse response (RIR)
             rir = None
@@ -117,6 +118,8 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 audio_s = dc_remove(audio_s)
             # print(f"[Process {self.proc_pid}] {wavname} -> {snr_db}dB")
             if self.debug:
+                import sounddevice as sd
+                sd.play(audio_s, samplerate=target_sample_rate)
                 self._debug_plot(audio_sn, audio_s, snr_db)
             else:
                 tfrecord_name = re.sub(r'^wavs', path_tfrecord,
