@@ -104,38 +104,45 @@ static ns_usb_config_t webUsbConfig = {
     .desc_url = &webusb_url // Filled in at runtime
 };
 
+alignas(16) uint32_t static dmaBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2];     // DMA target
+am_hal_audadc_sample_t static sLGSampleBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // working buffer
+                                                                                // used by AUDADC
+
+#ifndef NS_AMBIQSUITE_VERSION_R4_1_0
+am_hal_offset_cal_coeffs_array_t sOffsetCalib;
+#endif
+
+
 void audio_frame_callback(ns_audio_config_t *config, uint16_t bytesCollected) {
-    if (g_audioRecording) {
+    if (g_audioRecording) 
+    {
+        if (g_audioReady) // g_audioReady should be false here
+        {
+            ns_lp_printf("Overflow!\n");
+        }
         ns_audio_getPCM_v2(config, g_in16AudioDataBuffer);
         g_audioReady = true;
     }
 }
 
-ns_audio_config_t audio_config = {
-    .api = &ns_audio_V2_0_0,
+ns_audio_config_t audioConfig = {
+    .api = &ns_audio_V2_1_0,
     .eAudioApiMode = NS_AUDIO_API_CALLBACK,
     .callback = audio_frame_callback,
-    .audioBuffer = (void *)&g_in16AudioDataBuffer,
-#ifdef USE_AUDADC
-    .eAudioSource = NS_AUDIO_SOURCE_AUDADC,
-#else
-    .eAudioSource = NS_AUDIO_SOURCE_PDM,
-#endif
-    .sampleBuffer = audadcSampleBuffer,
-#ifdef USE_AUDADC
-    .workingBuffer = workingBuffer,
-#else
-    .workingBuffer = NULL,
-#endif
+    .audioBuffer = (void *) &g_in16AudioDataBuffer,
+    .eAudioSource = AUDIO_SOURCE,
+    .sampleBuffer = dmaBuffer,
+    .workingBuffer = sLGSampleBuffer,
     .numChannels = NUM_CHANNELS,
-    .numSamples = LEN_STFT_HOP,
-    .sampleRate = SAMPLING_RATE,
+    .numSamples = SAMPLES_IN_FRAME,
+    .sampleRate = SAMPLE_RATE,
     .audioSystemHandle = NULL, // filled in by init
     .bufferHandle = NULL,      // only for ringbuffer mode
-#if !defined(NS_AMBIQSUITE_VERSION_R4_1_0) && defined(NS_AUDADC_PRESENT)
+#ifndef NS_AMBIQSUITE_VERSION_R4_1_0
     .sOffsetCalib = &sOffsetCalib,
 #endif
 };
+
 
 // Custom power mode for USB+Audio
 const ns_power_config_t ns_power_usb = {
@@ -340,8 +347,13 @@ int main(void) {
 
     ns_itm_printf_enable();
     ns_interrupt_master_enable();
-
-    ns_audio_init(&audio_config);
+    
+    // -- Init the audio system
+    NS_TRY(ns_audio_init(&audioConfig), "Audio Initialization Failed.\n");
+    NS_TRY(ns_audio_set_gain(AM_HAL_PDM_GAIN_P195DB, AM_HAL_PDM_GAIN_P195DB), "Gain set failed.\n");
+    // NS_TRY(ns_audio_set_gain(24, 24), "Audio gain set failed.\n"); // AUDADC gain
+    NS_TRY(ns_start_audio(&audioConfig), "Audio Start Failed.\n");
+    
     ns_peripheral_button_init(&button_config_nnsp);
     ns_init_perf_profiler();
     ns_start_perf_profiler();
