@@ -114,31 +114,34 @@ am_hal_offset_cal_coeffs_array_t sOffsetCalib;
 
 
 void audio_frame_callback(ns_audio_config_t *config, uint16_t bytesCollected) {
-    if (g_audioRecording) 
-    {
-        if (g_audioReady) // g_audioReady should be false here
-        {
-            ns_lp_printf("Overflow!\n");
-        }
+    if (g_audioRecording) {
         ns_audio_getPCM_v2(config, g_in16AudioDataBuffer);
         g_audioReady = true;
     }
 }
 
-ns_audio_config_t audioConfig = {
+ns_audio_config_t audio_config = {
     .api = &ns_audio_V2_1_0,
     .eAudioApiMode = NS_AUDIO_API_CALLBACK,
     .callback = audio_frame_callback,
-    .audioBuffer = (void *) &g_in16AudioDataBuffer,
-    .eAudioSource = AUDIO_SOURCE,
-    .sampleBuffer = dmaBuffer,
-    .workingBuffer = sLGSampleBuffer,
+    .audioBuffer = (void *)&g_in16AudioDataBuffer,
+#ifdef USE_AUDADC
+    .eAudioSource = NS_AUDIO_SOURCE_AUDADC,
+#else
+    .eAudioSource = NS_AUDIO_SOURCE_PDM,
+#endif
+    .sampleBuffer = audadcSampleBuffer,
+#ifdef USE_AUDADC
+    .workingBuffer = workingBuffer,
+#else
+    .workingBuffer = NULL,
+#endif
     .numChannels = NUM_CHANNELS,
-    .numSamples = SAMPLES_IN_FRAME,
-    .sampleRate = SAMPLE_RATE,
+    .numSamples = LEN_STFT_HOP,
+    .sampleRate = SAMPLING_RATE,
     .audioSystemHandle = NULL, // filled in by init
     .bufferHandle = NULL,      // only for ringbuffer mode
-#ifndef NS_AMBIQSUITE_VERSION_R4_1_0
+#if !defined(NS_AMBIQSUITE_VERSION_R4_1_0) && defined(NS_AUDADC_PRESENT)
     .sOffsetCalib = &sOffsetCalib,
 #endif
 };
@@ -349,10 +352,10 @@ int main(void) {
     ns_interrupt_master_enable();
     
     // -- Init the audio system
-    NS_TRY(ns_audio_init(&audioConfig), "Audio Initialization Failed.\n");
+    NS_TRY(ns_audio_init(&audio_config), "Audio Initialization Failed.\n");
     NS_TRY(ns_audio_set_gain(AM_HAL_PDM_GAIN_P195DB, AM_HAL_PDM_GAIN_P195DB), "Gain set failed.\n");
     // NS_TRY(ns_audio_set_gain(24, 24), "Audio gain set failed.\n"); // AUDADC gain
-    NS_TRY(ns_start_audio(&audioConfig), "Audio Start Failed.\n");
+    NS_TRY(ns_start_audio(&audio_config), "Audio Start Failed.\n");
     
     ns_peripheral_button_init(&button_config_nnsp);
     ns_init_perf_profiler();
