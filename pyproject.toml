@@ -12,19 +12,23 @@ dependencies = [
     # Core & ML
     "tensorflow[and-cuda]~=2.15.1",
     "tensorboard>=2.15,<2.16",
-    "torch >= 2.5, < 2.7",
-    "torchvision~=0.22.0",
-    "torchaudio~=2.7.0",
-    "torchmetrics~=1.7.1",
+    "torch>=2.6.0",          # Changed to match current stable
+    "torchvision~=0.21.0",   # Downgraded from 0.22 (unreleased)
+    "torchaudio~=2.6.0",     # Downgraded from 2.7 (unreleased)
+    "torchmetrics~=1.6.0",   # Downgraded from 1.7 (unreleased)
 
     # Scientific and Data Utilities
     "numpy>=1.21,<2.0",
     "scipy>=1.8,<2.0",
     "pyyaml>=6.0,<7.0",
-    "pydantic~=2.11",
+    "pydantic~=2.10",        # Downgraded from 2.11 (unreleased)
     "argdantic~=1.3",
     "omegaconf~=2.3",
     "tqdm>=4.66,<5.0",
+    
+    # Explicit build fixes (Prevent compiling from source)
+    "h5py>=3.10.0",
+    "soxr>=0.3.7",
 
     # Audio & DSP
     "librosa>=0.9,<0.11",
