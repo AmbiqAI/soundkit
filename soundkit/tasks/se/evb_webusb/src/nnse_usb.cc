@@ -147,6 +147,7 @@ ns_audio_config_t audio_config = {
 };
 
 
+
 // Custom power mode for USB+Audio
 const ns_power_config_t ns_power_usb = {
     .api = &ns_power_V1_0_0,
