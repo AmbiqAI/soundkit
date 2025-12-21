@@ -6,7 +6,7 @@ extern "C" {
 #include <stdint.h>
 
 // feature parameters of NNSE:
-#define FEATURE_CONTEXT 6
+#define FEATURE_CONTEXT 1
 #define FEATURE_QBIT 8
 #define FEATURE_NUM_MFC 72
 #define FEATURE_WINSIZE 480

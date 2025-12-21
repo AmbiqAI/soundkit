@@ -113,6 +113,16 @@ def demo_evb(params: SKTaskParams):
         mel_filters=fbanks,
         bank_type=params.train['feature']['type'])
 
+    if params.train['feature']['type'] == 'erb_complex':
+        invfilterbank_name='filter_banks_inv'
+        fbanks = tf.identity(feat_extractor.mel_filter_inv)
+        fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
+
+        gen_mel_c(
+            f"{evb_src_tflm_dir}/{invfilterbank_name}.c",
+            invfilterbank_name,
+            mel_filters=fbanks,
+            bank_type=params.train['feature']['type'])
     # === Generate feature statstics ===
     if params.train.standardization:
         stats_name = 'stats.pkl'
@@ -122,12 +132,16 @@ def demo_evb(params: SKTaskParams):
     else:
         stats = None
 
+
+    mean_t = stats['nMean_feat'] if stats is not None else None
+    stdinv_t = stats['nInvStd'] if stats is not None else None
+
     generate_feature_c_files(
         file_name="def_nn3_se",
         param_struct_name="params_nn3_se",
         dir=evb_src_tflm_dir,
-        feature_mean=stats['nMean_feat'],
-        feature_std=stats['nInvStd'],
+        feature_mean=mean_t,
+        feature_std=stdinv_t,
         sampling_rate=params.data['signal']['sampling_rate'],
         fftsize=feat_params['fft_size'],
         winsize_stft=feat_params['frame_size'],
@@ -138,6 +152,7 @@ def demo_evb(params: SKTaskParams):
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        feature_type=params.train['feature']['type'],
     )
 
     # === Define Key Paths ===
@@ -291,9 +306,9 @@ def demo_pc(params: SKTaskParams):
         dtype=dtype,
         path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
-    # interpreter = tf.lite.Interpreter(
-    #     model_content=tflite_fp16_model)
-    # interpreter.allocate_tensors()  # Needed before execution!
+    interpreter = tf.lite.Interpreter(
+        model_content=tflite_fp16_model)
+    interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
         stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
@@ -301,7 +316,7 @@ def demo_pc(params: SKTaskParams):
         stats = None
 
     model_tflite = TFLiteAudioModel(
-        model_content=tflite_fp16_model,
+        interpreter=interpreter,
         dtype=dtype,
     )
 
@@ -374,9 +389,9 @@ def demo_pc(params: SKTaskParams):
             """
             if np.iscomplexobj(spec):
                 if params.train.feature.type == 'erb_complex':
-                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2])
+                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
                     tfmask = erb.bs(tfmask)
-                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
+                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
                 
                 # print(tfmask.shape)
                 # print(type(tfmask))

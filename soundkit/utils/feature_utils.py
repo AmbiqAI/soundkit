@@ -77,7 +77,7 @@ class FeatureExtractor:
             self.mel_filter = tf.constant(fbanks.T, dtype=tf.float32)
             # self.mel_filter = self.mel_filter / tf.sqrt(
             #     tf.reduce_sum(self.mel_filter**2, axis=0, keepdims=True))
-            
+           
             self.mel_filter_inv = tf.constant(fbanks, dtype=tf.float32)
             self.mel_filter_inv = self.mel_filter_inv / tf.sqrt(
                 tf.reduce_sum(self.mel_filter_inv**2, axis=0, keepdims=True))
@@ -93,12 +93,15 @@ class FeatureExtractor:
             self.erb = ERB(
                 erb_subband_1=65,
                 erb_subband_2=64)
+            self.mel_filter = self.erb.filter_map
+            self.mel_filter_inv = self.erb.filter_inv_map
             self.dim_feat = 129
         elif feat_params['type'] == "erb_mag":
             self.erb = ERB(
                 erb_subband_1=65,
                 erb_subband_2=64)
             self.dim_feat = 129
+            self.mel_filter = self.erb.filter_map
         else:
             dim_feat = (feat_params['fft_size'] // 2) + 1
             self.mel_filter = tf.eye(

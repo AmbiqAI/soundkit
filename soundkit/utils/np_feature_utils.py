@@ -4,6 +4,7 @@ from .np_stft import StreamingSTFT, StreamingISTFT
 from soundkit.utils.mel import gen_mel_bank
 from soundkit.utils.mel_spec_gen import melspec_gen
 from soundkit.utils.erb import ERB
+from soundkit.utils.converter_fix_point import fakefix
 def log10_eps(val, eps = 2.0**-15):
     """
     log10 with minimum eps
@@ -127,8 +128,11 @@ class FeatureExtractor_np:
         
         # import pdb; pdb.set_trace()
         # erb_spec = np.transpose(erb_spec, (0,2, 3, 1))  # Shape: [T, F, 2]
-
-        erb_complex = erb_spec[0] + 1j * erb_spec[1]
+        # real = fakefix(erb_spec[0], 16, 8)
+        # imag = fakefix(erb_spec[1], 16, 8)
+        real = erb_spec[0]
+        imag = erb_spec[1]
+        erb_complex = real + 1j * imag
         return erb_complex, spec.copy()
     
     def _extract_erb_mag(
