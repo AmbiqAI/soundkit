@@ -100,8 +100,9 @@ class FeatureExtractor:
             self.erb = ERB(
                 erb_subband_1=65,
                 erb_subband_2=64)
-            self.dim_feat = 129
             self.mel_filter = self.erb.filter_map
+            self.mel_filter_inv = self.erb.filter_inv_map
+            self.dim_feat = 129
         else:
             dim_feat = (feat_params['fft_size'] // 2) + 1
             self.mel_filter = tf.eye(

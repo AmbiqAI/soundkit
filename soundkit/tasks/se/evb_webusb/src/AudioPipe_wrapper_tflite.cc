@@ -125,6 +125,9 @@ int AudioPipe_wrapper_init(void)
     
     for (int m = 0; m < numOutputs; m++) {
         ns_lp_printf("Output tensor %d has %d bytes\n", m, pt_tflm->interpreter->output(m)->bytes);
+        ns_lp_printf("output scale=%f\n", pt_tflm->interpreter->output(m)->params.scale);
+        ns_lp_printf("output zero_point=%d\n", pt_tflm->interpreter->output(m)->params.zero_point);
+        
         nn_output_dim = 1;
         for (int i = 0; i < pt_tflm->interpreter->output(m)->dims->size; i++) {
             nn_output_dim *= pt_tflm->interpreter->output(m)->dims->data[i];
@@ -163,7 +166,7 @@ int AudioPipe_wrapper_frameProc(
     1. iir for dc remove
     2. melspectrogram
     */
-    int fft_bins = (params_nn3_se.fftsize >> 1) + 1;
+    int fft_bins = 257;
     int32_t *pt_spec = FEAT_INST.state_stftModule.spec;
     int32_t *pt_spec_buffer = spec_buffer;
     static int32_t tmp_v32[514];
@@ -187,7 +190,7 @@ int AudioPipe_wrapper_frameProc(
     IIR_CLASS_exec(&dcrm_inst, pt_tmp16, pcm_input, params_nn3_se.hopsize_stft);
     FeatureClass_execute(&FEAT_INST, pt_tmp16);
 
-    int fft_bins_double = fft_bins * 2;
+    int fft_bins_double = 514;
     // take out the oldest spec & cyclic insert the new one  at the end
     if (num_lookeahead > 0)
     {
@@ -240,7 +243,7 @@ int AudioPipe_wrapper_frameProc(
         float32_t out; 
         out = (float32_t) (tflm.model_output[0]->data.i16[i] - output_zero_point);
         out = out * output_scale;
-        tmp_v32[i] = (int32_t)(out * 32768.0f); // q15
+        tmp_v32[i] = (int32_t)MAX(MIN((out * 32768.0f), MAX_INT32_T), MIN_INT32_T); // q15
         // tmp_16s[i] = (int16_t) MAX(MIN(out_32s, 32767), -32768); // clamp to 16-bit range
     }
 
@@ -254,6 +257,11 @@ int AudioPipe_wrapper_frameProc(
         for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
             inputs_blk[i] = tmp_v32[2*i];
         
+        // ns_printf("ERB est Real: \n");
+        // for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+        //     ns_printf("%d, ", inputs_blk[i]);
+        // ns_printf("\n");
+
         melSpecProc(
             inputs_blk, // input
             mask_est_blk, // output
@@ -261,17 +269,42 @@ int AudioPipe_wrapper_frameProc(
             fft_bins // num_fft_bins
         );
 
+        // ns_printf("ERB Mel Inv Real: \n");
+        // for (int i = 0; i < 257; i++)
+        //     ns_printf("%d, ", mask_est_blk[i]);
+        // ns_printf("\n");
+
         // imag part
         for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
             inputs_blk[i] = tmp_v32[2*i+1];
         
+        // ns_printf("ERB est Imag: \n");
+        // for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+        //     ns_printf("%d, ", inputs_blk[i]);
+        // ns_printf("\n");
+
         melSpecProc(
             inputs_blk, // input
             mask_est_blk + fft_bins, // output
             filter_banks_inv,
             fft_bins // num_fft_bins
         );
+        
+        // ns_printf("ERB Mel Inv Imag: \n");
+        // for (int i = 0; i < 257; i++)
+        //     ns_printf("%d, ", mask_est_blk[257+i]);
+        // ns_printf("\n");
 
+        pt_out = mask_est_blk;
+    }
+    else if (params_nn3_se.feature_type == feat_erb_mag)
+    {
+        melSpecProc(
+            tmp_v32, // input
+            mask_est_blk, // output
+            filter_banks_inv,
+            fft_bins // num_fft_bins
+        );
         pt_out = mask_est_blk;
     }
     else

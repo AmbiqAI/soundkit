@@ -116,7 +116,7 @@ uint8_t ucHeap[RPCC_HEAP_SIZE] __attribute__((aligned(4)));
 static uint8_t my_cdc_rx_ff_buf[MY_USB_RX_BUFSIZE];
 static uint8_t my_cdc_tx_ff_buf[MY_USB_TX_BUFSIZE];
 // End RPC Stuff
-
+extern const int16_t audio_data[];
 int main(void) {
     ns_core_config_t ns_core_cfg = {.api = &ns_core_V1_0_0};
 
@@ -213,183 +213,200 @@ int main(void) {
     NS_TRY(ns_rpc_genericDataOperations_init(&rpcConfig), "RPC Init Failed\n"); // init RPC and USB
 
 
-#if PERF_TEST==1
+
     ns_lp_printf("\n|------ MCPS Measurement: run 100 times of inference ------|\n");
     
     // -- Init the NNSE2 model
     AudioPipe_wrapper_init();
     AudioPipe_wrapper_reset();
-    int16_t *pcm_input = (int16_t*) audioDataBuffer;
-    int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
+
+    int16_t *pt_pcm_input = (int16_t*) audio_data + 160 * 500;
+    int16_t pcm_input[160];
     
-    static ns_perf_counters_t pp;
-    ns_init_perf_profiler();
-    ns_reset_perf_counters();
-    ns_start_perf_profiler();
-    for (int i=0; i < 100; i++)
-    {
-        AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
-    }
-    ns_printf("\n");
-    ns_stop_perf_profiler();
-    ns_capture_perf_profiler(&pp);
-    ns_print_perf_profile(&pp);
-    ns_lp_printf("cpu freq=%d\n", g_ui32TrimVer);
-    ns_lp_printf("Model execution completed\n");
-    ns_lp_printf("Output after execution\n");
-    ns_lp_printf("|------End MCPS Measurement ------|\n\n");
+    int16_t pcm_output[160];
     
-    ns_printf("\nElapsedtime measurement\n");
-    NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
-    tic();
-    for (int i=0; i < 100; i++)
+    for (int i=500; i < 510; i++)
     {
-        AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
-    }
-    elapsedTime = toc();
-    ns_printf("Elapsed time: %d us\n", elapsedTime);
-#endif // PERF_TEST
-
-    // There is a chicken-and-egg thing involved in getting the RPC
-    // started. The PC-side server cant start until the USB TTY interface
-    // shows up as a device, and that doesn't happen until we start servicing
-    // TinyUSB, and even then it doesn't happen immediately.
-    //
-    // To address this, we loop waiting for a button press, servicing
-    // USB. This gives the user a chance to start the server then
-    // pressing the button to let the EVB it is ready to start RPCing.
-
-    ns_printf("Open the other terminal\n");
-    ns_printf("Type $ soundkit -t se -m demo -c your_config.yaml demo.platform=evb --view\n");
-
-    ns_printf("Start the PC-side server, then press Button 0 to get started\n");
-    while (g_intButtonPressed == 0) {
-        ns_delay_us(1000);
-    }
-
-    // g_intButtonPressed is retired after this point.
-    ns_printf("Starting remote procedure call demo.\n");
-
-    // In the app loop we service USB and the RPC server while
-    // we collect data and send it over the various RPC
-    // interfaces. Any incoming RPC calls will result in calls to the
-    // RPC handler functions defined above.
-
-#if GUI_ON==1
-    // -- Init the NNSE2 model
-    ns_printf("Type $tools/python audioview_se.py\n");
-#if PERF_TEST==0
-    AudioPipe_wrapper_init();
-#endif
-    while (1) 
-    {
-        g_audioRecording = false;
+        // warm up
+        // ns_printf("Processing frame %d\n", i);
+        memcpy(pcm_input, pt_pcm_input, sizeof(pcm_input));
         
-        // ns_deep_sleep();
-        ns_lp_printf("\nPress record button on GUI to start!\n");
-        while (1) // check for record button press
-        {
-            ns_rpc_data_computeOnPC(&computeBlock, &resultBlock);
-            int recording=resultBlock.buffer.data[0];
-            ns_rpc_data_clientDoneWithBlockFromPC(&resultBlock);
-            if (recording==1)
-            {
-                AudioPipe_wrapper_reset(); // reset the Audio Pipe
-                g_audioRecording = true;
-                break;
-            }
-            am_hal_delay_us(20000); 
-        }
+        AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
+        pt_pcm_input += 160;
+    }
 
-        while (1) // record audio and check for stop button press
-        {   
-            // ns_deep_sleep();
-            if (g_audioReady) 
-            {
-                // execution of each time frame data
-                int16_t *pcm_input = audioDataBuffer;
-                int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
+
+//     int16_t *pcm_input = (int16_t*) audioDataBuffer;
+//     int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
+    
+//     static ns_perf_counters_t pp;
+//     ns_init_perf_profiler();
+//     ns_reset_perf_counters();
+//     ns_start_perf_profiler();
+//     for (int i=0; i < 100; i++)
+//     {
+//         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
+//     }
+//     ns_printf("\n");
+//     ns_stop_perf_profiler();
+//     ns_capture_perf_profiler(&pp);
+//     ns_print_perf_profile(&pp);
+//     ns_lp_printf("cpu freq=%d\n", g_ui32TrimVer);
+//     ns_lp_printf("Model execution completed\n");
+//     ns_lp_printf("Output after execution\n");
+//     ns_lp_printf("|------End MCPS Measurement ------|\n\n");
+    
+//     ns_printf("\nElapsedtime measurement\n");
+//     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
+//     tic();
+//     for (int i=0; i < 100; i++)
+//     {
+//         AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
+//     }
+//     elapsedTime = toc();
+//     ns_printf("Elapsed time: %d us\n", elapsedTime);
+// #endif // PERF_TEST
+
+//     // There is a chicken-and-egg thing involved in getting the RPC
+//     // started. The PC-side server cant start until the USB TTY interface
+//     // shows up as a device, and that doesn't happen until we start servicing
+//     // TinyUSB, and even then it doesn't happen immediately.
+//     //
+//     // To address this, we loop waiting for a button press, servicing
+//     // USB. This gives the user a chance to start the server then
+//     // pressing the button to let the EVB it is ready to start RPCing.
+
+//     ns_printf("Open the other terminal\n");
+//     ns_printf("Type $ soundkit -t se -m demo -c your_config.yaml demo.platform=evb --view\n");
+
+//     ns_printf("Start the PC-side server, then press Button 0 to get started\n");
+//     while (g_intButtonPressed == 0) {
+//         ns_delay_us(1000);
+//     }
+
+//     // g_intButtonPressed is retired after this point.
+//     ns_printf("Starting remote procedure call demo.\n");
+
+//     // In the app loop we service USB and the RPC server while
+//     // we collect data and send it over the various RPC
+//     // interfaces. Any incoming RPC calls will result in calls to the
+//     // RPC handler functions defined above.
+
+// #if GUI_ON==1
+//     // -- Init the NNSE2 model
+//     ns_printf("Type $tools/python audioview_se.py\n");
+// #if PERF_TEST==0
+//     AudioPipe_wrapper_init();
+// #endif
+//     while (1) 
+//     {
+//         g_audioRecording = false;
+        
+//         // ns_deep_sleep();
+//         ns_lp_printf("\nPress record button on GUI to start!\n");
+//         while (1) // check for record button press
+//         {
+//             ns_rpc_data_computeOnPC(&computeBlock, &resultBlock);
+//             int recording=resultBlock.buffer.data[0];
+//             ns_rpc_data_clientDoneWithBlockFromPC(&resultBlock);
+//             if (recording==1)
+//             {
+//                 AudioPipe_wrapper_reset(); // reset the Audio Pipe
+//                 g_audioRecording = true;
+//                 break;
+//             }
+//             am_hal_delay_us(20000); 
+//         }
+
+//         while (1) // record audio and check for stop button press
+//         {   
+//             // ns_deep_sleep();
+//             if (g_audioReady) 
+//             {
+//                 // execution of each time frame data
+//                 int16_t *pcm_input = audioDataBuffer;
+//                 int16_t *pcm_output = audioDataBuffer + SAMPLES_IN_FRAME;
                 
-                AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
+//                 AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
                 
-                ns_rpc_data_sendBlockToPC(&outBlock);
-                ns_rpc_data_computeOnPC(&computeBlock, &resultBlock);
-                int recording=resultBlock.buffer.data[0];
-                ns_rpc_data_clientDoneWithBlockFromPC(&resultBlock);
-                g_audioReady = false;
-                if (recording==0)
-                {
-                    g_audioRecording = false;
-                    g_audioReady = false;
-                    break;
-                }
+//                 ns_rpc_data_sendBlockToPC(&outBlock);
+//                 ns_rpc_data_computeOnPC(&computeBlock, &resultBlock);
+//                 int recording=resultBlock.buffer.data[0];
+//                 ns_rpc_data_clientDoneWithBlockFromPC(&resultBlock);
+//                 g_audioReady = false;
+//                 if (recording==0)
+//                 {
+//                     g_audioRecording = false;
+//                     g_audioReady = false;
+//                     break;
+//                 }
                 
-            }
+//             }
             
-        }  // while(1)
+//         }  // while(1)
         
-    } // while(1)
-#else
+//     } // while(1)
+// #else
     
-    #if PERF_TEST==0
-    AudioPipe_wrapper_init();
-    #endif
+//     #if PERF_TEST==0
+//     AudioPipe_wrapper_init();
+//     #endif
     
-    int16_t *pt_button_send=(int16_t*) audioDataBuffer + 2 * SAMPLES_IN_FRAME;
-    NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
-    tic();
-    while (1)
-    {
-        while (1)
-        {
-            if (g_intButtonPressed==1)
-            {
-                g_audioRecording = true;
-                g_intButtonPressed=0;
-                AudioPipe_wrapper_reset();
-                ns_printf("Recording...\n");
-                ns_printf("Press Button 0 to stop recording\n");
-                break;
-            }
-            am_hal_delay_us(20000);
-        }
-        int count_frame=0;
-        while (1)
-        {
-            if (g_audioReady) 
-            {
-                // execution of each time frame data
-                if (count_frame%100==0)
-                {
-                    count_frame=0;
-                    ns_printf(".");
-                }
+//     int16_t *pt_button_send=(int16_t*) audioDataBuffer + 2 * SAMPLES_IN_FRAME;
+//     NS_TRY(ns_timer_init(&tickTimer), "Timer Init Failed\n");
+//     tic();
+//     while (1)
+//     {
+//         while (1)
+//         {
+//             if (g_intButtonPressed==1)
+//             {
+//                 g_audioRecording = true;
+//                 g_intButtonPressed=0;
+//                 AudioPipe_wrapper_reset();
+//                 ns_printf("Recording...\n");
+//                 ns_printf("Press Button 0 to stop recording\n");
+//                 break;
+//             }
+//             am_hal_delay_us(20000);
+//         }
+//         int count_frame=0;
+//         while (1)
+//         {
+//             if (g_audioReady) 
+//             {
+//                 // execution of each time frame data
+//                 if (count_frame%100==0)
+//                 {
+//                     count_frame=0;
+//                     ns_printf(".");
+//                 }
                 
-                AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
-                if (g_intButtonPressed==1)
-                    *pt_button_send=1;
-                else
-                    *pt_button_send=0;
-                ns_rpc_data_sendBlockToPC(&outBlock);
-                g_audioReady = false;
-                count_frame++;
-                if (g_intButtonPressed==1)
-                {
-                    g_audioRecording = false;
-                    g_audioReady = false;
-                    g_intButtonPressed=0;
-                    break;
-                }
-            }
-        }
-        ns_printf("\nPress Button 0 to start recording\n");
-    }
-    ns_printf("\n");
-    elapsedTime = toc();
-    ns_printf("Elapsed time: %d us\n", elapsedTime);
-    ns_rpc_data_remotePrintOnPC(
-        "EVB Says this: Samples Sent.\n");
-    ns_printf("Done\n");
+//                 AudioPipe_wrapper_frameProc(pcm_input, pcm_output);
+//                 if (g_intButtonPressed==1)
+//                     *pt_button_send=1;
+//                 else
+//                     *pt_button_send=0;
+//                 ns_rpc_data_sendBlockToPC(&outBlock);
+//                 g_audioReady = false;
+//                 count_frame++;
+//                 if (g_intButtonPressed==1)
+//                 {
+//                     g_audioRecording = false;
+//                     g_audioReady = false;
+//                     g_intButtonPressed=0;
+//                     break;
+//                 }
+//             }
+//         }
+//         ns_printf("\nPress Button 0 to start recording\n");
+//     }
+//     ns_printf("\n");
+//     elapsedTime = toc();
+//     ns_printf("Elapsed time: %d us\n", elapsedTime);
+//     ns_rpc_data_remotePrintOnPC(
+//         "EVB Says this: Samples Sent.\n");
+//     ns_printf("Done\n");
 
-#endif
+// #endif
 }

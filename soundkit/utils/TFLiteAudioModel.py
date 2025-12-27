@@ -73,13 +73,15 @@ class TFLiteAudioModel:
             input_tensor = input_tensor.astype(np.int8 if self.dtype == "int8" else np.int16)
         else:
             input_tensor = input_tensor.astype(np.float32)
+
+
         self.interpreter.set_tensor(self.input_details['index'], input_tensor)
 
 
         # Inference
         self.interpreter.invoke()
         output_tensor = self.interpreter.get_tensor(self.output_details['index'])
-
+        # import pdb; pdb.set_trace()
         # Dequantize if needed
         if self.dtype in ("int8", "int16"):
             scale, zero_point = self.output_details["quantization"]

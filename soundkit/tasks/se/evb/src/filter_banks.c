@@ -1,4 +1,4 @@
-// bank type: erb_complex
+// bank type: erb_mag
 #include <stdint.h>
 const int16_t mel_coeff_nfilt129 = 129;
 const int16_t filter_banks[] = {

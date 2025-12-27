@@ -12,7 +12,8 @@ typedef enum {
     feat_spec = 1,
     feat_logpspec = 2,
     feat_spec_erb = 3,
-    feat_hybrid = 4
+    feat_erb_mag = 4,
+    feat_hybrid = 5
 } FEATURE_TYPE_E;
 
 typedef struct {

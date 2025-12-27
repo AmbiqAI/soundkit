@@ -105,7 +105,6 @@ def train_step(
                 est = tf.transpose(est, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
                 est = erb.bs(est)
                 est = tf.transpose(est, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
-
             est_real = est[..., 0]
             est_imag = est[..., 1]
             est = tf.complex(
@@ -118,7 +117,7 @@ def train_step(
             loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
             if feat_type == "erb_mag":
-                est = erb.bs(est)
+                est = erb.bs(est[..., 0])
             est = tf.complex(est, 0.0)
             spec_en_delay = est * batch["spec_sn_delay"]
 
@@ -206,7 +205,7 @@ def run_epoch(
 
         model.reset_states()
         return states_audio_sn, states_audio_s
-
+    cali_data=[]
     for step, batch in enumerate(dataset):
         if params.train['reset_states_every_batch']:
             states_audio_sn, states_audio_s = reset_states()
@@ -219,7 +218,17 @@ def run_epoch(
             audio_sn, states=states_audio_sn)
         _, spec_s, states_audio_s = feat_extractor(
             audio_s, states=states_audio_s)
+        
+        rr = tf.math.real(feat_sn)
+        ii = tf.math.imag(feat_sn)
 
+        tmp = tf.stack([rr, ii], axis=-1)
+        cali_data.append(tmp.numpy())
+        import numpy as np
+        if tf.concat(cali_data, axis=0).shape[0] >= 32:
+            np.save("feat_sn.npy", tf.concat(cali_data, axis=0).numpy())
+        
+        import pdb; pdb.set_trace()
         # Apply lookahead
         spec_sn_delay = buffer_sn.apply(spec_sn)
         spec_s_delay = buffer_s.apply(spec_s)

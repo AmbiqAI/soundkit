@@ -158,6 +158,18 @@ def evaluate(params: SKTaskParams):
         )
 
         audio_sn, audio_s, _ = batch
+        # save to wav for int16, 16kHz
+        tmp = audio_sn[0].numpy()
+        sf.write("tmp_sn.wav", tmp, params.data['signal']['sampling_rate'])
+        xx, fs = sf.read("tmp_sn.wav", dtype='int16')  # to make sure the file is written before proceeding
+        # save .c file for evb test
+
+        with open("audio_data.c", "w") as f:
+            f.write("int16_t audio_data[] = {\n")
+            f.write(",\n".join(str(sample) for sample in xx))
+            f.write("\n};\n")
+            f.write(f"const int audio_data_len = {len(xx)};\n")
+        
 
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
@@ -236,6 +248,14 @@ def evaluate(params: SKTaskParams):
             if params.train.feature.type == 'erb_complex':
                 from soundkit.utils.erb import ERB
                 erb = ERB(erb_subband_1=65, erb_subband_2=64)
+                
+                rr = np.array([8574, 11464, 13598, 14132, 14528, 14528, 7798, 6448, 12946, 14278, 15628, 16560, 16436, 15700, 14938, 14756, 7096, 5200, 3574, 2772, 2192, 2192, 2192, 2192, 3150, 3930, 11340, 12660, 24442, 27198, 36617, 36617, 37823, 41171, 32664, 30120, 20066, 17000, 17624, 17104, 18444, 19850, 28474, 33597, 35189, 36269, 33393, 30564, 23486, 19694, 14060, 11304, 5408, 2362, -134, -134, -134, -134, 806, 1536, 13398, 18162, 16964, 17644, 18286, 17762, 16506, 15750, 13796, 16192, 14132, 13974, 20206, 21434, 28412, 30150, 32847, 29512, 28412, 25694, 14528, 14528, 7096, 5200, 3574, 2772, 1968, 1782, 844, 298, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, 8406, 11066, 3856, 1052, -282,], dtype=np.int32)
+                ii = np.array([-22, 0, 0, -22, -22, -22, 0, 0, 0, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -74, -112, -186, -186, -186, -262, -170, -150, -74, 0, -22, -22, 0, 0, -22, -96, -74, -74, -58, 22, 22, 22, 22, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 22, 22, 22, 22, -58, -38, -58, -58, -58, -74, -74, -134, -96, -112, -96, -22, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -22, -22, 0, 0, 0, ], dtype=np.int32)
+                
+                aa = np.stack((rr, ii), axis=0).astype(np.float32) / 32768.0
+                oo = (erb.bs(aa) * 32768.0).numpy().astype(np.int32)
+
+                
                 tfmask = tf.transpose(tfmask, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
                 tfmask = erb.bs(tfmask)
                 tfmask = tf.transpose(tfmask, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
@@ -253,7 +273,7 @@ def evaluate(params: SKTaskParams):
             elif params.train.feature.type == 'erb_mag':
                 from soundkit.utils.erb import ERB
                 erb = ERB(erb_subband_1=65, erb_subband_2=64)
-                tfmask = erb.bs(tfmask)
+                tfmask = erb.bs(tfmask[..., 0])
             pspec_en_delay = tfmask * pspec_sn_delay
             
             spec_en_delay = polar_to_complex(

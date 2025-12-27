@@ -36,12 +36,14 @@ def generate_feature_c_files(
 
     else:
         filter_name_def = f"extern const int16_t {filterbank_name}[];"
-        if feature_type == "erb_complex":
+        if feature_type == "erb_complex" or feature_type == "erb_mag":
             invfilter_name_def = f"extern const int16_t {filterbank_name}_inv[];"
     if feature_type == "mel":
         feature_type_c="feat_mel"
     elif feature_type == "erb_complex":
         feature_type_c="feat_spec_erb"
+    elif feature_type == "erb_mag":
+        feature_type_c="feat_erb_mag"
     elif feature_type == "logpspec":
         feature_type_c="feat_logpspec"
     elif feature_type == "hybrid":

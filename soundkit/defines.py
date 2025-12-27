@@ -206,6 +206,7 @@ class ExportConfig:
     dtype: str = ""
     eval: bool = False
     qbit_input: int = 8
+    calibration_samples: int | None = 100
     epoch_loaded: Any = "random"
     tflite_dir: str = ""
     # Check epoch_loaded
@@ -227,6 +228,10 @@ class DemoConfig:
     pre_gain: float = 1.0
     filename: str = ""
     param_struct_name: str = "model_params"
+    dtype: str = "int16"
+    nbits: int = 16
+    qbits: int = 8
+    calibration_samples: int | None = None
     num_utterances_registered: int = 4 # number of registered utterances for VAD ID
     frames_vad_trigger_id: int = 180 # number of frames to trigger VAD for ID
     # Check epoch_loaded

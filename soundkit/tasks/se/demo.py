@@ -6,10 +6,7 @@ import shutil
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
@@ -17,12 +14,16 @@ from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.np_stft import StreamingISTFT
-from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.converter_fix_point import (
+    fakefix_tf,
+    int2str_array
+)
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.mel import gen_mel_c
 from soundkit.utils.erb import ERB
 from .export import export
+
 erb = ERB(
     erb_subband_1=65,
     erb_subband_2=64,
@@ -42,15 +43,31 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
+    # === export TFLite File ===
+    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
+    tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+    log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+    params.export['epoch_loaded'] = params.demo['epoch_loaded']
+    params.export['tflite_dir'] = params.demo['tflite_dir']
+    params.export["calibration_samples"] = params.demo["calibration_samples"]
+    params.export["tflite_dir"] = params.demo["tflite_dir"]
+    export(params)
 
+    # === Choose platform ===
     if params.demo.platform == 'evb':
-        demo_evb(params)
+        demo_evb(params, tflite_path_src)
     elif params.demo.platform == 'pc':
-        demo_pc(params)
+        demo_pc(params, tflite_path_src)
     else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. "
+            "Supported platforms are 'evb' and 'pc'."
+        )
 
-def demo_evb(params: SKTaskParams):
+def demo_evb(
+        params: SKTaskParams,
+        tflite_path_src: str
+        ):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
@@ -62,8 +79,6 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
-    tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
 
@@ -87,15 +102,26 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
+
+    # Extract parameters for readability
     feat_params = params.train['feature']
+    framesize = feat_params['frame_size']
+    hopsize = feat_params['hop_size']
+
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=feat_params['frame_size'],
-        hop=feat_params['hop_size'])
+        win_size=framesize,
+        hop=hopsize)
     win_coeff = fakefix_tf(win_coeff, 16, 15)
-    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
-    c_code = '#include <stdint.h>\n\n' + c_code
+
+    # Build the file content as a list of strings
+    lines = [
+        '#include <stdint.h>\n',
+        f"// stft window_coeff (framesize={framesize}, hopsize={hopsize})",
+        int2str_array(stft_win_name, win_coeff.numpy() * 32768, nbits=16)
+    ]
+
+    c_code = "\n".join(lines)
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
     # === Generate C Code Filter Banks ===
@@ -113,7 +139,7 @@ def demo_evb(params: SKTaskParams):
         mel_filters=fbanks,
         bank_type=params.train['feature']['type'])
 
-    if params.train['feature']['type'] == 'erb_complex':
+    if params.train['feature']['type'] in ['erb_complex', 'erb_mag']:
         invfilterbank_name='filter_banks_inv'
         fbanks = tf.identity(feat_extractor.mel_filter_inv)
         fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
@@ -123,6 +149,7 @@ def demo_evb(params: SKTaskParams):
             invfilterbank_name,
             mel_filters=fbanks,
             bank_type=params.train['feature']['type'])
+
     # === Generate feature statstics ===
     if params.train.standardization:
         stats_name = 'stats.pkl'
@@ -131,7 +158,6 @@ def demo_evb(params: SKTaskParams):
             stats_name=stats_name)
     else:
         stats = None
-
 
     mean_t = stats['nMean_feat'] if stats is not None else None
     stdinv_t = stats['nInvStd'] if stats is not None else None
@@ -156,23 +182,17 @@ def demo_evb(params: SKTaskParams):
     )
 
     # === Define Key Paths ===
-    src_tflite_path = Path(params.demo['tflite_dir']) / tflite_filename_src
+    tflite_filename = "net.tflite"
 
     tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
-    dst_tflite_path = tools_dir / tflite_filename
+    tflite_path_dst = tools_dir / tflite_filename
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
-
-    # === export TFLite File ===
-    log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
-    params.export['epoch_loaded'] = params.demo['epoch_loaded']
-    params.export['tflite_dir'] = params.demo['tflite_dir']
-    export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
 
-    log.info(f"📦 Copying TFLite to {dst_tflite_path}")
+    log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(src_tflite_path, dst_tflite_path)
+    shutil.copy(tflite_path_src, tflite_path_dst)
 
     # === Setup venv and install ===
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
@@ -239,16 +259,16 @@ def demo_evb(params: SKTaskParams):
 
     log.info("✅ TFLite deployment and file transfer complete.")
 
-def demo_pc(params: SKTaskParams):
+def demo_pc(
+        params: SKTaskParams,
+        tflite_path_src: str
+        ):
     """Export se task model with given parameters.
 
     Args:
         params (SKTaskParams): Task parameters
     """
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-
-    batchsize_train = params.train['batchsize']
-    batchsize = 1
 
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
@@ -263,51 +283,11 @@ def demo_pc(params: SKTaskParams):
         mel_bins=mel_bins,
         platform="numpy"
     )
-    dim_feat = feat_extractor.dim_feat
     hop_size = params.train.feature.hop_size
-    # 1.1. Build the model
-    # Load from YAML file
-    if params.train['truncate_time'] is not None:
-        time_steps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
-    else:
-        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
-
-    model_train = build_model(
-        params,
-        batchsize=batchsize_train,
-        dim_feat=dim_feat,
-        time_steps = time_steps)
-
-    load_model_checkpoint(
-        model_train, params.demo['epoch_loaded'], checkpoint_dir)
-
-    model = build_model(
-        params,
-        batchsize=batchsize,
-        dim_feat=dim_feat,
-        time_steps=1,
-        export=True)
-    copy_model_weights(model_dst=model, model_src=model_train)
-    if params.train.feature.type in ("spec", "erb_complex"):
-        is_complex = True
-    else:
-        is_complex = False
-
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat,
-        is_complex=is_complex)
-
-    dtype='float32'
-
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
     interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
+        model_path=str(tflite_path_src)
+    )
     interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
@@ -317,7 +297,7 @@ def demo_pc(params: SKTaskParams):
 
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
-        dtype=dtype,
+        dtype=params.demo['dtype'],
     )
 
     class SEModel:
@@ -338,7 +318,7 @@ def demo_pc(params: SKTaskParams):
                 hop_len=params.train.feature.hop_size,
                 fft_len=params.train.feature.fft_size,
             )
-            
+
             if params.train.feature.type == 'erb_complex':
                 self.erb = erb
 
@@ -366,9 +346,13 @@ def demo_pc(params: SKTaskParams):
             # input to the tflite model
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
 
+            # reshape to (batch_size, time_steps, dim_feat, 2) for complex input
             if np.iscomplexobj(features):
                 features = np.stack(
-                    (features.real, features.imag), axis=-1)  # reshape to (batch_size, time_steps, dim_feat, 2) for complex input
+                    (features.real, features.imag), axis=-1)
+
+            features =fakefix_tf(features, 32, 21).numpy()
+
             tfmask = self.model_tflite(features)
 
             pcm_out = self.post_procsessing(tfmask, spec)
@@ -387,16 +371,14 @@ def demo_pc(params: SKTaskParams):
             Returns:
                 np.ndarray: time-domain waveform after ISTFT
             """
-            if np.iscomplexobj(spec):
-                if params.train.feature.type == 'erb_complex':
-                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
-                    tfmask = erb.bs(tfmask)
-                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
-                
-                # print(tfmask.shape)
-                # print(type(tfmask))
-                # import pdb; pdb.set_trace()
+
+            if params.train.feature.type == 'erb_complex':
+                tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
+                tfmask = erb.bs(tfmask)
+                tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
                 tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
+            elif params.train.feature.type == 'erb_mag':
+                tfmask = erb.bs(tfmask[..., 0])
 
             tfmask = tfmask.flatten()
 
