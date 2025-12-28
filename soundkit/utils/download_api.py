@@ -159,6 +159,6 @@ def corpus_download(
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
 
             shutil.copyfile(
-                'wavs/FSD50K/non_speech.csv',
-                'metadata/non_speech_fsd50k.csv'
+                'metadata/FSD50K/non_speech.csv',
+                'wavs/noise/FSD50K/non_speech.csv'
                 )

@@ -218,17 +218,7 @@ def run_epoch(
             audio_sn, states=states_audio_sn)
         _, spec_s, states_audio_s = feat_extractor(
             audio_s, states=states_audio_s)
-        
-        rr = tf.math.real(feat_sn)
-        ii = tf.math.imag(feat_sn)
 
-        tmp = tf.stack([rr, ii], axis=-1)
-        cali_data.append(tmp.numpy())
-        import numpy as np
-        if tf.concat(cali_data, axis=0).shape[0] >= 32:
-            np.save("feat_sn.npy", tf.concat(cali_data, axis=0).numpy())
-        
-        import pdb; pdb.set_trace()
         # Apply lookahead
         spec_sn_delay = buffer_sn.apply(spec_sn)
         spec_s_delay = buffer_s.apply(spec_s)

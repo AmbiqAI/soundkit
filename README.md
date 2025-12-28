@@ -38,20 +38,10 @@ The following are also required to compile/flash binaries for EVB demos:
 
 ## <span class="sk-h2-span">Installation</span>
 
-Install the `soundkit` package directly from PyPI:
-
-```bash
-pip install soundkit
-```
-
-Or install from source:
-
 ```bash
 git clone https://github.com/AmbiqAI/soundkit.git
 cd soundkit
-pip install .
-# or
-pip install -e . # editable mode-Any changes you make to the codebase are immediately reflected without needing to re-install.
+./install.sh
 ```
 
 ---
