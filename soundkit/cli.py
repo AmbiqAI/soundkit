@@ -84,9 +84,8 @@ def run_task(
                 elif task == "id":
                     script="audioview_nnid"
 
-                if params.demo.platform == "evb":
-                    print("🔌 Running EVB demo...")
-                    os.system(f"python -m soundkit.tools.{script}")
+                print("🔌 Running EVB demo...")
+                os.system(f"python -m soundkit.tools.{script}")
             else:
                 task_handler.demo(params)
 

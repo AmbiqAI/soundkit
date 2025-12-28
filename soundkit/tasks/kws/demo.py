@@ -6,10 +6,13 @@ import shutil
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.converter_fix_point import (
+     fakefix_tf,
+     int2str_array
+)
+from soundkit.utils.mel import gen_mel_c
+from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
@@ -32,14 +35,28 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
-    if params.demo.platform == 'evb':
-        demo_evb(params)
-    elif params.demo.platform == 'pc':
-        demo_pc(params)
-    else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+    # === export TFLite File ===
+    tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
+    tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+    log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+    params.export['epoch_loaded'] = params.demo['epoch_loaded']
+    params.export['tflite_dir'] = params.demo['tflite_dir']
+    params.export["dtype"] = params.demo["dtype"]
+    params.export["calibration_samples"] = params.demo["calibration_samples"]
+    export(params)
 
-def demo_evb(params: SKTaskParams):
+    if params.demo.platform == 'evb':
+        demo_evb(params, tflite_path_src)
+    elif params.demo.platform == 'pc':
+        demo_pc(params, tflite_path_src)
+    else:
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. ",
+            "Supported platforms are 'evb' and 'pc'.")
+
+def demo_evb(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
@@ -51,7 +68,6 @@ def demo_evb(params: SKTaskParams):
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -65,7 +81,6 @@ def demo_evb(params: SKTaskParams):
     if not os.path.exists(neuralspot_path):
         subprocess.run(["git", "clone", repo_url, neuralspot_path], check=True)
         log.info(f"📦 Cloned {neuralSPOT} to {neuralspot_path}")
-       
     else:
         log.info(f"✅ {neuralSPOT} already exists at {neuralspot_path}")
     # === Checkout specific commit ===
@@ -77,8 +92,7 @@ def demo_evb(params: SKTaskParams):
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
+
     feat_params = params.train['feature']
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
@@ -92,8 +106,7 @@ def demo_evb(params: SKTaskParams):
 
 
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.mel import gen_mel_c
+
 
     filterbank_name='filter_banks'
 
@@ -136,28 +149,20 @@ def demo_evb(params: SKTaskParams):
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
-        task=params.project
+        task=params.project,
+        feature_type=params.train['feature']['type'],
     )
 
     # === Define Key Paths ===
-    src_tflite_path = Path(params.demo['tflite_dir']) / tflite_filename_src
 
-    tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
-    dst_tflite_path = tools_dir / tflite_filename
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
-
-    # === export TFLite File ===
-    log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
-    params.export['epoch_loaded'] = params.demo['epoch_loaded']
-    params.export['tflite_dir'] = params.demo['tflite_dir']
-    export(params)
-
+    tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
+    tflite_path_dst = tools_dir / tflite_filename
     # === Copy TFLite File to neuralSPOT/tools ===
 
-    log.info(f"📦 Copying TFLite to {dst_tflite_path}")
+    log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(src_tflite_path, dst_tflite_path)
-
+    shutil.copy(tflite_path_src, tflite_path_dst)
     # === Setup venv and install ===
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
     os.chdir(neuralspot_root)
@@ -227,18 +232,16 @@ def demo_evb(params: SKTaskParams):
 
     log.info("✅ TFLite deployment and file transfer complete.")
 
-def demo_pc(params: SKTaskParams):
+def demo_pc(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """Export VAD task model with given parameters.
 
     Args:
         params (SKTaskParams): Task parameters
     """
-    params_export = params.export
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-
-    batchsize_train = params.train['batchsize']
-    batchsize = 1
 
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
@@ -253,45 +256,12 @@ def demo_pc(params: SKTaskParams):
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
     )
-    dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
     # Load from YAML file
-    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
-    model_train = build_model(
-        params,
-        batchsize=batchsize_train,
-        dim_feat=dim_feat,
-        time_steps = time_steps,)
-
-    load_model_checkpoint(
-        model_train,
-        params_export['epoch_loaded'],
-        checkpoint_dir,
-        criterion_epoch="val_acc")
-
-    model = build_model(
-        params,
-        batchsize=batchsize,
-        dim_feat=dim_feat,
-        time_steps=1,
-        export=True)
-    copy_model_weights(model_dst=model, model_src=model_train)
-
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat)
-
-    dtype='float32'
-
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
     interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
+        model_path=str(tflite_path_src))
     interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
@@ -301,7 +271,7 @@ def demo_pc(params: SKTaskParams):
 
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
-        dtype=dtype,
+        dtype=params.demo.dtype,
     )
 
     class KwsModel:

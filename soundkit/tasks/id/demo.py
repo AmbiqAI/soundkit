@@ -35,26 +35,39 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
+    # === export TFLite File ===
+    tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
+    tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+    log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+    params.export['epoch_loaded'] = params.demo['epoch_loaded']
+    params.export['tflite_dir'] = params.demo['tflite_dir']
+    # params.export["calibration_samples"] = params.demo["calibration_samples"]
+    params.export["dtype"] = params.demo["dtype"]
+    export(params)
     if params.demo.platform == 'evb':
-        demo_evb(params)
+        demo_evb(params, tflite_path_src)
     elif params.demo.platform == 'pc':
-        demo_pc(params)
+        demo_pc(params, tflite_path_src)
     else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. ",
+             "Supported platforms are 'evb' and 'pc'.")
 
-def demo_evb(params: SKTaskParams):
+def demo_evb(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
     Args:
         params (SKTaskParams): Task parameters
+        tflite_path_src: str
     """
     # === Setup Variables ===
 
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -136,26 +149,19 @@ def demo_evb(params: SKTaskParams):
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
         task=params.project,
+        feature_type=params.train['feature']['type'],
     )
 
     # === Define Key Paths ===
-    src_tflite_path = Path(params.demo['tflite_dir']) / tflite_filename_src
-
     tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
-    dst_tflite_path = tools_dir / tflite_filename
+    tflite_path_dst = tools_dir / tflite_filename
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
-
-    # === export TFLite File ===
-    log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
-    params.export['epoch_loaded'] = params.demo['epoch_loaded']
-    params.export['tflite_dir'] = params.demo['tflite_dir']
-    export(params)
 
     # === Copy TFLite File to neuralSPOT/tools ===
     
-    log.info(f"📦 Copying TFLite to {dst_tflite_path}")
+    log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(src_tflite_path, dst_tflite_path)
+    shutil.copy(tflite_path_src, tflite_path_dst)
 
     # === Setup venv and install ===
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
@@ -164,9 +170,6 @@ def demo_evb(params: SKTaskParams):
 
     subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
     subprocess.run(["uv", "sync"], check=True)
-    # subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    # subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    # subprocess.run([".venv/bin/pip", "install", "."], check=True)
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
@@ -226,7 +229,9 @@ def demo_evb(params: SKTaskParams):
 
     log.info("✅ TFLite deployment and file transfer complete.")
 
-def demo_pc(params_id: SKTaskParams):
+def demo_pc(
+        params_id: SKTaskParams,
+        tflite_path_src: str):
     """Export ID task model with given parameters.
 
     Args:
@@ -242,9 +247,6 @@ def demo_pc(params_id: SKTaskParams):
     }
 
     def init_model_artifacts(params: SKTaskParams):
-        checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-        batchsize_train = params.train['batchsize']
-        batchsize = 1
 
         if params.train.feature.type=='hybrid':
             mel_bins = params.train.feature.n_mels
@@ -258,28 +260,9 @@ def demo_pc(params_id: SKTaskParams):
             sampling_rate=params.data.signal.sampling_rate,
             mel_bins=mel_bins,
         )
-        dim_feat = feat_extractor.dim_feat
 
-        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
-        model_train = build_model(
-            params, batchsize=batchsize_train, dim_feat=dim_feat,
-            time_steps=time_steps)
-
-        load_model_checkpoint(model_train, params.demo['epoch_loaded'], checkpoint_dir)
-
-        model = build_model(params, batchsize=batchsize, dim_feat=dim_feat,
-                            time_steps=1, export=True)
-        copy_model_weights(model_dst=model, model_src=model_train)
-
-        model_wrap = warp_tf_model(model, time_steps=1, dim_feat=dim_feat)
-
-        tflite_model = tflite_convert(
-            model_wrap,
-            dtype="float32",
-            path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite'
-        )
-
-        interpreter = tf.lite.Interpreter(model_content=tflite_model)
+        interpreter = tf.lite.Interpreter(
+            model_path=tflite_path_src)
 
         if params.train.standardization:
             stats = load_feat_stats(params.train['path']['checkpoint_dir'], 'stats.pkl')
@@ -287,7 +270,6 @@ def demo_pc(params_id: SKTaskParams):
             stats = None
 
         return feat_extractor, stats, interpreter
-
 
     class IDModel:
         """VAD model class in tflite for processing audio input and returning VAD output."""

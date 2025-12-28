@@ -15,9 +15,9 @@ from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.np_stft import StreamingISTFT
 from soundkit.utils.converter_fix_point import (
-    fakefix_tf,
-    int2str_array
-)
+        fakefix_tf,
+        int2str_array
+    )
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.mel import gen_mel_c
@@ -44,13 +44,13 @@ def demo(params: SKTaskParams):
         params (SKTaskParams): Task parameters
     """
     # === export TFLite File ===
-    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
+    tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
     tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
     log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
     params.export['epoch_loaded'] = params.demo['epoch_loaded']
     params.export['tflite_dir'] = params.demo['tflite_dir']
     params.export["calibration_samples"] = params.demo["calibration_samples"]
-    params.export["tflite_dir"] = params.demo["tflite_dir"]
+    params.export["dtype"] = params.demo["dtype"]
     export(params)
 
     # === Choose platform ===

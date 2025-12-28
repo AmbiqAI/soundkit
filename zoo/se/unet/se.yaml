@@ -86,6 +86,7 @@ export:
 
 demo:
   epoch_loaded: 0
+  dtype: int16
   tflite_dir: ${job_dir}/tflite
   platform: pc
   evb_dir: ${job_dir}/evb_webusb

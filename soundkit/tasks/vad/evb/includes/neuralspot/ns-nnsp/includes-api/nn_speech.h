@@ -12,7 +12,10 @@ typedef enum {
     feat_spec = 1,
     feat_logpspec = 2,
     feat_spec_erb = 3,
-    feat_hybrid = 4
+    feat_erb_mag = 4,
+    feat_erb_logpspec = 5,
+    feat_hybrid = 6,
+    feat_time = 7
 } FEATURE_TYPE_E;
 
 typedef struct {
@@ -72,12 +75,19 @@ void s2i_post_proc(NNSPClass *pt_inst, int32_t *pt_nn_est, int16_t *pt_trigger);
 /*
 post processing for SE: apply tfmask and istft
 */
-void se_post_proc(
+void se_post_proc_cmplx(
     void *pt_feat_t,    // feature instance
     int32_t *pt_nn_est, // tfmask
     int16_t *pt_se_out, // output
     int start_bin,      // start bin
     int nn_dim_out);       // NN output dimension
+void se_post_proc_real(
+    void *pt_feat_t,    // feature instance
+    int32_t *pt_nn_est, // tfmask
+    int16_t *pt_se_out, // output
+    int start_bin,      // start bin
+    int nn_dim_out);       // NN output dimension
+
 #ifdef __cplusplus
 }
 #endif

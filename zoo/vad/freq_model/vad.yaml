@@ -95,6 +95,7 @@ export:
 
 demo:
   platform: pc # evb or pc
+  dtype: int16
   epoch_loaded: 0
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb

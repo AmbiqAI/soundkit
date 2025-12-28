@@ -86,7 +86,9 @@ int AudioPipe_wrapper_init(void)
             pt_param->hopsize_stft, // FEATURE_HOPSIZE,
             pt_param->fftsize, // FEATURE_FFTSIZE,
             pt_param->pt_stft_win_coeff,
-            pt_param->p_melBanks);
+            pt_param->p_melBanks,
+            pt_param->feature_type
+        );
 #endif
     if (pt_param->is_dcrm)
         IIR_CLASS_init(&dcrm_inst);
@@ -236,7 +238,7 @@ int AudioPipe_wrapper_frameProc(
             (pt_param->fftsize+2)  * sizeof(int32_t));
     #endif
 #if FEATURE_EXTRACTION==1
-    int16_t *ptfeat = FEAT_INST.normFeatContext;
+    int32_t *ptfeat = FEAT_INST.normFeatContext;
 #else
     int16_t *ptfeat = pcm_input;
 #endif
@@ -251,6 +253,7 @@ int AudioPipe_wrapper_frameProc(
     {
         float32_t val = ((float32_t) ptfeat[i] ) * scalar_norm;
         int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+        input = MIN(MAX(input, -32768), 32767);
         pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
     }
 

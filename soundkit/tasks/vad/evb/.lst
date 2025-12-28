@@ -1265,10 +1265,10 @@ int AudioPipe_wrapper_init(void)
     ns_model_state_t *pt_tflm = &tflm;
     nn_dim_input = 1;
   410c94:	2301      	movs	r3, #1
-            pt_param->hopsize_stft, // FEATURE_HOPSIZE,
-            pt_param->fftsize, // FEATURE_FFTSIZE,
             pt_param->pt_stft_win_coeff,
-            pt_param->p_melBanks);
+            pt_param->p_melBanks,
+            pt_param->feature_type
+        );
 #endif
     if (pt_param->is_dcrm)
   410c96:	4a80      	ldr	r2, [pc, #512]	@ (410e98 <AudioPipe_wrapper_init+0x208>)
@@ -4931,137 +4931,137 @@ void am_gpio0_001f_isr(void) {
 
 00412528 <am_gpio0_405f_isr>:
 
-void am_gpio0_405f_isr(void) {
+// #ifndef NS_GPIO0_203F_IRQn
   412528:	b500      	push	{lr}
   41252a:	b083      	sub	sp, #12
-    uint32_t ui32IntStatus;
-    // Clear the GPIO Interrupt (write to clear).
-    AM_CRITICAL_BEGIN
+// #define NS_GPIO0_203F_IRQn GPIO0_203F_IRQn
+// void am_gpio0_203f_isr(void) {
+//     uint32_t ui32IntStatus;
   41252c:	f009 f9e8 	bl	41b900 <am_hal_interrupt_master_disable>
   412530:	4603      	mov	r3, r0
-    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, true, &ui32IntStatus);
+//     // Clear the GPIO Interrupt (write to clear).
   412532:	466a      	mov	r2, sp
   412534:	2101      	movs	r1, #1
   412536:	203a      	movs	r0, #58	@ 0x3a
-    AM_CRITICAL_BEGIN
+//     uint32_t ui32IntStatus;
   412538:	9301      	str	r3, [sp, #4]
-    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, true, &ui32IntStatus);
+//     // Clear the GPIO Interrupt (write to clear).
   41253a:	f009 f8bd 	bl	41b6b8 <am_hal_gpio_interrupt_irq_status_get>
-    am_hal_gpio_interrupt_irq_clear(GPIO0_405F_IRQn, ui32IntStatus);
+//     AM_CRITICAL_BEGIN
   41253e:	9900      	ldr	r1, [sp, #0]
   412540:	203a      	movs	r0, #58	@ 0x3a
   412542:	f009 f8e9 	bl	41b718 <am_hal_gpio_interrupt_irq_clear>
-    AM_CRITICAL_END
+//     am_hal_gpio_interrupt_irq_status_get(GPIO0_203F_IRQn, true, &ui32IntStatus);
   412546:	9801      	ldr	r0, [sp, #4]
   412548:	f009 f9de 	bl	41b908 <am_hal_interrupt_master_set>
-    am_hal_gpio_interrupt_service(GPIO0_405F_IRQn, ui32IntStatus);
+//     am_hal_gpio_interrupt_irq_clear(GPIO0_203F_IRQn, ui32IntStatus);
   41254c:	9900      	ldr	r1, [sp, #0]
   41254e:	203a      	movs	r0, #58	@ 0x3a
   412550:	f009 f936 	bl	41b7c0 <am_hal_gpio_interrupt_service>
-}
+//     AM_CRITICAL_END
   412554:	b003      	add	sp, #12
   412556:	f85d fb04 	ldr.w	pc, [sp], #4
   41255a:	bf00      	nop
 
 0041255c <ns_button_platform_init>:
 
-    // APOLLO5A_TODO - Apollo5A EB does not have buttons
-
-#ifdef apollo510_evb
-    uint32_t ui32BUTTON0GpioNum = AM_BSP_GPIO_BUTTON0;
-    uint32_t ui32BUTTON1GpioNum = AM_BSP_GPIO_BUTTON1;
+extern int volatile *g_ns_peripheral_button0;
+extern int volatile *g_ns_peripheral_button1;
+extern int volatile *g_ns_peripheral_joulescope_trigger;
+extern void ns_button_0_handler(void *pArg);
+extern void ns_button_1_handler(void *pArg);
   41255c:	225e      	movs	r2, #94	@ 0x5e
-    uint32_t ui32BUTTON0GpioNum = AM_BSP_GPIO_BUTTON0;
+extern void ns_button_0_handler(void *pArg);
   41255e:	235d      	movs	r3, #93	@ 0x5d
-uint32_t ns_button_platform_init(ns_button_config_t *cfg) {
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, true, &ui32IntStatus);
   412560:	b530      	push	{r4, r5, lr}
-    uint32_t GpioIntMask = 0;
+}
   412562:	2100      	movs	r1, #0
-    uint32_t ui32JoulescopeTriggerGpioNum = 14;
+    AM_CRITICAL_END
   412564:	250e      	movs	r5, #14
-uint32_t ns_button_platform_init(ns_button_config_t *cfg) {
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, true, &ui32IntStatus);
   412566:	b087      	sub	sp, #28
-    uint32_t ui32BUTTON1GpioNum = AM_BSP_GPIO_BUTTON1;
+extern void ns_button_1_handler(void *pArg);
   412568:	e9cd 3203 	strd	r3, r2, [sp, #12]
-    // Configure the button pin.
-    if (cfg->button_0_enable) {
+extern void ns_joulescope_trigger_handler(void *pArg);
+
   41256c:	7902      	ldrb	r2, [r0, #4]
-uint32_t ns_button_platform_init(ns_button_config_t *cfg) {
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, true, &ui32IntStatus);
   41256e:	4604      	mov	r4, r0
-    uint32_t GpioIntMask = 0;
+}
   412570:	e9cd 5101 	strd	r5, r1, [sp, #4]
-    if (cfg->button_0_enable) {
+
   412574:	2a00      	cmp	r2, #0
   412576:	d138      	bne.n	4125ea <ns_button_platform_init+0x8e>
-        am_hal_gpio_pinconfig(ui32BUTTON0GpioNum, g_AM_BSP_GPIO_BUTTON0);
-        g_ns_peripheral_button0 = cfg->button_0_flag;
-    }
-    if (cfg->button_1_enable) {
+uint32_t ns_button_platform_init(ns_button_config_t *cfg) {
+    uint32_t ui32IntStatus;
+    #if defined(apollo510b_evb)
+    uint32_t ui32JoulescopeTriggerGpioNum = 5;
   412578:	7963      	ldrb	r3, [r4, #5]
   41257a:	2b00      	cmp	r3, #0
   41257c:	d140      	bne.n	412600 <ns_button_platform_init+0xa4>
-        am_hal_gpio_pinconfig(ui32BUTTON1GpioNum, g_AM_BSP_GPIO_BUTTON1);
-        g_ns_peripheral_button1 = cfg->button_1_flag;
-    }
-#endif
-    if (cfg->joulescope_trigger_enable) {
+    #else
+    uint32_t ui32JoulescopeTriggerGpioNum = 14;
+    #endif
+    // am_hal_gpio_mask_t GpioIntMask = AM_HAL_GPIO_MASK_DECLARE_ZERO;
+    uint32_t GpioIntMask = 0;
   41257e:	79a3      	ldrb	r3, [r4, #6]
   412580:	2b00      	cmp	r3, #0
   412582:	d148      	bne.n	412616 <ns_button_platform_init+0xba>
-        am_hal_gpio_pinconfig(ui32JoulescopeTriggerGpioNum, am_hal_gpio_pincfg_input);
-        g_ns_peripheral_joulescope_trigger = cfg->joulescope_trigger_flag;
-    }
 
-    // // Clear the GPIO Interrupt (write to clear).
-    AM_CRITICAL_BEGIN
+    // APOLLO5A_TODO - Apollo5A EB does not have buttons
+
+#if defined(apollo510_evb) || defined(apollo510b_evb)
+    uint32_t ui32BUTTON0GpioNum = AM_BSP_GPIO_BUTTON0;
+    uint32_t ui32BUTTON1GpioNum = AM_BSP_GPIO_BUTTON1;
   412584:	f009 f9bc 	bl	41b900 <am_hal_interrupt_master_disable>
   412588:	4603      	mov	r3, r0
-    am_hal_gpio_interrupt_irq_status_get(GPIO0_001F_IRQn, false, &GpioIntMask);
+    // Configure the button pin.
   41258a:	aa02      	add	r2, sp, #8
   41258c:	2100      	movs	r1, #0
   41258e:	2038      	movs	r0, #56	@ 0x38
-    AM_CRITICAL_BEGIN
+    uint32_t ui32BUTTON1GpioNum = AM_BSP_GPIO_BUTTON1;
   412590:	9305      	str	r3, [sp, #20]
-    am_hal_gpio_interrupt_irq_status_get(GPIO0_001F_IRQn, false, &GpioIntMask);
+    // Configure the button pin.
   412592:	f009 f891 	bl	41b6b8 <am_hal_gpio_interrupt_irq_status_get>
-    am_hal_gpio_interrupt_irq_clear(GPIO0_001F_IRQn, GpioIntMask);
+    if (cfg->button_0_enable) {
   412596:	9902      	ldr	r1, [sp, #8]
   412598:	2038      	movs	r0, #56	@ 0x38
   41259a:	f009 f8bd 	bl	41b718 <am_hal_gpio_interrupt_irq_clear>
-    am_hal_gpio_interrupt_irq_status_get(GPIO0_405F_IRQn, false, &GpioIntMask);
+        am_hal_gpio_pinconfig(ui32BUTTON0GpioNum, g_AM_BSP_GPIO_BUTTON0);
   41259e:	aa02      	add	r2, sp, #8
   4125a0:	2100      	movs	r1, #0
   4125a2:	203a      	movs	r0, #58	@ 0x3a
   4125a4:	f009 f888 	bl	41b6b8 <am_hal_gpio_interrupt_irq_status_get>
-    am_hal_gpio_interrupt_irq_clear(GPIO0_405F_IRQn, GpioIntMask);
+        g_ns_peripheral_button0 = cfg->button_0_flag;
   4125a8:	9902      	ldr	r1, [sp, #8]
   4125aa:	203a      	movs	r0, #58	@ 0x3a
   4125ac:	f009 f8b4 	bl	41b718 <am_hal_gpio_interrupt_irq_clear>
-    AM_CRITICAL_END
+    }
   4125b0:	9805      	ldr	r0, [sp, #20]
   4125b2:	f009 f9a9 	bl	41b908 <am_hal_interrupt_master_set>
-
-#ifdef apollo510_evb
-    // Register interrupt handlers
-    if (cfg->button_0_enable) {
+    if (cfg->button_1_enable) {
+        am_hal_gpio_pinconfig(ui32BUTTON1GpioNum, g_AM_BSP_GPIO_BUTTON1);
+        g_ns_peripheral_button1 = cfg->button_1_flag;
+    }
   4125b6:	7923      	ldrb	r3, [r4, #4]
   4125b8:	2b00      	cmp	r3, #0
   4125ba:	d14d      	bne.n	412658 <ns_button_platform_init+0xfc>
-        ui32IntStatus = am_hal_gpio_interrupt_control(
-            AM_HAL_GPIO_INT_CHANNEL_0, AM_HAL_GPIO_INT_CTRL_INDV_ENABLE,
-            (void *)&ui32BUTTON0GpioNum);
-        // ns_lp_printf("Button 0 interrupt enabled. Status %d\n", ui32IntStatus);
-    }
-    if (cfg->button_1_enable) {
+
+    // // Clear the GPIO Interrupt (write to clear).
+    AM_CRITICAL_BEGIN
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_001F_IRQn, false, &GpioIntMask);
+    am_hal_gpio_interrupt_irq_clear(GPIO0_001F_IRQn, GpioIntMask);
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_203F_IRQn, false, &GpioIntMask);
   4125bc:	7963      	ldrb	r3, [r4, #5]
   4125be:	2b00      	cmp	r3, #0
   4125c0:	d13e      	bne.n	412640 <ns_button_platform_init+0xe4>
-        am_hal_gpio_interrupt_control(
-            AM_HAL_GPIO_INT_CHANNEL_0, AM_HAL_GPIO_INT_CTRL_INDV_ENABLE,
-            (void *)&ui32BUTTON1GpioNum);
-    }
-#endif
-    if (cfg->joulescope_trigger_enable) {
+    AM_CRITICAL_END
+
+#if defined(apollo510_evb) || defined(apollo510b_evb)
+    // Register interrupt handlers
+    if (cfg->button_0_enable) {
+        // uint32_t ui32IntStatus;
   4125c2:	79a3      	ldrb	r3, [r4, #6]
   4125c4:	2b00      	cmp	r3, #0
   4125c6:	d12f      	bne.n	412628 <ns_button_platform_init+0xcc>
@@ -5080,95 +5080,95 @@ __STATIC_INLINE void __NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
   4125d8:	605a      	str	r2, [r3, #4]
   4125da:	f04f 6280 	mov.w	r2, #67108864	@ 0x4000000
   4125de:	605a      	str	r2, [r3, #4]
-    NVIC_SetPriority(GPIO0_001F_IRQn, AM_IRQ_PRIORITY_DEFAULT);
-    NVIC_SetPriority(GPIO0_405F_IRQn, AM_IRQ_PRIORITY_DEFAULT);
-    NVIC_EnableIRQ(GPIO0_001F_IRQn);
-    NVIC_EnableIRQ(GPIO0_405F_IRQn);
-
-    am_hal_interrupt_master_enable();
+    }
+    if (cfg->button_1_enable) {
+        am_hal_gpio_interrupt_register(
+            AM_HAL_GPIO_INT_CHANNEL_0, ui32BUTTON1GpioNum,
+            (am_hal_gpio_handler_t)ns_button_1_handler, NULL);
+        am_hal_gpio_interrupt_control(
   4125e0:	f009 f98a 	bl	41b8f8 <am_hal_interrupt_master_enable>
-    return NS_STATUS_SUCCESS;
-}
+            AM_HAL_GPIO_INT_CHANNEL_0, AM_HAL_GPIO_INT_CTRL_INDV_ENABLE,
+            (void *)&ui32BUTTON1GpioNum);
   4125e4:	2000      	movs	r0, #0
   4125e6:	b007      	add	sp, #28
   4125e8:	bd30      	pop	{r4, r5, pc}
-        am_hal_gpio_pinconfig(ui32BUTTON0GpioNum, g_AM_BSP_GPIO_BUTTON0);
+uint32_t ns_button_platform_init(ns_button_config_t *cfg) {
   4125ea:	4a26      	ldr	r2, [pc, #152]	@ (412684 <ns_button_platform_init+0x128>)
   4125ec:	4618      	mov	r0, r3
   4125ee:	6811      	ldr	r1, [r2, #0]
   4125f0:	f008 fe88 	bl	41b304 <am_hal_gpio_pinconfig>
-        g_ns_peripheral_button0 = cfg->button_0_flag;
+    uint32_t ui32IntStatus;
   4125f4:	4b24      	ldr	r3, [pc, #144]	@ (412688 <ns_button_platform_init+0x12c>)
   4125f6:	68a2      	ldr	r2, [r4, #8]
   4125f8:	601a      	str	r2, [r3, #0]
-    if (cfg->button_1_enable) {
+    uint32_t ui32JoulescopeTriggerGpioNum = 5;
   4125fa:	7963      	ldrb	r3, [r4, #5]
   4125fc:	2b00      	cmp	r3, #0
   4125fe:	d0be      	beq.n	41257e <ns_button_platform_init+0x22>
-        am_hal_gpio_pinconfig(ui32BUTTON1GpioNum, g_AM_BSP_GPIO_BUTTON1);
+    #else
   412600:	4b22      	ldr	r3, [pc, #136]	@ (41268c <ns_button_platform_init+0x130>)
   412602:	9804      	ldr	r0, [sp, #16]
   412604:	6819      	ldr	r1, [r3, #0]
   412606:	f008 fe7d 	bl	41b304 <am_hal_gpio_pinconfig>
-        g_ns_peripheral_button1 = cfg->button_1_flag;
+    uint32_t ui32JoulescopeTriggerGpioNum = 14;
   41260a:	4b21      	ldr	r3, [pc, #132]	@ (412690 <ns_button_platform_init+0x134>)
   41260c:	68e2      	ldr	r2, [r4, #12]
   41260e:	601a      	str	r2, [r3, #0]
-    if (cfg->joulescope_trigger_enable) {
+    uint32_t GpioIntMask = 0;
   412610:	79a3      	ldrb	r3, [r4, #6]
   412612:	2b00      	cmp	r3, #0
   412614:	d0b6      	beq.n	412584 <ns_button_platform_init+0x28>
-        am_hal_gpio_pinconfig(ui32JoulescopeTriggerGpioNum, am_hal_gpio_pincfg_input);
+
   412616:	4b1f      	ldr	r3, [pc, #124]	@ (412694 <ns_button_platform_init+0x138>)
   412618:	9801      	ldr	r0, [sp, #4]
   41261a:	6819      	ldr	r1, [r3, #0]
   41261c:	f008 fe72 	bl	41b304 <am_hal_gpio_pinconfig>
-        g_ns_peripheral_joulescope_trigger = cfg->joulescope_trigger_flag;
+    // APOLLO5A_TODO - Apollo5A EB does not have buttons
   412620:	4b1d      	ldr	r3, [pc, #116]	@ (412698 <ns_button_platform_init+0x13c>)
   412622:	6922      	ldr	r2, [r4, #16]
   412624:	601a      	str	r2, [r3, #0]
   412626:	e7ad      	b.n	412584 <ns_button_platform_init+0x28>
-        am_hal_gpio_interrupt_register(
+        ui32IntStatus = am_hal_gpio_interrupt_register(
   412628:	2300      	movs	r3, #0
   41262a:	9901      	ldr	r1, [sp, #4]
   41262c:	4618      	mov	r0, r3
   41262e:	4a1b      	ldr	r2, [pc, #108]	@ (41269c <ns_button_platform_init+0x140>)
   412630:	f009 f88c 	bl	41b74c <am_hal_gpio_interrupt_register>
-        am_hal_gpio_interrupt_control(
+        // ns_lp_printf("Button 0 interrupt registered. Status %d\n", ui32IntStatus);
   412634:	2101      	movs	r1, #1
   412636:	aa01      	add	r2, sp, #4
   412638:	2000      	movs	r0, #0
   41263a:	f008 ff1b 	bl	41b474 <am_hal_gpio_interrupt_control>
   41263e:	e7c3      	b.n	4125c8 <ns_button_platform_init+0x6c>
-        am_hal_gpio_interrupt_register(
+    am_hal_gpio_interrupt_irq_clear(GPIO0_203F_IRQn, GpioIntMask);
   412640:	2300      	movs	r3, #0
   412642:	9904      	ldr	r1, [sp, #16]
   412644:	4618      	mov	r0, r3
   412646:	4a16      	ldr	r2, [pc, #88]	@ (4126a0 <ns_button_platform_init+0x144>)
   412648:	f009 f880 	bl	41b74c <am_hal_gpio_interrupt_register>
-        am_hal_gpio_interrupt_control(
+    AM_CRITICAL_END
   41264c:	2101      	movs	r1, #1
   41264e:	aa04      	add	r2, sp, #16
   412650:	2000      	movs	r0, #0
   412652:	f008 ff0f 	bl	41b474 <am_hal_gpio_interrupt_control>
   412656:	e7b4      	b.n	4125c2 <ns_button_platform_init+0x66>
-        ui32IntStatus = am_hal_gpio_interrupt_register(
+    if (cfg->joulescope_trigger_enable) {
   412658:	2300      	movs	r3, #0
   41265a:	4a12      	ldr	r2, [pc, #72]	@ (4126a4 <ns_button_platform_init+0x148>)
   41265c:	4618      	mov	r0, r3
   41265e:	9903      	ldr	r1, [sp, #12]
   412660:	f009 f874 	bl	41b74c <am_hal_gpio_interrupt_register>
   412664:	4601      	mov	r1, r0
-        // ns_lp_printf("Button 0 interrupt registered. Status %d\n", ui32IntStatus);
+    }
   412666:	4810      	ldr	r0, [pc, #64]	@ (4126a8 <ns_button_platform_init+0x14c>)
   412668:	f003 f994 	bl	415994 <am_util_stdio_printf>
-        ui32IntStatus = am_hal_gpio_interrupt_control(
+
   41266c:	2101      	movs	r1, #1
   41266e:	aa03      	add	r2, sp, #12
   412670:	2000      	movs	r0, #0
   412672:	f008 feff 	bl	41b474 <am_hal_gpio_interrupt_control>
   412676:	4601      	mov	r1, r0
-        // ns_lp_printf("Button 0 interrupt enabled. Status %d\n", ui32IntStatus);
+    am_hal_gpio_interrupt_irq_status_get(GPIO0_001F_IRQn, false, &GpioIntMask);
   412678:	480c      	ldr	r0, [pc, #48]	@ (4126ac <ns_button_platform_init+0x150>)
   41267a:	f003 f98b 	bl	415994 <am_util_stdio_printf>
   41267e:	e79d      	b.n	4125bc <ns_button_platform_init+0x60>
@@ -5186,233 +5186,233 @@ __STATIC_INLINE void __NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
   4126ac:	00448658 	.word	0x00448658
 
 004126b0 <ns_set_performance_mode>:
+
+#ifdef apollo510_evb
+#include "am_hal_clkmgr.h"
+#include "am_hal_spotmgr.h"
 #endif
 
-uint32_t ns_set_performance_mode(ns_power_mode_e eAIPowerMode) {
-    // Configure power mode
-    uint32_t retval = NS_STATUS_SUCCESS;
-    if ((eAIPowerMode == NS_MAXIMUM_PERF) || (eAIPowerMode == NS_MEDIUM_PERF)) {
   4126b0:	3801      	subs	r0, #1
   4126b2:	2801      	cmp	r0, #1
   4126b4:	d902      	bls.n	4126bc <ns_set_performance_mode+0xc>
-        retval = am_hal_pwrctrl_mcu_mode_select(AM_HAL_PWRCTRL_MCU_MODE_HIGH_PERFORMANCE);
-    } else {
-        retval = am_hal_pwrctrl_mcu_mode_select(AM_HAL_PWRCTRL_MCU_MODE_LOW_POWER);
+uint32_t ns_set_performance_mode(ns_power_mode_e eAIPowerMode) {
+    // Configure power mode
+    uint32_t retval = NS_STATUS_SUCCESS;
   4126b6:	2001      	movs	r0, #1
   4126b8:	f001 ba9e 	b.w	413bf8 <am_hal_pwrctrl_mcu_mode_select>
-        retval = am_hal_pwrctrl_mcu_mode_select(AM_HAL_PWRCTRL_MCU_MODE_HIGH_PERFORMANCE);
+uint32_t ns_set_performance_mode(ns_power_mode_e eAIPowerMode) {
   4126bc:	2002      	movs	r0, #2
   4126be:	f001 ba9b 	b.w	413bf8 <am_hal_pwrctrl_mcu_mode_select>
   4126c2:	bf00      	nop
 
 004126c4 <ns_power_platform_config>:
+// #endif
+
+    if (pCfg->bNeedSharedSRAM == false) {
+        am_hal_pwrctrl_sram_memcfg_t SRAMMemCfg = {
+            .eSRAMCfg = AM_HAL_PWRCTRL_SRAM_NONE,
+            .eActiveWithMCU  = AM_HAL_PWRCTRL_SRAM_NONE,
+  4126c4:	2800      	cmp	r0, #0
+  4126c6:	d07b      	beq.n	4127c0 <ns_power_platform_config+0xfc>
+
+  4126c8:	b570      	push	{r4, r5, r6, lr}
+            .eActiveWithGFX  = AM_HAL_PWRCTRL_SRAM_NONE,
+            .eActiveWithDISP = AM_HAL_PWRCTRL_SRAM_NONE,          
+            .eSRAMRetain     = AM_HAL_PWRCTRL_SRAM_NONE
+        };
+  4126ca:	4a48      	ldr	r2, [pc, #288]	@ (4127ec <ns_power_platform_config+0x128>)
+  4126cc:	4604      	mov	r4, r0
+  4126ce:	4948      	ldr	r1, [pc, #288]	@ (4127f0 <ns_power_platform_config+0x12c>)
+  4126d0:	6800      	ldr	r0, [r0, #0]
+
+  4126d2:	b086      	sub	sp, #24
+        };
+  4126d4:	f7fe f9ee 	bl	410ab4 <ns_core_check_api>
+  4126d8:	4605      	mov	r5, r0
+  4126da:	2800      	cmp	r0, #0
+  4126dc:	d16d      	bne.n	4127ba <ns_power_platform_config+0xf6>
         am_hal_pwrctrl_sram_config(&SRAMMemCfg);
+
+    } else {
+         am_hal_pwrctrl_sram_memcfg_t SRAMMemCfg = {
+            #ifndef apollo510L_eb
+  4126de:	f000 fb43 	bl	412d68 <ns_core_initialized>
+  4126e2:	2800      	cmp	r0, #0
+  4126e4:	d074      	beq.n	4127d0 <ns_power_platform_config+0x10c>
+            .eSRAMCfg = AM_HAL_PWRCTRL_SRAM_3M,
+            #else
+            .eSRAMCfg = AM_HAL_PWRCTRL_SRAM_1P75M,
+            #endif
+            // .eActiveWithMCU   = PWRCTRL_SSRAMPWREN_PWRENSSRAM_ALL,
+            .eActiveWithMCU   = AM_HAL_PWRCTRL_SRAM_NONE,
+  4126e6:	f013 f869 	bl	4257bc <am_bsp_low_power_init>
+            .eActiveWithGFX   = AM_HAL_PWRCTRL_SRAM_NONE,
+            .eActiveWithDISP  = AM_HAL_PWRCTRL_SRAM_NONE,   
+            #ifndef apollo510L_eb
+  4126ea:	f04f 0300 	mov.w	r3, #0
+  4126ee:	f88d 5006 	strb.w	r5, [sp, #6]
+  4126f2:	f8ad 3004 	strh.w	r3, [sp, #4]
     };
 }
 
 
 int32_t ns_power_platform_config(const ns_power_config_t *pCfg) {
-  4126c4:	2800      	cmp	r0, #0
-  4126c6:	d07b      	beq.n	4127c0 <ns_power_platform_config+0xfc>
-    };
-  4126c8:	b570      	push	{r4, r5, r6, lr}
     uint32_t ui32ReturnStatus = AM_HAL_STATUS_SUCCESS;
+  4126f6:	f007 f881 	bl	4197fc <am_hal_cachectrl_icache_enable>
 
+  4126fa:	2001      	movs	r0, #1
+  4126fc:	f007 f8ba 	bl	419874 <am_hal_cachectrl_dcache_enable>
 #ifndef NS_DISABLE_API_VALIDATION
-    if (pCfg == NULL) {
-  4126ca:	4a48      	ldr	r2, [pc, #288]	@ (4127ec <ns_power_platform_config+0x128>)
-  4126cc:	4604      	mov	r4, r0
-  4126ce:	4948      	ldr	r1, [pc, #288]	@ (4127f0 <ns_power_platform_config+0x12c>)
-  4126d0:	6800      	ldr	r0, [r0, #0]
-    };
-  4126d2:	b086      	sub	sp, #24
-    if (pCfg == NULL) {
-  4126d4:	f7fe f9ee 	bl	410ab4 <ns_core_check_api>
-  4126d8:	4605      	mov	r5, r0
-  4126da:	2800      	cmp	r0, #0
-  4126dc:	d16d      	bne.n	4127ba <ns_power_platform_config+0xf6>
-        return NS_STATUS_INVALID_HANDLE;
-    }
-
-    if (ns_core_check_api(
-            pCfg->api, &ns_power_oldest_supported_version, &ns_power_current_version)) {
-  4126de:	f000 fb43 	bl	412d68 <ns_core_initialized>
-  4126e2:	2800      	cmp	r0, #0
-  4126e4:	d074      	beq.n	4127d0 <ns_power_platform_config+0x10c>
-        return NS_STATUS_INVALID_VERSION;
-    }
-
-    if (!ns_core_initialized()) {
-        // Power needs ns_core to be initialized first
-        return NS_STATUS_INIT_FAILED;
-  4126e6:	f013 f869 	bl	4257bc <am_bsp_low_power_init>
-    }
-#endif
-
-  4126ea:	f04f 0300 	mov.w	r3, #0
-  4126ee:	f88d 5006 	strb.w	r5, [sp, #6]
-  4126f2:	f8ad 3004 	strh.w	r3, [sp, #4]
+  412700:	9801      	ldr	r0, [sp, #4]
+  412702:	f002 f99b 	bl	414a3c <am_hal_pwrctrl_pwrmodctl_cpdlp_config>
+    am_hal_pwrctrl_pwrmodctl_cpdlp_t sDefaultCpdlpConfig =
+    {
+         .eRlpConfig = AM_HAL_PWRCTRL_RLP_ON,
          #if ELP_ON
             .eElpConfig = AM_HAL_PWRCTRL_ELP_ON,
          #else
-            .eElpConfig = AM_HAL_PWRCTRL_ELP_RET,
-         #endif
-         .eClpConfig = AM_HAL_PWRCTRL_CLP_ON
-  4126f6:	f007 f881 	bl	4197fc <am_hal_cachectrl_icache_enable>
-    };
-  4126fa:	2001      	movs	r0, #1
-  4126fc:	f007 f8ba 	bl	419874 <am_hal_cachectrl_dcache_enable>
-
-  412700:	9801      	ldr	r0, [sp, #4]
-  412702:	f002 f99b 	bl	414a3c <am_hal_pwrctrl_pwrmodctl_cpdlp_config>
-    #endif
-
-
-
-
-
   412706:	2001      	movs	r0, #1
   412708:	f009 ff52 	bl	41c5b0 <am_hal_rtc_osc_select>
-    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_DIS_PERIPHS_ALL, 0);
+            .eElpConfig = AM_HAL_PWRCTRL_ELP_RET,
   41270c:	f009 ff46 	bl	41c59c <am_hal_rtc_osc_disable>
-    // MCUCTRL->XTALCTRL = 0;
+         #endif
   412710:	2237      	movs	r2, #55	@ 0x37
-    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_XTAL_PWDN_DEEPSLEEP, 0);
+         .eClpConfig = AM_HAL_PWRCTRL_CLP_ON
   412712:	4e38      	ldr	r6, [pc, #224]	@ (4127f4 <ns_power_platform_config+0x130>)
-    // MCUCTRL->XTALCTRL = 0;
+         #endif
   412714:	4b38      	ldr	r3, [pc, #224]	@ (4127f8 <ns_power_platform_config+0x134>)
-    am_hal_rtc_osc_select(AM_HAL_RTC_OSC_LFRC); // Use LFRC instead of XT
-    am_hal_rtc_osc_disable();
+    };
+
   412716:	201c      	movs	r0, #28
-    // MCUCTRL->XTALCTRL = 0;
+         #endif
   412718:	609a      	str	r2, [r3, #8]
-    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_XTAL_PWDN_DEEPSLEEP, 0);
+         .eClpConfig = AM_HAL_PWRCTRL_CLP_ON
   41271a:	f8c6 5250 	str.w	r5, [r6, #592]	@ 0x250
-    am_hal_rtc_osc_disable();
+
   41271e:	f001 fd9d 	bl	41425c <am_hal_pwrctrl_periph_disable>
-    VCOMP->PWDKEY = VCOMP_PWDKEY_PWDKEY_Key;
+    // Configure the cache, Enable the I-Cache and D-Cache.
   412722:	2017      	movs	r0, #23
   412724:	f001 fd9a 	bl	41425c <am_hal_pwrctrl_periph_disable>
-    MCUCTRL->DBGCTRL = 0;
+    am_hal_cachectrl_icache_enable();
   412728:	201d      	movs	r0, #29
   41272a:	f001 fd97 	bl	41425c <am_hal_pwrctrl_periph_disable>
-    am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
+    //
   41272e:	4b33      	ldr	r3, [pc, #204]	@ (4127fc <ns_power_platform_config+0x138>)
-    am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
+                    .eDTCMCfg       = AM_HAL_PWRCTRL_ITCM256K_DTCM512K,
   412730:	a802      	add	r0, sp, #8
-    am_hal_pwrctrl_mcu_memory_config_t McuMemCfg =
+    //
   412732:	9302      	str	r3, [sp, #8]
   412734:	f88d 500c 	strb.w	r5, [sp, #12]
-    am_hal_pwrctrl_mcu_memory_config(&McuMemCfg);
+                    .eDTCMCfg       = AM_HAL_PWRCTRL_ITCM256K_DTCM512K,
   412738:	f001 fb9a 	bl	413e70 <am_hal_pwrctrl_mcu_memory_config>
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0LPREN = 1;
+        #if defined(AM_PART_APOLLO5A)
   41273c:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   412740:	f043 0301 	orr.w	r3, r3, #1
   412744:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0SLPEN = 0;
+                .bEnableNVM     = true,
   412748:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   41274c:	f365 0341 	bfi	r3, r5, #1, #1
   412750:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM0PWRCTRL = 1;
+        #else
   412754:	f8d6 3180 	ldr.w	r3, [r6, #384]	@ 0x180
   412758:	f043 0304 	orr.w	r3, r3, #4
   41275c:	f8c6 3180 	str.w	r3, [r6, #384]	@ 0x180
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM1PWRCTRL = 1;
+            #else
   412760:	79a3      	ldrb	r3, [r4, #6]
   412762:	b37b      	cbz	r3, 4127c4 <ns_power_platform_config+0x100>
-        am_hal_pwrctrl_sram_config(&SRAMMemCfg);
+//     MCUCTRL->MRAMPWRCTRL_b.MRAMSLPEN = 0;
   412764:	2307      	movs	r3, #7
-            .eActiveWithGFX   = AM_HAL_PWRCTRL_SRAM_NONE,
+//         MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM1LPREN = 1;
   412766:	a804      	add	r0, sp, #16
-        am_hal_pwrctrl_sram_config(&SRAMMemCfg);
+//     MCUCTRL->MRAMPWRCTRL_b.MRAMSLPEN = 0;
   412768:	9304      	str	r3, [sp, #16]
   41276a:	f88d 3014 	strb.w	r3, [sp, #20]
-            .eActiveWithGFX   = AM_HAL_PWRCTRL_SRAM_NONE,
+//         MCUCTRL->MRAMCRYPTOPWRCTRL_b.MRAM1LPREN = 1;
   41276e:	f001 fc47 	bl	414000 <am_hal_pwrctrl_sram_config>
-    // Powering down various peripheral power domains
-    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_DEBUG);
-    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_CRYPTO);
-    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_OTP);
-  412772:	f00e ffd9 	bl	421728 <am_hal_sysctrl_fpu_enable>
+    am_hal_cachectrl_dcache_enable(true);
+    am_hal_pwrctrl_pwrmodctl_cpdlp_config(sDefaultCpdlpConfig);
 
+
+  412772:	f00e ffd9 	bl	421728 <am_hal_sysctrl_fpu_enable>
+    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_DIS_PERIPHS_ALL, 0);
   412776:	2001      	movs	r0, #1
   412778:	f00e ffe4 	bl	421744 <am_hal_sysctrl_fpu_stacking_enable>
+    // MCUCTRL->XTALCTRL = 0;
+    // am_hal_pwrctrl_control(AM_HAL_PWRCTRL_CONTROL_XTAL_PWDN_DEEPSLEEP, 0);
+    am_hal_rtc_osc_select(AM_HAL_RTC_OSC_LFRC); // Use LFRC instead of XT
+    am_hal_rtc_osc_disable();
+    VCOMP->PWDKEY = VCOMP_PWDKEY_PWDKEY_Key;
+    MCUCTRL->DBGCTRL = 0;
+  41277c:	f242 7010 	movw	r0, #10000	@ 0x2710
+  412780:	f002 fa92 	bl	414ca8 <am_util_delay_us>
+
+  412784:	7923      	ldrb	r3, [r4, #4]
+  412786:	3b01      	subs	r3, #1
+  412788:	2b01      	cmp	r3, #1
+uint32_t ns_set_performance_mode(ns_power_mode_e eAIPowerMode) {
+  41278a:	bf94      	ite	ls
+  41278c:	2002      	movls	r0, #2
+    uint32_t retval = NS_STATUS_SUCCESS;
+  41278e:	2001      	movhi	r0, #1
+  412790:	f001 fa32 	bl	413bf8 <am_hal_pwrctrl_mcu_mode_select>
+    // Powering down various peripheral power domains
+  412794:	bb18      	cbnz	r0, 4127de <ns_power_platform_config+0x11a>
+    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_DEBUG);
+  412796:	4a17      	ldr	r2, [pc, #92]	@ (4127f4 <ns_power_platform_config+0x130>)
+  412798:	f8d2 3180 	ldr.w	r3, [r2, #384]	@ 0x180
+  41279c:	f443 7300 	orr.w	r3, r3, #512	@ 0x200
+  4127a0:	f8c2 3180 	str.w	r3, [r2, #384]	@ 0x180
+    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_CRYPTO);
+    am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_OTP);
+  4127a4:	7b63      	ldrb	r3, [r4, #13]
+  4127a6:	b9b3      	cbnz	r3, 4127d6 <ns_power_platform_config+0x112>
     ns_power_memory_config(pCfg);
 
     am_hal_sysctrl_fpu_enable();
     am_hal_sysctrl_fpu_stacking_enable(true);
 
     // configure peripherals
-  41277c:	f242 7010 	movw	r0, #10000	@ 0x2710
-  412780:	f002 fa92 	bl	414ca8 <am_util_delay_us>
-    if ((eAIPowerMode == NS_MAXIMUM_PERF) || (eAIPowerMode == NS_MEDIUM_PERF)) {
-  412784:	7923      	ldrb	r3, [r4, #4]
-  412786:	3b01      	subs	r3, #1
-  412788:	2b01      	cmp	r3, #1
-        retval = am_hal_pwrctrl_mcu_mode_select(AM_HAL_PWRCTRL_MCU_MODE_HIGH_PERFORMANCE);
-  41278a:	bf94      	ite	ls
-  41278c:	2002      	movls	r0, #2
-        retval = am_hal_pwrctrl_mcu_mode_select(AM_HAL_PWRCTRL_MCU_MODE_LOW_POWER);
-  41278e:	2001      	movhi	r0, #1
-  412790:	f001 fa32 	bl	413bf8 <am_hal_pwrctrl_mcu_mode_select>
-    // ns_power_down_peripherals(pCfg);
-  412794:	bb18      	cbnz	r0, 4127de <ns_power_platform_config+0x11a>
-
-  412796:	4a17      	ldr	r2, [pc, #92]	@ (4127f4 <ns_power_platform_config+0x130>)
-  412798:	f8d2 3180 	ldr.w	r3, [r2, #384]	@ 0x180
-  41279c:	f443 7300 	orr.w	r3, r3, #512	@ 0x200
-  4127a0:	f8c2 3180 	str.w	r3, [r2, #384]	@ 0x180
-    // Configure power mode
-    ns_delay_us(10000);
-  4127a4:	7b63      	ldrb	r3, [r4, #13]
-  4127a6:	b9b3      	cbnz	r3, 4127d6 <ns_power_platform_config+0x112>
-    MCUCTRL->MRAMCRYPTOPWRCTRL_b.CRYPTOCLKGATEN = 1;
-
-    if (pCfg->bEnableTempCo) {
-        ns_lp_printf("WARNING TempCo not supported.\n");
-    }
-    g_ns_state.cryptoWantsToBeEnabled = pCfg->bNeedCrypto;
   4127a8:	2000      	movs	r0, #0
 
   4127aa:	4b15      	ldr	r3, [pc, #84]	@ (412800 <ns_power_platform_config+0x13c>)
   4127ac:	79e2      	ldrb	r2, [r4, #7]
-        ns_lp_printf("WARNING TempCo not supported.\n");
+    am_hal_sysctrl_fpu_stacking_enable(true);
   4127ae:	7ba1      	ldrb	r1, [r4, #14]
 
   4127b0:	725a      	strb	r2, [r3, #9]
-    if (pCfg->bEnableTempCo) {
+    am_hal_sysctrl_fpu_enable();
   4127b2:	729a      	strb	r2, [r3, #10]
-        ns_lp_printf("WARNING TempCo not supported.\n");
+    am_hal_sysctrl_fpu_stacking_enable(true);
   4127b4:	7159      	strb	r1, [r3, #5]
-    g_ns_state.cryptoCurrentlyEnabled = pCfg->bNeedCrypto;
+    // ns_power_down_peripherals(pCfg);
   4127b6:	b006      	add	sp, #24
   4127b8:	bd70      	pop	{r4, r5, r6, pc}
-    }
+
   4127ba:	2002      	movs	r0, #2
-    g_ns_state.cryptoCurrentlyEnabled = pCfg->bNeedCrypto;
+    // ns_power_down_peripherals(pCfg);
   4127bc:	b006      	add	sp, #24
   4127be:	bd70      	pop	{r4, r5, r6, pc}
-    uint32_t ui32ReturnStatus = AM_HAL_STATUS_SUCCESS;
+            .eActiveWithGFX  = AM_HAL_PWRCTRL_SRAM_NONE,
   4127c0:	2001      	movs	r0, #1
-    g_ns_state.cryptoCurrentlyEnabled = pCfg->bNeedCrypto;
+    // ns_power_down_peripherals(pCfg);
   4127c2:	4770      	bx	lr
-#endif
+                .eNVMCfg        = AM_HAL_PWRCTRL_NVM0_AND_NVM1,
   4127c4:	a804      	add	r0, sp, #16
   4127c6:	9304      	str	r3, [sp, #16]
   4127c8:	7103      	strb	r3, [r0, #4]
-            .eActiveWithDISP = AM_HAL_PWRCTRL_SRAM_NONE,          
+
   4127ca:	f001 fc19 	bl	414000 <am_hal_pwrctrl_sram_config>
   4127ce:	e7d0      	b.n	412772 <ns_power_platform_config+0xae>
-    }
+            #else
   4127d0:	2004      	movs	r0, #4
-    g_ns_state.cryptoCurrentlyEnabled = pCfg->bNeedCrypto;
+    // ns_power_down_peripherals(pCfg);
   4127d2:	b006      	add	sp, #24
   4127d4:	bd70      	pop	{r4, r5, r6, pc}
-    NS_TRY(ns_set_performance_mode(pCfg->eAIPowerMode), "Set CPU Perf mode failed.");
+
   4127d6:	480b      	ldr	r0, [pc, #44]	@ (412804 <ns_power_platform_config+0x140>)
   4127d8:	f003 f8dc 	bl	415994 <am_util_stdio_printf>
   4127dc:	e7e4      	b.n	4127a8 <ns_power_platform_config+0xe4>
-    // ns_power_down_peripherals(pCfg);
+    // Powering down various peripheral power domains
   4127de:	480a      	ldr	r0, [pc, #40]	@ (412808 <ns_power_platform_config+0x144>)
   4127e0:	f003 f8d8 	bl	415994 <am_util_stdio_printf>
   4127e4:	f7fe f9dc 	bl	410ba0 <ns_core_fail_loop>
@@ -5825,135 +5825,127 @@ uint32_t ns_audio_set_gain(int left_gain, int right_gain) {
   4129ec:	200272c8 	.word	0x200272c8
 
 004129f0 <am_pdm_isr_common.part.0>:
-
-    NVIC_DisableIRQ(g_ePdmInterrupts[cfg->mic]);
-
-
-    am_hal_pdm_disable(cfg);
-    am_hal_pdm_power_control(cfg, AM_HAL_PDM_POWER_OFF, false);
+        return;
+    }
+    // Read the interrupt status.
+    am_hal_pdm_interrupt_status_get(pvPDMHandle, &ui32Status, true);
+    am_hal_pdm_interrupt_clear(pvPDMHandle, ui32Status);
+        am_hal_pdm_interrupt_service(pvPDMHandle, ui32Status, &(g_ns_audio_config->sTransfer));
   4129f0:	b570      	push	{r4, r5, r6, lr}
-    uint32_t ui32Status;
+        uint32_t *ui32PDMDatabuffer = (uint32_t *)am_hal_pdm_dma_get_buffer(pvPDMHandle);
 
-#if configUSE_SYSVIEWER
-    traceISR_ENTER();
-#endif // configUSE_SYSVIEWER
+        g_ns_audio_config->callback(g_ns_audio_config, 0);
 
+        // Re-arrange data
+        uint8_t *temp1 = (uint8_t *)g_ns_audio_config->audioBuffer;
   4129f2:	4e2b      	ldr	r6, [pc, #172]	@ (412aa0 <am_pdm_isr_common.part.0+0xb0>)
-    am_hal_pdm_power_control(cfg, AM_HAL_PDM_POWER_OFF, false);
+        am_hal_pdm_interrupt_service(pvPDMHandle, ui32Status, &(g_ns_audio_config->sTransfer));
   4129f4:	b082      	sub	sp, #8
-
+        uint8_t *temp1 = (uint8_t *)g_ns_audio_config->audioBuffer;
   4129f6:	2201      	movs	r2, #1
   4129f8:	4669      	mov	r1, sp
   4129fa:	6830      	ldr	r0, [r6, #0]
-    if (pdmNumber != g_ns_audio_config->pdm_config->mic) {
-        return;
+        for (uint32_t i = 0; i < g_ns_audio_config->numSamples * g_ns_audio_config->numChannels;
+             i++) {
   4129fc:	4c29      	ldr	r4, [pc, #164]	@ (412aa4 <am_pdm_isr_common.part.0+0xb4>)
-
+        uint8_t *temp1 = (uint8_t *)g_ns_audio_config->audioBuffer;
   4129fe:	f009 fd99 	bl	41c534 <am_hal_pdm_interrupt_status_get>
-    if (pdmNumber != g_ns_audio_config->pdm_config->mic) {
+        for (uint32_t i = 0; i < g_ns_audio_config->numSamples * g_ns_audio_config->numChannels;
   412a02:	9900      	ldr	r1, [sp, #0]
   412a04:	6830      	ldr	r0, [r6, #0]
   412a06:	f009 fd7d 	bl	41c504 <am_hal_pdm_interrupt_clear>
-        return;
+             i++) {
   412a0a:	6822      	ldr	r2, [r4, #0]
   412a0c:	9900      	ldr	r1, [sp, #0]
   412a0e:	6830      	ldr	r0, [r6, #0]
   412a10:	322c      	adds	r2, #44	@ 0x2c
   412a12:	f009 fccd 	bl	41c3b0 <am_hal_pdm_interrupt_service>
-    }
-    // Read the interrupt status.
+            temp1[2 * i] = (ui32PDMDatabuffer[i] & 0xFF00) >> 8U;
+            temp1[2 * i + 1] = (ui32PDMDatabuffer[i] & 0xFF0000) >> 16U;
   412a16:	9b00      	ldr	r3, [sp, #0]
   412a18:	f013 0508 	ands.w	r5, r3, #8
   412a1c:	d11a      	bne.n	412a54 <am_pdm_isr_common.part.0+0x64>
-        g_ns_audio_config->callback(g_ns_audio_config, 0);
-
-        // Re-arrange data
-        uint8_t *temp1 = (uint8_t *)g_ns_audio_config->audioBuffer;
-        for (uint32_t i = 0; i < g_ns_audio_config->numSamples * g_ns_audio_config->numChannels;
-             i++) {
-  412a1e:	f013 0f06 	tst.w	r3, #6
-  412a22:	d101      	bne.n	412a28 <am_pdm_isr_common.part.0+0x38>
+                    ui32FifoDummy = PDMn(g_ns_audio_config->pdm_config->mic)->FIFOREAD;
                 }
         #pragma GCC diagnostic pop
         #endif
         am_hal_pdm_fifo_flush(pvPDMHandle);
         // ns_lp_printf("am_hal_pdm_fifo_flush() %d\n", ui32Status);
-    }
+  412a1e:	f013 0f06 	tst.w	r3, #6
+  412a22:	d101      	bne.n	412a28 <am_pdm_isr_common.part.0+0x38>
   412a24:	b002      	add	sp, #8
   412a26:	bd70      	pop	{r4, r5, r6, pc}
-            temp1[2 * i] = (ui32PDMDatabuffer[i] & 0xFF00) >> 8U;
+    }
   412a28:	6830      	ldr	r0, [r6, #0]
   412a2a:	f009 fdaf 	bl	41c58c <am_hal_pdm_fifo_count_get>
-        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
+}
   412a2e:	b160      	cbz	r0, 412a4a <am_pdm_isr_common.part.0+0x5a>
   412a30:	462b      	mov	r3, r5
-        #pragma GCC diagnostic push
+void am_pdm0_isr(void) { am_pdm_isr_common(0); }
   412a32:	6822      	ldr	r2, [r4, #0]
   412a34:	491c      	ldr	r1, [pc, #112]	@ (412aa8 <am_pdm_isr_common.part.0+0xb8>)
   412a36:	6a92      	ldr	r2, [r2, #40]	@ 0x28
   412a38:	7892      	ldrb	r2, [r2, #2]
   412a3a:	eb01 3102 	add.w	r1, r1, r2, lsl #12
-        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
+}
   412a3e:	3301      	adds	r3, #1
-        #pragma GCC diagnostic push
+void am_pdm0_isr(void) { am_pdm_isr_common(0); }
   412a40:	694a      	ldr	r2, [r1, #20]
-        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
+}
   412a42:	b2db      	uxtb	r3, r3
   412a44:	4298      	cmp	r0, r3
-        #pragma GCC diagnostic push
+void am_pdm0_isr(void) { am_pdm_isr_common(0); }
   412a46:	9201      	str	r2, [sp, #4]
-        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
+}
   412a48:	d8f9      	bhi.n	412a3e <am_pdm_isr_common.part.0+0x4e>
-                {
+#endif
   412a4a:	6830      	ldr	r0, [r6, #0]
   412a4c:	f009 fc86 	bl	41c35c <am_hal_pdm_fifo_flush>
-    }
   412a50:	b002      	add	sp, #8
   412a52:	bd70      	pop	{r4, r5, r6, pc}
-
+        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
   412a54:	6830      	ldr	r0, [r6, #0]
   412a56:	f009 fd93 	bl	41c580 <am_hal_pdm_dma_get_buffer>
-    // ns_lp_printf("PDM ISR %d\n", ui32Status);
+        #pragma GCC diagnostic push
   412a5a:	6823      	ldr	r3, [r4, #0]
   412a5c:	2100      	movs	r1, #0
-
+        uint32_t count = am_hal_pdm_fifo_count_get(pvPDMHandle);
   412a5e:	4605      	mov	r5, r0
-    // ns_lp_printf("PDM ISR %d\n", ui32Status);
+        #pragma GCC diagnostic push
   412a60:	4618      	mov	r0, r3
   412a62:	689b      	ldr	r3, [r3, #8]
   412a64:	4798      	blx	r3
-        uint32_t *ui32PDMDatabuffer = (uint32_t *)am_hal_pdm_dma_get_buffer(pvPDMHandle);
+                for ( uint8_t i = 0; i < count; i++ )
   412a66:	6822      	ldr	r2, [r4, #0]
-
+                {
   412a68:	8bd3      	ldrh	r3, [r2, #30]
   412a6a:	7f11      	ldrb	r1, [r2, #28]
-        uint32_t *ui32PDMDatabuffer = (uint32_t *)am_hal_pdm_dma_get_buffer(pvPDMHandle);
+                for ( uint8_t i = 0; i < count; i++ )
   412a6c:	68d0      	ldr	r0, [r2, #12]
-
+                {
   412a6e:	fb01 f303 	mul.w	r3, r1, r3
   412a72:	2b00      	cmp	r3, #0
   412a74:	d0d6      	beq.n	412a24 <am_pdm_isr_common.part.0+0x34>
   412a76:	2300      	movs	r3, #0
   412a78:	1c46      	adds	r6, r0, #1
-
+                }
   412a7a:	682a      	ldr	r2, [r5, #0]
   412a7c:	0a12      	lsrs	r2, r2, #8
   412a7e:	f800 2013 	strb.w	r2, [r0, r3, lsl #1]
-        // Re-arrange data
+        #pragma GCC diagnostic pop
   412a82:	f855 2b04 	ldr.w	r2, [r5], #4
   412a86:	0c12      	lsrs	r2, r2, #16
   412a88:	f806 2013 	strb.w	r2, [r6, r3, lsl #1]
-
+                {
   412a8c:	6821      	ldr	r1, [r4, #0]
-        g_ns_audio_config->callback(g_ns_audio_config, 0);
+                    ui32FifoDummy = PDMn(g_ns_audio_config->pdm_config->mic)->FIFOREAD;
   412a8e:	3301      	adds	r3, #1
-
+                {
   412a90:	8bca      	ldrh	r2, [r1, #30]
   412a92:	7f09      	ldrb	r1, [r1, #28]
   412a94:	fb01 f202 	mul.w	r2, r1, r2
   412a98:	4293      	cmp	r3, r2
   412a9a:	d3ee      	bcc.n	412a7a <am_pdm_isr_common.part.0+0x8a>
-    }
   412a9c:	b002      	add	sp, #8
   412a9e:	bd70      	pop	{r4, r5, r6, pc}
   412aa0:	2004038c 	.word	0x2004038c
@@ -5986,66 +5978,66 @@ uint32_t ns_audio_set_gain(int left_gain, int right_gain) {
   412ace:	f88d 3007 	strb.w	r3, [sp, #7]
         .ui32GainChangeDelay = AM_HAL_PDM_CLKOUT_DELAY_NONE,
   412ad2:	f88d 2006 	strb.w	r2, [sp, #6]
-    //     // .bLRSwap             = 0,
+        switch (cfg->clock_freq) {
   412ad6:	7833      	ldrb	r3, [r6, #0]
 
   412ad8:	4604      	mov	r4, r0
-    //     // .bLRSwap             = 0,
+        switch (cfg->clock_freq) {
   412ada:	2b05      	cmp	r3, #5
   412adc:	f200 808a 	bhi.w	412bf4 <pdm_init+0x148>
   412ae0:	e8df f003 	tbb	[pc, r3]
   412ae4:	556c5b55 	.word	0x556c5b55
   412ae8:	0383      	.short	0x0383
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412aea:	7f03      	ldrb	r3, [r0, #28]
-
+            pdmConfig.ui32DecimationRate = 24;
   412aec:	f240 3c01 	movw	ip, #769	@ 0x301
 
   412af0:	2b02      	cmp	r3, #2
-            pdmConfig.ui32DecimationRate = 48;
+            am_hal_clkmgr_clock_config(AM_HAL_CLKMGR_CLK_ID_PLLVCO, 245760000, NULL);
   412af2:	f04f 0530 	mov.w	r5, #48	@ 0x30
 
   412af6:	bf0c      	ite	eq
   412af8:	2303      	moveq	r3, #3
   412afa:	2301      	movne	r3, #1
-        pdmConfig.ePCMChannels = AM_HAL_PDM_CHANNEL_LEFT;
+        am_hal_clkmgr_clock_config(AM_HAL_CLKMGR_CLK_ID_HFRC2, AM_HAL_CLKMGR_HFRC2_FREQ_ADJ_196P608MHZ, NULL);
   412afc:	2200      	movs	r2, #0
   412afe:	2006      	movs	r0, #6
   412b00:	4942      	ldr	r1, [pc, #264]	@ (412c0c <pdm_init+0x160>)
-
+            pdmConfig.ui32DecimationRate = 24;
   412b02:	f8ad c004 	strh.w	ip, [sp, #4]
-            pdmConfig.ui32DecimationRate = 48;
+            am_hal_clkmgr_clock_config(AM_HAL_CLKMGR_CLK_ID_PLLVCO, 245760000, NULL);
   412b06:	9503      	str	r5, [sp, #12]
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412b08:	f88d 301b 	strb.w	r3, [sp, #27]
-        pdmConfig.ePCMChannels = AM_HAL_PDM_CHANNEL_LEFT;
-  412b0c:	f007 f9e6 	bl	419edc <am_hal_clkmgr_clock_config>
-        #endif
-  412b10:	4d3f      	ldr	r5, [pc, #252]	@ (412c10 <pdm_init+0x164>)
         am_hal_clkmgr_clock_config(AM_HAL_CLKMGR_CLK_ID_HFRC2, AM_HAL_CLKMGR_HFRC2_FREQ_ADJ_196P608MHZ, NULL);
+  412b0c:	f007 f9e6 	bl	419edc <am_hal_clkmgr_clock_config>
+        (AM_HAL_PDM_INT_DERR | AM_HAL_PDM_INT_DCMP | AM_HAL_PDM_INT_UNDFL | AM_HAL_PDM_INT_OVF));
+  412b10:	4d3f      	ldr	r5, [pc, #252]	@ (412c10 <pdm_init+0x164>)
+        pvPDMHandle,
   412b12:	78b0      	ldrb	r0, [r6, #2]
   412b14:	f012 ff5c 	bl	4259d0 <am_bsp_pdm_pins_enable>
-        #endif
+        (AM_HAL_PDM_INT_DERR | AM_HAL_PDM_INT_DCMP | AM_HAL_PDM_INT_UNDFL | AM_HAL_PDM_INT_OVF));
   412b18:	4629      	mov	r1, r5
   412b1a:	78b0      	ldrb	r0, [r6, #2]
   412b1c:	f009 f8b6 	bl	41bc8c <am_hal_pdm_initialize>
-    }
+
   412b20:	2200      	movs	r2, #0
   412b22:	6828      	ldr	r0, [r5, #0]
   412b24:	4611      	mov	r1, r2
   412b26:	f009 f8ed 	bl	41bd04 <am_hal_pdm_power_control>
-
+    // NVIC_SetPriority(g_ePdmInterrupts[cfg->mic],AM_IRQ_PRIORITY_DEFAULT);
   412b2a:	a901      	add	r1, sp, #4
   412b2c:	6828      	ldr	r0, [r5, #0]
   412b2e:	f009 f927 	bl	41bd80 <am_hal_pdm_configure>
-    am_bsp_pdm_pins_enable(cfg->mic);
+    NVIC_EnableIRQ(g_ePdmInterrupts[cfg->mic]);
   412b32:	2110      	movs	r1, #16
   412b34:	6828      	ldr	r0, [r5, #0]
   412b36:	f009 fc27 	bl	41c388 <am_hal_pdm_fifo_threshold_setup>
-    am_hal_pdm_configure(pvPDMHandle, &pdmConfig);
+    pdm_trigger_dma(config);
   412b3a:	6828      	ldr	r0, [r5, #0]
   412b3c:	f009 fc0e 	bl	41c35c <am_hal_pdm_fifo_flush>
-
+void pdm_deinit(ns_audio_config_t *config) {
   412b40:	211e      	movs	r1, #30
   412b42:	6828      	ldr	r0, [r5, #0]
   412b44:	f009 fcac 	bl	41c4a0 <am_hal_pdm_interrupt_enable>
@@ -6056,7 +6048,7 @@ uint32_t ns_audio_set_gain(int left_gain, int right_gain) {
     NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
   412b50:	f44f 3280 	mov.w	r2, #65536	@ 0x10000
   412b54:	605a      	str	r2, [r3, #4]
-
+                                           AM_HAL_PDM_INT_DCMP  |\
   412b56:	6828      	ldr	r0, [r5, #0]
   412b58:	f009 f992 	bl	41be80 <am_hal_pdm_enable>
 
@@ -6084,91 +6076,91 @@ void pdm_trigger_dma(ns_audio_config_t *config) {
   412b7e:	6828      	ldr	r0, [r5, #0]
   412b80:	f104 012c 	add.w	r1, r4, #44	@ 0x2c
   412b84:	f009 fb6e 	bl	41c264 <am_hal_pdm_dma_start>
-    NVIC_SetPriority(g_ePdmInterrupts[cfg->mic], 7);
+                                           AM_HAL_PDM_INT_OVF));
   412b88:	2000      	movs	r0, #0
-    NVIC_EnableIRQ(g_ePdmInterrupts[cfg->mic]);
+
   412b8a:	b008      	add	sp, #32
   412b8c:	bd70      	pop	{r4, r5, r6, pc}
-        pdmConfig.ePDMClkSpeed = AM_HAL_PDM_CLK_HFXTAL;
+    {
   412b8e:	4822      	ldr	r0, [pc, #136]	@ (412c18 <pdm_init+0x16c>)
   412b90:	f002 ff00 	bl	415994 <am_util_stdio_printf>
-        pdmConfig.eClkDivider = AM_HAL_PDM_MCLKDIV_3;
+        #ifdef AM_PART_APOLLO510
   412b94:	2003      	movs	r0, #3
-    NVIC_EnableIRQ(g_ePdmInterrupts[cfg->mic]);
+
   412b96:	b008      	add	sp, #32
   412b98:	bd70      	pop	{r4, r5, r6, pc}
-    case NS_CLKSEL_HFRC2_ADJ:
+    } else {
   412b9a:	f240 2001 	movw	r0, #513	@ 0x201
-        pdmConfig.ePDMClkSpeed = AM_HAL_PDM_CLK_HFRC2_31MHZ;
+        pdmConfig.ePCMChannels = AM_HAL_PDM_CHANNEL_LEFT;
   412b9e:	f640 6103 	movw	r1, #3587	@ 0xe03
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412ba2:	2218      	movs	r2, #24
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412ba4:	7f23      	ldrb	r3, [r4, #28]
-    case NS_CLKSEL_HFRC2_ADJ:
+    } else {
   412ba6:	f8ad 0018 	strh.w	r0, [sp, #24]
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412baa:	2b02      	cmp	r3, #2
-        pdmConfig.ePDMClkSpeed = AM_HAL_PDM_CLK_HFRC2_31MHZ;
+        pdmConfig.ePCMChannels = AM_HAL_PDM_CHANNEL_LEFT;
   412bac:	f8ad 1004 	strh.w	r1, [sp, #4]
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412bb0:	9203      	str	r2, [sp, #12]
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412bb2:	d027      	beq.n	412c04 <pdm_init+0x158>
-        pdmConfig.ePCMChannels = AM_HAL_PDM_CHANNEL_STEREO;
+        am_util_delay_us(500);
   412bb4:	2301      	movs	r3, #1
   412bb6:	f88d 301b 	strb.w	r3, [sp, #27]
-
+    }
   412bba:	e7a9      	b.n	412b10 <pdm_init+0x64>
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412bbc:	7f03      	ldrb	r3, [r0, #28]
-        //     pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV7;
+
   412bbe:	f240 2102 	movw	r1, #514	@ 0x202
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412bc2:	2b02      	cmp	r3, #2
   412bc4:	bf0c      	ite	eq
   412bc6:	2003      	moveq	r0, #3
   412bc8:	2001      	movne	r0, #1
-        //     pdmConfig.ui32DecimationRate = 48;
+    // PDM Channel Config
   412bca:	f640 6201 	movw	r2, #3585	@ 0xe01
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412bce:	2318      	movs	r3, #24
   412bd0:	f88d 001b 	strb.w	r0, [sp, #27]
-        //     pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV7;
-  412bd4:	f8ad 1018 	strh.w	r1, [sp, #24]
-        //     pdmConfig.ui32DecimationRate = 48;
-  412bd8:	f8ad 2004 	strh.w	r2, [sp, #4]
 
+  412bd4:	f8ad 1018 	strh.w	r1, [sp, #24]
+    // PDM Channel Config
+  412bd8:	f8ad 2004 	strh.w	r2, [sp, #4]
+    am_hal_pdm_fifo_flush(pvPDMHandle);
   412bdc:	490f      	ldr	r1, [pc, #60]	@ (412c1c <pdm_init+0x170>)
   412bde:	2200      	movs	r2, #0
   412be0:	2005      	movs	r0, #5
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412be2:	9303      	str	r3, [sp, #12]
-
+    am_hal_pdm_fifo_flush(pvPDMHandle);
   412be4:	f007 f97a 	bl	419edc <am_hal_clkmgr_clock_config>
   412be8:	e792      	b.n	412b10 <pdm_init+0x64>
-        //     pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV7;
+
   412bea:	f44f 7000 	mov.w	r0, #512	@ 0x200
-        //     pdmConfig.ui32DecimationRate = 48;
+    // PDM Channel Config
   412bee:	f640 6101 	movw	r1, #3585	@ 0xe01
   412bf2:	e7d6      	b.n	412ba2 <pdm_init+0xf6>
-        }
+        #endif
   412bf4:	210e      	movs	r1, #14
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412bf6:	2218      	movs	r2, #24
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412bf8:	7f03      	ldrb	r3, [r0, #28]
-        }
+        #endif
   412bfa:	f88d 1005 	strb.w	r1, [sp, #5]
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412bfe:	2b02      	cmp	r3, #2
-    } if (cfg->clock == NS_CLKSEL_PLL) {
+    }
   412c00:	9203      	str	r2, [sp, #12]
-        pdmConfig.ePDMAClkOutDivder = AM_HAL_PDM_PDMA_CLKO_DIV14;
+        // Start the 32MHz crystal rapidly used to adjust HFRC2.
   412c02:	d1d7      	bne.n	412bb4 <pdm_init+0x108>
   412c04:	2303      	movs	r3, #3
   412c06:	f88d 301b 	strb.w	r3, [sp, #27]
-
+    }
   412c0a:	e781      	b.n	412b10 <pdm_init+0x64>
   412c0c:	00bb8000 	.word	0x00bb8000
   412c10:	2004038c 	.word	0x2004038c
@@ -6177,15 +6169,15 @@ void pdm_trigger_dma(ns_audio_config_t *config) {
   412c1c:	0bb80000 	.word	0x0bb80000
 
 00412c20 <pdm_deinit>:
-    am_hal_pdm_enable(pvPDMHandle);
+
   412c20:	b510      	push	{r4, lr}
-    pdm_trigger_dma(config);
+
   412c22:	6a84      	ldr	r4, [r0, #40]	@ 0x28
-    return NS_STATUS_SUCCESS;
+    am_hal_pdm_disable(cfg);
   412c24:	211e      	movs	r1, #30
   412c26:	4620      	mov	r0, r4
   412c28:	f009 fc6c 	bl	41c504 <am_hal_pdm_interrupt_clear>
-    am_hal_pdm_interrupt_clear(cfg, (AM_HAL_PDM_INT_DERR  |\
+// PDM Interrupt Service Routine (ISR)
   412c2c:	211e      	movs	r1, #30
   412c2e:	4620      	mov	r0, r4
   412c30:	f009 fc4e 	bl	41c4d0 <am_hal_pdm_interrupt_disable>
@@ -6202,19 +6194,19 @@ __STATIC_FORCEINLINE void __DSB(void)
   412c3e:	f3bf 8f4f 	dsb	sy
   __ASM volatile ("isb 0xF":::"memory");
   412c42:	f3bf 8f6f 	isb	sy
-                                           AM_HAL_PDM_INT_OVF));
+    if (pdmNumber != g_ns_audio_config->pdm_config->mic) {
   412c46:	4620      	mov	r0, r4
   412c48:	f009 fa42 	bl	41c0d0 <am_hal_pdm_disable>
-
+        return;
   412c4c:	4620      	mov	r0, r4
   412c4e:	2200      	movs	r2, #0
   412c50:	2101      	movs	r1, #1
   412c52:	f009 f857 	bl	41bd04 <am_hal_pdm_power_control>
-    NVIC_DisableIRQ(g_ePdmInterrupts[cfg->mic]);
+    }
   412c56:	4620      	mov	r0, r4
-
+    // Read the interrupt status.
   412c58:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
-    NVIC_DisableIRQ(g_ePdmInterrupts[cfg->mic]);
+    }
   412c5c:	f009 b83e 	b.w	41bcdc <am_hal_pdm_deinitialize>
   412c60:	e000e100 	.word	0xe000e100
 
@@ -6225,8 +6217,6 @@ __STATIC_FORCEINLINE void __DSB(void)
   412c68:	6a9b      	ldr	r3, [r3, #40]	@ 0x28
   412c6a:	789b      	ldrb	r3, [r3, #2]
   412c6c:	b103      	cbz	r3, 412c70 <am_pdm0_isr+0xc>
-
-#if configUSE_SYSVIEWER
   412c6e:	4770      	bx	lr
   412c70:	f7ff bebe 	b.w	4129f0 <am_pdm_isr_common.part.0>
   412c74:	20040384 	.word	0x20040384
@@ -6497,220 +6487,220 @@ uint32_t ns_timer_init(ns_timer_config_t *cfg) {
   412db8:	20040390 	.word	0x20040390
 
 00412dbc <am_timer01_isr>:
+
 void am_timer01_isr(void) {
     ns_timers_e timerNum = ns_timer_config[1]->timer;
     //
     // Clear the timer Interrupt (write to clear).
     //
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412dbc:	2002      	movs	r0, #2
-void am_timer01_isr(void) {
+
   412dbe:	b570      	push	{r4, r5, r6, lr}
-    ns_timers_e timerNum = ns_timer_config[1]->timer;
+void am_timer01_isr(void) {
   412dc0:	4c07      	ldr	r4, [pc, #28]	@ (412de0 <am_timer01_isr+0x24>)
   412dc2:	6863      	ldr	r3, [r4, #4]
   412dc4:	791d      	ldrb	r5, [r3, #4]
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
+    //
   412dc6:	006b      	lsls	r3, r5, #1
   412dc8:	4098      	lsls	r0, r3
   412dca:	f00f fd99 	bl	422900 <am_hal_timer_interrupt_clear>
-    am_hal_timer_clear(timerNum);
+    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412dce:	4628      	mov	r0, r5
   412dd0:	f00f fd42 	bl	422858 <am_hal_timer_clear>
+    am_hal_timer_clear(timerNum);
 
-    ns_timer_config[1]->callback(ns_timer_config[1]);
   412dd4:	6860      	ldr	r0, [r4, #4]
-}
-  412dd6:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
     ns_timer_config[1]->callback(ns_timer_config[1]);
+  412dd6:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+
   412dda:	68c3      	ldr	r3, [r0, #12]
   412ddc:	4718      	bx	r3
   412dde:	bf00      	nop
   412de0:	20040390 	.word	0x20040390
 
 00412de4 <am_timer02_isr>:
+
 void am_timer02_isr(void) {
     ns_timers_e timerNum = ns_timer_config[2]->timer;
     //
     // Clear the timer Interrupt (write to clear).
     //
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412de4:	2002      	movs	r0, #2
-void am_timer02_isr(void) {
+
   412de6:	b570      	push	{r4, r5, r6, lr}
-    ns_timers_e timerNum = ns_timer_config[2]->timer;
+void am_timer02_isr(void) {
   412de8:	4c07      	ldr	r4, [pc, #28]	@ (412e08 <am_timer02_isr+0x24>)
   412dea:	68a3      	ldr	r3, [r4, #8]
   412dec:	791d      	ldrb	r5, [r3, #4]
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
+    //
   412dee:	006b      	lsls	r3, r5, #1
   412df0:	4098      	lsls	r0, r3
   412df2:	f00f fd85 	bl	422900 <am_hal_timer_interrupt_clear>
-    am_hal_timer_clear(timerNum);
+    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412df6:	4628      	mov	r0, r5
   412df8:	f00f fd2e 	bl	422858 <am_hal_timer_clear>
+    am_hal_timer_clear(timerNum);
 
-    ns_timer_config[2]->callback(ns_timer_config[2]);
   412dfc:	68a0      	ldr	r0, [r4, #8]
-}
-  412dfe:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
     ns_timer_config[2]->callback(ns_timer_config[2]);
+  412dfe:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+
   412e02:	68c3      	ldr	r3, [r0, #12]
   412e04:	4718      	bx	r3
   412e06:	bf00      	nop
   412e08:	20040390 	.word	0x20040390
 
 00412e0c <am_timer03_isr>:
+
 void am_timer03_isr(void) {
     ns_timers_e timerNum = ns_timer_config[3]->timer;
     //
     // Clear the timer Interrupt (write to clear).
     //
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412e0c:	2002      	movs	r0, #2
-void am_timer03_isr(void) {
+
   412e0e:	b570      	push	{r4, r5, r6, lr}
-    ns_timers_e timerNum = ns_timer_config[3]->timer;
+void am_timer03_isr(void) {
   412e10:	4c07      	ldr	r4, [pc, #28]	@ (412e30 <am_timer03_isr+0x24>)
   412e12:	68e3      	ldr	r3, [r4, #12]
   412e14:	791d      	ldrb	r5, [r3, #4]
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
+    //
   412e16:	006b      	lsls	r3, r5, #1
   412e18:	4098      	lsls	r0, r3
   412e1a:	f00f fd71 	bl	422900 <am_hal_timer_interrupt_clear>
-    am_hal_timer_clear(timerNum);
+    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412e1e:	4628      	mov	r0, r5
   412e20:	f00f fd1a 	bl	422858 <am_hal_timer_clear>
+    am_hal_timer_clear(timerNum);
 
-    ns_timer_config[3]->callback(ns_timer_config[3]);
   412e24:	68e0      	ldr	r0, [r4, #12]
-}
-  412e26:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
     ns_timer_config[3]->callback(ns_timer_config[3]);
+  412e26:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+
   412e2a:	68c3      	ldr	r3, [r0, #12]
   412e2c:	4718      	bx	r3
   412e2e:	bf00      	nop
   412e30:	20040390 	.word	0x20040390
 
 00412e34 <am_timer04_isr>:
+
 void am_timer04_isr(void) {
     ns_timers_e timerNum = ns_timer_config[4]->timer;
     //
     // Clear the timer Interrupt (write to clear).
     //
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412e34:	2002      	movs	r0, #2
-void am_timer04_isr(void) {
+
   412e36:	b570      	push	{r4, r5, r6, lr}
-    ns_timers_e timerNum = ns_timer_config[4]->timer;
+void am_timer04_isr(void) {
   412e38:	4c07      	ldr	r4, [pc, #28]	@ (412e58 <am_timer04_isr+0x24>)
   412e3a:	6923      	ldr	r3, [r4, #16]
   412e3c:	791d      	ldrb	r5, [r3, #4]
-    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
+    //
   412e3e:	006b      	lsls	r3, r5, #1
   412e40:	4098      	lsls	r0, r3
   412e42:	f00f fd5d 	bl	422900 <am_hal_timer_interrupt_clear>
-    am_hal_timer_clear(timerNum);
+    am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(timerNum, AM_HAL_TIMER_COMPARE1));
   412e46:	4628      	mov	r0, r5
   412e48:	f00f fd06 	bl	422858 <am_hal_timer_clear>
+    am_hal_timer_clear(timerNum);
 
-    ns_timer_config[4]->callback(ns_timer_config[4]);
   412e4c:	6920      	ldr	r0, [r4, #16]
-}
-  412e4e:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
     ns_timer_config[4]->callback(ns_timer_config[4]);
+  412e4e:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+
   412e52:	68c3      	ldr	r3, [r0, #12]
   412e54:	4718      	bx	r3
   412e56:	bf00      	nop
   412e58:	20040390 	.word	0x20040390
 
 00412e5c <ns_timer_platform_init>:
+}
 
-uint32_t ns_timer_platform_init(ns_timer_config_t *cfg) {
   412e5c:	b570      	push	{r4, r5, r6, lr}
   412e5e:	4604      	mov	r4, r0
   412e60:	b086      	sub	sp, #24
+#endif
 
     am_hal_timer_config_t TimerConfig;
 
     // Set the timer configuration
     // The default timer configuration is HFRC_DIV16, EDGE, compares=0, no trig.
-    am_hal_timer_default_config_set(&TimerConfig);
   412e62:	4668      	mov	r0, sp
   412e64:	f00f fce6 	bl	422834 <am_hal_timer_default_config_set>
+    am_hal_timer_default_config_set(&TimerConfig);
 
     // modify the default
-    if (cfg->timer == NS_TIMER_TEMPCO) {
   412e68:	7920      	ldrb	r0, [r4, #4]
   412e6a:	2804      	cmp	r0, #4
-        TimerConfig.eInputClock = AM_HAL_TIMER_CLOCK_HFRC_DIV16;
+    if (cfg->timer == NS_TIMER_TEMPCO) {
   412e6c:	bf04      	itt	eq
   412e6e:	2301      	moveq	r3, #1
   412e70:	f8ad 3000 	strheq.w	r3, [sp]
+        TimerConfig.eInputClock = AM_HAL_TIMER_CLOCK_HFRC_DIV16;
     }
 
-    if ((cfg->enableInterrupt)) {
   412e74:	7963      	ldrb	r3, [r4, #5]
   412e76:	b143      	cbz	r3, 412e8a <ns_timer_platform_init+0x2e>
-        TimerConfig.eFunction = AM_HAL_TIMER_FN_UPCOUNT;
+    if ((cfg->enableInterrupt)) {
   412e78:	2102      	movs	r1, #2
-        TimerConfig.ui32Compare1 = cfg->periodInMicroseconds / 6; // 6 ticks per uS
+        TimerConfig.eFunction = AM_HAL_TIMER_FN_UPCOUNT;
   412e7a:	68a3      	ldr	r3, [r4, #8]
   412e7c:	4a1d      	ldr	r2, [pc, #116]	@ (412ef4 <ns_timer_platform_init+0x98>)
-        TimerConfig.eFunction = AM_HAL_TIMER_FN_UPCOUNT;
+    if ((cfg->enableInterrupt)) {
   412e7e:	f88d 1002 	strb.w	r1, [sp, #2]
-        TimerConfig.ui32Compare1 = cfg->periodInMicroseconds / 6; // 6 ticks per uS
+        TimerConfig.eFunction = AM_HAL_TIMER_FN_UPCOUNT;
   412e82:	fba2 2303 	umull	r2, r3, r2, r3
   412e86:	40cb      	lsrs	r3, r1
   412e88:	9305      	str	r3, [sp, #20]
+        TimerConfig.ui32Compare1 = cfg->periodInMicroseconds / 6; // 6 ticks per uS
     }
 
-    ui32Status = am_hal_timer_config(cfg->timer, &TimerConfig);
   412e8a:	4669      	mov	r1, sp
   412e8c:	f00f fc7c 	bl	422788 <am_hal_timer_config>
+    ui32Status = am_hal_timer_config(cfg->timer, &TimerConfig);
     if (ui32Status != AM_HAL_STATUS_SUCCESS) {
-        ns_lp_printf("Failed to configure TIMER%d, return value=%d\r\n", cfg->timer, ui32Status);
   412e90:	7921      	ldrb	r1, [r4, #4]
-    if (ui32Status != AM_HAL_STATUS_SUCCESS) {
+    ui32Status = am_hal_timer_config(cfg->timer, &TimerConfig);
   412e92:	4605      	mov	r5, r0
   412e94:	b9f8      	cbnz	r0, 412ed6 <ns_timer_platform_init+0x7a>
+        return ui32Status;
     }
 
     //
     // Stop and clear the timer.
     //
-    am_hal_timer_clear(cfg->timer);
   412e96:	4608      	mov	r0, r1
   412e98:	f00f fcde 	bl	422858 <am_hal_timer_clear>
+    am_hal_timer_clear(cfg->timer);
 
-    if ((cfg->enableInterrupt)) {
   412e9c:	7963      	ldrb	r3, [r4, #5]
   412e9e:	b913      	cbnz	r3, 412ea6 <ns_timer_platform_init+0x4a>
+        } else if (cfg->timer == NS_TIMER_USB) {
             NVIC_SetPriority(TIMER3_IRQn, AM_IRQ_PRIORITY_DEFAULT);
             NVIC_EnableIRQ(TIMER3_IRQn);
         }
     }
     return ui32Status;
-}
   412ea0:	4628      	mov	r0, r5
   412ea2:	b006      	add	sp, #24
   412ea4:	bd70      	pop	{r4, r5, r6, pc}
-        am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(cfg->timer, AM_HAL_TIMER_COMPARE1));
+    if ((cfg->enableInterrupt)) {
   412ea6:	2602      	movs	r6, #2
   412ea8:	7920      	ldrb	r0, [r4, #4]
   412eaa:	0040      	lsls	r0, r0, #1
   412eac:	fa06 f000 	lsl.w	r0, r6, r0
   412eb0:	f00f fd26 	bl	422900 <am_hal_timer_interrupt_clear>
-        am_hal_timer_interrupt_enable(AM_HAL_TIMER_MASK(cfg->timer, AM_HAL_TIMER_COMPARE1));
+        am_hal_timer_interrupt_clear(AM_HAL_TIMER_MASK(cfg->timer, AM_HAL_TIMER_COMPARE1));
   412eb4:	7920      	ldrb	r0, [r4, #4]
   412eb6:	0040      	lsls	r0, r0, #1
   412eb8:	fa06 f000 	lsl.w	r0, r6, r0
   412ebc:	f00f fd16 	bl	4228ec <am_hal_timer_interrupt_enable>
-        if (cfg->timer == NS_TIMER_INTERRUPT) {
+        //
   412ec0:	7923      	ldrb	r3, [r4, #4]
   412ec2:	2b01      	cmp	r3, #1
   412ec4:	d00e      	beq.n	412ee4 <ns_timer_platform_init+0x88>
-        } else if (cfg->timer == NS_TIMER_USB) {
+            NVIC_SetPriority(TIMER1_IRQn, AM_IRQ_PRIORITY_DEFAULT);
   412ec6:	2b03      	cmp	r3, #3
   412ec8:	d1ea      	bne.n	412ea0 <ns_timer_platform_init+0x44>
     NVIC->IPR[((uint32_t)IRQn)]               = (uint8_t)((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL);
@@ -6721,11 +6711,11 @@ uint32_t ns_timer_platform_init(ns_timer_config_t *cfg) {
   412ed2:	609a      	str	r2, [r3, #8]
     __COMPILER_BARRIER();
   412ed4:	e7e4      	b.n	412ea0 <ns_timer_platform_init+0x44>
-        ns_lp_printf("Failed to configure TIMER%d, return value=%d\r\n", cfg->timer, ui32Status);
+    if (ui32Status != AM_HAL_STATUS_SUCCESS) {
   412ed6:	4602      	mov	r2, r0
   412ed8:	4808      	ldr	r0, [pc, #32]	@ (412efc <ns_timer_platform_init+0xa0>)
   412eda:	f002 fd5b 	bl	415994 <am_util_stdio_printf>
-}
+    return ui32Status;
   412ede:	4628      	mov	r0, r5
   412ee0:	b006      	add	sp, #24
   412ee2:	bd70      	pop	{r4, r5, r6, pc}
@@ -6743,52 +6733,52 @@ uint32_t ns_timer_platform_init(ns_timer_config_t *cfg) {
   412efc:	00448808 	.word	0x00448808
 
 00412f00 <ns_us_ticker_read>:
+}
 
 uint32_t ns_us_ticker_read(ns_timer_config_t *cfg) {
 #ifndef NS_DISABLE_API_VALIDATION
-    if (cfg == NULL) {
   412f00:	b140      	cbz	r0, 412f14 <ns_us_ticker_read+0x14>
-uint32_t ns_us_ticker_read(ns_timer_config_t *cfg) {
+
   412f02:	b508      	push	{r3, lr}
+    if (cfg == NULL) {
         return 0xDEADBEEF;
     }
 #endif
-    return am_hal_timer_read(cfg->timer) / 6; // 6 ticks per uS
   412f04:	7900      	ldrb	r0, [r0, #4]
   412f06:	f00f fcd7 	bl	4228b8 <am_hal_timer_read>
   412f0a:	4b03      	ldr	r3, [pc, #12]	@ (412f18 <ns_us_ticker_read+0x18>)
   412f0c:	fba3 3000 	umull	r3, r0, r3, r0
   412f10:	0880      	lsrs	r0, r0, #2
-}
+    return am_hal_timer_read(cfg->timer) / 6; // 6 ticks per uS
   412f12:	bd08      	pop	{r3, pc}
-        return 0xDEADBEEF;
+    if (cfg == NULL) {
   412f14:	4801      	ldr	r0, [pc, #4]	@ (412f1c <ns_us_ticker_read+0x1c>)
-}
+    return am_hal_timer_read(cfg->timer) / 6; // 6 ticks per uS
   412f16:	4770      	bx	lr
   412f18:	aaaaaaab 	.word	0xaaaaaaab
   412f1c:	deadbeef 	.word	0xdeadbeef
 
 00412f20 <ns_timer_clear>:
+}
 
 uint32_t ns_timer_clear(ns_timer_config_t *cfg) {
 #ifndef NS_DISABLE_API_VALIDATION
-    if (cfg == NULL) {
   412f20:	b128      	cbz	r0, 412f2e <ns_timer_clear+0xe>
-uint32_t ns_timer_clear(ns_timer_config_t *cfg) {
+
   412f22:	b508      	push	{r3, lr}
+    if (cfg == NULL) {
         return NS_STATUS_INVALID_HANDLE;
     }
 #endif
-    am_hal_timer_clear(cfg->timer);
   412f24:	7900      	ldrb	r0, [r0, #4]
   412f26:	f00f fc97 	bl	422858 <am_hal_timer_clear>
-    return NS_STATUS_SUCCESS;
+    am_hal_timer_clear(cfg->timer);
   412f2a:	2000      	movs	r0, #0
-}
+    return NS_STATUS_SUCCESS;
   412f2c:	bd08      	pop	{r3, pc}
-        return NS_STATUS_INVALID_HANDLE;
+    if (cfg == NULL) {
   412f2e:	2001      	movs	r0, #1
-}
+    return NS_STATUS_SUCCESS;
   412f30:	4770      	bx	lr
   412f32:	bf00      	nop
 
@@ -8691,7 +8681,7 @@ uint8_t *ns_usb_get_tx_buffer() { return usb_config.tx_buffer; }
 
 uint32_t ns_usb_init(ns_usb_config_t *cfg, usb_handle_t *h) {
   413904:	b570      	push	{r4, r5, r6, lr}
-
+    ns_lp_printf("ns_usb_init\n");
 #ifndef NS_DISABLE_API_VALIDATION
     if (cfg == NULL) {
   413906:	b330      	cbz	r0, 413956 <ns_usb_init+0x52>
@@ -8718,7 +8708,7 @@ uint32_t ns_usb_init(ns_usb_config_t *cfg, usb_handle_t *h) {
         return NS_STATUS_INVALID_CONFIG;
     }
 #endif
-
+    ns_lp_printf("ns_usb_init\n");
     usb_config.deviceType = cfg->deviceType;
   413922:	7920      	ldrb	r0, [r4, #4]
   413924:	4b16      	ldr	r3, [pc, #88]	@ (413980 <ns_usb_init+0x7c>)
@@ -8807,12 +8797,12 @@ void ns_usb_register_callbacks(usb_handle_t handle, ns_usb_rx_cb rxcb, ns_usb_tx
 // Blocking read from USB. Will loop until we get the full buffer or timeout
 uint32_t ns_usb_recieve_data(usb_handle_t handle, void *buffer, uint32_t bufsize) {
   413994:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
+        ns_delay_us(100);
     // uint32_t before = tud_cdc_available();
     // uint8_t before_sem = gGotUSBRx;
     // ns_delay_us(10);
     // uint32_t after = tud_cdc_available();
     // uint8_t after_sem = gGotUSBRx;
-    while (tud_cdc_available() < bufsize) {
   413998:	2710      	movs	r7, #16
 }
 
@@ -8829,62 +8819,62 @@ uint32_t ns_usb_recieve_data(usb_handle_t handle, void *buffer, uint32_t bufsize
   4139a4:	4e20      	ldr	r6, [pc, #128]	@ (413a28 <ns_usb_recieve_data+0x94>)
   4139a6:	2000      	movs	r0, #0
   4139a8:	f002 fa64 	bl	415e74 <tud_cdc_n_available>
-    while (tud_cdc_available() < bufsize) {
+    // uint8_t after_sem = gGotUSBRx;
   4139ac:	4285      	cmp	r5, r0
   4139ae:	d91f      	bls.n	4139f0 <ns_usb_recieve_data+0x5c>
+    while (tud_cdc_available() < bufsize) {
         // If there isn't enough data to satisfy request, wait for a while
 
         // ns_lp_printf("Mystery path after %d %d %d\n", after, after_sem, gGotUSBRx);
 
         // We only care abot gGotUSBRx in order to count 'blocks' (i.e. USB RX interrupts)
-        ns_interrupt_master_disable(); // critical region
   4139b0:	f007 ffa6 	bl	41b900 <am_hal_interrupt_master_disable>
   4139b4:	2000      	movs	r0, #0
   4139b6:	f002 fa5d 	bl	415e74 <tud_cdc_n_available>
-        if (tud_cdc_available() < bufsize) {
+        ns_interrupt_master_disable(); // critical region
   4139ba:	4285      	cmp	r5, r0
-            gGotUSBRx = 0; // set to 1 in IRQ context, need to disable IRQs for a bit
+        if (tud_cdc_available() < bufsize) {
   4139bc:	bf88      	it	hi
   4139be:	f886 8000 	strbhi.w	r8, [r6]
+            gGotUSBRx = 0; // set to 1 in IRQ context, need to disable IRQs for a bit
         }
-        ns_interrupt_master_enable();
   4139c2:	f007 ff99 	bl	41b8f8 <am_hal_interrupt_master_enable>
+        ns_interrupt_master_enable();
 
         // Wait for a block to come in
-        while ((gGotUSBRx == 0) && (tud_cdc_available() < bufsize)) {
   4139c6:	e009      	b.n	4139dc <ns_usb_recieve_data+0x48>
   4139c8:	f002 fa54 	bl	415e74 <tud_cdc_n_available>
   4139cc:	4285      	cmp	r5, r0
   4139ce:	d90a      	bls.n	4139e6 <ns_usb_recieve_data+0x52>
-            ns_delay_us(750);
+        while ((gGotUSBRx == 0) && (tud_cdc_available() < bufsize)) {
   4139d0:	f240 20ee 	movw	r0, #750	@ 0x2ee
   4139d4:	f001 f968 	bl	414ca8 <am_util_delay_us>
+            ns_delay_us(750);
             // tud_task(); // process USB events
-            retries--;
   4139d8:	3c01      	subs	r4, #1
   4139da:	d01d      	beq.n	413a18 <ns_usb_recieve_data+0x84>
-        while ((gGotUSBRx == 0) && (tud_cdc_available() < bufsize)) {
+        // Wait for a block to come in
   4139dc:	7833      	ldrb	r3, [r6, #0]
   4139de:	f003 00ff 	and.w	r0, r3, #255	@ 0xff
   4139e2:	2b00      	cmp	r3, #0
   4139e4:	d0f0      	beq.n	4139c8 <ns_usb_recieve_data+0x34>
+            if (retries == 0) {
                 ns_lp_printf("[ERROR] ns_usb_recieve_data exhausted wait for sem\n");
                 break;
             }
         };
 
-        // Incoming blocks may be less than needed bytes, try up to 5 times
   4139e6:	3f01      	subs	r7, #1
   4139e8:	d1dd      	bne.n	4139a6 <ns_usb_recieve_data+0x12>
-        if (block_retries == 0) {
+        // Incoming blocks may be less than needed bytes, try up to 5 times
   4139ea:	4810      	ldr	r0, [pc, #64]	@ (413a2c <ns_usb_recieve_data+0x98>)
   4139ec:	f001 ffd2 	bl	415994 <am_util_stdio_printf>
+            ns_lp_printf("[ERROR] ns_usb_recieve_data exhausted block retries\n");
             break;
         }
         block_retries--;
     }
     // uint32_t after2 = tud_cdc_available();
-    // uint8_t after2_sem = gGotUSBRx;
   4139f0:	2000      	movs	r0, #0
   return tud_cdc_n_read_char(0);
 }
@@ -8897,33 +8887,33 @@ static inline uint32_t tud_cdc_read (void* buffer, uint32_t bufsize)
   4139f6:	7030      	strb	r0, [r6, #0]
   4139f8:	f002 fa48 	bl	415e8c <tud_cdc_n_read>
   4139fc:	4604      	mov	r4, r0
+    gGotUSBRx = 0;
     ns_interrupt_master_disable(); // critical region
     tud_task(); // process USB events
     bytes_rx = tud_cdc_read((void *)buffer, bufsize);
     ns_interrupt_master_enable();
     // if (retries != 10000)
-    //     ns_lp_printf("rx_data ask %d got %d retries %d before cnt, sem: %d,%d, after cnt, sem: %d, %d, af2 cnt,sem: %d, %d\n",
   4139fe:	20c8      	movs	r0, #200	@ 0xc8
   413a00:	f001 f952 	bl	414ca8 <am_util_delay_us>
+    //     ns_lp_printf("rx_data ask %d got %d retries %d before cnt, sem: %d,%d, after cnt, sem: %d, %d, af2 cnt,sem: %d, %d\n",
     //         bufsize, bytes_rx, retries, before, before_sem, after, after_sem, after2,
     //         after2_sem);
-    // ns_lp_printf("Got bytes %d\n", bytes_rx);
   413a04:	42a5      	cmp	r5, r4
   413a06:	d004      	beq.n	413a12 <ns_usb_recieve_data+0x7e>
-     ns_delay_us(200);
+    // ns_lp_printf("Got bytes %d\n", bytes_rx);
   413a08:	4622      	mov	r2, r4
   413a0a:	4629      	mov	r1, r5
   413a0c:	4808      	ldr	r0, [pc, #32]	@ (413a30 <ns_usb_recieve_data+0x9c>)
   413a0e:	f001 ffc1 	bl	415994 <am_util_stdio_printf>
+     ns_delay_us(200);
 
     // dontoptimizeme = after + after_sem + before + before_sem + after2 + after2_sem;
-    if (bytes_rx != bufsize) {
   413a12:	4620      	mov	r0, r4
   413a14:	e8bd 83f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, pc}
-            if (retries == 0) {
+            retries--;
   413a18:	4806      	ldr	r0, [pc, #24]	@ (413a34 <ns_usb_recieve_data+0xa0>)
   413a1a:	f001 ffbb 	bl	415994 <am_util_stdio_printf>
-        // Incoming blocks may be less than needed bytes, try up to 5 times
+
   413a1e:	3f01      	subs	r7, #1
   413a20:	d1c1      	bne.n	4139a6 <ns_usb_recieve_data+0x12>
   413a22:	e7e2      	b.n	4139ea <ns_usb_recieve_data+0x56>
@@ -8934,20 +8924,20 @@ static inline uint32_t tud_cdc_read (void* buffer, uint32_t bufsize)
   413a34:	00448934 	.word	0x00448934
 
 00413a38 <ns_usb_handle_read_error>:
+    if (bytes_rx != bufsize) {
         ns_lp_printf("[ERROR] RX error, asked for %d, got %d\n", bufsize, bytes_rx);
-    }
   413a38:	b510      	push	{r4, lr}
   413a3a:	2464      	movs	r4, #100	@ 0x64
+    }
     return bytes_rx;
 }
-
   413a3c:	f242 7010 	movw	r0, #10000	@ 0x2710
   413a40:	f001 f932 	bl	414ca8 <am_util_delay_us>
-}
+    return bytes_rx;
   413a44:	3c01      	subs	r4, #1
   413a46:	d1f9      	bne.n	413a3c <ns_usb_handle_read_error+0x4>
+
 void ns_usb_handle_read_error(usb_handle_t h) {
-    int i;
   413a48:	4804      	ldr	r0, [pc, #16]	@ (413a5c <ns_usb_handle_read_error+0x24>)
   413a4a:	f001 ffa3 	bl	415994 <am_util_stdio_printf>
 }
@@ -8957,29 +8947,29 @@ static inline void tud_cdc_read_flush (void)
   tud_cdc_n_read_flush(0);
   413a4e:	4620      	mov	r0, r4
   413a50:	f002 fa58 	bl	415f04 <tud_cdc_n_read_flush>
+    int i;
     for (i = 0; i < 100; i++) {
-        ns_delay_us(10000);
   413a54:	4b02      	ldr	r3, [pc, #8]	@ (413a60 <ns_usb_handle_read_error+0x28>)
   413a56:	701c      	strb	r4, [r3, #0]
-    }
+        ns_delay_us(10000);
   413a58:	bd10      	pop	{r4, pc}
   413a5a:	bf00      	nop
   413a5c:	004489c8 	.word	0x004489c8
   413a60:	20040428 	.word	0x20040428
 
 00413a64 <ns_usb_send_data>:
+    }
     ns_lp_printf("In error after wait\n");
-    tud_cdc_read_flush();
   413a64:	b570      	push	{r4, r5, r6, lr}
+    tud_cdc_read_flush();
     gGotUSBRx = 0; // may be set by final RX
 }
 
 uint32_t ns_usb_send_data(usb_handle_t handle, void *buffer, uint32_t bufsize) {
-
   413a66:	4615      	mov	r5, r2
   413a68:	b312      	cbz	r2, 413ab0 <ns_usb_send_data+0x4c>
   413a6a:	460e      	mov	r6, r1
-}
+    gGotUSBRx = 0; // may be set by final RX
   413a6c:	2400      	movs	r4, #0
   return tud_cdc_n_write_char(0, ch);
 }
@@ -8999,10 +8989,10 @@ static inline uint32_t tud_cdc_write_flush (void)
 {
   return tud_cdc_n_write_flush(0);
   413a7a:	2000      	movs	r0, #0
-    uint32_t bytes_tx = 0;
+
   413a7c:	441c      	add	r4, r3
   413a7e:	f002 fa75 	bl	415f6c <tud_cdc_n_write_flush>
-
+uint32_t ns_usb_send_data(usb_handle_t handle, void *buffer, uint32_t bufsize) {
   413a82:	42a5      	cmp	r5, r4
   413a84:	d8f3      	bhi.n	413a6e <ns_usb_send_data+0xa>
   413a86:	2000      	movs	r0, #0
@@ -9016,31 +9006,31 @@ static inline uint32_t tud_cdc_write_available(void)
   413a8e:	2000      	movs	r0, #0
   413a90:	f002 face 	bl	416030 <tud_cdc_n_write_available>
   413a94:	4601      	mov	r1, r0
+    // Make sure there is no pending data in the USB TX buffer
     // This is a blocking call, so we can be sure that the buffer is flushed
     while (tud_cdc_write_available() < usb_config.tx_bufferLength) {
         // ns_lp_printf("NS USB flushing before of send %d, avail %d\n", bufsize, tud_cdc_write_available());
         ns_delay_us(1000);
         ns_interrupt_master_disable(); // critical region
-        tud_cdc_write_flush(); // flush the write buffer
   413a96:	4807      	ldr	r0, [pc, #28]	@ (413ab4 <ns_usb_send_data+0x50>)
   413a98:	f001 ff7c 	bl	415994 <am_util_stdio_printf>
-        tud_task(); // flush the write buffer
+        tud_cdc_write_flush(); // flush the write buffer
   413a9c:	4806      	ldr	r0, [pc, #24]	@ (413ab8 <ns_usb_send_data+0x54>)
   413a9e:	f001 f903 	bl	414ca8 <am_util_delay_us>
   413aa2:	2000      	movs	r0, #0
   413aa4:	f002 fac4 	bl	416030 <tud_cdc_n_write_available>
-        ns_interrupt_master_disable(); // critical region
+        ns_delay_us(1000);
   413aa8:	280d      	cmp	r0, #13
   413aaa:	d9f0      	bls.n	413a8e <ns_usb_send_data+0x2a>
+        ns_interrupt_master_enable();
     }
 
     while (bytes_tx < bufsize) {
         ns_interrupt_master_disable(); // critical region
         bytes_tx += tud_cdc_write((void *)(buffer + bytes_tx), bufsize - bytes_tx); // blocking
-        tud_cdc_write_flush();
   413aac:	4620      	mov	r0, r4
   413aae:	bd70      	pop	{r4, r5, r6, pc}
-}
+    gGotUSBRx = 0; // may be set by final RX
   413ab0:	4614      	mov	r4, r2
   413ab2:	e7e8      	b.n	413a86 <ns_usb_send_data+0x22>
   413ab4:	004489e0 	.word	0x004489e0
@@ -73210,85 +73200,85 @@ uint32_t ns_uart_init(ns_uart_config_t *cfg, ns_uart_handle_t * handle) {
   4397e0:	20027b7c 	.word	0x20027b7c
 
 004397e4 <uart_done>:
+}
 
 
 // non blocking callback function
 void uart_done(uint32_t ui32ErrorStatus, void *pvContext)
 {
-    g_bUARTdone = true;
   4397e4:	2201      	movs	r2, #1
   4397e6:	4b01      	ldr	r3, [pc, #4]	@ (4397ec <uart_done+0x8>)
   4397e8:	701a      	strb	r2, [r3, #0]
-}
+    g_bUARTdone = true;
   4397ea:	4770      	bx	lr
   4397ec:	200441f9 	.word	0x200441f9
 
 004397f0 <am_uart_isr>:
-{
+void am_uart_isr(void)
   4397f0:	b510      	push	{r4, lr}
-    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
+    uint32_t ui32Status;
   4397f2:	4c16      	ldr	r4, [pc, #88]	@ (43984c <am_uart_isr+0x5c>)
-{
+void am_uart_isr(void)
   4397f4:	b082      	sub	sp, #8
-    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
+    uint32_t ui32Status;
   4397f6:	2201      	movs	r2, #1
   4397f8:	a901      	add	r1, sp, #4
   4397fa:	6820      	ldr	r0, [r4, #0]
   4397fc:	f000 fea8 	bl	43a550 <am_hal_uart_interrupt_status_get>
-    am_hal_uart_interrupt_clear(phUART, ui32Status);
+    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
   439800:	9901      	ldr	r1, [sp, #4]
   439802:	6820      	ldr	r0, [r4, #0]
   439804:	f000 fe90 	bl	43a528 <am_hal_uart_interrupt_clear>
-    am_hal_uart_interrupt_service(phUART, ui32Status);
+    am_hal_uart_interrupt_clear(phUART, ui32Status);
   439808:	9901      	ldr	r1, [sp, #4]
   43980a:	6820      	ldr	r0, [r4, #0]
   43980c:	f000 febc 	bl	43a588 <am_hal_uart_interrupt_service>
-    if (ui32Status & (AM_HAL_UART_INT_RX | AM_HAL_UART_INT_RX_TMOUT))
+    // Set the data available flag if RX interrupt is set
   439810:	9b01      	ldr	r3, [sp, #4]
   439812:	f013 0f50 	tst.w	r3, #80	@ 0x50
   439816:	d00c      	beq.n	439832 <am_uart_isr+0x42>
-        g_sUartTransaction.status = AM_HAL_UART_INT_RX;
+    {
   439818:	2210      	movs	r2, #16
-        if (ctx->rx_cb != NULL)
+        g_sUartTransaction.status = AM_HAL_UART_INT_RX;
   43981a:	4b0d      	ldr	r3, [pc, #52]	@ (439850 <am_uart_isr+0x60>)
-        g_sUartTransaction.status = AM_HAL_UART_INT_RX;
+    {
   43981c:	490d      	ldr	r1, [pc, #52]	@ (439854 <am_uart_isr+0x64>)
-        if (ctx->rx_cb != NULL)
-  43981e:	689b      	ldr	r3, [r3, #8]
         g_sUartTransaction.status = AM_HAL_UART_INT_RX;
+  43981e:	689b      	ldr	r3, [r3, #8]
+    {
   439820:	700a      	strb	r2, [r1, #0]
-        if (ctx->rx_cb != NULL)
+        g_sUartTransaction.status = AM_HAL_UART_INT_RX;
   439822:	b10b      	cbz	r3, 439828 <am_uart_isr+0x38>
-            ctx->rx_cb(&g_sUartTransaction);
+        {
   439824:	4608      	mov	r0, r1
   439826:	4798      	blx	r3
-        g_DataAvailable = true;
+        }
   439828:	2201      	movs	r2, #1
   43982a:	4b0b      	ldr	r3, [pc, #44]	@ (439858 <am_uart_isr+0x68>)
   43982c:	701a      	strb	r2, [r3, #0]
-}
+    }
   43982e:	b002      	add	sp, #8
   439830:	bd10      	pop	{r4, pc}
-    else if (ui32Status & AM_HAL_UART_INT_TX)
+    }
   439832:	069b      	lsls	r3, r3, #26
   439834:	d5fb      	bpl.n	43982e <am_uart_isr+0x3e>
-        g_sUartTransaction.status = AM_HAL_UART_INT_TX;
+    {
   439836:	2220      	movs	r2, #32
-        if (ctx->tx_cb != NULL)
+        g_sUartTransaction.status = AM_HAL_UART_INT_TX;
   439838:	4b05      	ldr	r3, [pc, #20]	@ (439850 <am_uart_isr+0x60>)
-        g_sUartTransaction.status = AM_HAL_UART_INT_TX;
+    {
   43983a:	4906      	ldr	r1, [pc, #24]	@ (439854 <am_uart_isr+0x64>)
-        if (ctx->tx_cb != NULL)
-  43983c:	68db      	ldr	r3, [r3, #12]
         g_sUartTransaction.status = AM_HAL_UART_INT_TX;
+  43983c:	68db      	ldr	r3, [r3, #12]
+    {
   43983e:	700a      	strb	r2, [r1, #0]
-        if (ctx->tx_cb != NULL)
+        g_sUartTransaction.status = AM_HAL_UART_INT_TX;
   439840:	2b00      	cmp	r3, #0
   439842:	d0f4      	beq.n	43982e <am_uart_isr+0x3e>
-            ctx->tx_cb(&g_sUartTransaction);
+        {
   439844:	4608      	mov	r0, r1
   439846:	4798      	blx	r3
-}
+    }
   439848:	b002      	add	sp, #8
   43984a:	bd10      	pop	{r4, pc}
   43984c:	200441f4 	.word	0x200441f4
@@ -73297,53 +73287,53 @@ void uart_done(uint32_t ui32ErrorStatus, void *pvContext)
   439858:	200441f0 	.word	0x200441f0
 
 0043985c <am_uart2_isr>:
-void am_uart2_isr(void) {
+
   43985c:	b510      	push	{r4, lr}
-    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
+    uint32_t ui32Status;
   43985e:	4c0b      	ldr	r4, [pc, #44]	@ (43988c <am_uart2_isr+0x30>)
-void am_uart2_isr(void) {
+
   439860:	b082      	sub	sp, #8
-    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
+    uint32_t ui32Status;
   439862:	2201      	movs	r2, #1
   439864:	a901      	add	r1, sp, #4
   439866:	6820      	ldr	r0, [r4, #0]
   439868:	f000 fe72 	bl	43a550 <am_hal_uart_interrupt_status_get>
-    am_hal_uart_interrupt_clear(phUART, ui32Status);
+    am_hal_uart_interrupt_status_get(phUART, &ui32Status, true);
   43986c:	9901      	ldr	r1, [sp, #4]
   43986e:	6820      	ldr	r0, [r4, #0]
   439870:	f000 fe5a 	bl	43a528 <am_hal_uart_interrupt_clear>
-    am_hal_uart_interrupt_service(phUART, ui32Status);
+    am_hal_uart_interrupt_clear(phUART, ui32Status);
   439874:	9901      	ldr	r1, [sp, #4]
   439876:	6820      	ldr	r0, [r4, #0]
   439878:	f000 fe86 	bl	43a588 <am_hal_uart_interrupt_service>
-    if (ui32Status & AM_HAL_UART_INT_RX)
+    // Set the data available flag if RX interrupt is set
   43987c:	9b01      	ldr	r3, [sp, #4]
   43987e:	06db      	lsls	r3, r3, #27
   439880:	d502      	bpl.n	439888 <am_uart2_isr+0x2c>
-        g_DataAvailable = true;
+    {
   439882:	2201      	movs	r2, #1
   439884:	4b02      	ldr	r3, [pc, #8]	@ (439890 <am_uart2_isr+0x34>)
   439886:	701a      	strb	r2, [r3, #0]
-}
+    }
   439888:	b002      	add	sp, #8
   43988a:	bd10      	pop	{r4, pc}
   43988c:	200441f4 	.word	0x200441f4
   439890:	200441f0 	.word	0x200441f0
 
 00439894 <init_uart>:
+}
 
 uint32_t init_uart(am_hal_uart_config_t *uart_config)
-{
   439894:	b538      	push	{r3, r4, r5, lr}
-    NS_TRY(am_hal_uart_initialize(0, &phUART), "Failed to initialize the UART");
-  439896:	4925      	ldr	r1, [pc, #148]	@ (43992c <init_uart+0x98>)
 {
+  439896:	4925      	ldr	r1, [pc, #148]	@ (43992c <init_uart+0x98>)
+uint32_t init_uart(am_hal_uart_config_t *uart_config)
   439898:	4605      	mov	r5, r0
-    NS_TRY(am_hal_uart_initialize(0, &phUART), "Failed to initialize the UART");
+{
   43989a:	2000      	movs	r0, #0
   43989c:	f000 faac 	bl	439df8 <am_hal_uart_initialize>
   4398a0:	bb28      	cbnz	r0, 4398ee <init_uart+0x5a>
-    NS_TRY(am_hal_uart_power_control(phUART, AM_HAL_SYSCTRL_WAKE, false), "Failed to power the UART");
+    NS_TRY(am_hal_uart_initialize(0, &phUART), "Failed to initialize the UART");
   4398a2:	2200      	movs	r2, #0
   4398a4:	4c21      	ldr	r4, [pc, #132]	@ (43992c <init_uart+0x98>)
   4398a6:	4611      	mov	r1, r2
@@ -73351,19 +73341,19 @@ uint32_t init_uart(am_hal_uart_config_t *uart_config)
   4398aa:	f000 fae1 	bl	439e70 <am_hal_uart_power_control>
   4398ae:	2800      	cmp	r0, #0
   4398b0:	d135      	bne.n	43991e <init_uart+0x8a>
-    NS_TRY(am_hal_uart_configure(phUART, uart_config),  "Failed to configure the UART");
+    NS_TRY(am_hal_uart_power_control(phUART, AM_HAL_SYSCTRL_WAKE, false), "Failed to power the UART");
   4398b2:	4629      	mov	r1, r5
   4398b4:	6820      	ldr	r0, [r4, #0]
   4398b6:	f000 fbdb 	bl	43a070 <am_hal_uart_configure>
   4398ba:	bb50      	cbnz	r0, 439912 <init_uart+0x7e>
+    NS_TRY(am_hal_uart_configure(phUART, uart_config),  "Failed to configure the UART");
 
-    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_TX, g_AM_BSP_GPIO_COM_UART_TX), "Failed to configure UART TX pin");
   4398bc:	4b1c      	ldr	r3, [pc, #112]	@ (439930 <init_uart+0x9c>)
   4398be:	201e      	movs	r0, #30
   4398c0:	6819      	ldr	r1, [r3, #0]
   4398c2:	f7e1 fd1f 	bl	41b304 <am_hal_gpio_pinconfig>
   4398c6:	b9f0      	cbnz	r0, 439906 <init_uart+0x72>
-    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_RX, g_AM_BSP_GPIO_COM_UART_RX), "Failed to configure UART RX pin");
+    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_TX, g_AM_BSP_GPIO_COM_UART_TX), "Failed to configure UART TX pin");
   4398c8:	4b1a      	ldr	r3, [pc, #104]	@ (439934 <init_uart+0xa0>)
   4398ca:	2037      	movs	r0, #55	@ 0x37
   4398cc:	6819      	ldr	r1, [r3, #0]
@@ -73376,39 +73366,39 @@ uint32_t init_uart(am_hal_uart_config_t *uart_config)
     NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
   4398dc:	f44f 4200 	mov.w	r2, #32768	@ 0x8000
   4398e0:	601a      	str	r2, [r3, #0]
+    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_RX, g_AM_BSP_GPIO_COM_UART_RX), "Failed to configure UART RX pin");
 
     // Enable interrupts.
     NVIC_SetPriority((IRQn_Type)(UART0_IRQn + AM_BSP_UART_PRINT_INST), AM_IRQ_PRIORITY_DEFAULT);
     NVIC_EnableIRQ((IRQn_Type)(UART0_IRQn + AM_BSP_UART_PRINT_INST));
-    am_hal_uart_interrupt_enable(phUART, (AM_HAL_UART_INT_RX | AM_HAL_UART_INT_TX | AM_HAL_UART_INT_RX_TMOUT));
   4398e2:	2170      	movs	r1, #112	@ 0x70
   4398e4:	6820      	ldr	r0, [r4, #0]
   4398e6:	f000 fe0b 	bl	43a500 <am_hal_uart_interrupt_enable>
+    am_hal_uart_interrupt_enable(phUART, (AM_HAL_UART_INT_RX | AM_HAL_UART_INT_TX | AM_HAL_UART_INT_RX_TMOUT));
     return AM_HAL_STATUS_SUCCESS;
-}
   4398ea:	2000      	movs	r0, #0
   4398ec:	bd38      	pop	{r3, r4, r5, pc}
-    NS_TRY(am_hal_uart_initialize(0, &phUART), "Failed to initialize the UART");
+{
   4398ee:	4813      	ldr	r0, [pc, #76]	@ (43993c <init_uart+0xa8>)
   4398f0:	f7dc f850 	bl	415994 <am_util_stdio_printf>
   4398f4:	f7d7 f954 	bl	410ba0 <ns_core_fail_loop>
   4398f8:	e7d3      	b.n	4398a2 <init_uart+0xe>
-    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_RX, g_AM_BSP_GPIO_COM_UART_RX), "Failed to configure UART RX pin");
+    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_TX, g_AM_BSP_GPIO_COM_UART_TX), "Failed to configure UART TX pin");
   4398fa:	4811      	ldr	r0, [pc, #68]	@ (439940 <init_uart+0xac>)
   4398fc:	f7dc f84a 	bl	415994 <am_util_stdio_printf>
   439900:	f7d7 f94e 	bl	410ba0 <ns_core_fail_loop>
   439904:	e7e6      	b.n	4398d4 <init_uart+0x40>
-    NS_TRY(am_hal_gpio_pinconfig(AM_BSP_GPIO_COM_UART_TX, g_AM_BSP_GPIO_COM_UART_TX), "Failed to configure UART TX pin");
+
   439906:	480f      	ldr	r0, [pc, #60]	@ (439944 <init_uart+0xb0>)
   439908:	f7dc f844 	bl	415994 <am_util_stdio_printf>
   43990c:	f7d7 f948 	bl	410ba0 <ns_core_fail_loop>
   439910:	e7da      	b.n	4398c8 <init_uart+0x34>
-    NS_TRY(am_hal_uart_configure(phUART, uart_config),  "Failed to configure the UART");
+    NS_TRY(am_hal_uart_power_control(phUART, AM_HAL_SYSCTRL_WAKE, false), "Failed to power the UART");
   439912:	480d      	ldr	r0, [pc, #52]	@ (439948 <init_uart+0xb4>)
   439914:	f7dc f83e 	bl	415994 <am_util_stdio_printf>
   439918:	f7d7 f942 	bl	410ba0 <ns_core_fail_loop>
   43991c:	e7ce      	b.n	4398bc <init_uart+0x28>
-    NS_TRY(am_hal_uart_power_control(phUART, AM_HAL_SYSCTRL_WAKE, false), "Failed to power the UART");
+    NS_TRY(am_hal_uart_initialize(0, &phUART), "Failed to initialize the UART");
   43991e:	480b      	ldr	r0, [pc, #44]	@ (43994c <init_uart+0xb8>)
   439920:	f7dc f838 	bl	415994 <am_util_stdio_printf>
   439924:	f7d7 f93c 	bl	410ba0 <ns_core_fail_loop>
@@ -73425,73 +73415,73 @@ uint32_t init_uart(am_hal_uart_config_t *uart_config)
   43994c:	00448b70 	.word	0x00448b70
 
 00439950 <ns_uart_blocking_send_data>:
+}
 
 uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
-    uint32_t ui32BytesWritten = 0;
   439950:	2300      	movs	r3, #0
-uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
+
   439952:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    uint32_t ui32BytesWritten = 0;
+uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
   439956:	f04f 0b0a 	mov.w	fp, #10
+    uint32_t ui32BytesWritten = 0;
     uint32_t retries = MAX_UART_RETRIES;
     uint32_t status = AM_HAL_STATUS_SUCCESS;
     while(retries > 0) {
-        const am_hal_uart_transfer_t sUartWrite =
   43995a:	f44f 797a 	mov.w	r9, #1000	@ 0x3e8
-uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
+
   43995e:	460e      	mov	r6, r1
   439960:	4615      	mov	r5, r2
   439962:	b091      	sub	sp, #68	@ 0x44
   439964:	f8df 805c 	ldr.w	r8, [pc, #92]	@ 4399c4 <ns_uart_blocking_send_data+0x74>
   439968:	4f14      	ldr	r7, [pc, #80]	@ (4399bc <ns_uart_blocking_send_data+0x6c>)
   43996a:	f10d 0a04 	add.w	sl, sp, #4
-    uint32_t ui32BytesWritten = 0;
+uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
   43996e:	9301      	str	r3, [sp, #4]
-        const am_hal_uart_transfer_t sUartWrite =
+    while(retries > 0) {
   439970:	2224      	movs	r2, #36	@ 0x24
   439972:	2100      	movs	r1, #0
   439974:	a807      	add	r0, sp, #28
   439976:	f7fe fc69 	bl	43824c <memset>
+            .pui32BytesTransferred = &ui32BytesWritten,
             .ui32TimeoutMs = 1000,
             .pfnCallback = &uart_done,
             .pvContext = NULL,
             .ui32ErrorStatus = 0
         };    
-        status = am_hal_uart_transfer(phUART, &sUartWrite);
   43997a:	6838      	ldr	r0, [r7, #0]
   43997c:	a902      	add	r1, sp, #8
-        const am_hal_uart_transfer_t sUartWrite =
+    while(retries > 0) {
   43997e:	e9cd 6502 	strd	r6, r5, [sp, #8]
   439982:	e9cd a904 	strd	sl, r9, [sp, #16]
   439986:	f8cd 8018 	str.w	r8, [sp, #24]
-        status = am_hal_uart_transfer(phUART, &sUartWrite);
+        };    
   43998a:	f000 fc69 	bl	43a260 <am_hal_uart_transfer>
-        if (status == AM_HAL_STATUS_SUCCESS && ui32BytesWritten == size) {
+        status = am_hal_uart_transfer(phUART, &sUartWrite);
   43998e:	4604      	mov	r4, r0
   439990:	b910      	cbnz	r0, 439998 <ns_uart_blocking_send_data+0x48>
   439992:	9b01      	ldr	r3, [sp, #4]
   439994:	42ab      	cmp	r3, r5
   439996:	d009      	beq.n	4399ac <ns_uart_blocking_send_data+0x5c>
-    while(retries > 0) {
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439998:	f1bb 0b01 	subs.w	fp, fp, #1
   43999c:	d1e8      	bne.n	439970 <ns_uart_blocking_send_data+0x20>
+            am_hal_uart_tx_flush(phUART);
             return AM_HAL_STATUS_SUCCESS;
         }
         retries--;
     }
     // If we reach here, it means send operation failed all retries
-    ns_lp_printf("[ERROR] ns_uart_send_data exhausted retries\n");
   43999e:	4808      	ldr	r0, [pc, #32]	@ (4399c0 <ns_uart_blocking_send_data+0x70>)
   4399a0:	f7db fff8 	bl	415994 <am_util_stdio_printf>
+    ns_lp_printf("[ERROR] ns_uart_send_data exhausted retries\n");
     return status;
-}
   4399a4:	4620      	mov	r0, r4
   4399a6:	b011      	add	sp, #68	@ 0x44
   4399a8:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-            am_hal_uart_tx_flush(phUART);
+            // Successfully sent the whole string
   4399ac:	6838      	ldr	r0, [r7, #0]
   4399ae:	f000 fd67 	bl	43a480 <am_hal_uart_tx_flush>
-}
+    return status;
   4399b2:	4620      	mov	r0, r4
   4399b4:	b011      	add	sp, #68	@ 0x44
   4399b6:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
@@ -73501,75 +73491,75 @@ uint32_t ns_uart_blocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint
   4399c4:	004397e5 	.word	0x004397e5
 
 004399c8 <ns_uart_nonblocking_send_data>:
+}
 
 
 uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
-    uint32_t ui32BytesWritten = 0;
   4399c8:	2300      	movs	r3, #0
-uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
+
   4399ca:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    uint32_t ui32BytesWritten = 0;
+uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
   4399ce:	f04f 0b0a 	mov.w	fp, #10
+    uint32_t ui32BytesWritten = 0;
     uint32_t retries = MAX_UART_RETRIES;
     uint32_t status = AM_HAL_STATUS_SUCCESS;
     while(retries > 0) {
-        const am_hal_uart_transfer_t sUartWrite =
   4399d2:	f04f 0902 	mov.w	r9, #2
-uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
+
   4399d6:	460e      	mov	r6, r1
   4399d8:	4615      	mov	r5, r2
   4399da:	b091      	sub	sp, #68	@ 0x44
   4399dc:	f8df 8060 	ldr.w	r8, [pc, #96]	@ 439a40 <ns_uart_nonblocking_send_data+0x78>
   4399e0:	4f15      	ldr	r7, [pc, #84]	@ (439a38 <ns_uart_nonblocking_send_data+0x70>)
   4399e2:	f10d 0a04 	add.w	sl, sp, #4
-    uint32_t ui32BytesWritten = 0;
+uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, uint32_t size) {
   4399e6:	9301      	str	r3, [sp, #4]
-        const am_hal_uart_transfer_t sUartWrite =
+    while(retries > 0) {
   4399e8:	222c      	movs	r2, #44	@ 0x2c
   4399ea:	2100      	movs	r1, #0
   4399ec:	a805      	add	r0, sp, #20
   4399ee:	f7fe fc2d 	bl	43824c <memset>
+            .pui32BytesTransferred = &ui32BytesWritten,
             .ui32TimeoutMs = 0,
             .pfnCallback = &uart_done,
             .pvContext = NULL,
             .ui32ErrorStatus = 0
         };    
-        status = am_hal_uart_transfer(phUART, &sUartWrite);
   4399f2:	6838      	ldr	r0, [r7, #0]
   4399f4:	a902      	add	r1, sp, #8
-        const am_hal_uart_transfer_t sUartWrite =
+    while(retries > 0) {
   4399f6:	e9cd 6502 	strd	r6, r5, [sp, #8]
   4399fa:	f8cd a010 	str.w	sl, [sp, #16]
   4399fe:	f8cd 8018 	str.w	r8, [sp, #24]
   439a02:	f88d 903c 	strb.w	r9, [sp, #60]	@ 0x3c
-        status = am_hal_uart_transfer(phUART, &sUartWrite);
+        };    
   439a06:	f000 fc2b 	bl	43a260 <am_hal_uart_transfer>
-        if (status == AM_HAL_STATUS_SUCCESS && ui32BytesWritten == size) {
+        status = am_hal_uart_transfer(phUART, &sUartWrite);
   439a0a:	4604      	mov	r4, r0
   439a0c:	b910      	cbnz	r0, 439a14 <ns_uart_nonblocking_send_data+0x4c>
   439a0e:	9b01      	ldr	r3, [sp, #4]
   439a10:	42ab      	cmp	r3, r5
   439a12:	d009      	beq.n	439a28 <ns_uart_nonblocking_send_data+0x60>
-    while(retries > 0) {
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439a14:	f1bb 0b01 	subs.w	fp, fp, #1
   439a18:	d1e6      	bne.n	4399e8 <ns_uart_nonblocking_send_data+0x20>
+            am_hal_uart_tx_flush(phUART);
             return AM_HAL_STATUS_SUCCESS;
         }
         retries--;
     }
     // If we reach here, it means send operation failed all retries
-    ns_lp_printf("[ERROR] ns_uart_send_data exhausted retries\n");
   439a1a:	4808      	ldr	r0, [pc, #32]	@ (439a3c <ns_uart_nonblocking_send_data+0x74>)
   439a1c:	f7db ffba 	bl	415994 <am_util_stdio_printf>
+    ns_lp_printf("[ERROR] ns_uart_send_data exhausted retries\n");
     return status;
-}
   439a20:	4620      	mov	r0, r4
   439a22:	b011      	add	sp, #68	@ 0x44
   439a24:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-            am_hal_uart_tx_flush(phUART);
+            // Successfully sent the whole string
   439a28:	6838      	ldr	r0, [r7, #0]
   439a2a:	f000 fd29 	bl	43a480 <am_hal_uart_tx_flush>
-}
+    return status;
   439a2e:	4620      	mov	r0, r4
   439a30:	b011      	add	sp, #68	@ 0x44
   439a32:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
@@ -73579,30 +73569,30 @@ uint32_t ns_uart_nonblocking_send_data(ns_uart_config_t* cfg, char * txBuffer, u
   439a40:	004397e5 	.word	0x004397e5
 
 00439a44 <ns_uart_blocking_receive_data>:
+}
 
 
 uint32_t ns_uart_blocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
     uint32_t retries = MAX_UART_RETRIES;
     uint32_t status = AM_HAL_STATUS_SUCCESS;
-    uint32_t ui32BytesRead = 0;
   439a44:	2000      	movs	r0, #0
-uint32_t ns_uart_blocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
+
   439a46:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    uint32_t ui32BytesRead = 0;
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439a4a:	f04f 090a 	mov.w	r9, #10
+    uint32_t ui32BytesRead = 0;
     while (retries > 0) {
-        const am_hal_uart_transfer_t sUartRead =
   439a4e:	f44f 7a7a 	mov.w	sl, #1000	@ 0x3e8
-uint32_t ns_uart_blocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
+
   439a52:	460e      	mov	r6, r1
   439a54:	4615      	mov	r5, r2
   439a56:	b091      	sub	sp, #68	@ 0x44
   439a58:	f8df 8080 	ldr.w	r8, [pc, #128]	@ 439adc <ns_uart_blocking_receive_data+0x98>
   439a5c:	4f1a      	ldr	r7, [pc, #104]	@ (439ac8 <ns_uart_blocking_receive_data+0x84>)
   439a5e:	f10d 0b04 	add.w	fp, sp, #4
-    uint32_t ui32BytesRead = 0;
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439a62:	9001      	str	r0, [sp, #4]
-        const am_hal_uart_transfer_t sUartRead =
+    while (retries > 0) {
   439a64:	2224      	movs	r2, #36	@ 0x24
   439a66:	2100      	movs	r1, #0
   439a68:	a807      	add	r0, sp, #28
@@ -73611,59 +73601,59 @@ uint32_t ns_uart_blocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, u
   439a70:	f8d8 0000 	ldr.w	r0, [r8]
   439a74:	4b15      	ldr	r3, [pc, #84]	@ (439acc <ns_uart_blocking_receive_data+0x88>)
   439a76:	9008      	str	r0, [sp, #32]
+            .pui32BytesTransferred = &ui32BytesRead,
             .ui32TimeoutMs = 1000,
             .pfnCallback = &uart_done,
             .pvContext = NULL,
             .ui32ErrorStatus = ui32LastError
         };
-        status = am_hal_uart_transfer(phUART, &sUartRead);
   439a78:	a902      	add	r1, sp, #8
   439a7a:	6838      	ldr	r0, [r7, #0]
-        const am_hal_uart_transfer_t sUartRead =
+    while (retries > 0) {
   439a7c:	e9cd 6502 	strd	r6, r5, [sp, #8]
   439a80:	e9cd ba04 	strd	fp, sl, [sp, #16]
   439a84:	9306      	str	r3, [sp, #24]
   439a86:	f88d 203c 	strb.w	r2, [sp, #60]	@ 0x3c
-        status = am_hal_uart_transfer(phUART, &sUartRead);
+        };
   439a8a:	f000 fbe9 	bl	43a260 <am_hal_uart_transfer>
-        if (status == AM_HAL_STATUS_SUCCESS && ui32BytesRead == size) {
+        status = am_hal_uart_transfer(phUART, &sUartRead);
   439a8e:	4604      	mov	r4, r0
   439a90:	b910      	cbnz	r0, 439a98 <ns_uart_blocking_receive_data+0x54>
   439a92:	9a01      	ldr	r2, [sp, #4]
   439a94:	42aa      	cmp	r2, r5
   439a96:	d011      	beq.n	439abc <ns_uart_blocking_receive_data+0x78>
-    while (retries > 0) {
+    uint32_t ui32BytesRead = 0;
   439a98:	f1b9 0901 	subs.w	r9, r9, #1
   439a9c:	d1e2      	bne.n	439a64 <ns_uart_blocking_receive_data+0x20>
+            // Successfully read the whole string
             g_DataAvailable = false; // Clear the data available flag
             return AM_HAL_STATUS_SUCCESS;
         }
         retries--;
     }
-    if(ui32BytesRead < size) {
   439a9e:	9a01      	ldr	r2, [sp, #4]
   439aa0:	42aa      	cmp	r2, r5
   439aa2:	d306      	bcc.n	439ab2 <ns_uart_blocking_receive_data+0x6e>
+    if(ui32BytesRead < size) {
         ns_lp_printf("[ERROR] RX error, asked for %d, got %d\n", size, ui32BytesRead);
     }
     // If we reach here, it means receive operation failed all retries
-    ns_lp_printf("[ERROR] ns_uart_receive_data exhausted retries\n");
   439aa4:	480a      	ldr	r0, [pc, #40]	@ (439ad0 <ns_uart_blocking_receive_data+0x8c>)
   439aa6:	f7db ff75 	bl	415994 <am_util_stdio_printf>
+    ns_lp_printf("[ERROR] ns_uart_receive_data exhausted retries\n");
     return status;
-}
   439aaa:	4620      	mov	r0, r4
   439aac:	b011      	add	sp, #68	@ 0x44
   439aae:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-        ns_lp_printf("[ERROR] RX error, asked for %d, got %d\n", size, ui32BytesRead);
+    if(ui32BytesRead < size) {
   439ab2:	4629      	mov	r1, r5
   439ab4:	4807      	ldr	r0, [pc, #28]	@ (439ad4 <ns_uart_blocking_receive_data+0x90>)
   439ab6:	f7db ff6d 	bl	415994 <am_util_stdio_printf>
   439aba:	e7f3      	b.n	439aa4 <ns_uart_blocking_receive_data+0x60>
-            g_DataAvailable = false; // Clear the data available flag
+            // Successfully read the whole string
   439abc:	4b06      	ldr	r3, [pc, #24]	@ (439ad8 <ns_uart_blocking_receive_data+0x94>)
   439abe:	7018      	strb	r0, [r3, #0]
-}
+    return status;
   439ac0:	4620      	mov	r0, r4
   439ac2:	b011      	add	sp, #68	@ 0x44
   439ac4:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
@@ -73677,86 +73667,88 @@ uint32_t ns_uart_blocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, u
 00439ae0 <ns_uart_nonblocking_receive_data>:
 
 
+
 uint32_t ns_uart_nonblocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
     uint32_t retries = MAX_UART_RETRIES;
     uint32_t status = AM_HAL_STATUS_SUCCESS;
-    uint32_t ui32BytesRead = 0;
   439ae0:	2000      	movs	r0, #0
-uint32_t ns_uart_nonblocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
+
   439ae2:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    uint32_t ui32BytesRead = 0;
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439ae6:	f04f 090a 	mov.w	r9, #10
+    uint32_t ui32BytesRead = 0;
     while (retries > 0) {
-        const am_hal_uart_transfer_t sUartRead =
   439aea:	f04f 0a03 	mov.w	sl, #3
-uint32_t ns_uart_nonblocking_receive_data(ns_uart_config_t *cfg, char * rxBuffer, uint32_t size) {
+
   439aee:	460e      	mov	r6, r1
   439af0:	4615      	mov	r5, r2
   439af2:	b091      	sub	sp, #68	@ 0x44
   439af4:	f8df 8080 	ldr.w	r8, [pc, #128]	@ 439b78 <ns_uart_nonblocking_receive_data+0x98>
   439af8:	4f1a      	ldr	r7, [pc, #104]	@ (439b64 <ns_uart_nonblocking_receive_data+0x84>)
   439afa:	f10d 0b04 	add.w	fp, sp, #4
-    uint32_t ui32BytesRead = 0;
+    uint32_t status = AM_HAL_STATUS_SUCCESS;
   439afe:	9001      	str	r0, [sp, #4]
-        const am_hal_uart_transfer_t sUartRead =
+    while (retries > 0) {
   439b00:	222c      	movs	r2, #44	@ 0x2c
   439b02:	2100      	movs	r1, #0
   439b04:	a805      	add	r0, sp, #20
   439b06:	f7fe fba1 	bl	43824c <memset>
   439b0a:	f8d8 2000 	ldr.w	r2, [r8]
   439b0e:	4b16      	ldr	r3, [pc, #88]	@ (439b68 <ns_uart_nonblocking_receive_data+0x88>)
+            .pui32BytesTransferred = &ui32BytesRead,
             .ui32TimeoutMs = 0,
             .pfnCallback = &uart_done,
             .pvContext = NULL,
             .ui32ErrorStatus = ui32LastError
         };
-        status = am_hal_uart_transfer(phUART, &sUartRead);
   439b10:	6838      	ldr	r0, [r7, #0]
   439b12:	a902      	add	r1, sp, #8
-        const am_hal_uart_transfer_t sUartRead =
+    while (retries > 0) {
   439b14:	e9cd 6502 	strd	r6, r5, [sp, #8]
   439b18:	f8cd b010 	str.w	fp, [sp, #16]
   439b1c:	9306      	str	r3, [sp, #24]
   439b1e:	9208      	str	r2, [sp, #32]
   439b20:	f88d a03c 	strb.w	sl, [sp, #60]	@ 0x3c
-        status = am_hal_uart_transfer(phUART, &sUartRead);
+        };
   439b24:	f000 fb9c 	bl	43a260 <am_hal_uart_transfer>
-        if (status == AM_HAL_STATUS_SUCCESS && ui32BytesRead == size) {
+        status = am_hal_uart_transfer(phUART, &sUartRead);
   439b28:	4604      	mov	r4, r0
   439b2a:	b910      	cbnz	r0, 439b32 <ns_uart_nonblocking_receive_data+0x52>
   439b2c:	9a01      	ldr	r2, [sp, #4]
   439b2e:	42aa      	cmp	r2, r5
   439b30:	d011      	beq.n	439b56 <ns_uart_nonblocking_receive_data+0x76>
-    while (retries > 0) {
+    uint32_t ui32BytesRead = 0;
   439b32:	f1b9 0901 	subs.w	r9, r9, #1
   439b36:	d1e3      	bne.n	439b00 <ns_uart_nonblocking_receive_data+0x20>
+            // Successfully read the whole string
             g_DataAvailable = false; // Clear the data available flag
             return AM_HAL_STATUS_SUCCESS;
         }
         retries--;
     }
-    if(ui32BytesRead < size) {
   439b38:	9a01      	ldr	r2, [sp, #4]
   439b3a:	42aa      	cmp	r2, r5
   439b3c:	d306      	bcc.n	439b4c <ns_uart_nonblocking_receive_data+0x6c>
+    if(ui32BytesRead < size) {
         ns_lp_printf("[ERROR] RX error, asked for %d, got %d\n", size, ui32BytesRead);
     }
     // If we reach here, it means receive operation failed all retries
-    ns_lp_printf("[ERROR] ns_uart_receive_data exhausted retries\n");
   439b3e:	480b      	ldr	r0, [pc, #44]	@ (439b6c <ns_uart_nonblocking_receive_data+0x8c>)
   439b40:	f7db ff28 	bl	415994 <am_util_stdio_printf>
+    ns_lp_printf("[ERROR] ns_uart_receive_data exhausted retries\n");
     return status;
   439b44:	4620      	mov	r0, r4
   439b46:	b011      	add	sp, #68	@ 0x44
   439b48:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-        ns_lp_printf("[ERROR] RX error, asked for %d, got %d\n", size, ui32BytesRead);
+    if(ui32BytesRead < size) {
   439b4c:	4629      	mov	r1, r5
   439b4e:	4808      	ldr	r0, [pc, #32]	@ (439b70 <ns_uart_nonblocking_receive_data+0x90>)
   439b50:	f7db ff20 	bl	415994 <am_util_stdio_printf>
   439b54:	e7f3      	b.n	439b3e <ns_uart_nonblocking_receive_data+0x5e>
-            g_DataAvailable = false; // Clear the data available flag
+            // Successfully read the whole string
   439b56:	4b07      	ldr	r3, [pc, #28]	@ (439b74 <ns_uart_nonblocking_receive_data+0x94>)
   439b58:	7018      	strb	r0, [r3, #0]
+    return status;
   439b5a:	4620      	mov	r0, r4
   439b5c:	b011      	add	sp, #68	@ 0x44
   439b5e:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}

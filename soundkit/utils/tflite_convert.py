@@ -71,6 +71,7 @@ def tflite_convert(
 
     def dataset_example():
         shapes = model._feed_input_shapes
+
         if data_calibration is None:
             shape_inputs = shapes[0]
             for _ in range(100):

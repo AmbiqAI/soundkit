@@ -206,7 +206,7 @@ class ExportConfig:
     dtype: str = ""
     eval: bool = False
     qbit_input: int = 8
-    calibration_samples: int | None = 100
+    calibration_samples: int | None = None
     epoch_loaded: Any = "random"
     tflite_dir: str = ""
     # Check epoch_loaded

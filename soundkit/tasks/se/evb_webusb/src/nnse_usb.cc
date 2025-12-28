@@ -413,15 +413,9 @@ int main(void) {
     // Audio xmit will start immediately, no waiting for button presses
     g_audioRecording = true;
     xTaskCreate(setup_task, "Setup", 512, 0, 1, &my_xSetupTask);
-    q31_t input = (int32_t) 22506635; 
-    q31_t result;
-
-    arm_status status = arm_sqrt_q31(input, &result);
-
-
-    ns_printf("result = %f\n", ((float)result) / (1 << 26));
 
     vTaskStartScheduler();
+
     while (1) {
     };
 }

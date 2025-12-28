@@ -71,6 +71,7 @@ def export(params: SKTaskParams):
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype=params.export.dtype,
-        path_tflite=path_tflite)
+        path_tflite=path_tflite,
+        data_calibration=params.export.calibration_samples)
 
     log.info(f"Exported model to {path_tflite}")

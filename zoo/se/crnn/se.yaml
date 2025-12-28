@@ -89,6 +89,8 @@ export:
 demo:
   epoch_loaded: 0
   platform: evb # or pc
+  dtype: int16
+  calibration_samples: 100
   tflite_dir: ./soundkit/tasks/se/tflite
   # evb_dir: ./soundkit/tasks/se/evb
   evb_dir: ./soundkit/tasks/se/evb_webusb
