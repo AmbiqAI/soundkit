@@ -337,7 +337,7 @@ def load_dns_challenge_noise(corpus: str) -> dict:
 
     wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets_fullband/noise_fullband')
     wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
-    
+
     random.shuffle(wavs)
     split = len(wavs) // 5
 
@@ -362,9 +362,8 @@ def load_dns_challenge_train(corpus: str) -> dict:
 
     wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets/clean')
     # wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
-    
+
     random.shuffle(wavs)
-    # split = len(wavs) // 5
 
     return wavs
 
@@ -384,7 +383,7 @@ def load_dns_challenge_val(corpus: str) -> dict:
 
     wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets/dev_testset')
     # wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
-    
+
     random.shuffle(wavs)
     # split = len(wavs) // 5
 

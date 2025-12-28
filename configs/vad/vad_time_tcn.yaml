@@ -103,5 +103,6 @@ demo:
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1
+  dtype: int16
   filename: def_nn1_nnvad
   param_struct_name: params_nn1_nnvad

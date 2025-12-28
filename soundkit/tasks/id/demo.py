@@ -6,10 +6,7 @@ import shutil
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation_id import AudioShowClass
@@ -17,7 +14,10 @@ from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
 from soundkit.utils.basic_dsp import DCRemover
-from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.converter_fix_point import (
+        fakefix_tf,
+        int2str_array
+    )
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.mel import gen_mel_c
 from .export import export
@@ -127,7 +127,6 @@ def demo_evb(
         fbanks=None
     else:
         fbanks = tf.identity(feat_extractor.mel_filter)
-    
         fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
@@ -168,7 +167,6 @@ def demo_evb(
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
 
     # === Copy TFLite File to neuralSPOT/tools ===
-    
     log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(tflite_path_src, tflite_path_dst)
