@@ -99,7 +99,7 @@ def corpus_download(
                 corpus = 'dev-clean'
             target_name = f'{corpus}.tar.gz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://openslr.org/resources/12/{target_name}'
+            url = f'https://www.openslr.org/resources/12/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
@@ -108,14 +108,14 @@ def corpus_download(
                 corpus = 'thchs30'
             target_name = f'{corpus}.tgz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://openslr.org/resources/18/data_{target_name}'
+            url = f'https://openslr.trmal.net/resources/18/data_thchs30.tgz'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
         case 'musan':
             target_name = f'{corpus}.tar.gz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://openslr.org/resources/17/{target_name}'
+            url = f'https://www.openslr.org/resources/17/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
