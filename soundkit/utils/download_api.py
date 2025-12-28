@@ -84,12 +84,14 @@ def corpus_download(
     match corpus:
 
         case (
-        'train-clean-360'
+          'train-clean-360'
         | 'vad_train-clean-360' # for vad
         | 'train-clean-100'
         | 'vad_train-clean-100' # for vad
         | 'dev-clean'
         | 'vad_dev-clean' # for vad
+        | 'train-other-500'
+        | 'vad_train-other-500' # for vad
         ):
             if corpus == 'vad_train-clean-360':
                 corpus = 'train-clean-360'
@@ -97,6 +99,8 @@ def corpus_download(
                 corpus = 'train-clean-100'
             elif corpus == 'vad_dev-clean':
                 corpus = 'dev-clean'
+            elif corpus == 'vad_train-other-500':
+                corpus = 'train-other-500'
             target_name = f'{corpus}.tar.gz'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://www.openslr.org/resources/12/{target_name}'
