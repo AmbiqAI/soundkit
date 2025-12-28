@@ -175,9 +175,55 @@ def demo_evb(
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
+    # Ensure uv is on PATH for subprocess calls
+    os.environ["PATH"] = f"{Path.home()}/.local/bin:" + os.environ.get("PATH", "")
 
-    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
-    subprocess.run(["uv", "sync"], check=True)
+    # Try to locate or download helios-aot
+    aot_candidates = [
+        Path.home() / "Documents" / "helios-aot",
+        Path.home() / "helios-aot",
+    ]
+    aot_path = None
+    for p in aot_candidates:
+        if p.exists():
+            aot_path = p
+            break
+    if aot_path is None:
+        try:
+            log.info("📥 Downloading helios-aot to ~/helios-aot")
+            subprocess.run([
+                "git", "clone", "https://github.com/AmbiqAI/helios-aot.git",
+                str(Path.home() / "helios-aot")
+            ], check=True)
+            aot_path = Path.home() / "helios-aot"
+        except subprocess.CalledProcessError:
+            log.warning("helios-aot not found and clone failed; proceeding without explicit AOT add. If uv sync fails, set HELIOS AOT path manually.")
+
+    # Pin Python and sync root env for neuralSPOT
+    subprocess.run(["uv", "python", "pin", "3.12.11"], cwd=neuralspot_root, check=True)
+
+    # If we have helios-aot, add it to the tools project and sync there too
+    tools_project_dir = neuralspot_root / "tools"
+    if aot_path and tools_project_dir.exists():
+        try:
+            # Remove any previous entry and add our local path
+            subprocess.run(["uv", "remove", "helios-aot"], cwd=tools_project_dir, check=False)
+            subprocess.run(["uv", "add", str(aot_path)], cwd=tools_project_dir, check=True)
+            subprocess.run(["uv", "sync"], cwd=tools_project_dir, check=True)
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to add/sync helios-aot: {e}")
+
+    # Also sync at neuralSPOT root to ensure its venv resolves dependencies
+    try:
+        subprocess.run(["uv", "sync"], cwd=neuralspot_root, check=True)
+    except subprocess.CalledProcessError as e:
+        log.error(
+            "uv sync failed in neuralSPOT root.\n"
+            "- Ensure 'uv' is installed and on PATH (~/.local/bin).\n"
+            f"- If a local dependency like helios-aot is required, verify it exists at: {aot_path or '[not found]'}\n"
+            "  or configure the tools project to point to your actual path."
+        )
+        raise
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")

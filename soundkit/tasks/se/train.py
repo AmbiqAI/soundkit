@@ -415,6 +415,9 @@ def train(params: SKTaskParams):
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
     }
     truncate_samples = int(params.train['truncate_time'] * params.data.signal.sampling_rate) if params.train['truncate_time'] is not None else None
+
+    # if params.train.num_per_epoch_files.train > 
+
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
         batchsize=batchsize,
@@ -426,6 +429,7 @@ def train(params: SKTaskParams):
         tfrecord_list['val'],
         batchsize=batchsize,
         is_shuffle=False,
+        num_per_epoch_files=params.train.num_per_epoch_files.val,
         truncate_samples=truncate_samples,
     )
 

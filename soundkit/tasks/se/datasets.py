@@ -153,18 +153,16 @@ def create_dataset(
             except:# pylint: disable=bare-except
                 log.warning('Can not find the list %s', tfrecords)
             else:
-                
+                create_tfrecords_pipeline
                 total_batches = len(lines) // batchsize
                 len0 = total_batches * batchsize
                 fnames = [line.strip() for line in lines[:len0]]
-                # if num_samples > 0:
-                #     import random
-                #     random.seed(42)
-                #     random.shuffle(fnames[tr_set])
-                #     if tr_set=='train':
-                #         fnames[tr_set] = fnames[tr_set][:num_samples]
-                #     else:
-                #         fnames[tr_set] = fnames[tr_set][:num_samples >> 2]
+                
+                if num_per_epoch_files is not None:
+                    if len(fnames) < num_per_epoch_files:
+                        raise ValueError(
+                            "num_per_epoch_files is larger than the total number of tfrecords.",
+                            " Reduce num_per_epoch_files or add more tfrecords")
     elif isinstance(tfrecords, list):
         fnames = tfrecords
         total_batches = len(fnames) // batchsize
