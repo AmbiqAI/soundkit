@@ -41,7 +41,7 @@ def demo(params: SKTaskParams):
     log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
     params.export['epoch_loaded'] = params.demo['epoch_loaded']
     params.export['tflite_dir'] = params.demo['tflite_dir']
-    # params.export["calibration_samples"] = params.demo["calibration_samples"]
+    params.export["calibration_samples"] = params.demo["calibration_samples"]
     params.export["dtype"] = params.demo["dtype"]
     export(params)
     if params.demo.platform == 'evb':
@@ -93,15 +93,25 @@ def demo_evb(
 
     # === Generate C Code STFT Window ===
 
+    # Extract parameters for readability
     feat_params = params.train['feature']
+    framesize = feat_params['frame_size']
+    hopsize = feat_params['hop_size']
+
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=feat_params['frame_size'],
-        hop=feat_params['hop_size'])
+        win_size=framesize,
+        hop=hopsize)
     win_coeff = fakefix_tf(win_coeff, 16, 15)
-    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
-    c_code = '#include <stdint.h>\n\n' + c_code
+
+    # Build the file content as a list of strings
+    lines = [
+        '#include <stdint.h>\n',
+        f"// stft window_coeff (framesize={framesize}, hopsize={hopsize})",
+        int2str_array(stft_win_name, win_coeff.numpy() * 32768, nbits=16)
+    ]
+
+    c_code = "\n".join(lines)
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
     # === Generate C Code Filter Banks ===
@@ -261,11 +271,23 @@ def demo_pc(
             mel_bins=mel_bins,
         )
 
+        tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
+        tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+        log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+        params.export['epoch_loaded'] = params.demo['epoch_loaded']
+        params.export['tflite_dir'] = params.demo['tflite_dir']
+        params.export["calibration_samples"] = params.demo["calibration_samples"]
+        params.export["dtype"] = params.demo["dtype"]
+        export(params)
+
         interpreter = tf.lite.Interpreter(
-            model_path=tflite_path_src)
+            model_path=str(tflite_path_src)
+            )
 
         if params.train.standardization:
-            stats = load_feat_stats(params.train['path']['checkpoint_dir'], 'stats.pkl')
+            stats = load_feat_stats(
+                params.train['path']['checkpoint_dir'],
+                'stats.pkl')
         else:
             stats = None
 
@@ -321,7 +343,8 @@ def demo_pc(
             for key, interpreter in self.interpreters.items():
                 interpreter.allocate_tensors()
                 self.models_tflite[key] = TFLiteAudioModel(
-                    interpreter=interpreter, dtype="float32")
+                    interpreter=interpreter,
+                    dtype=params_list[key].demo.dtype,)
 
         def __call__(self,
                      inputs: np.ndarray, # input from microphone

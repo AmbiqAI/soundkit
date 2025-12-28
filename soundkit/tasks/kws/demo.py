@@ -66,7 +66,8 @@ def demo_evb(
     # === Setup Variables ===
 
     current_dir = Path.cwd().resolve()
-    log.info(f"🔧 Current working directory: {current_dir}")
+    log.info(
+        f"🔧 Current working directory: {current_dir}")
 
     tflite_filename = "net.tflite"
 
@@ -93,15 +94,25 @@ def demo_evb(
 
     # === Generate C Code STFT Window ===
 
+    # Extract parameters for readability
     feat_params = params.train['feature']
+    framesize = feat_params['frame_size']
+    hopsize = feat_params['hop_size']
+
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=feat_params['frame_size'],
-        hop=feat_params['hop_size'])
+        win_size=framesize,
+        hop=hopsize)
     win_coeff = fakefix_tf(win_coeff, 16, 15)
-    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
-    c_code = '#include <stdint.h>\n\n' + c_code
+
+    # Build the file content as a list of strings
+    lines = [
+        '#include <stdint.h>\n',
+        f"// stft window_coeff (framesize={framesize}, hopsize={hopsize})",
+        int2str_array(stft_win_name, win_coeff.numpy() * 32768, nbits=16)
+    ]
+
+    c_code = "\n".join(lines)
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
 
@@ -118,7 +129,6 @@ def demo_evb(
         fbanks=None
     else:
         fbanks = tf.identity(feat_extractor.mel_filter)
-    
         fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
@@ -314,18 +324,16 @@ def demo_pc(
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
             outputs = self.model_tflite(features)
             outputs = outputs.flatten()
-            if 0:
+            if 1:
                 if outputs[0] < outputs[1]:
                     outputs = np.ones(160, dtype=np.float32)*0.95
                 else:
                     outputs = np.zeros(160, dtype=np.float32)
-                
             else: # softmax
                 sum_exp = np.exp(outputs[0]) + np.exp(outputs[1])
                 outputs[0] = np.exp(outputs[0]) / sum_exp
                 outputs[1] = np.exp(outputs[1]) / sum_exp
                 outputs = np.ones(160, dtype=np.float32)*outputs[1]
-            
             outputs = outputs.reshape(shape)
             return outputs
 
