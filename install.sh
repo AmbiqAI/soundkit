@@ -71,7 +71,8 @@ fi
 
 $PYTHON_CMD -m venv .venv
 source .venv/bin/activate
-
+# Ensure 'python' points to the venv's python even if the system doesn't have it
+sudo apt install python-is-python3
 echo "📦 Upgrading pip..."
 python -m pip install --upgrade pip
 

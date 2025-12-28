@@ -85,6 +85,7 @@ def run_task(
                     script="audioview_nnid"
 
                 print("🔌 Running EVB demo...")
+
                 os.system(f"python -m soundkit.tools.{script}")
             else:
                 task_handler.demo(params)
