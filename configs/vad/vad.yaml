@@ -12,7 +12,7 @@ data:
     val: 250
   force_download: false
   reverb_prob: 0.0
-  num_processes: 8
+  num_processes: 2
   corpora:
     - {name: vad_train-clean-100, type: speech, split: train}
     # - {name: vad_train-clean-360, type: speech, split: train}
