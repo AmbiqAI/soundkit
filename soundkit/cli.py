@@ -68,6 +68,25 @@ def download_s3_folder(bucket_name, s3_prefix, local_dir):
             log.info(f"  ⬇️ {relative_path}")
             s3.download_file(bucket_name, key, str(local_file_path))
 
+# soundkit/utils/s3.py
+
+def sync_metadata(local_root: Path = Path("."), bucket: str = "ambiqai-model-zoo"):
+    """
+    Checks if ./metadata exists; if not, downloads it from S3.
+    """
+    local_metadata_path = local_root / "metadata"
+    s3_prefix = "soundkit/metadata/"
+    
+    if not local_metadata_path.exists():
+        log.info("📂 Metadata folder not found. Downloading from S3...")
+        # You can call your existing download_s3_folder logic here
+        # Assuming download_s3_folder(bucket, s3_prefix, local_metadata_path)
+        try:
+            download_s3_folder(bucket, s3_prefix, local_metadata_path)
+            log.info("✅ Metadata sync complete.")
+        except Exception as e:
+            log.error(f"❌ Failed to download metadata: {e}")
+
 # === Real logic (can be called from anywhere) ===
 def run_task(
         mode: str,
@@ -78,25 +97,20 @@ def run_task(
 
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
-
+    # Ensure metadata is synced
+    sync_metadata()
     # 1. Normalize the path to handle './zoo', 'zoo/', or '../zoo'
     # .resolve() makes the path absolute and removes things like './'
     absolute_config_path = Path(config).resolve()
     
-    # 2. Check if 'zoo' is in the folder structure AND it doesn't exist locally
-    if "zoo" in absolute_config_path.parts and not Path(config).exists():
+    # 2. If 'zoo' is in the folder structure, always sync the S3 folder to ensure all files are present
+    if "zoo" in absolute_config_path.parts:
         log.info(f"📂 Detected Model Zoo path: {config}")
-        log.info(f"📥 Config not found locally. Syncing from S3...")
-        
+        log.info(f"📥 Syncing Model Zoo folder from S3...")
         bucket = "ambiqai-model-zoo"
-        # We assume the S3 structure is soundkit/task_name
         s3_folder = f"soundkit/{task}/"
-        
-        # Determine the local target directory (e.g., ./zoo/id/)
-        # This finds where 'zoo' starts in your input path
         zoo_index = absolute_config_path.parts.index("zoo")
         local_target = Path(*absolute_config_path.parts[:zoo_index + 2])
-        
         try:
             log.info(f"🔄 Syncing S3 folder s3://{bucket}/{s3_folder} to {local_target}...")
             download_s3_folder(bucket, s3_folder, local_target)
