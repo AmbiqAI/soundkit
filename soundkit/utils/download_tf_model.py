@@ -118,7 +118,8 @@ def build_model(
         batchsize: int = 32,
         dim_feat: int = 72,
         time_steps: int = 1,
-        export: bool = False) -> Tuple[tf.keras.Model, int]:
+        export: bool = False,
+        summary: bool = True) -> Tuple[tf.keras.Model, int]:
 
     """Download model weights from a remote server.
 
@@ -172,6 +173,7 @@ def build_model(
             shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
 
     model(inputs_x)
-    model.summary()
+    if summary:
+        model.summary()
 
     return model

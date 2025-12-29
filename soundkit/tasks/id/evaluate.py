@@ -28,7 +28,7 @@ def evaluate(params: SKTaskParams):
         params (SKTaskParams): Task parameters
 
     """
-    log.info(f"Evaluating ID model with params: {params} and more")
+    log.debug(f"Evaluating ID model with params: {params} and more")
 
     params_evaluate = params.evaluate
 
@@ -110,7 +110,8 @@ def evaluate(params: SKTaskParams):
             params,
             batchsize=batchsize,
             dim_feat=dim_feat,
-            time_steps=time_steps)
+            time_steps=time_steps,
+            summary=False)
 
         copy_model_weights(
             model_dst=model,
@@ -161,6 +162,6 @@ def evaluate(params: SKTaskParams):
         score = cos_sim(spk_reg, d_vec)
 
         if score < params_evaluate['threshold_id']:
-            log.info(f"Test file {wav_test} is NOT recognized as registered speaker. (score={score.numpy():.4f} < threshold={params_evaluate['threshold_id']})")
+            print(f"Test file {wav_test} is NOT recognized as registered speaker. (score={score.numpy():.4f} < threshold={params_evaluate['threshold_id']})")
         else:
-            log.info(f"Test file {wav_test} is recognized as registered speaker. (score={score.numpy():.4f} >= threshold={params_evaluate['threshold_id']})")
+            print(f"Test file {wav_test} is recognized as registered speaker. (score={score.numpy():.4f} >= threshold={params_evaluate['threshold_id']})")

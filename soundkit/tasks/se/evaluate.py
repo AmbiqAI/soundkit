@@ -38,7 +38,7 @@ def evaluate(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
-    logging.info(f"Evaluating SE model with params: {params} and more")
+    logging.debug(f"Evaluating SE model with params: {params} and more")
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']

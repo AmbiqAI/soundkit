@@ -30,7 +30,7 @@ def evaluate(params: SKTaskParams):
 
     """
     from .utils.vad_silero import get_vad, calculate_vad_accuracy
-    log.info(f"Evaluating VAD model with params: {params} and more")
+    log.debug(f"Evaluating VAD model with params: {params} and more")
 
     params_evaluate = params.evaluate
     feat_params = params.train['feature']

@@ -4,7 +4,10 @@ import argparse
 from pathlib import Path
 from argdantic import ArgField, ArgParser
 from omegaconf import OmegaConf, DictConfig
-import boto3
+from soundkit.utils.s3 import (
+        S3Manager,
+        sync_metadata
+    )
 from .defines import SKTaskParams, SKMode
 
 from .tasks import TaskFactory
@@ -42,51 +45,6 @@ def parse_config(
 
     return cfg
 
-def download_s3_folder(bucket_name, s3_prefix, local_dir):
-    s3 = boto3.client('s3')
-    local_dir = Path(local_dir)
-    
-    paginator = s3.get_paginator('list_objects_v2')
-    for result in paginator.paginate(Bucket=bucket_name, Prefix=s3_prefix):
-        if 'Contents' not in result:
-            log.warning(f"⚠️ No objects found in S3 with prefix: {s3_prefix}")
-            continue
-            
-        for obj in result['Contents']:
-            key = obj['Key']
-            
-            # Extract relative path from S3 key
-            # If key is 'soundkit/id/id.yaml' and prefix is 'soundkit/id/'
-            # relative_path becomes 'id.yaml'
-            relative_path = key[len(s3_prefix):].lstrip('/')
-            if not relative_path: 
-                continue
-            
-            local_file_path = local_dir / relative_path
-            local_file_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            log.info(f"  ⬇️ {relative_path}")
-            s3.download_file(bucket_name, key, str(local_file_path))
-
-# soundkit/utils/s3.py
-
-def sync_metadata(local_root: Path = Path("."), bucket: str = "ambiqai-model-zoo"):
-    """
-    Checks if ./metadata exists; if not, downloads it from S3.
-    """
-    local_metadata_path = local_root / "metadata"
-    s3_prefix = "soundkit/metadata/"
-    
-    if not local_metadata_path.exists():
-        log.info("📂 Metadata folder not found. Downloading from S3...")
-        # You can call your existing download_s3_folder logic here
-        # Assuming download_s3_folder(bucket, s3_prefix, local_metadata_path)
-        try:
-            download_s3_folder(bucket, s3_prefix, local_metadata_path)
-            log.info("✅ Metadata sync complete.")
-        except Exception as e:
-            log.error(f"❌ Failed to download metadata: {e}")
-
 # === Real logic (can be called from anywhere) ===
 def run_task(
         mode: str,
@@ -97,26 +55,21 @@ def run_task(
 
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
-    # Ensure metadata is synced
+
+    # Always ensure metadata is present first
     sync_metadata()
-    # 1. Normalize the path to handle './zoo', 'zoo/', or '../zoo'
-    # .resolve() makes the path absolute and removes things like './'
-    absolute_config_path = Path(config).resolve()
-    
-    # 2. If 'zoo' is in the folder structure, always sync the S3 folder to ensure all files are present
-    if "zoo" in absolute_config_path.parts:
-        log.info(f"📂 Detected Model Zoo path: {config}")
-        log.info(f"📥 Syncing Model Zoo folder from S3...")
-        bucket = "ambiqai-model-zoo"
-        s3_folder = f"soundkit/{task}/"
-        zoo_index = absolute_config_path.parts.index("zoo")
-        local_target = Path(*absolute_config_path.parts[:zoo_index + 2])
-        try:
-            log.info(f"🔄 Syncing S3 folder s3://{bucket}/{s3_folder} to {local_target}...")
-            download_s3_folder(bucket, s3_folder, local_target)
-        except Exception as e:
-            log.error(f"❌ S3 Sync failed: {e}")
-            return
+
+    config_path = Path(config)
+    abs_config_path = config_path.resolve()
+    # Handle the Model Zoo 'zoo' logic
+    if "zoo" in abs_config_path.parts:
+        zoo_idx = abs_config_path.parts.index("zoo")
+        # local_target becomes /your/path/zoo/task_name/
+        local_target = Path(*abs_config_path.parts[:zoo_idx + 2])
+        
+        # Use the modulized manager
+        s3 = S3Manager()
+        s3.download_folder(s3_prefix=f"soundkit/{task}/", local_dir=local_target)
 
     params = parse_config(config, overrides=extra_overrides)
     task_handler = TaskFactory.get(task)

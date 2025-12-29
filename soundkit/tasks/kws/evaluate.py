@@ -33,7 +33,7 @@ def evaluate(params: SKTaskParams):
         params (SKTaskParams): Task parameters
 
     """
-    log.info(f"Evaluating KWS model with params: {params} and more")
+    log.debug(f"Evaluating KWS model with params: {params} and more")
 
     params_evaluate = params.evaluate
     feat_params = params.train['feature']
