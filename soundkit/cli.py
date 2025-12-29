@@ -71,6 +71,8 @@ def run_task(
         s3 = S3Manager()
         s3.download_folder(s3_prefix=f"soundkit/{task}/", local_dir=local_target)
 
+        if task == "id": # ensure VAD model is also downloaded
+            s3.download_folder(s3_prefix=f"soundkit/vad/", local_dir=Path("./zoo/vad/"))
     params = parse_config(config, overrides=extra_overrides)
     task_handler = TaskFactory.get(task)
     if task == "id":

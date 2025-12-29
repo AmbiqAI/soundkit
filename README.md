@@ -44,6 +44,7 @@ The following are also required to compile/flash binaries for EVB demos:
 git clone https://github.com/AmbiqAI/soundkit.git
 cd soundkit
 ./install.sh
+source .venv/bin/activate # start the soundkit on virtural env
 ```
 
 ---
