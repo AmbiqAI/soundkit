@@ -157,35 +157,71 @@ soundkit -t se -m demo -c configs/se.yaml demo.platform=evb
 soundkit -t se -m train -c configs/se.yaml train.batchsize=64
 ```
 
+To polish the **Model Zoo** section, I’ve refined the structure to be more professional, added descriptive subheadings, and used clear formatting to distinguish between the various tasks and model variants.
 
-## **Model Zoo**
+---
 
-You can directly try on already trained model on your PC.
+## 🦁 **Model Zoo**
 
-- se:
+The Model Zoo contains pre-trained, high-performance models ready for immediate evaluation. You can run these on your local PC to verify performance before deploying to hardware.
 
-    ```bash
-    soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc # crnn
-    # or
-    soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc # unet
-    ```
+!!! tip "Switching to Hardware"
+    To deploy any of these models to an Ambiq Apollo EVB, simply append `demo.platform=evb` to the command.
 
-- vad
+### 🎧 **Sound Enhancement (SE)**
 
-    ```bash
-    soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc # frequency domain input
-    # or
-    soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc # time domain input (end-to-end model)
-    ```
+Clean noisy audio streams using state-of-the-art architectures.
 
-- kws
+* **CRNN Model** (Balanced performance/efficiency):
+```bash
+soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc
 
-    ```bash
-    soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
-    ```
+```
 
-- id
 
-    ```bash
-    soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
-    ```
+* **UNet Model** (High-fidelity enhancement):
+```bash
+soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc
+
+```
+
+
+
+### 🗣️ **Voice Activity Detection (VAD)**
+
+Detect the presence of human speech in diverse environments.
+
+* **Frequency Domain** (Robust to stationary noise):
+```bash
+soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc
+
+```
+
+
+* **Time Domain** (End-to-end efficiency):
+```bash
+soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc
+
+```
+
+
+
+### 🔑 **Keyword Spotting (KWS)**
+
+Low-latency wake-word and command recognition.
+
+```bash
+soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
+
+```
+
+### 🆔 **Speaker Identification (ID)**
+
+Secure voice-biometrics and speaker classification.
+
+```bash
+soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
+
+```
+
+---
