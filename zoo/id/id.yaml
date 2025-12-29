@@ -14,12 +14,12 @@ data:
   reverb_prob: 0.0
   num_processes: 8
   corpora:
-    # - {name: vad_train-clean-100, type: speech, split: train}
-    # - {name: vad_train-clean-360, type: speech, split: train}
+    - {name: vad_train-clean-100, type: speech, split: train}
+    - {name: vad_train-clean-360, type: speech, split: train}
     - {name: vad_train-other-500, type: speech, split: train}
-    # - {name: vad_dev-clean, type: speech, split: val}
-    # - {name: ESC-50-master, type: noise, split: train-val}
-    # - {name: FSD50K, type: noise, split: train-val}
+    - {name: vad_dev-clean, type: speech, split: val}
+    - {name: ESC-50-master, type: noise, split: train-val}
+    - {name: FSD50K, type: noise, split: train-val}
     - {name: musan, type: noise, split: train-val}
     - {name: wham_noise, type: noise, split: train-val}
     # - {name: rirs_noises, type: reverb, split: train-val}

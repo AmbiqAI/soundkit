@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from argdantic import ArgField, ArgParser
 from omegaconf import OmegaConf, DictConfig
+import boto3
 from .defines import SKTaskParams, SKMode
 
 from .tasks import TaskFactory
@@ -41,6 +42,32 @@ def parse_config(
 
     return cfg
 
+def download_s3_folder(bucket_name, s3_prefix, local_dir):
+    s3 = boto3.client('s3')
+    local_dir = Path(local_dir)
+    
+    paginator = s3.get_paginator('list_objects_v2')
+    for result in paginator.paginate(Bucket=bucket_name, Prefix=s3_prefix):
+        if 'Contents' not in result:
+            log.warning(f"⚠️ No objects found in S3 with prefix: {s3_prefix}")
+            continue
+            
+        for obj in result['Contents']:
+            key = obj['Key']
+            
+            # Extract relative path from S3 key
+            # If key is 'soundkit/id/id.yaml' and prefix is 'soundkit/id/'
+            # relative_path becomes 'id.yaml'
+            relative_path = key[len(s3_prefix):].lstrip('/')
+            if not relative_path: 
+                continue
+            
+            local_file_path = local_dir / relative_path
+            local_file_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            log.info(f"  ⬇️ {relative_path}")
+            s3.download_file(bucket_name, key, str(local_file_path))
+
 # === Real logic (can be called from anywhere) ===
 def run_task(
         mode: str,
@@ -52,8 +79,32 @@ def run_task(
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
 
-    params = parse_config(config, overrides=extra_overrides)
+    # 1. Normalize the path to handle './zoo', 'zoo/', or '../zoo'
+    # .resolve() makes the path absolute and removes things like './'
+    absolute_config_path = Path(config).resolve()
+    
+    # 2. Check if 'zoo' is in the folder structure AND it doesn't exist locally
+    if "zoo" in absolute_config_path.parts and not Path(config).exists():
+        log.info(f"📂 Detected Model Zoo path: {config}")
+        log.info(f"📥 Config not found locally. Syncing from S3...")
+        
+        bucket = "ambiqai-model-zoo"
+        # We assume the S3 structure is soundkit/task_name
+        s3_folder = f"soundkit/{task}/"
+        
+        # Determine the local target directory (e.g., ./zoo/id/)
+        # This finds where 'zoo' starts in your input path
+        zoo_index = absolute_config_path.parts.index("zoo")
+        local_target = Path(*absolute_config_path.parts[:zoo_index + 2])
+        
+        try:
+            log.info(f"🔄 Syncing S3 folder s3://{bucket}/{s3_folder} to {local_target}...")
+            download_s3_folder(bucket, s3_folder, local_target)
+        except Exception as e:
+            log.error(f"❌ S3 Sync failed: {e}")
+            return
 
+    params = parse_config(config, overrides=extra_overrides)
     task_handler = TaskFactory.get(task)
     if task == "id":
         if params.train.batchsize != params.data.ppls_per_group * params.data.num_sentences:
@@ -61,7 +112,6 @@ def run_task(
             log.warning(
                 f"Adjusted train batchsize to {params.train.batchsize} based on ppls_per_group and num_sentences."
                 )
-
     match mode:
         case SKMode.data:
             task_handler.data(params)
