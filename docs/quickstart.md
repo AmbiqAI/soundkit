@@ -10,9 +10,8 @@
         ```bash
         git clone https://github.com/AmbiqAI/soundkit.git
         cd soundkit
-        python -m venv .venv         # Create virtual environment
-        source .venv/bin/activate    # Activate it
         ./install.sh
+        source .venv/bin/activate # start the soundkit on virtural env
         ```
     === "From PyPI"
 
@@ -23,7 +22,7 @@
 
 ## **Requirements**
 
-- Python  **3.10**
+- Python  **3.10^+**
 
 **Optional (for EVB demo support):**
 

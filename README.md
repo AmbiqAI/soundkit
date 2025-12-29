@@ -18,8 +18,11 @@
 * **Customizable**: Add new models, datasets, and audio tasks.
 * **End-to-End**: Includes tools for training, quantization, evaluation, and deployment.
 * **Open Source**: Available for use and contributions on GitHub.
+* **Int16x8 Tflite Quantization**: Utilize [**HeliaRT**](https://github.com/AmbiqAI/helia-rt), a specialized fork of TensorFlow Lite for Microcontrollers (TFLM), developed by Ambiq. It supports the quantization format **int16x8** including LSTM, conv2d with group (separable convolution) exclusively
 
 ---
+## <span class="sk-h2-span">Operation System</span>
+* **Ubuntu 20.04 / 22.04 / 24.04** (The CLI and installation scripts are currently Ubuntu-only).
 
 ## <span class="sk-h2-span">Requirements</span>
 
