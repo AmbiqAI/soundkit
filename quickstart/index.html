@@ -446,10 +446,60 @@
   <a href="#model-zoo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Zoo
+        🦁 Model Zoo
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="🦁 Model Zoo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sound-enhancement-se" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎧 Sound Enhancement (SE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice-activity-detection-vad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗣️ Voice Activity Detection (VAD)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyword-spotting-kws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔑 Keyword Spotting (KWS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#speaker-identification-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🆔 Speaker Identification (ID)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1962,10 +2012,60 @@
   <a href="#model-zoo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Zoo
+        🦁 Model Zoo
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="🦁 Model Zoo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sound-enhancement-se" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎧 Sound Enhancement (SE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice-activity-detection-vad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗣️ Voice Activity Detection (VAD)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyword-spotting-kws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔑 Keyword Spotting (KWS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#speaker-identification-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🆔 Speaker Identification (ID)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2121,34 +2221,51 @@ soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </s
 <p><strong>Example: Override training batch size</strong></p>
 <div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>train<span class="w"> </span>-c<span class="w"> </span>configs/se.yaml<span class="w"> </span>train.batchsize<span class="o">=</span><span class="m">64</span>
 </code></pre></div>
-<h2 id="model-zoo"><strong>Model Zoo</strong></h2>
-<p>You can directly try on already trained model on your PC.</p>
+<p>To polish the <strong>Model Zoo</strong> section, I’ve refined the structure to be more professional, added descriptive subheadings, and used clear formatting to distinguish between the various tasks and model variants.</p>
+<hr />
+<h2 id="model-zoo">🦁 <strong>Model Zoo</strong></h2>
+<p>The Model Zoo contains pre-trained, high-performance models ready for immediate evaluation. You can run these on your local PC to verify performance before deploying to hardware.</p>
+<div class="admonition tip">
+<p class="admonition-title">Switching to Hardware</p>
+<p>To deploy any of these models to an Ambiq Apollo EVB, simply append <code>demo.platform=evb</code> to the command.</p>
+</div>
+<h3 id="sound-enhancement-se">🎧 <strong>Sound Enhancement (SE)</strong></h3>
+<p>Clean noisy audio streams using state-of-the-art architectures.</p>
 <ul>
 <li>
-<p>se:</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/se/crnn/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># crnn</span>
-<span class="c1"># or</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/se/unet/se_unet.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># unet</span>
-</code></pre></div>
+<p><strong>CRNN Model</strong> (Balanced performance/efficiency):
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/se/crnn/se.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div></p>
 </li>
 <li>
-<p>vad</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/vad/freq_model/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># frequency domain input</span>
-<span class="c1"># or</span>
-soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/vad/time_model/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc<span class="w"> </span><span class="c1"># time domain input (end-to-end model)</span>
-</code></pre></div>
-</li>
-<li>
-<p>kws</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>kws<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/kws/kws.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div>
-</li>
-<li>
-<p>id</p>
-<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>id<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/id/id.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
-</code></pre></div>
+<p><strong>UNet Model</strong> (High-fidelity enhancement):
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>se<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/se/unet/se_unet.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div></p>
 </li>
 </ul>
+<h3 id="voice-activity-detection-vad">🗣️ <strong>Voice Activity Detection (VAD)</strong></h3>
+<p>Detect the presence of human speech in diverse environments.</p>
+<ul>
+<li>
+<p><strong>Frequency Domain</strong> (Robust to stationary noise):
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/vad/freq_model/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Time Domain</strong> (End-to-end efficiency):
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>vad<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/vad/time_model/vad.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div></p>
+</li>
+</ul>
+<h3 id="keyword-spotting-kws">🔑 <strong>Keyword Spotting (KWS)</strong></h3>
+<p>Low-latency wake-word and command recognition.</p>
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>kws<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/kws/kws.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div>
+<h3 id="speaker-identification-id">🆔 <strong>Speaker Identification (ID)</strong></h3>
+<p>Secure voice-biometrics and speaker classification.</p>
+<div class="highlight"><pre><span></span><code>soundkit<span class="w"> </span>-t<span class="w"> </span>id<span class="w"> </span>-m<span class="w"> </span>demo<span class="w"> </span>-c<span class="w"> </span>zoo/id/id.yaml<span class="w"> </span>demo.platform<span class="o">=</span>pc
+</code></pre></div>
+<hr />
 
 
 
