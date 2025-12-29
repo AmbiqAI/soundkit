@@ -3,7 +3,10 @@ import os
 import logging
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.download_tf_model import (
+        build_model,
+        load_model_checkpoint
+    )
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.tf_copy_model import copy_model_weights

@@ -242,9 +242,18 @@ def data(params: SKTaskParams) -> None:
                 len(speech_list[train_set]),
                 params_data['num_samples_per_noise'][train_set])
 
-        speech_list_split = np.array_split(
-            speech_list[train_set][:num_samples],
-            params_data['num_processes'])
+        # Robust split for Python lists of possibly ragged elements
+        # Avoid np.array_split which tries to coerce to ndarray and can fail on heterogeneous sequences
+        split_points = np.linspace(
+            0,
+            num_samples,
+            params_data['num_processes'] + 1,
+            dtype=int
+        )
+        speech_list_split = [
+            speech_list[train_set][split_points[i]:split_points[i + 1]]
+            for i in range(params_data['num_processes'])
+        ]
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
             log.info(f"Processing [{train_set}] set with [{noise_type}] noise")

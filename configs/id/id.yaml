@@ -15,8 +15,8 @@ data:
   num_processes: 8
   corpora:
     - {name: vad_train-clean-100, type: speech, split: train}
-    # - {name: vad_train-clean-360, type: speech, split: train}
-    # - {name: vad_train-other-500, type: speech, split: train}
+    - {name: vad_train-clean-360, type: speech, split: train}
+    - {name: vad_train-other-500, type: speech, split: train}
     - {name: vad_dev-clean, type: speech, split: val}
     - {name: ESC-50-master, type: noise, split: train-val}
     - {name: FSD50K, type: noise, split: train-val}

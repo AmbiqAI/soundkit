@@ -6,10 +6,15 @@ from pathlib import Path
 from typing import Any
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import save_train_log, load_train_log
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.download_tf_model import (
+        save_train_log,
+        load_train_log
+    )
+from soundkit.utils.download_tf_model import (
+        build_model,
+        load_model_checkpoint
+)
 from soundkit.utils.feature_utils import FeatureExtractor
-# from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
@@ -17,7 +22,11 @@ from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_dataset
-from .utils.nnid_utils import gen_target_nnid, get_corr_fast, cross_entropy_nnid
+from .utils.nnid_utils import (
+        gen_target_nnid,
+        get_corr_fast,
+        cross_entropy_nnid
+    )
 
 logging.basicConfig(
     level=logging.INFO,

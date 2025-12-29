@@ -4,8 +4,14 @@ Args:
 """
 import logging
 from soundkit.defines import SKTaskParams
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.tflite_convert import (
+        tflite_convert,
+        warp_tf_model
+    )
+from soundkit.utils.download_tf_model import (
+        build_model,
+        load_model_checkpoint
+    )
 from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
 

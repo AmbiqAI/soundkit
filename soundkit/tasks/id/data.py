@@ -14,7 +14,11 @@ from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.defines import SKTaskParams
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.download_api import corpus_download
-from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
+from soundkit.utils.audio import (
+    audio_read,
+    random_load_audio_from_list,
+    synthesize_audio_with_labels
+)
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
