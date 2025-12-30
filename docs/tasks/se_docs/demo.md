@@ -25,11 +25,11 @@ Example:
 
 ```yaml
 demo:
-epoch_loaded: best
-platform: pc # or evb
-tflite_dir: ./soundkit/tasks/se/tflite
-evb_dir: ./soundkit/tasks/se/evb
-pre_gain: 1
+    epoch_loaded: best
+    platform: pc # or evb
+    tflite_dir: ./soundkit/tasks/se/tflite
+    evb_dir: ./soundkit/tasks/se/evb
+    pre_gain: 1
 ```
 
 ---
