@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+soundkit/__init__.py
+soundkit/__main__.py
+soundkit/cli.py
+soundkit/defines.py
+soundkit.egg-info/PKG-INFO
+soundkit.egg-info/SOURCES.txt
+soundkit.egg-info/dependency_links.txt
+soundkit.egg-info/entry_points.txt
+soundkit.egg-info/requires.txt
+soundkit.egg-info/top_level.txt

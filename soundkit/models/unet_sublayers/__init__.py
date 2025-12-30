@@ -12,9 +12,16 @@ class UNetParams(BaseModel):
     num_chs: List[int] = [1, 16, 16, 16, 16]
     separable: bool = False
     activation: str = 'relu'
+    activation_final: str = 'relu'
     unroll_rnn: bool = False
     normalization_layer: str | None = None
     dropout: float = 0.0
+    bypass_last_fc: bool = False
+    output_scaling: float = 1.0
+    bottleneck: str = 'lstm'  # options: 'dpgrnn', 'lstm', 'none'
+    dilations: List[int] = [1, 2, 4, 8, 16, 32]
+    filters_tcn: int = 64
+    kernel_size_tcn: int = 2
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

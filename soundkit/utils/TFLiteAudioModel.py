@@ -1,7 +1,21 @@
 import numpy as np
 import tensorflow as tf
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
+def print_model_inputs(interpreter):
+    """Prints the details of all input tensors in the TFLite model."""
+    print("--- Model Input Details ---")
+    input_details = interpreter.get_input_details()
+    
+    for i, detail in enumerate(input_details):
+        print(f"Index {i}:")
+        print(f"  Name: {detail.get('name', 'N/A')}")
+        print(f"  Shape: {detail['shape']}")
+        print(f"  Dtype: {detail['dtype']}")
+        print(f"  Quantization: {detail['quantization']}")
+    print("---------------------------")
 
+# Call this function with your interpreter
+# print_model_inputs(self.interpreter)
 class TFLiteAudioModel:
     """ A general-purpose wrapper for TensorFlow Lite audio models.
     This class handles preprocessing (feature extraction and normalization),
@@ -34,6 +48,10 @@ class TFLiteAudioModel:
 
         self.input_details = interpreter.get_input_details()[0]
         self.output_details = interpreter.get_output_details()[0]
+
+
+        print_model_inputs(self.interpreter)
+
         
     def __call__(
             self,
@@ -55,13 +73,15 @@ class TFLiteAudioModel:
             input_tensor = input_tensor.astype(np.int8 if self.dtype == "int8" else np.int16)
         else:
             input_tensor = input_tensor.astype(np.float32)
+
+
         self.interpreter.set_tensor(self.input_details['index'], input_tensor)
 
 
         # Inference
         self.interpreter.invoke()
         output_tensor = self.interpreter.get_tensor(self.output_details['index'])
-
+        # import pdb; pdb.set_trace()
         # Dequantize if needed
         if self.dtype in ("int8", "int16"):
             scale, zero_point = self.output_details["quantization"]
@@ -75,3 +95,4 @@ class TFLiteAudioModel:
         """Reset the TFLite model state."""
         # self.interpreter.reset_all_variables() # doesn't work
         self.interpreter.allocate_tensors()  # Reallocate tensors to reset state
+

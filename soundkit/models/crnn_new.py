@@ -8,6 +8,7 @@ class CRNNParams(BaseModel):
     batchsize: int = 1
     time_steps: int = 1
     dim_feat: int = 257
+    output_gain: float = 1.0
     unroll_rnn: bool = False
     layer_configs: List[dict] = [
         {
@@ -31,7 +32,7 @@ class CRNN(tf.keras.Model):
         self.layers_list = []
         self.states = []
         self.stride_time=1
-
+        self.output_gain = params.output_gain
         # for speaker verification
         self.weight_cos = tf.Variable(30.0, dtype=tf.float32)
         self.bias_cos = tf.Variable(0, dtype=tf.float32)
@@ -175,4 +176,4 @@ class CRNN(tf.keras.Model):
                 idx_lstm += 1
             else:
                 x = layer(x, training=training)
-        return x
+        return x * self.output_gain

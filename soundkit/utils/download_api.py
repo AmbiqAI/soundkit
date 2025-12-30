@@ -25,7 +25,16 @@ def unzip_with_progress(
                     zip_ref.extract(file, extract_to)
                     pbar.update(file.file_size)
     else:
-        with tarfile.open(zip_file_path, "r") as tar:
+        # Choose correct tarfile mode
+        if re.search(r'\.(tar\.gz|tgz)$', zip_file_path):
+            tar_mode = "r:gz"
+        elif re.search(r'\.tar\.bz2$', zip_file_path):
+            tar_mode = "r:bz2"
+        elif re.search(r'\.tar\.xz$', zip_file_path):
+            tar_mode = "r:xz"
+        else:
+            tar_mode = "r"
+        with tarfile.open(zip_file_path, tar_mode) as tar:
             members = tar.getmembers()
             total_size = sum(member.size for member in members)
 
@@ -44,7 +53,8 @@ def url_download(
     print(f"Downloading {url}")
     # Sizes in bytes.
     total_size = int(response.headers.get("content-length", 0))
-    block_size = 1024  # 1 Kibibyte 
+    block_size = 1024  # 1 Kibibyte
+
     with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
         with open(target_name, "wb") as file:
             for data in response.iter_content(block_size):
@@ -74,12 +84,14 @@ def corpus_download(
     match corpus:
 
         case (
-        'train-clean-360'
+          'train-clean-360'
         | 'vad_train-clean-360' # for vad
         | 'train-clean-100'
         | 'vad_train-clean-100' # for vad
         | 'dev-clean'
         | 'vad_dev-clean' # for vad
+        | 'train-other-500'
+        | 'vad_train-other-500' # for vad
         ):
             if corpus == 'vad_train-clean-360':
                 corpus = 'train-clean-360'
@@ -87,9 +99,11 @@ def corpus_download(
                 corpus = 'train-clean-100'
             elif corpus == 'vad_dev-clean':
                 corpus = 'dev-clean'
+            elif corpus == 'vad_train-other-500':
+                corpus = 'train-other-500'
             target_name = f'{corpus}.tar.gz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://us.openslr.org/resources/12/{target_name}'
+            url = f'https://www.openslr.org/resources/12/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
@@ -98,14 +112,14 @@ def corpus_download(
                 corpus = 'thchs30'
             target_name = f'{corpus}.tgz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://openslr.elda.org/resources/18/{target_name}'
+            url = f'https://openslr.trmal.net/resources/18/data_thchs30.tgz'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
         case 'musan':
             target_name = f'{corpus}.tar.gz'
             target_path = f'./{tmp_download}/{target_name}'
-            url = f'https://us.openslr.org/resources/17/{target_name}'
+            url = f'https://www.openslr.org/resources/17/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 
@@ -147,6 +161,8 @@ def corpus_download(
                 url_download(url, f"./{tmp_download}/{fname}")
             os.system(f"zip -s 0 ./{tmp_download}/FSD50K.dev_audio.zip --out ./{tmp_download}/unsplit.zip")
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
+
             shutil.copyfile(
-                'metadata/non_speech_fsd50k.csv',
-                'wavs/noise/FSD50K/non_speech.csv')
+                'metadata/FSD50K/non_speech.csv',
+                'wavs/noise/FSD50K/non_speech.csv'
+                )

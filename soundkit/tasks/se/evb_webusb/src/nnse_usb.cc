@@ -104,6 +104,15 @@ static ns_usb_config_t webUsbConfig = {
     .desc_url = &webusb_url // Filled in at runtime
 };
 
+alignas(16) uint32_t static dmaBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2];     // DMA target
+am_hal_audadc_sample_t static sLGSampleBuffer[SAMPLES_IN_FRAME * NUM_CHANNELS * 2]; // working buffer
+                                                                                // used by AUDADC
+
+#ifndef NS_AMBIQSUITE_VERSION_R4_1_0
+am_hal_offset_cal_coeffs_array_t sOffsetCalib;
+#endif
+
+
 void audio_frame_callback(ns_audio_config_t *config, uint16_t bytesCollected) {
     if (g_audioRecording) {
         ns_audio_getPCM_v2(config, g_in16AudioDataBuffer);
@@ -112,7 +121,7 @@ void audio_frame_callback(ns_audio_config_t *config, uint16_t bytesCollected) {
 }
 
 ns_audio_config_t audio_config = {
-    .api = &ns_audio_V2_0_0,
+    .api = &ns_audio_V2_1_0,
     .eAudioApiMode = NS_AUDIO_API_CALLBACK,
     .callback = audio_frame_callback,
     .audioBuffer = (void *)&g_in16AudioDataBuffer,
@@ -136,6 +145,8 @@ ns_audio_config_t audio_config = {
     .sOffsetCalib = &sOffsetCalib,
 #endif
 };
+
+
 
 // Custom power mode for USB+Audio
 const ns_power_config_t ns_power_usb = {
@@ -197,7 +208,7 @@ void set_se_mode(bool enable) {
     data.type = SET_SE_MODE;
     data.length = 1;
     data.data[0] = enable ? 1 : 0;
-    webusb_send_data((uint8_t *)&data, 5);
+    webusb_send_data((uint8_t *) &data, 5);
 }
 
 void send_se_latency(uint32_t latency) {
@@ -340,8 +351,13 @@ int main(void) {
 
     ns_itm_printf_enable();
     ns_interrupt_master_enable();
-
-    ns_audio_init(&audio_config);
+    
+    // -- Init the audio system
+    NS_TRY(ns_audio_init(&audio_config), "Audio Initialization Failed.\n");
+    NS_TRY(ns_audio_set_gain(AM_HAL_PDM_GAIN_P195DB, AM_HAL_PDM_GAIN_P195DB), "Gain set failed.\n");
+    // NS_TRY(ns_audio_set_gain(24, 24), "Audio gain set failed.\n"); // AUDADC gain
+    NS_TRY(ns_start_audio(&audio_config), "Audio Start Failed.\n");
+    
     ns_peripheral_button_init(&button_config_nnsp);
     ns_init_perf_profiler();
     ns_start_perf_profiler();
@@ -399,6 +415,7 @@ int main(void) {
     xTaskCreate(setup_task, "Setup", 512, 0, 1, &my_xSetupTask);
 
     vTaskStartScheduler();
+
     while (1) {
     };
 }

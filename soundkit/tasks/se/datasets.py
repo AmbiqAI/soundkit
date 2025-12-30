@@ -4,12 +4,18 @@
     2 create tfrecord pipeline
 
 '''
+import logging
 import os
 from pathlib import Path
 from typing import List, Tuple, Iterator
 import tensorflow as tf
 import numpy as np
-
+from typing import List, Callable, Optional
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 def create_raw_tfrecord(
         fname: str,
         audio_sn: np.ndarray,
@@ -48,7 +54,10 @@ def create_raw_tfrecord(
         serialized = seq_example.SerializeToString()
         writer.write(serialized)
 
-def parser( example_proto: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+def parser(
+        example_proto: tf.Tensor,
+        truncate_samples: Optional[int] = None,
+        ) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     """
     Create a description of the features.
     """
@@ -72,38 +81,56 @@ def parser( example_proto: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
 
     audio_s = tf.sparse.to_dense(seq_parsed['audio_s'])
 
-    return audio_sn[0], audio_s[0], length
+    audio_sn = audio_sn[0]
+    audio_s = audio_s[0]
+    if truncate_samples is not None:
+        len_raw = tf.shape(audio_sn)[0]
+
+        start = tf.random.uniform([],
+                                minval=0,
+                                maxval=len_raw - truncate_samples + 1,
+                                dtype=tf.int32)
+
+        audio_sn = audio_sn[start:start+truncate_samples]
+        audio_s = audio_s[start:start+truncate_samples]
+    return audio_sn, audio_s, length
 
 def create_tfrecords_pipeline(
             filenames: List[str],
             batchsize: int = 2,
+            num_per_epoch_files: Optional[int] = None,    # e.g., 40000 (random subset per epoch); None = use all files
+            truncate_samples: Optional[int] = None,
             is_shuffle: bool = False) -> Tuple[Iterator, tf.data.Dataset]:
     """
     Tfrecord generator
     """
     def mapping(record):
-        return parser(record)
+        return parser(record, truncate_samples=truncate_samples)
 
     def tfrecord_convert(val):
         return tf.data.TFRecordDataset(val)
 
     dataset = tf.data.Dataset.from_tensor_slices(filenames)
     if is_shuffle:
-        dataset = dataset.shuffle(len(filenames), reshuffle_each_iteration=True)
+        dataset = dataset.shuffle(
+            len(filenames),
+            reshuffle_each_iteration=True)
+    if num_per_epoch_files is not None:
+        dataset = dataset.take(num_per_epoch_files)
     dataset = dataset.interleave(
                 map_func           = tfrecord_convert,
                 cycle_length       = batchsize,
                 block_length       = 1,
                 deterministic      = True,
-                num_parallel_calls = tf.data.AUTOTUNE)
+                num_parallel_calls = tf.data.AUTOTUNE,)
     dataset = dataset.map(
                 mapping,
-                num_parallel_calls = tf.data.AUTOTUNE,
+                num_parallel_calls = 1,
                 deterministic = True)
     dataset = dataset.batch(
                     batchsize,
                     drop_remainder=True,
-                    num_parallel_calls = tf.data.AUTOTUNE)
+                    num_parallel_calls = 1)
     dataset = dataset.prefetch(buffer_size = 1)
     iterator = iter(dataset)
     return iterator, dataset
@@ -111,6 +138,8 @@ def create_tfrecords_pipeline(
 def create_dataset(
         tfrecords: str | list,
         batchsize: int = 2,
+        num_per_epoch_files: Optional[int] = None,    # e.g., 40000 (random subset per epoch); None = use all files
+        truncate_samples: Optional[int] = None,
         is_shuffle: bool = False) -> Tuple[tf.data.Dataset, int]:
     """
     Create dataset from tfrecord list
@@ -122,20 +151,18 @@ def create_dataset(
                 lines = file.readlines()
 
             except:# pylint: disable=bare-except
-                print(f'Can not find the list {tfrecords}')
+                log.warning('Can not find the list %s', tfrecords)
             else:
-                
+                create_tfrecords_pipeline
                 total_batches = len(lines) // batchsize
                 len0 = total_batches * batchsize
                 fnames = [line.strip() for line in lines[:len0]]
-                # if num_samples > 0:
-                #     import random
-                #     random.seed(42)
-                #     random.shuffle(fnames[tr_set])
-                #     if tr_set=='train':
-                #         fnames[tr_set] = fnames[tr_set][:num_samples]
-                #     else:
-                #         fnames[tr_set] = fnames[tr_set][:num_samples >> 2]
+                
+                if num_per_epoch_files is not None:
+                    if len(fnames) < num_per_epoch_files:
+                        raise ValueError(
+                            "num_per_epoch_files is larger than the total number of tfrecords.",
+                            " Reduce num_per_epoch_files or add more tfrecords")
     elif isinstance(tfrecords, list):
         fnames = tfrecords
         total_batches = len(fnames) // batchsize
@@ -145,6 +172,10 @@ def create_dataset(
     _, dataset = create_tfrecords_pipeline(
             fnames,
             batchsize = batchsize,
+            num_per_epoch_files = num_per_epoch_files,
+            truncate_samples = truncate_samples,
             is_shuffle = is_shuffle)
 
+    if num_per_epoch_files is not None:
+        total_batches = num_per_epoch_files // batchsize
     return dataset, total_batches

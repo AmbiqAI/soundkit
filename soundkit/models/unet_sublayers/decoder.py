@@ -25,7 +25,7 @@ class decoder_unet(tf.keras.layers.Layer):
             num_pad = self.pad_freq_bins[i]
             layer=tf.keras.Sequential(name=f"decoder_{i}")
             if i == 0:
-               activation_layer=params.activation
+               activation_layer=params.activation_final
             else:
                 activation_layer = params.activation
             if params.separable:
@@ -56,7 +56,7 @@ class decoder_unet(tf.keras.layers.Layer):
                             kernel_size=(params.kernel_size_time, 3),
                             strides=(1, 2),
                             padding='valid',
-                            activation=params.activation,
+                            activation=activation_layer,
                             kernel_initializer='he_normal',
                             name=f"conv_tran_{i}"
                             ))

@@ -1,7 +1,7 @@
+"""SoundKit Task base class module."""
 import abc # abstract base class
-import os
 
-from ..defines import SKTaskParams
+from soundkit.defines import SKTaskParams
 
 
 class SKTask(abc.ABC):
@@ -26,7 +26,7 @@ class SKTask(abc.ABC):
 
         """
         raise NotImplementedError
-    
+
     @staticmethod
     def train(params: SKTaskParams) -> None:
         """Train a model

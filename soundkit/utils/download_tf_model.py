@@ -14,7 +14,8 @@ from soundkit.models import ModelFactory, ModelParamFactory
 def load_model_checkpoint(
     model: tf.keras.Model,
     epoch_loaded: Union[str, int],
-    checkpoint_root: str
+    checkpoint_root: str,
+    criterion_epoch: str = 'val_loss',
 ) -> Tuple[int, int]:
     """
     Load model weights from checkpoint based on the specified epoch.
@@ -61,12 +62,16 @@ def load_model_checkpoint(
         logs = [entry for entry in logs if entry is not None]
 
         # ✅ Find entry with lowest val_loss
-        best_epoch_entry = min(logs, key=lambda x: x["val_loss"])
+        if criterion_epoch == 'val_loss':
+            best_epoch_entry = min(logs, key=lambda x: x[criterion_epoch])
+        elif criterion_epoch == 'val_acc':
+            best_epoch_entry = max(logs, key=lambda x: x[criterion_epoch])
         epoch_loaded = best_epoch_entry['epoch']
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
 
         model.load_weights(checkpoint_path)
-        print(f"Loaded best model from epoch {epoch_loaded} amoung val_loss")
+        print(f"Loaded best model from epoch {epoch_loaded} amoung {criterion_epoch}")
+
     else:
         # Load a specific epoch number
         epoch_loaded = int(epoch_loaded)
@@ -113,7 +118,8 @@ def build_model(
         batchsize: int = 32,
         dim_feat: int = 72,
         time_steps: int = 1,
-        export: bool = False) -> Tuple[tf.keras.Model, int]:
+        export: bool = False,
+        summary: bool = True) -> Tuple[tf.keras.Model, int]:
 
     """Download model weights from a remote server.
 
@@ -130,9 +136,9 @@ def build_model(
     config_path = f"{params.train[model_config]['config_dir']}/{params.train[model_config]['config_file']}"
 
     config_dict = OmegaConf.load(config_path)
-
-    # Apply model override from vad.yaml if present
-    if "override" in params.train[model_config]:
+    
+    # Apply model override
+    if "override" in params.train[model_config] and params.train[model_config]["override"] is not None:
         override_cfg = OmegaConf.create(params.train[model_config]["override"])
         config_dict = OmegaConf.merge(config_dict, override_cfg)
 
@@ -167,6 +173,7 @@ def build_model(
             shape=[time_steps, dim_feat], batch_size=batchsize, dtype=tf.float32, name="x_input")
 
     model(inputs_x)
-    model.summary()
+    if summary:
+        model.summary()
 
     return model

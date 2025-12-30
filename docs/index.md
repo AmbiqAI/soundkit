@@ -4,7 +4,17 @@
 
 Whether you're prototyping on a PC or deploying to an ultra-efficient [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/)., SoundKit provides a streamlined path from development to deployment.
 
-To simplify embedded development even further, SoundKit integrates with [NeuralSPOT](https://github.com/AmbiqAI/neuralSPOT) — Ambiq’s open-source software development kit for AI acceleration and system-level optimization. NeuralSPOT provides drivers, utilities, and example projects tailored for deploying ML workloads efficiently on Ambiq hardware.
+For production-grade deployment, SoundKit utilizes HeliaRT, Ambiq's ultra-efficient edge AI runtime. Optimized specifically for the Apollo family of SoCs, HeliaRT delivers:
+
+- Up to 3x faster inference compared to standard LiteRT (formerly TFLM) implementations.
+
+- Custom AI kernels that leverage Apollo510’s vector acceleration hardware.
+
+- Improved the model quantization for int16x8 support specifically designed for high-fidelity audio and speech processing.
+
+Integrated with NeuralSPOT
+To simplify embedded development even further, SoundKit integrates with NeuralSPOT — Ambiq’s open-source software development kit for AI acceleration and system-level optimization. NeuralSPOT provides drivers, utilities, and example projects tailored for deploying ML workloads efficiently on Ambiq hardware.
+
 
 ## Key Features
 
@@ -47,7 +57,7 @@ To simplify embedded development even further, SoundKit integrates with [NeuralS
 
 ## Get Started
 
-- Clone the repo and follow [quickstart.md](./quickstart.md) to set up.
-- Run TFLite examples on PC.
+- Clone the repo and follow [QuickStart](./quickstart.md) to set up.
+- Run TFLite on real-time on PC.
 - Flash to [Apollo5](https://ambiq.com/apollo510/) for embedded testing.
 

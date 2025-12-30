@@ -1,7 +1,12 @@
+"""Evaluate ID task model with given parameters."""
 import os
+import logging
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.download_tf_model import (
+        build_model,
+        load_model_checkpoint
+    )
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.tf_copy_model import copy_model_weights
@@ -9,14 +14,21 @@ from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.audio import audio_read
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+log = logging.getLogger(__name__)
+
+
 def evaluate(params: SKTaskParams):
     """Evaluate ID task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
 
     """
-    print(f"Evaluating ID model with params: {params} and more")
+    log.debug(f"Evaluating ID model with params: {params} and more")
 
     params_evaluate = params.evaluate
 
@@ -27,7 +39,7 @@ def evaluate(params: SKTaskParams):
 
     # generate tfrecords for test files
     if params.data.signal.dc_removal:
-        print("DC removal is enabled. Initializing DCRemover...")
+        log.info("DC removal is enabled. Initializing DCRemover...")
         # Initialize DCRemover if DC removal is enabled
         dc_remover = DCRemover()
     else:
@@ -37,6 +49,7 @@ def evaluate(params: SKTaskParams):
 
     wavs_test = [os.path.join(dir, f) for f in params.evaluate['data']['test_files']]
 
+    params.train['batchsize'] = params.data['ppls_per_group'] * params.data['num_sentences']
     batchsize_train = params.train['batchsize']
 
 
@@ -97,7 +110,8 @@ def evaluate(params: SKTaskParams):
             params,
             batchsize=batchsize,
             dim_feat=dim_feat,
-            time_steps=time_steps)
+            time_steps=time_steps,
+            summary=False)
 
         copy_model_weights(
             model_dst=model,
@@ -111,7 +125,7 @@ def evaluate(params: SKTaskParams):
 
 
     # 4. Evaluate registration files
-    print("Calculate the characteristics of registration files")
+    log.info("Calculate the characteristics of registration files")
     d_vecs = []
     for step, wav_reg in enumerate(wavs_reg):
         print(f"\rEvaluating {wav_reg}, ", end='')

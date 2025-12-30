@@ -11,7 +11,10 @@ from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.pyaudio_animation import AudioShowClass
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.generate_feature_c_files import generate_feature_c_files
-from soundkit.utils.converter_fix_point import fakefix_tf, int2str_array
+from soundkit.utils.converter_fix_point import (
+        fakefix_tf,
+        int2str_array
+    )
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.mel import gen_mel_c
 from .export import export, build_vad_tflite
@@ -29,27 +32,40 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
+    # === export TFLite File ===
+    tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
+    tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+    log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+    params.export['epoch_loaded'] = params.demo['epoch_loaded']
+    params.export['tflite_dir'] = params.demo['tflite_dir']
+    params.export["dtype"] = params.demo["dtype"]
+    params.export["calibration_samples"] = params.demo["calibration_samples"]
+    export(params)
     if params.demo.platform == 'evb':
-        demo_evb(params)
+        demo_evb(params, tflite_path_src)
     elif params.demo.platform == 'pc':
-        demo_pc(params)
+        demo_pc(params, tflite_path_src)
     else:
         raise ValueError(
-            f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+            f"Unsupported platform: {params.demo.platform}. "
+            "Supported platforms are 'evb' and 'pc'."
+        )
 
-def demo_evb(params: SKTaskParams):
+def demo_evb(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
     Args:
         params (SKTaskParams): Task parameters
+        tflite_path_src: str
     """
     # === Setup Variables ===
 
     current_dir = Path.cwd().resolve()
     log.info(f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}_{params.export.dtype}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -65,22 +81,34 @@ def demo_evb(params: SKTaskParams):
         log.info(f"📦 Cloned {neuralSPOT} to {neuralspot_path}")
     else:
         log.info(f"✅ {neuralSPOT} already exists at {neuralspot_path}")
-
+    # === Checkout specific commit ===
+    subprocess.run(["git", "checkout", "14c29b246"], cwd=neuralspot_path, check=True)
+    log.info(f"🔄 Checked out neuralSPOT commit 14c29b246")
     # === Generate Feature C Files ===
     log.info("🧪 Generating feature C files")
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
+    # Extract parameters for readability
     feat_params = params.train['feature']
+    framesize = feat_params['frame_size']
+    hopsize = feat_params['hop_size']
+
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=feat_params['frame_size'],
-        hop=feat_params['hop_size'])
+        win_size=framesize,
+        hop=hopsize)
     win_coeff = fakefix_tf(win_coeff, 16, 15)
-    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
-    c_code = '#include <stdint.h>\n\n' + c_code
+
+    # Build the file content as a list of strings
+    lines = [
+        '#include <stdint.h>\n',
+        f"// stft window_coeff (framesize={framesize}, hopsize={hopsize})",
+        int2str_array(stft_win_name, win_coeff.numpy() * 32768, nbits=16)
+    ]
+
+    c_code = "\n".join(lines)
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
     # === Generate C Code Filter Banks ===
@@ -130,35 +158,72 @@ def demo_evb(params: SKTaskParams):
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
         task=params.project,
+        feature_type=params.train['feature']['type'],
     )
 
     # === Define Key Paths ===
-    src_tflite_path = Path(params.demo['tflite_dir']) / tflite_filename_src
-
     tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
-    dst_tflite_path = tools_dir / tflite_filename
+    tflite_path_dst = tools_dir / tflite_filename
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
 
-    # === export TFLite File ===
-    log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
-    params.export['epoch_loaded'] = params.demo['epoch_loaded']
-    params.export['tflite_dir'] = params.demo['tflite_dir']
-
-    params.export.eval=False
-    export(params)
-
     # === Copy TFLite File to neuralSPOT/tools ===
-    log.info(f"📦 Copying TFLite to {dst_tflite_path}")
+    log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(src_tflite_path, dst_tflite_path)
+    shutil.copy(tflite_path_src, tflite_path_dst)
 
     # === Setup venv and install ===
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
+    # Ensure uv is on PATH for subprocess calls
+    os.environ["PATH"] = f"{Path.home()}/.local/bin:" + os.environ.get("PATH", "")
 
-    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
-    subprocess.run(["uv", "sync"], check=True)
+    # Try to locate or download helios-aot
+    aot_candidates = [
+        Path.home() / "Documents" / "helios-aot",
+        Path.home() / "helios-aot",
+    ]
+    aot_path = None
+    for p in aot_candidates:
+        if p.exists():
+            aot_path = p
+            break
+    if aot_path is None:
+        try:
+            log.info("📥 Downloading helios-aot to ~/helios-aot")
+            subprocess.run([
+                "git", "clone", "https://github.com/AmbiqAI/helios-aot.git",
+                str(Path.home() / "helios-aot")
+            ], check=True)
+            aot_path = Path.home() / "helios-aot"
+        except subprocess.CalledProcessError:
+            log.warning("helios-aot not found and clone failed; proceeding without explicit AOT add. If uv sync fails, set HELIOS AOT path manually.")
+
+    # Pin Python and sync root env for neuralSPOT
+    subprocess.run(["uv", "python", "pin", "3.12.11"], cwd=neuralspot_root, check=True)
+
+    # If we have helios-aot, add it to the tools project and sync there too
+    tools_project_dir = neuralspot_root / "tools"
+    if aot_path and tools_project_dir.exists():
+        try:
+            # Remove any previous entry and add our local path
+            subprocess.run(["uv", "remove", "helios-aot"], cwd=tools_project_dir, check=False)
+            subprocess.run(["uv", "add", str(aot_path)], cwd=tools_project_dir, check=True)
+            subprocess.run(["uv", "sync"], cwd=tools_project_dir, check=True)
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to add/sync helios-aot: {e}")
+
+    # Also sync at neuralSPOT root to ensure its venv resolves dependencies
+    try:
+        subprocess.run(["uv", "sync"], cwd=neuralspot_root, check=True)
+    except subprocess.CalledProcessError as e:
+        log.error(
+            "uv sync failed in neuralSPOT root.\n"
+            "- Ensure 'uv' is installed and on PATH (~/.local/bin).\n"
+            f"- If a local dependency like helios-aot is required, verify it exists at: {aot_path or '[not found]'}\n"
+            "  or configure the tools project to point to your actual path."
+        )
+        raise
 
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
@@ -218,15 +283,17 @@ def demo_evb(params: SKTaskParams):
 
     log.info("✅ TFLite deployment and file transfer complete.")
 
-def demo_pc(params: SKTaskParams):
+def demo_pc(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """Export VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     hop_size = params.train['feature']['hop_size']
     sample_rate = params.data['signal']['sampling_rate']
-    vad_model = build_vad_tflite(params)
+    vad_model = build_vad_tflite(params, tflite_path_src)
 
     aud_handle = AudioShowClass(
         frame_size=hop_size,

@@ -1,9 +1,10 @@
 """ stft and istft functions for tensorflow
     Those function support batch processing
 """
+import numpy as np
 import tensorflow as tf
-import math as m
-pi = tf.constant(m.pi)
+
+pi = tf.constant(np.pi)
 
 def gen_stft_win(
         win_size: int     = 240,
@@ -69,7 +70,7 @@ def tf_istft(
     """ Calculate the inverse STFT of a batch of signals"""
     def my_win(frame_length, dtype=tf.float32):
         return window_fn(frame_length, tf.constant(frame_step),dtype=dtype)
-    
+
     signals_recons = tf.signal.inverse_stft(
         signals_stft,
         frame_length = frame_length,
@@ -82,12 +83,14 @@ def tf_istft(
     return signals_recons[:,overlap:-overlap]
 
 class StreamingSTFT(tf.Module):
+    """ Streaming STFT module """
     def __init__(
             self,
             frame_length=480,
             frame_step=160,
             fft_length=512,
             window_fn=window_fn):
+
         super().__init__()
         self.frame_length = frame_length
         self.frame_step = frame_step
@@ -97,6 +100,7 @@ class StreamingSTFT(tf.Module):
         self.reset()
 
     def reset(self):
+        """Reset the overlap buffer."""
         self.buffer = tf.zeros([self.buffer_size], dtype=tf.float32)
 
     def process_frame(self, audio_chunk):
@@ -113,6 +117,7 @@ class StreamingSTFT(tf.Module):
 
 
 class StreamingISTFT(tf.Module):
+    """ Streaming inverse STFT module """
     def __init__(
             self,
             frame_length=480,
@@ -127,6 +132,7 @@ class StreamingISTFT(tf.Module):
         self.reset()
 
     def reset(self):
+        """Reset the overlap buffer."""
         self.overlap_buffer = tf.zeros([self.frame_length - self.frame_step], dtype=tf.float32)
 
     def process_frame(self, stft_frame):
@@ -135,11 +141,16 @@ class StreamingISTFT(tf.Module):
         Output: waveform_chunk [frame_step]
         """
         time_frame = tf.signal.irfft(stft_frame, [self.fft_length])
-        
+
         windowed = time_frame * self.window
 
         # Apply overlap-add
-        full = tf.concat([self.overlap_buffer, tf.zeros([self.frame_step], dtype=tf.float32)], axis=0)
+        full = tf.concat(
+            [
+                self.overlap_buffer,
+                tf.zeros([self.frame_step],dtype=tf.float32)
+             ],
+             axis=0)
         full += windowed
 
         # Output the first hop-size samples

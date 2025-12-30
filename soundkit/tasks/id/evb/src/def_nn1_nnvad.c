@@ -24,6 +24,7 @@ PARAMS_NNSP params_nn1_nnvad = {
     .start_bin = 0,
     .is_dcrm = 1,
     .pre_gain_q1 = 1 << 1, // q1
+    .feature_type = feat_logpspec
 };
 
 

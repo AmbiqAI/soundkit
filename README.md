@@ -1,7 +1,7 @@
 
-<p align="center">
+<!-- <p align="center">
   <a href="https://github.com/AmbiqAI/soundkit"><img src="./docs/assets/soundkit-banner.png" alt="SoundKit"></a>
-</p>
+</p> -->
 
 ---
 
@@ -11,47 +11,40 @@
 ---
 
 **SoundKit** is an AI Development Kit (ADK) designed to help developers build, train, and deploy real-time audio classification models onto [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). The kit includes task-specific datasets, energy-efficient model architectures, and built-in tools for optimization and deployment. It also integrates with [NeuralSPOT](https://github.com/AmbiqAI/neuralSPOT), Ambiq’s open-source AI SDK, to streamline the deployment of inference models onto embedded hardware. Developers can use pre-trained models or create custom audio models tailored to their specific edge application.
-**Key Features:**
 
+**Key Features:**
 * **Real-time**: Run low-latency inference on embedded edge devices.
 * **Efficient**: Built for Ambiq’s ultra low-power hardware platforms.
 * **Customizable**: Add new models, datasets, and audio tasks.
 * **End-to-End**: Includes tools for training, quantization, evaluation, and deployment.
 * **Open Source**: Available for use and contributions on GitHub.
+* **Int16x8 Tflite Quantization**: Utilize [**HeliaRT**](https://github.com/AmbiqAI/helia-rt), a specialized fork of TensorFlow Lite for Microcontrollers (TFLM), developed by Ambiq. It supports the quantization format **int16x8** including LSTM, conv2d with group (separable convolution) exclusively
 
 ---
+## <span class="sk-h2-span">Operation System</span>
+* **Ubuntu 20.04 / 22.04 / 24.04** (The CLI and installation scripts are currently Ubuntu-only).
 
 ## <span class="sk-h2-span">Requirements</span>
 
 * [Python ^3.10+](https://www.python.org)
-* [uv ^1.6.1+](https://docs.astral.sh/uv/getting-started/installation/)
 
 The following are also required to compile/flash binaries for EVB demos:
 
 * [Arm GNU Toolchain ^12.2](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 * [Segger J-Link ^7.92](https://www.segger.com/downloads/jlink/)
-
+<!-- 
 !!! note
-    A [VSCode Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) is defined in [./.devcontainer](https://github.com/AmbiqAI/soundkit/tree/main/.devcontainer).
+    A [VSCode Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) is defined in [./.devcontainer](https://github.com/AmbiqAI/soundkit/tree/main/.devcontainer). -->
 
 ---
 
 ## <span class="sk-h2-span">Installation</span>
 
-Install the `soundkit` package directly from PyPI:
-
-```bash
-pip install soundkit
-```
-
-Or install from source:
-
 ```bash
 git clone https://github.com/AmbiqAI/soundkit.git
 cd soundkit
-pip install .
-# or
-pip install -e . # editable mode-Any changes you make to the codebase are immediately reflected without needing to re-install.
+./install.sh
+source .venv/bin/activate # start the soundkit on virtural env
 ```
 
 ---
@@ -113,7 +106,7 @@ Each dataset is loaded using a factory function and supports automatic file disc
 
 ## <span class="sk-h2-span">Model Zoo</span>
 
-Pre-trained models are available for SE, VAD, and KWS tasks. Each model includes:
+Pre-trained models are available for SE, VAD, ID, and KWS tasks. Each model includes:
 
 * Downloadable `.tflite` binaries
 * Training configuration files
@@ -128,7 +121,7 @@ Visit the [Model Zoo](https://ambiqai.github.io/soundkit/zoo) to explore and ben
 
 Explore the [Guides](https://ambiqai.github.io/soundkit/quickstart) section for:
 
-* Task-specific tutorials (KWS, VAD, SE)
+* Task-specific tutorials (KWS, VAD, SE, ID)
 * Dataset preparation and augmentation
 * Model customization and benchmarking
 * Deployment on Ambiq Apollo EVBs

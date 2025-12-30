@@ -1,6 +1,7 @@
 #include "arm_mve.h"
 #include "def_nnse_params.h"
 #include "mut_model_metadata.h"
+#include "melSpecProc.h"
 #include "mut_model_data.h"
 #include "def_nn3_se.h"
 #include "tflm_ns_model.h"
@@ -74,7 +75,8 @@ int AudioPipe_wrapper_init(void)
         params_nn3_se.hopsize_stft, // FEATURE_HOPSIZE,
         params_nn3_se.fftsize, // FEATURE_FFTSIZE,
         params_nn3_se.pt_stft_win_coeff,
-        params_nn3_se.p_melBanks);
+        params_nn3_se.p_melBanks,
+        params_nn3_se.feature_type);
 
     IIR_CLASS_init(&dcrm_inst);
     
@@ -123,6 +125,9 @@ int AudioPipe_wrapper_init(void)
     
     for (int m = 0; m < numOutputs; m++) {
         ns_lp_printf("Output tensor %d has %d bytes\n", m, pt_tflm->interpreter->output(m)->bytes);
+        ns_lp_printf("output scale=%f\n", pt_tflm->interpreter->output(m)->params.scale);
+        ns_lp_printf("output zero_point=%d\n", pt_tflm->interpreter->output(m)->params.zero_point);
+        
         nn_output_dim = 1;
         for (int i = 0; i < pt_tflm->interpreter->output(m)->dims->size; i++) {
             nn_output_dim *= pt_tflm->interpreter->output(m)->dims->data[i];
@@ -152,7 +157,7 @@ int AudioPipe_wrapper_reset(void)
     pt_tflm->interpreter->Reset();
     return 0;
 }
-
+extern int16_t filter_banks_inv[];
 int AudioPipe_wrapper_frameProc(
         int16_t *pcm_input,
         int16_t *pcm_output)
@@ -161,47 +166,55 @@ int AudioPipe_wrapper_frameProc(
     1. iir for dc remove
     2. melspectrogram
     */
+    int fft_bins = 257;
     int32_t *pt_spec = FEAT_INST.state_stftModule.spec;
     int32_t *pt_spec_buffer = spec_buffer;
-    int32_t tmp_spec[514];
-
-    static int16_t tmp_16s[300];
-    static float scalar_norm = 1.0 / (float) (1 << FEATURE_QBIT);
+    static int32_t tmp_v32[514];
+    static int32_t mask_est_blk[514];
+    
+    int16_t *pt_tmp16 = (int16_t*) tmp_v32;
+    // static int16_t tmp_16s[514]; // max output dim
+    float scalar_norm;
+    if (params_nn3_se.feature_type == feat_spec_erb)
+        scalar_norm = 1.0 / (float) (1 << 21); // Q21, because erb feature is in Q21 x
+    else
+        scalar_norm = 1.0 / (float) (1 << FEATURE_QBIT);
     ns_model_state_t *pt_tflm = &tflm;
     int32_t gain= (int32_t) params_nn3_se.pre_gain_q1;
     for (int i = 0; i < params_nn3_se.hopsize_stft; i++)
     {
         int32_t tmp = (int32_t) pcm_input[i] * gain;
-        pcm_input[i] = (int16_t) MIN(MAX((tmp >> 1), -32768), 32767);
+        pcm_input[i] = (int16_t) MIN(MAX((tmp >> 1), -32768), 32767); // Q1
     }
 
-    IIR_CLASS_exec(&dcrm_inst, tmp_16s, pcm_input, params_nn3_se.hopsize_stft);
-    FeatureClass_execute(&FEAT_INST, tmp_16s);
+    IIR_CLASS_exec(&dcrm_inst, pt_tmp16, pcm_input, params_nn3_se.hopsize_stft);
+    FeatureClass_execute(&FEAT_INST, pt_tmp16);
 
-    // move pt_spec to pt_spec_buffer
+    int fft_bins_double = 514;
+    // take out the oldest spec & cyclic insert the new one  at the end
     if (num_lookeahead > 0)
     {
         arm_memcpy_s8(
-            (int8_t*) tmp_spec,
-            (int8_t*) pt_spec,
-             514 * sizeof(int32_t));
+            (int8_t*) tmp_v32,
+            (int8_t*) pt_spec_buffer,
+            fft_bins_double * sizeof(int32_t));
 
         arm_memcpy_s8(
             (int8_t*) pt_spec_buffer,
-            (int8_t*) (pt_spec_buffer + 514),
-            514 * (num_lookeahead-1) * sizeof(int32_t));
+            (int8_t*) (pt_spec_buffer + fft_bins_double),
+            fft_bins_double * (num_lookeahead-1) * sizeof(int32_t));
         
         arm_memcpy_s8(
-            (int8_t*) (pt_spec_buffer + 514 * (num_lookeahead-1)),
+            (int8_t*) (pt_spec_buffer + fft_bins_double * (num_lookeahead-1)),
             (int8_t*) pt_spec,
-            514 * sizeof(int32_t));
+            fft_bins_double * sizeof(int32_t));
 
         arm_memcpy_s8(
             (int8_t*) pt_spec,
-            (int8_t*) tmp_spec,
-            514 * sizeof(int32_t));
+            (int8_t*) tmp_v32,
+            fft_bins_double * sizeof(int32_t));
     }
-    int16_t *ptfeat = FEAT_INST.normFeatContext + params_nn3_se.num_mfltrBank * (FEATURE_CONTEXT-1);
+    int32_t *ptfeat = FEAT_INST.normFeatContext + params_nn3_se.num_mfltrBank * (FEATURE_CONTEXT-1);
 
     int input_idx=0;
     float32_t input_scale = pt_tflm->interpreter->input(input_idx)->params.scale;
@@ -210,7 +223,8 @@ int AudioPipe_wrapper_frameProc(
     for (int i =0; i < nn_input_dim; i++)
     {
         float32_t val = ((float32_t) ptfeat[i] ) * scalar_norm;
-        int16_t input = (int16_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+        int32_t input32 = (int32_t) ((float32_t) val / (float32_t) input_scale + (float32_t) input_zero_point);
+        int16_t input = (int16_t) MAX(MIN(input32, 32767), -32768);
         pt_tflm->interpreter->input(input_idx)->data.i16[i] =  input;
     }
 
@@ -229,19 +243,95 @@ int AudioPipe_wrapper_frameProc(
         float32_t out; 
         out = (float32_t) (tflm.model_output[0]->data.i16[i] - output_zero_point);
         out = out * output_scale;
-        int32_t out_32s = (int32_t)(out * 32768.0f); // scale to 16-bit range
-        // ns_lp_printf("%f ", out);
-        tmp_16s[i] = (int16_t) MAX(MIN(out_32s, 32767), -32768); // clamp to 16-bit range
+        tmp_v32[i] = (int32_t)MAX(MIN((out * 32768.0f), MAX_INT32_T), MIN_INT32_T); // q15
+        // tmp_16s[i] = (int16_t) MAX(MIN(out_32s, 32767), -32768); // clamp to 16-bit range
     }
 
-    // ns_lp_printf("\n");
-    // // get the tf mask
-    se_post_proc(
-        &FEAT_INST,
-        tmp_16s,
-        pcm_output,
-        0,
-        NN_DIM_OUT);
+
+    int32_t *pt_out;
+    static int32_t inputs_blk[129];
+    if (params_nn3_se.feature_type == feat_spec_erb)
+    {
+        
+        // real part
+        for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+            inputs_blk[i] = tmp_v32[2*i];
+        
+        // ns_printf("ERB est Real: \n");
+        // for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+        //     ns_printf("%d, ", inputs_blk[i]);
+        // ns_printf("\n");
+
+        melSpecProc(
+            inputs_blk, // input
+            mask_est_blk, // output
+            filter_banks_inv,
+            fft_bins // num_fft_bins
+        );
+
+        // ns_printf("ERB Mel Inv Real: \n");
+        // for (int i = 0; i < 257; i++)
+        //     ns_printf("%d, ", mask_est_blk[i]);
+        // ns_printf("\n");
+
+        // imag part
+        for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+            inputs_blk[i] = tmp_v32[2*i+1];
+        
+        // ns_printf("ERB est Imag: \n");
+        // for (int i = 0; i < params_nn3_se.num_mfltrBank; i++)
+        //     ns_printf("%d, ", inputs_blk[i]);
+        // ns_printf("\n");
+
+        melSpecProc(
+            inputs_blk, // input
+            mask_est_blk + fft_bins, // output
+            filter_banks_inv,
+            fft_bins // num_fft_bins
+        );
+        
+        // ns_printf("ERB Mel Inv Imag: \n");
+        // for (int i = 0; i < 257; i++)
+        //     ns_printf("%d, ", mask_est_blk[257+i]);
+        // ns_printf("\n");
+
+        pt_out = mask_est_blk;
+    }
+    else if (params_nn3_se.feature_type == feat_erb_mag)
+    {
+        melSpecProc(
+            tmp_v32, // input
+            mask_est_blk, // output
+            filter_banks_inv,
+            fft_bins // num_fft_bins
+        );
+        pt_out = mask_est_blk;
+    }
+    else
+    {
+        pt_out = tmp_v32;
+    }
+    // // ns_lp_printf("\n");
+    // // // get the tf mask
+    if (params_nn3_se.feature_type == feat_spec_erb)
+    {
+        se_post_proc_cmplx(
+            &FEAT_INST,
+            pt_out,
+            pcm_output,
+            0,
+            NN_DIM_OUT);     
+    }
+    else
+    {
+        se_post_proc_real(
+            &FEAT_INST,
+            pt_out,
+            pcm_output,
+            0,
+            NN_DIM_OUT);     
+    }
+    
     return 0;
 }
 

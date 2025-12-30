@@ -22,7 +22,7 @@ def convert_model(
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     converter.experimental_new_converter = True
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
+    converter.experimental_enable_resource_variables = True
     if dtype=="int8":
         converter.target_spec.supported_ops = [
             tf.lite.OpsSet.TFLITE_BUILTINS_INT8,
@@ -60,7 +60,8 @@ def tflite_convert(
         dtype: str = "int8",
         path_tflite: str = "./tflite/nnse.tflite",
         nbits: int = 16,
-        qbits: int = 8):
+        qbits: int = 8,
+        data_calibration: np.ndarray | None = None):
     """tflite converter"""
 
     os.makedirs('tflite', exist_ok=True)
@@ -70,12 +71,29 @@ def tflite_convert(
 
     def dataset_example():
         shapes = model._feed_input_shapes
-        shape_inputs = shapes[0]
-        for _ in range(100):
-            x = np.random.uniform(
-                min_val, max_val,
-                size=shape_inputs).astype(np.float32)
-            yield {"x_input": x}
+
+        if data_calibration is None:
+            shape_inputs = shapes[0]
+            for _ in range(100):
+                x = np.random.uniform(
+                    min_val, max_val,
+                    size=shape_inputs).astype(np.float32)
+                yield {"x_input": x}
+
+        # Load a few real samples from your validation set
+        else:
+            for sequence in data_calibration: # 10 long sequences
+
+                # Manually loop through the sequence frame-by-frame
+
+                # to simulate how the model will be used in TFLite
+
+                for t in range(sequence.shape[0]):
+
+                    # Reshape frame to (1, 1, 257)
+                    shape = shapes[0]
+                    frame = sequence[t].reshape(shape).astype(np.float32)
+                    yield {"x_input": frame}
 
     model.summary()
 
@@ -95,11 +113,14 @@ def warp_tf_model(
         model,
         dim_feat=257,
         time_steps=1,
-        batch_size=1):
+        batch_size=1,
+        is_complex=False):
     """ Convert the model to tflite format """
     # states = model.make_states(batchsize=1)
-
-    input_shape=(time_steps, dim_feat)
+    if is_complex:
+        input_shape = (time_steps, dim_feat, 2)
+    else:   
+        input_shape=(time_steps, dim_feat)
 
     inputs_feat = tf.keras.Input(
         shape=input_shape,

@@ -1,0 +1,13 @@
+name: unet
+kernel_size_time: 2
+num_chs: [2, 42, 42, 42, 42]
+separable: false
+activation: relu
+activation_final: tanh
+unroll_rnn: false
+normalization_layer:
+bypass_last_fc: true
+use_erb: true
+dropout: 0.0
+output_scaling: 6.0
+bottleneck: lstm  # options: 'dpgrnn', 'lstm', 'none'

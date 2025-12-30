@@ -1,5 +1,6 @@
 """Train keyword spotting model with given parameters."""
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
@@ -11,15 +12,19 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
-from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.ConfusionMatrixMetric import ConfusionMatrixMetric
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
-
+from soundkit.utils.plot_api import fig_to_image
 from .datasets import create_dataset
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 @tf.function
 def train_step(
@@ -94,7 +99,7 @@ def run_epoch(
     acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
     loss_metric = tf.keras.metrics.Mean()
     confused_metric = ConfusionMatrixMetric(num_classes=2)
-    
+
     def reset_nn_states(model: tf.keras.Model):
         """Reset the model states."""
         states_audio_sn = tf.random.uniform(
@@ -107,7 +112,11 @@ def run_epoch(
         return states_audio_sn
     states_audio_sn = reset_nn_states(model)
     for step, batch in enumerate(dataset):
-
+        # if params.train.reset_states_every_batch:
+        rn = tf.random.uniform([], minval=0, maxval=1)
+        if rn < 0.5:
+            # Reset the state buffer for the next batch
+            states_audio_sn = reset_nn_states(model)
         audio_sn, _, kws = batch
 
         if model.stride_time > 1:
@@ -115,9 +124,7 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-        if params.train.reset_every_batch:
-            # Reset the state buffer for the next batch
-            states_audio_sn = reset_nn_states(model)
+        
 
         if params.train['standardization']:
             # Standardize features
@@ -179,37 +186,37 @@ def run_epoch(
                 f"  Confusion Matrix (row-normalized):\n{conf_matrix}\n",
                 flush=True)
 
-        if not training:
-            if step == 0:
-                idx = 10
-                mask = pred[idx,:,1]
-                pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[idx])).numpy()
 
-                if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
-                    feat_sn = 10* feat_sn[idx].numpy()
-                elif params.train['feature']['type'] in ('pspec', 'spec'):
-                    feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
-                feat_sn = feat_sn[::model.stride_time]
+        if step % 100 == 0:
+            idx = 0
+            mask = pred[idx,:,1]
+            pspec_sn = 20*tf_log10_eps( tf.abs(spec_sn[idx])).numpy()
 
-                fig = plot_spectrograms(
-                    images=[pspec_sn.T, feat_sn.T],
-                    titles=[ "noisy logspec", "feat"],
-                    vmin_vmax=[(-80, 10), (-80, 10)],
-                    show_colorbar=True,
-                    show_fig=False       # set False if only saving
-                )
+            if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
+                feat_sn = 10* feat_sn[idx].numpy()
+            elif params.train['feature']['type'] in ('pspec', 'spec'):
+                feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
+            feat_sn = feat_sn[::model.stride_time]
 
-                plt.plot(mask * 200)
-                plt.plot(kws[idx] * 200)
-                # plt.show()
-                from ...utils.plot_api import fig_to_image
-                # Convert fig to image
-                tf_image = fig_to_image(fig)
+            fig,axes = plot_spectrograms(
+                images=[pspec_sn.T, feat_sn.T],
+                titles=[ "noisy logspec", "feat"],
+                vmin_vmax=[(-80, 10), (-80, 10)],
+                show_colorbar=True,
+                show_fig=False       # set False if only saving
+            )
 
-                # Write to TensorBoard
-                if train_summary_writer is not None:
-                    with train_summary_writer.as_default():
-                        tf.summary.image("spectrograms", tf_image, step=epoch)
+            plt.plot(mask * feat_extractor.dim_feat)
+            plt.plot(kws[idx] * feat_extractor.dim_feat)
+            # plt.show()
+
+            # Convert fig to image
+            tf_image = fig_to_image(fig)
+
+            # Write to TensorBoard
+            if train_summary_writer is not None:
+                with train_summary_writer.as_default():
+                    tf.summary.image("spectrograms", tf_image, step=epoch)
     # Final summary for the epoch
     print(
         f"  [{train_tag}] |\n"
@@ -221,9 +228,9 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
-    print(f"Training KWS model with params: {params} and more")
+    log.info(f"Training KWS model with params: {params} and more")
 
     params_train = params.train
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
@@ -232,7 +239,7 @@ def train(params: SKTaskParams):
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     if batchsize < 8:
-        print(
+        log.warning(
             "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
             "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
             "    train:\n"
@@ -252,26 +259,17 @@ def train(params: SKTaskParams):
 
     # Load from YAML file
 
-    is_complex = True if params_train['feature']['type'] =='spec' else False
-
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
     model = build_model(
         params,
         batchsize,
         dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,
-        complex_input=is_complex)
+        time_steps=time_steps)
 
     _, epoch_loaded_1 = load_model_checkpoint(
         model, params_train['epoch_loaded'], checkpoint_dir)
 
-    # import pickle
-    # with open('array_list.pkl', 'rb') as f:
-    #         reloaded_list = pickle.load(f)
-    # for u, v in zip(model.trainable_variables, reloaded_list):
-    #     u.assign(v)
-    #     print(u.shape, v.shape)
 
-    # 3. Create the dataset
     tfrecord_list = {
         'train': Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
@@ -308,13 +306,20 @@ def train(params: SKTaskParams):
         params.train["loss_function"]["type"],
         params=params.train["loss_function"]["params"])
 
-    lr_schedule = WarmUpCosineDecay(
-        initial_lr = float(params_train['initial_lr']),
-        total_steps = params_train['epochs'] * batches_train,
-        warmup_steps =params_train['warmup_epochs'] * batches_train,
-        alpha=1e-5,
-        initial_step=epoch_loaded_1 * batches_train,)
-
+    # 6. Define learning rate schedule
+    if params.train.lr_schedule=='cosine':
+        lr_schedule = WarmUpCosineDecay(
+            initial_lr = float(params_train['initial_lr']),
+            total_steps = params_train['epochs'] * batches_train,
+            warmup_steps =params_train['warmup_epochs'] * batches_train,
+            alpha=1e-5,
+            initial_step=epoch_loaded_1 * batches_train,)
+    elif params.train.lr_schedule=='constant':
+        lr_schedule=float(params_train['initial_lr'])
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -339,7 +344,7 @@ def train(params: SKTaskParams):
             'total_batches': {'train': batches_train, 'val': batches_val},
             'train_summary_writer': train_summary_writer,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

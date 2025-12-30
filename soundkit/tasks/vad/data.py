@@ -1,4 +1,5 @@
 ''' prepare tfrecords data for SE task '''
+import logging
 import random
 import re
 import multiprocessing
@@ -11,11 +12,21 @@ from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.defines import SKTaskParams
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.download_api import corpus_download
-from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels_vad
+from soundkit.utils.audio import (
+        audio_read,
+        random_load_audio_from_list,
+        synthesize_audio_with_labels_vad,
+    )
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.feature_utils import FeatureExtractor
+from soundkit.datasets import SKDatasetFactory
 from .datasets import create_raw_tfrecord
-from ...datasets import SKDatasetFactory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -52,7 +63,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         is_dc_removal = self.params.data['signal']["dc_removal"]
         revert_prob = self.params.data["reverb_prob"]
         path_tfrecord=self.params.data['path_tfrecord']
-        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
+        target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
 
         for idx, sample in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
@@ -272,7 +283,7 @@ def data(params: SKTaskParams) -> None:
 
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

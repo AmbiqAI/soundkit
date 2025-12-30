@@ -15,7 +15,7 @@ This command launches training using your settings in `id.yaml`.
 To monitor training in real time using TensorBoard, open a second terminal:
 
 ```bash
-soundkit -t id -m train --tensorboard -c configs/id/id.yaml
+soundkit -t id -m train -c configs/id/id.yaml --tensorboard
 ```
 
 Then visit [http://localhost:6006](http://localhost:6006) in your browser.
@@ -27,6 +27,7 @@ Then visit [http://localhost:6006](http://localhost:6006) in your browser.
 | Parameter | Description |
 |-----------|-------------|
 | `initial_lr` | Initial learning rate (uses cosine decay by default) |
+| `lr schedule` | Learning rate scheduling strategy (e.g., cosine, step, or custom). |
 | `batchsize` | Batch size for speaker embedding training |
 | `epochs` | Number of total training epochs |
 | `warmup_epochs` | Warm-up period to ramp up learning rate |
@@ -35,6 +36,10 @@ Then visit [http://localhost:6006](http://localhost:6006) in your browser.
 | `path.checkpoint_dir` | Path to save model checkpoints |
 | `path.tensorboard_dir` | Path to store TensorBoard logs |
 | `num_lookahead` | Number of lookahead frames (0 = causal inference) |
+| `feature` | Feature extraction settings (e.g., type, bins, frame size, hop size, FFT size). See below for YAML format. |
+| `standardization` | Enables per-feature mean-variance normalization for input features. |
+| `model` | Model architecture configuration (directory, config file, and overrides). See below for YAML format. |
+| `reset_states_every_batch` | If `true`, resets model states after each batch (useful for stateful RNNs). |
 
 ---
 

@@ -1,3 +1,4 @@
+"""Focal Loss Implementation"""
 import tensorflow as tf
 
 class FocalLoss(tf.keras.losses.Loss):
@@ -12,7 +13,7 @@ class FocalLoss(tf.keras.losses.Loss):
         y_pred: (B, T, C) — softmax probabilities over classes
     """
     def __init__(self, alpha=0.75, gamma=2.0, name="focal_loss", **kwargs):
-        super().__init__(name=name, **kwargs)
+        super().__init__(name=name)
         self.alpha = alpha
         self.gamma = gamma
 

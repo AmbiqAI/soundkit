@@ -12,16 +12,16 @@ data:
     val: 250
   force_download: false
   reverb_prob: 0.2
-  num_processes: 8
+  num_processes: 2
   corpora:
     - {name: vad_train-clean-100, type: speech, split: train}
-    - {name: vad_train-clean-360, type: speech, split: train}
+    # - {name: vad_train-clean-360, type: speech, split: train}
     - {name: vad_dev-clean, type: speech, split: val}
-    - {name: vad_thchs30, type: speech, split: train-val}
+    # - {name: vad_thchs30, type: speech, split: train-val}
     - {name: ESC-50-master, type: noise, split: train-val}
     - {name: FSD50K, type: noise, split: train-val}
-    - {name: musan, type: noise, split: train-val}
-    - {name: wham_noise, type: noise, split: train-val}
+    # - {name: musan, type: noise, split: train-val}
+    # - {name: wham_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
     
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
@@ -47,9 +47,8 @@ train:
     params: {}
     
   path:
-    full_name: ${name}
-    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
-    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+    checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
   spec_aug: false
 
@@ -80,7 +79,7 @@ train:
       kernel_size_tcn: 2
       filters_tcn: 32
       dilations: [1, 2, 4, 8, 16, 32]
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:
@@ -89,11 +88,11 @@ evaluate:
   data: 
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
-    result_folder: ${job_dir}/test_results/${train.path.full_name}
+    result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
 
 export:
   dtype: int16
-  eval: true
+  eval: false
   qbit_input: 15
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite_${export.dtype}
@@ -104,5 +103,6 @@ demo:
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1
+  dtype: int16
   filename: def_nn1_nnvad
   param_struct_name: params_nn1_nnvad

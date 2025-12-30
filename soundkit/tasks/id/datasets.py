@@ -5,11 +5,18 @@
 
 '''
 import os
+import logging
 from pathlib import Path
 from typing import List, Tuple, Iterator
 import tensorflow as tf
 import numpy as np
 import yaml
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 def create_tfrecord(
         fname: str,
@@ -202,11 +209,12 @@ def create_dataset(
                 fnames = yaml.safe_load(file)
 
             except:# pylint: disable=bare-except
-                print(f'Can not find the list {tfrecords}')
+                log.error(f'Can not find the list {tfrecords}')
             else:
                 num_ppls = len(fnames)
                 tot_sentences = (num_ppls * num_sentences * num_utterances_in_sentence)
                 total_batches = tot_sentences // (ppls_per_group* num_sentences)
+
     else:
         raise ValueError("tfrecords should be a string or a list of strings.")
 

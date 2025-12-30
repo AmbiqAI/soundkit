@@ -1,6 +1,7 @@
+""" VAD task evaluation script """
+import logging
 import re
 import os
-from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import soundfile as sf
@@ -10,21 +11,26 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.calculate_feat_stats import load_feat_stats
 from soundkit.utils.tf_copy_model import copy_model_weights
-from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
+
 def evaluate(params: SKTaskParams):
     """Evaluate VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
 
     """
     from .utils.vad_silero import get_vad, calculate_vad_accuracy
-    print(f"Evaluating VAD model with params: {params} and more")
+    log.debug(f"Evaluating VAD model with params: {params} and more")
 
     params_evaluate = params.evaluate
     feat_params = params.train['feature']
@@ -62,17 +68,18 @@ def evaluate(params: SKTaskParams):
 
     # 2. Build model architecture
     # Load Model architecture from YAML file
-
+    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps = time_steps)
 
     # load weights from the checkpoint
 
     load_model_checkpoint(
-        model_train, params_evaluate['epoch_loaded'], checkpoint_dir)
+        model_train, params_evaluate['epoch_loaded'], checkpoint_dir, 
+        criterion_epoch="val_acc")
 
     # 3. Compute feature statistics for standardization
     
@@ -162,7 +169,7 @@ def evaluate(params: SKTaskParams):
         plt.plot(prob*250)
         plt.legend(['VAD outputs', 'Prob of speech'])
         plt.savefig(save_path, format="pdf", bbox_inches="tight")
-        print(f"Saved figure to {save_path}")
+        log.info(f"Saved figure to {save_path}")
 
         # Save noisy audio
         sample_level_vad = tf.repeat(vad.numpy(), repeats=hop_size)
@@ -176,7 +183,7 @@ def evaluate(params: SKTaskParams):
             save_path,
             audio_sn_np,
             params.data['signal']['sampling_rate'])
-        print(f"Saved original audio to {save_path}")
+        log.info(f"Saved original audio to {save_path}")
 
         # save enhanced audio
         name = re.sub(r'(\.wav$|\.flac$)', '_vad.wav', wavs[step])
@@ -187,10 +194,10 @@ def evaluate(params: SKTaskParams):
             audio_vad_np,
             params.data['signal']['sampling_rate'])
 
-        print(f"Saved vad signal to {save_path}")
+        log.info(f"Saved vad signal to {save_path}")
         
         # Silero VAD
-        print("Calculating silero vad")
+        log.info("Calculating silero vad")
         vad_gt = get_vad(audio_sn_np, sampling_rate=16000) # silero vad
         name = re.sub(r'(\.wav$|\.flac$)', '_vad_silero.wav', wavs[step])
         save_path = f"{result_folder}/{name}"
@@ -199,7 +206,7 @@ def evaluate(params: SKTaskParams):
             vad_gt,
             params.data['signal']['sampling_rate'])
 
-        print(f"Saved silero vad (ground truth) VAD to {save_path}")
+        log.info(f"Saved silero vad (ground truth) VAD to {save_path}")
 
 
         vad = audio_vad_np
@@ -209,5 +216,5 @@ def evaluate(params: SKTaskParams):
         vad_gt = vad_gt.astype(np.int16)
         fa, fr, fa_total, fr_total = calculate_vad_accuracy(vad, vad_gt)
 
-        print(f"False Alarms: {fa:.4f} (total: {fa_total})")
-        print(f"False Rejections: {fr:.4f} (total: {fr_total})")
+        log.info(f"False Alarms: {fa:.4f} (total: {fa_total})")
+        log.info(f"False Rejections: {fr:.4f} (total: {fr_total})")

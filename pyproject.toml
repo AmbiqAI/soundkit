@@ -5,7 +5,7 @@ description = "SoundKit CLI tool"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 authors = [
-  {name = "Ambiq AI", email = "support.aitg@ambiq.com"}
+  {name = "Ambiq AI", email = "paul.chen@ambiq.com"}
 ]
 
 dependencies = [
@@ -46,10 +46,21 @@ dependencies = [
 
     # Utilities
     "requests>=2.25,<3.0",
+    "boto3>=1.26.0,<2.0",
 
     # Git-based dependency
     "erpc @ git+https://github.com/ambiqai/erpc.git#subdirectory=erpc_python"
 ]
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocs-callouts>=0.3.0",
+    "pymdown-extensions>=10.0",
+    "jinja2>=3.1.0",
+]
+
 [project.scripts]
 soundkit = "soundkit.cli:main"
 

@@ -6,10 +6,13 @@ import shutil
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.converter_fix_point import (
+     fakefix_tf,
+     int2str_array
+)
+from soundkit.utils.mel import gen_mel_c
+from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.utils.pyaudio_animation import AudioShowClass
@@ -32,14 +35,28 @@ def demo(params: SKTaskParams):
     Args:
         params (SKTaskParams): Task parameters
     """
-    if params.demo.platform == 'evb':
-        demo_evb(params)
-    elif params.demo.platform == 'pc':
-        demo_pc(params)
-    else:
-        raise ValueError(f"Unsupported platform: {params.demo.platform}. Supported platforms are 'evb' and 'pc'.")
+    # === export TFLite File ===
+    tflite_filename_src = f"{params.name}_{params.demo['dtype']}.tflite"
+    tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
+    log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
+    params.export['epoch_loaded'] = params.demo['epoch_loaded']
+    params.export['tflite_dir'] = params.demo['tflite_dir']
+    params.export["dtype"] = params.demo["dtype"]
+    params.export["calibration_samples"] = params.demo["calibration_samples"]
+    export(params)
 
-def demo_evb(params: SKTaskParams):
+    if params.demo.platform == 'evb':
+        demo_evb(params, tflite_path_src)
+    elif params.demo.platform == 'pc':
+        demo_pc(params, tflite_path_src)
+    else:
+        raise ValueError(
+            f"Unsupported platform: {params.demo.platform}. ",
+            "Supported platforms are 'evb' and 'pc'.")
+
+def demo_evb(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """
     Deploy a TFLite model to neuralSPOT and install dependencies.
 
@@ -49,9 +66,9 @@ def demo_evb(params: SKTaskParams):
     # === Setup Variables ===
 
     current_dir = Path.cwd().resolve()
-    log.info(f"🔧 Current working directory: {current_dir}")
+    log.info(
+        f"🔧 Current working directory: {current_dir}")
 
-    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
     tflite_filename = "net.tflite"
 
     tflm_version = "ns_tflm_v1_0_0"
@@ -67,30 +84,40 @@ def demo_evb(params: SKTaskParams):
         log.info(f"📦 Cloned {neuralSPOT} to {neuralspot_path}")
     else:
         log.info(f"✅ {neuralSPOT} already exists at {neuralspot_path}")
-
+    # === Checkout specific commit ===
+    subprocess.run(["git", "checkout", "14c29b246"], cwd=neuralspot_path, check=True)
+    log.info(f"🔄 Checked out neuralSPOT commit 14c29b246")
     # === Generate Feature C Files ===
     log.info("🧪 Generating feature C files")
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
 
     # === Generate C Code STFT Window ===
-    from ...utils.converter_fix_point import fakefix_tf, int2str_array
-    from ...utils.tf_stft import gen_stft_win
+
+    # Extract parameters for readability
     feat_params = params.train['feature']
+    framesize = feat_params['frame_size']
+    hopsize = feat_params['hop_size']
+
     stft_win_name='stft_win_coeff'
     win_coeff = gen_stft_win(
-        win_size=feat_params['frame_size'],
-        hop=feat_params['hop_size'])
+        win_size=framesize,
+        hop=hopsize)
     win_coeff = fakefix_tf(win_coeff, 16, 15)
-    c_code = int2str_array(stft_win_name, win_coeff.numpy()*32768, nbits=16)
-    c_code = f"// stft window_coeff (framesize={feat_params['frame_size']}, hopsize={feat_params['hop_size']})\n" + c_code
-    c_code = '#include <stdint.h>\n\n' + c_code
+
+    # Build the file content as a list of strings
+    lines = [
+        '#include <stdint.h>\n',
+        f"// stft window_coeff (framesize={framesize}, hopsize={hopsize})",
+        int2str_array(stft_win_name, win_coeff.numpy() * 32768, nbits=16)
+    ]
+
+    c_code = "\n".join(lines)
     Path(f"{evb_src_tflm_dir}/{stft_win_name}.c").write_text(c_code)
 
 
     # === Generate C Code Filter Banks ===
-    import tensorflow as tf
-    from ...utils.mel import gen_mel_c
+
 
     filterbank_name='filter_banks'
 
@@ -102,7 +129,6 @@ def demo_evb(params: SKTaskParams):
         fbanks=None
     else:
         fbanks = tf.identity(feat_extractor.mel_filter)
-    
         fbanks = fakefix_tf(fbanks, 16, 15).numpy().T
     gen_mel_c(
         f"{evb_src_tflm_dir}/{filterbank_name}.c",
@@ -133,39 +159,74 @@ def demo_evb(params: SKTaskParams):
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
-        task=params.project
+        task=params.project,
+        feature_type=params.train['feature']['type'],
     )
 
     # === Define Key Paths ===
-    src_tflite_path = Path(params.demo['tflite_dir']) / tflite_filename_src
 
-    tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
-    dst_tflite_path = tools_dir / tflite_filename
     neuralspot_root = Path(f"../{neuralSPOT}").resolve()
-
-    # === export TFLite File ===
-    log.info(f"🧪 Exporting TFLite model from {src_tflite_path}")
-    params.export['epoch_loaded'] = params.demo['epoch_loaded']
-    params.export['tflite_dir'] = params.demo['tflite_dir']
-    export(params)
-
+    tools_dir = Path(f"../{neuralSPOT}/tools").resolve()
+    tflite_path_dst = tools_dir / tflite_filename
     # === Copy TFLite File to neuralSPOT/tools ===
 
-    log.info(f"📦 Copying TFLite to {dst_tflite_path}")
+    log.info(f"📦 Copying TFLite to {tflite_path_dst}")
     tools_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(src_tflite_path, dst_tflite_path)
-
+    shutil.copy(tflite_path_src, tflite_path_dst)
+    
     # === Setup venv and install ===
     log.info(f"🔧 Setting up virtual environment at {neuralspot_root}")
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
+    # Ensure uv is on PATH for subprocess calls
+    os.environ["PATH"] = f"{Path.home()}/.local/bin:" + os.environ.get("PATH", "")
 
-    subprocess.run(["uv", "python", "pin", "3.12.11"], check=True)
-    subprocess.run(["uv", "sync"], check=True)
-    # subprocess.run(["python", "-m", "venv", ".venv"], check=True)
-    # subprocess.run([".venv/bin/pip", "install", "--upgrade", "pip"], check=True)
-    # subprocess.run([".venv/bin/pip", "install", "."], check=True)
+    # Try to locate or download helios-aot
+    aot_candidates = [
+        Path.home() / "Documents" / "helios-aot",
+        Path.home() / "helios-aot",
+    ]
+    aot_path = None
+    for p in aot_candidates:
+        if p.exists():
+            aot_path = p
+            break
+    if aot_path is None:
+        try:
+            log.info("📥 Downloading helios-aot to ~/helios-aot")
+            subprocess.run([
+                "git", "clone", "https://github.com/AmbiqAI/helios-aot.git",
+                str(Path.home() / "helios-aot")
+            ], check=True)
+            aot_path = Path.home() / "helios-aot"
+        except subprocess.CalledProcessError:
+            log.warning("helios-aot not found and clone failed; proceeding without explicit AOT add. If uv sync fails, set HELIOS AOT path manually.")
 
+    # Pin Python and sync root env for neuralSPOT
+    subprocess.run(["uv", "python", "pin", "3.12.11"], cwd=neuralspot_root, check=True)
+
+    # If we have helios-aot, add it to the tools project and sync there too
+    tools_project_dir = neuralspot_root / "tools"
+    if aot_path and tools_project_dir.exists():
+        try:
+            # Remove any previous entry and add our local path
+            subprocess.run(["uv", "remove", "helios-aot"], cwd=tools_project_dir, check=False)
+            subprocess.run(["uv", "add", str(aot_path)], cwd=tools_project_dir, check=True)
+            subprocess.run(["uv", "sync"], cwd=tools_project_dir, check=True)
+        except subprocess.CalledProcessError as e:
+            log.warning(f"Failed to add/sync helios-aot: {e}")
+
+    # Also sync at neuralSPOT root to ensure its venv resolves dependencies
+    try:
+        subprocess.run(["uv", "sync"], cwd=neuralspot_root, check=True)
+    except subprocess.CalledProcessError as e:
+        log.error(
+            "uv sync failed in neuralSPOT root.\n"
+            "- Ensure 'uv' is installed and on PATH (~/.local/bin).\n"
+            f"- If a local dependency like helios-aot is required, verify it exists at: {aot_path or '[not found]'}\n"
+            "  or configure the tools project to point to your actual path."
+        )
+        raise
     # === Ubuntu Fix: Ensure SVD path exists ===
     log.info("🐧 Fixing SVD path for Ubuntu")
     svd_dir = neuralspot_root / "extern/AmbiqSuite/R5.3.0/pack/svd"
@@ -224,18 +285,16 @@ def demo_evb(params: SKTaskParams):
 
     log.info("✅ TFLite deployment and file transfer complete.")
 
-def demo_pc(params: SKTaskParams):
+def demo_pc(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """Export VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
-    params_export = params.export
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-
-    batchsize_train = params.train['batchsize']
-    batchsize = 1
 
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
@@ -250,41 +309,12 @@ def demo_pc(params: SKTaskParams):
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
     )
-    dim_feat = feat_extractor.dim_feat
 
     # 1.1. Build the model
     # Load from YAML file
-    model_train = build_model(
-        params,
-        batchsize=batchsize_train,
-        dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size,)
-
-    load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
-
-    model = build_model(
-        params,
-        batchsize=batchsize,
-        dim_feat=dim_feat,
-        time_steps=1,
-        export=True)
-    copy_model_weights(model_dst=model, model_src=model_train)
-
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat)
-
-    dtype='float32'
-
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=dtype,
-        path_tflite=f'{params.export["tflite_dir"]}/{params.name}.tflite',)
 
     interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
+        model_path=str(tflite_path_src))
     interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
@@ -294,7 +324,7 @@ def demo_pc(params: SKTaskParams):
 
     model_tflite = TFLiteAudioModel(
         interpreter=interpreter,
-        dtype=dtype,
+        dtype=params.demo.dtype,
     )
 
     class KwsModel:
@@ -310,6 +340,7 @@ def demo_pc(params: SKTaskParams):
             if params.data.signal.dc_removal:
                 self.dc_remover = DCRemover()
             self.reset()
+            self.trigger_counts = 0
 
         def reset(self):
             """Reset the model state if needed."""
@@ -336,10 +367,16 @@ def demo_pc(params: SKTaskParams):
             features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
             outputs = self.model_tflite(features)
             outputs = outputs.flatten()
-            if outputs[0] < outputs[1]:
-                outputs = np.ones(160, dtype=np.float32)*0.95
-            else:
-                outputs = np.zeros(160, dtype=np.float32)
+            if 1:
+                if outputs[0] < outputs[1]:
+                    outputs = np.ones(160, dtype=np.float32)*0.95
+                else:
+                    outputs = np.zeros(160, dtype=np.float32)
+            else: # softmax
+                sum_exp = np.exp(outputs[0]) + np.exp(outputs[1])
+                outputs[0] = np.exp(outputs[0]) / sum_exp
+                outputs[1] = np.exp(outputs[1]) / sum_exp
+                outputs = np.ones(160, dtype=np.float32)*outputs[1]
             outputs = outputs.reshape(shape)
             return outputs
 

@@ -6,3 +6,4 @@ activation: relu
 unroll_rnn: false
 normalization_layer:
 dropout: 0.0
+bottleneck: lstm  # options: 'dpgrnn', 'lstm'

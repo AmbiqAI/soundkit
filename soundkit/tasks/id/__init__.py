@@ -1,5 +1,5 @@
-from ..task import SKTask
-from ...defines import SKTaskParams
+from soundkit.tasks.task import SKTask
+from soundkit.defines import SKTaskParams
 from .data import data
 from .train import train
 from .evaluate import evaluate

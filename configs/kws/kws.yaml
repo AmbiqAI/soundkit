@@ -39,6 +39,7 @@ data:
 
 train:
   initial_lr: 4e-4
+  lr_schedule: cosine
   batchsize: 8
   epochs: 150
   warmup_epochs: 5
@@ -46,12 +47,14 @@ train:
   loss_function: 
     type: focal # or cross_entropy
     # params: {} # for cross_entropy
-    params: {gamma: 2.0, alpha: 0.75} # for focal loss
+    params: 
+      gamma: 2.0
+      alpha: 0.75 # for focal loss
 
   path:
-    full_name: ${name}_loss-${train.feature.type}_drop-${train.model.override.dropout_rate}_stridetime-${train.model.override.stride_time}_mvn-${train.standardization}_units-${train.model.override.units}_sr-${data.signal.sampling_rate}
-    checkpoint_dir:  ${job_dir}/models_trained/${train.path.full_name}
-    tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
+  
+    checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
   
   feature:
@@ -75,7 +78,7 @@ train:
       dropout_rate: 0.25
       stride_time: 1
       len_time: 6
-  reset_every_batch: true
+  reset_states_every_batch: true
   debug: false
 
 evaluate:
@@ -84,7 +87,7 @@ evaluate:
   data: 
     dir: "./wavs/kws/test_wavs"
     files: [galaxy_example.wav, galaxy_counter_example.wav]
-    result_folder: ${job_dir}/test_results/${train.path.full_name}
+    result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
 
 export:
   dtype: int16
@@ -99,5 +102,6 @@ demo:
   tflite_dir: ${job_dir}/tflite
   evb_dir: ${job_dir}/evb
   pre_gain: 1
+  dtype: int16
   filename: def_nn_${project}
   param_struct_name: params_nn_${project}

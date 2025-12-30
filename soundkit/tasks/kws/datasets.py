@@ -5,10 +5,17 @@
 
 '''
 import os
+import logging
 from pathlib import Path
 from typing import List, Tuple, Iterator
 import tensorflow as tf
 import numpy as np
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 def create_raw_tfrecord(
         fname: str,
@@ -131,15 +138,15 @@ def create_tfrecords_pipeline(
                 cycle_length       = batchsize,
                 block_length       = 1,
                 deterministic      = True,
-                num_parallel_calls = tf.data.AUTOTUNE)
+                num_parallel_calls = 1)
     dataset = dataset.map(
                 mapping,
-                num_parallel_calls = tf.data.AUTOTUNE,
+                num_parallel_calls = 1,
                 deterministic = True)
     dataset = dataset.batch(
                     batchsize,
                     drop_remainder=True,
-                    num_parallel_calls = tf.data.AUTOTUNE)
+                    num_parallel_calls = 1)
     dataset = dataset.prefetch(buffer_size = 1)
     iterator = iter(dataset)
     return iterator, dataset

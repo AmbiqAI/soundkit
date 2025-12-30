@@ -21,10 +21,11 @@ soundkit -t id -m data -c configs/id/id.yaml
 | `force_download` | If `true`, forces re-download of the listed datasets |
 | `reverb_prob` | Probability of applying reverberation during sample generation |
 | `num_processes` | Number of parallel worker processes for data synthesis |
+| `corpora` | List of dataset specifications (name, type, split) used for generating speaker-labeled and noise examples. See below for YAML format. |
 | `snr_dbs` | List of signal-to-noise ratios (in dB) used when mixing speech and noise |
 | `target_length_in_secs` | Duration of each generated audio clip |
 | `min_amp`, `max_amp` | Amplitude range for random scaling of waveform samples |
-| `debug` | Enables verbose logging for debugging if `true` |
+| `signal` | Dictionary of signal-level preprocessing options (e.g., sampling rate, DC removal) applied to audio before feature extraction. See below for YAML format. |
 | `num_sentences` | Number of utterances sampled per speaker for ID training |
 | `ppls_per_group` | Number of speakers grouped per batch for training contrastive loss models |
 

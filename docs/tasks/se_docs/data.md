@@ -18,12 +18,13 @@ soundkit -t se -m data -c configs/se/se.yaml
 
 | Parameter | Description |
 |-----------|-------------|
-| `path_tfrecord` | Output directory to store generated TFRecords. Uses `${job_dir}/tfrecords` |
+| `path_tfrecord` | Output directory to store generated TFRecords. |
 | `tfrecord_datalist_name` | CSV file listing TFRecord shards for training and validation. The file is saved unter the directory of path_threcord |
 | `num_samples_per_noise` | Number of samples for clean speeches generated per type of noise for `train` and `val` splits |
 | `force_download` | If `true`, forces re-download of corpora |
 | `reverb_prob` | Probability of applying room reverb using impulse responses |
 | `num_processes` | Number of parallel processes used for synthesis |
+| `corpora` | List of dataset definitions for training and evaluation. Each entry specifies `name` (dataset name, must match a loader in SoundKit), `type` (speech, noise, or reverb), and `split` (train, val, or train-val). Default names and types are provided in `soundkit.defines`. |
 | `snr_dbs` | List of SNRs (in dB) for mixing clean speech with noise |
 | `target_length_in_secs` | Duration of each synthesized example (in seconds) |
 | `min_amp`, `max_amp` | Amplitude scaling range used to randomly scale synthesized signals |
@@ -62,23 +63,6 @@ corpora:
 🧩 **Custom Datasets**
 
 Want to use your own data? SoundKit makes it easy to register your own speech, noise, or reverb datasets. See the [BYOD](../../datasets/byod.md) guide for details.
-
----
-
-## 🎚 **Signal Preprocessing**
-
-The `signal` field defines how raw waveforms are prepared before feature extraction:
-
-```yaml
-signal:
-  sampling_rate: 16000
-  dc_removal: true
-```
-
-| Parameter | Description |
-|-----------|-------------|
-| `sampling_rate` | Audio sampling rate (Hz) |
-| `dc_removal` | If `true`, remove DC bias before STFT |
 
 ---
 

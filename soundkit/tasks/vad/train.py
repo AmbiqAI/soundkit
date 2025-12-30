@@ -1,6 +1,7 @@
 """ Voice Activity Detection (VAD) training script."""
 
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,6 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
-from soundkit.utils.lookaheadBuffer import LookaheadBuffer
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
 from soundkit.utils.plot_api import plot_spectrograms
@@ -22,6 +22,11 @@ from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from soundkit.utils.spec_aug import SpecAug
 from soundkit.utils.plot_api import fig_to_image
 from .datasets import create_dataset
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 @tf.function
 def train_step(
@@ -124,7 +129,7 @@ def run_epoch(
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
 
-        if params.train.reset_every_batch:
+        if params.train.reset_states_every_batch:
             states_audio_sn = reset_nn_states(model)
 
         if params.train['standardization']:
@@ -209,7 +214,7 @@ def run_epoch(
                     if model.stride_time > 1:
                         feat_sn = feat_sn[::model.stride_time]
 
-                fig = plot_spectrograms(
+                fig, axes = plot_spectrograms(
                     images=[pspec_sn.T, feat_sn.T],
                     titles=[ "noisy logspec", "feat"],
                     vmin_vmax=[(-80, 10), (-80, 10)],
@@ -240,7 +245,7 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     print(f"Training VAD model with params: {params} and more")
 
@@ -251,7 +256,7 @@ def train(params: SKTaskParams):
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
     batchsize = params.train['batchsize']
     if batchsize < 8:
-        print(
+        log.warning(
             "⚠️  Warning: Batch size is very small. This may lead to slow training and unstable gradients.\n\n"
             "💡 Consider increasing the batch size in your config.yaml file for better performance:\n\n"
             "    train:\n"
@@ -318,14 +323,20 @@ def train(params: SKTaskParams):
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
         params=params.train["loss_function"]["params"])
-
-    lr_schedule = WarmUpCosineDecay(
-        initial_lr = float(params_train['initial_lr']),
-        total_steps = params_train['epochs'] * batches_train,
-        warmup_steps =params_train['warmup_epochs'] * batches_train,
-        alpha=1e-5,
-        initial_step=epoch_loaded_1 * batches_train,)
-
+    # 6. Define learning rate schedule
+    if params.train.lr_schedule=='cosine':
+        lr_schedule = WarmUpCosineDecay(
+            initial_lr = float(params_train['initial_lr']),
+            total_steps = params_train['epochs'] * batches_train,
+            warmup_steps =params_train['warmup_epochs'] * batches_train,
+            alpha=1e-5,
+            initial_step=epoch_loaded_1 * batches_train,)
+    elif params.train.lr_schedule=='constant':
+        lr_schedule=float(params_train['initial_lr'])
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -344,18 +355,6 @@ def train(params: SKTaskParams):
         spec_aug = None
 
 
-    # import pickle    
-    # # Load
-    # with open('array_list.pkl', 'rb') as f:
-    #     reloaded_list = pickle.load(f)
-    # for u in reloaded_list:
-    #     print(u.shape, u.dtype)
-    # for u, v in zip(reloaded_list, model.trainable_variables):
-    #     v.assign(u)
-    # epoch=0
-    # import pdb; pdb.set_trace()  # pylint: disable=forgotten-debug-statement
-
-
     for epoch in range(epoch_loaded_1, params_train['epochs']):
         log_epoch ={"epoch": epoch}
         train_config={
@@ -369,7 +368,7 @@ def train(params: SKTaskParams):
             'train_summary_writer': train_summary_writer,
             'spec_aug': spec_aug,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

@@ -1,23 +1,99 @@
 """VAD task model export function."""
+import logging
+from pathlib import Path
 import numpy as np
 import tensorflow as tf
-from soundkit.utils.tflite_convert import tflite_convert, warp_tf_model
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
-from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.calculate_feat_stats import load_feat_stats
+from soundkit.utils.tflite_convert import (
+    tflite_convert,
+    warp_tf_model
+)
+from soundkit.utils.download_tf_model import (
+     build_model,
+     load_model_checkpoint
+)
+from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.basic_dsp import DCRemover
+from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.audio import audio_read
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 def export(params: SKTaskParams):
     """
     Export the VAD model to TFLite format.
     """
+    params_export = params.export
     hop_size = params.train['feature']['hop_size']
-    vad_model = build_vad_tflite(params)
+    tflite_filename_src = f"{params.name}_{params.export['dtype']}.tflite"
+    tflite_path_src = Path(params.export['tflite_dir']) / tflite_filename_src
+    checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
+
+    batchsize_train = params.train['batchsize']
+    batchsize = 1
+    feat_extractor = FeatureExtractor(
+        params=params,
+        )
+    dim_feat = feat_extractor.dim_feat
+
+    # 1.1. Build the model
+    # Load from YAML file
+
+    if params.train['truncate_time'] is not None:
+        time_steps = int(
+            params.train['truncate_time'] \
+            * params.data.signal.sampling_rate \
+            // params.train.feature.hop_size)
+    else:
+        time_steps = int(
+            params.data['target_length_in_secs'] \
+            * params.data.signal.sampling_rate \
+            //  params.train.feature.hop_size)
+
+    model_train = build_model(
+        params,
+        batchsize=batchsize_train,
+        dim_feat=dim_feat,
+        time_steps=time_steps)
+
+    load_model_checkpoint(
+        model_train, params_export['epoch_loaded'], checkpoint_dir)
+
+    model = build_model(
+        params,
+        batchsize=batchsize,
+        dim_feat=dim_feat,
+        time_steps=1,
+        export=True)
+
+    copy_model_weights(model_dst=model, model_src=model_train)
+    if params.train.feature.type in ('spec','erb_complex'):
+        is_complex = True
+    else:
+        is_complex = False
+    model_wrap = warp_tf_model(
+        model,
+        time_steps=1,
+        dim_feat=dim_feat,
+        is_complex=is_complex)
+
+    path_tflite=f'{params.export["tflite_dir"]}/{params.name}_{params.export["dtype"]}.tflite'
+    tflite_fp16_model = tflite_convert(
+        model_wrap,
+        dtype=params.export.dtype,
+        path_tflite=path_tflite,
+        qbits=params.export.qbit_input,
+        data_calibration=params.export.calibration_samples,
+    )
+
+    vad_model = build_vad_tflite(params, tflite_path_src)
 
     if params.export.eval:
         corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
@@ -67,18 +143,17 @@ def export(params: SKTaskParams):
         cmat_acc = cmat_acc / tf.reduce_sum(cmat_acc, axis=-1, keepdims=True)
         print(cmat_acc.numpy())
 
-def build_vad_tflite(params: SKTaskParams):
+def build_vad_tflite(
+        params: SKTaskParams,
+        tflite_path_src: str):
     """Export VAD task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
+        tflite_path_src: str
     """
     hop_size = params.train['feature']['hop_size']
-    sample_rate = params.data['signal']['sampling_rate']
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
-
-    batchsize_train = params.train['batchsize']
-    batchsize = 1
 
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
@@ -96,45 +171,9 @@ def build_vad_tflite(params: SKTaskParams):
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
     )
-    dim_feat = feat_extractor.dim_feat
-
-    # 1.1. Build the model
-    # Load from YAML file
-
-    time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
-    model_train = build_model(
-        params,
-        batchsize=batchsize_train,
-        dim_feat=dim_feat,
-        time_steps=time_steps)
-
-    load_model_checkpoint(
-        model_train, params.demo['epoch_loaded'], checkpoint_dir)
-
-    model = build_model(
-        params,
-        batchsize=batchsize,
-        dim_feat=dim_feat,
-        time_steps=1,
-        export=True)
-
-    copy_model_weights(model_dst=model, model_src=model_train)
-
-    model_wrap = warp_tf_model(
-        model,
-        time_steps=1,
-        dim_feat=dim_feat)
-
-    path_tflite = f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite'
-
-    tflite_fp16_model = tflite_convert(
-        model_wrap,
-        dtype=params.export.dtype,
-        path_tflite=path_tflite)
-    print(f"Exported model to {path_tflite}")
 
     interpreter = tf.lite.Interpreter(
-        model_content=tflite_fp16_model)
+        model_path=str(tflite_path_src))
 
     interpreter.allocate_tensors()  # Needed before execution!
 

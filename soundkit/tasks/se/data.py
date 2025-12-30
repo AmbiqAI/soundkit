@@ -1,9 +1,10 @@
 ''' prepare tfrecords data for SE task '''
+import logging
+from pathlib import Path
 import random
 import re
 import multiprocessing
 from tqdm import tqdm
-from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from soundkit.utils.tf_basic_math import tf_log10_eps
@@ -13,8 +14,15 @@ from soundkit.utils.download_api import corpus_download
 from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.datasets import SKDatasetFactory
-
+from soundkit.utils.feature_utils import FeatureExtractor
 from .datasets import create_raw_tfrecord
+from soundkit.utils.wind import wind_noise
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
+
 class FeatMultiProcsClass(multiprocessing.Process):
     """
     A worker process for parallel feature extraction.
@@ -50,12 +58,11 @@ class FeatMultiProcsClass(multiprocessing.Process):
         is_dc_removal = self.params.data['signal']["dc_removal"]
         revert_prob = self.params.data["reverb_prob"]
         path_tfrecord=self.params.data['path_tfrecord']
-        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
+        target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
-
-        for wavname in tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False):
+        random.shuffle(self.noise_list)
+        for id_clean, wavname in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
             # load clean speech
-
             clean = audio_read(
                 wavname,
                 sample_rate=target_sample_rate)
@@ -63,7 +70,9 @@ class FeatMultiProcsClass(multiprocessing.Process):
             # load noise
             noise = random_load_audio_from_list(
                 self.noise_list,
-                sample_rate=target_sample_rate)
+                sample_rate=target_sample_rate,
+                id = id_clean % len(self.noise_list)
+            )
 
             # load room impulse response (RIR)
             rir = None
@@ -87,12 +96,30 @@ class FeatMultiProcsClass(multiprocessing.Process):
                 max_amp=self.params.data['max_amp'],
                 target_length=target_length,
                 sample_rate=target_sample_rate)
+            
+            # # add wind noise with 10% probability
+            # pb = np.random.uniform(0,1)
+
+            # if pb < 0.1:
+                
+            #     duration_secs =self.params.data['target_length_in_secs']
+            #     wind = wind_noise(
+            #         duration_secs,
+            #         fs=target_sample_rate)  # intensity between 0 and 10 dB
+            #     gain = np.random.uniform(0.1,1)
+            #     audio_sn += gain * wind  # mix wind noise at a lower level
+            #     amp = np.maximum(np.max(np.abs(audio_sn)), 1e-8)
+            #     gain = np.random.uniform(0.03, 0.95) / amp
+            #     audio_sn *= gain
+            #     audio_s *= gain
 
             if is_dc_removal:
                 audio_sn = dc_remove(audio_sn)
                 audio_s = dc_remove(audio_s)
             # print(f"[Process {self.proc_pid}] {wavname} -> {snr_db}dB")
             if self.debug:
+                import sounddevice as sd
+                sd.play(audio_s, samplerate=target_sample_rate)
                 self._debug_plot(audio_sn, audio_s, snr_db)
             else:
                 tfrecord_name = re.sub(r'^wavs', path_tfrecord,
@@ -113,14 +140,10 @@ class FeatMultiProcsClass(multiprocessing.Process):
         their spectrograms for debugging.
         """
 
-        from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
 
-        frame_size = self.params.train['feature']['frame_size']
-        hop_size = self.params.train['feature']['hop_size']
-        fft_size = self.params.train['feature']['fft_size']
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             tf.constant([audio_sn], dtype=tf.float32))
         feat_s, spec_s, states_audio_s = feat_extractor(
@@ -134,7 +157,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
             logmel_sn = 10 * feat_sn[0].numpy()
         elif self.params.train['feature']['type'] in ('pspec'):
             logmel_sn = 10 * tf_log10_eps(tf.abs(feat_sn[0])**2).numpy()
-        elif self.params.train['feature']['type'] in ('spec'):
+        elif self.params.train['feature']['type'] in ('pspec', 'spec', "erb_complex", "hybrid_mag", "erb_mag"):
             logmel_sn = 20 * tf_log10_eps(tf.abs(feat_sn[0])**2).numpy()
         plot_spectrograms(
             images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
@@ -206,8 +229,9 @@ def data(params: SKTaskParams) -> None:
         else:
             raise ValueError(f"Unknown corpus type: {ctype} for corpus {name}")
 
-    sets = ['train','val']
+    sets = ["train", "val"]
     tot_success_dict = {'train': [], 'val': []}
+    snr_dbs_default = params_data['snr_dbs']
     for train_set in sets:
         random.shuffle(speech_list[train_set])
         if params_data['num_samples_per_noise'][train_set] is None:
@@ -218,12 +242,29 @@ def data(params: SKTaskParams) -> None:
                 len(speech_list[train_set]),
                 params_data['num_samples_per_noise'][train_set])
 
-        speech_list_split = np.array_split(
-            speech_list[train_set][:num_samples],
-            params_data['num_processes'])
+        # Robust split for Python lists of possibly ragged elements
+        # Avoid np.array_split which tries to coerce to ndarray and can fail on heterogeneous sequences
+        split_points = np.linspace(
+            0,
+            num_samples,
+            params_data['num_processes'] + 1,
+            dtype=int
+        )
+        speech_list_split = [
+            speech_list[train_set][split_points[i]:split_points[i + 1]]
+            for i in range(params_data['num_processes'])
+        ]
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
+            
+            if noise_type=="wind_noise":
+                # for wind noise, use only specific SNRs
+                params.data['snr_dbs'] = [-15, -12, -9, -6, -3, 0]
+            else:
+                params.data['snr_dbs'] = snr_dbs_default
+            
+            
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

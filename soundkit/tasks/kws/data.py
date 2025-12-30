@@ -1,22 +1,34 @@
 ''' prepare tfrecords data for KWS task '''
+import logging
 import random
 import re
 import multiprocessing
-from tqdm import tqdm
 from pathlib import Path
+from tqdm import tqdm
 import numpy as np
+import soundfile as sf
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from soundkit.utils.tf_stft import tf_stft
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.audio import pad_or_crop
 from soundkit.defines import SKTaskParams
+from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.download_api import corpus_download
-from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio_with_labels
+from soundkit.utils.audio import (
+        audio_read,
+        random_load_audio_from_list,
+        synthesize_audio_with_labels,
+    )
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.datasets import SKDatasetFactory
 from .datasets import create_raw_tfrecord
+
+logging.basicConfig(   
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 class FeatMultiProcsClass(multiprocessing.Process):
     """
@@ -54,182 +66,183 @@ class FeatMultiProcsClass(multiprocessing.Process):
         is_dc_removal = self.params.data['signal']["dc_removal"]
         revert_prob = self.params.data["reverb_prob"]
         path_tfrecord=self.params.data['path_tfrecord']
-        target_length = self.params.data['target_length_in_secs'] * target_sample_rate
+        target_length = int(self.params.data['target_length_in_secs'] * target_sample_rate)
         # print(f"[Process {self.proc_pid}] Started with {len(self.speech_list)} files.")
         target_frames_extension= self.params.data['target_frames_extension']
         hop_size = self.params.train['feature']['hop_size']
         len_garb_list = len(self.speech_list)
-        for idx, sample in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
-            for k in range(4):
-                
-                if k == 0 or k==1:
-                    # load clean speech
-                    wavname, label = sample
 
-                    clean = audio_read(
-                        wavname,
+        for idx, sample in enumerate(tqdm(self.speech_list, desc=f"Processing {self.proc_pid}", unit="file", leave=False)):
+            # for k in range(4):
+            #     if k == 0 or k==1:
+            #         # load clean speech
+            wavname, label = sample
+
+            clean = audio_read(
+                wavname,
+                sample_rate=target_sample_rate)
+
+            starts = np.array([seg['start'] for seg in label])
+            ends = np.array([seg['end'] for seg in label])
+            _, fs_t = sf.read(wavname)
+
+            if fs_t != target_sample_rate:
+                starts[0] = int(starts[0] * target_sample_rate / fs_t)
+                ends[0] = int(ends[0] * target_sample_rate / fs_t)
+            idx_t = np.maximum(starts[0]-1, 0)
+            clean[:idx_t] = 0.0 # zero before keyword
+            clean[ends[0]:] = 0.0 # zero after keyword
+    
+            pad_len_front = np.random.randint(hop_size*target_frames_extension, hop_size*target_frames_extension*5)
+            pad_len_back = np.random.randint(hop_size*target_frames_extension, hop_size*target_frames_extension*5)
+
+
+            starts = ends -1
+            ends = starts + hop_size * target_frames_extension-1
+
+            clean = np.concatenate(
+                [np.zeros(pad_len_front), clean, np.zeros(pad_len_back)])
+
+            starts += pad_len_front
+            ends += pad_len_front
+
+            garbs = []
+            lens_garb = []
+            for g in range(2):
+                idx1 = np.random.randint(0, len_garb_list)
+                wavname_g, labels = self.garb_list[idx1]
+
+                garb = audio_read(wavname_g, sample_rate=target_sample_rate)
+                garb, *_ = pad_or_crop(garb, target_length)
+
+                len_garb = target_length >> 2
+
+                s = np.random.randint(0, len(garb) - len_garb)
+                gain = np.random.randint(0, 2)
+                garbs.append(garb[s:s+len_garb] * gain)
+
+                lens_garb.append(len_garb)
+            
+
+            lst_r = [0,1,2]
+            rn = np.random.choice(lst_r)
+
+            rn_gains = np.random.uniform(0.3, 1.0, 3)
+            if rn == 0:
+
+                sigs = [clean, garbs[0], garbs[1]]
+
+                for sig, gain in zip(sigs, rn_gains):
+                    amp = np.max(np.abs(sig))
+                    if amp > 10**-5:
+                        sig = sig / amp
+                    sig *= gain
+
+
+                clean = np.concatenate([clean, garbs[0], garbs[1]])
+            elif rn ==1:
+                sigs = [garbs[0], clean, garbs[1]]
+                for sig, gain in zip(sigs, rn_gains):
+                    amp = np.max(np.abs(sig))
+                    if amp > 10**-5:
+                        sig = sig / amp
+                    sig *= gain
+                clean = np.concatenate([garbs[0], clean, garbs[1]])
+
+                starts = starts + lens_garb[0]
+                ends = ends + lens_garb[0]
+            else: # rn ==2
+                sigs = [garbs[0], garbs[1], clean]
+                for sig, gain in zip(sigs, rn_gains):
+                    amp = np.max(np.abs(sig))
+                    if amp > 10**-5:
+                        sig = sig / amp
+                    sig *= gain
+                clean = np.concatenate([garbs[0], garbs[1], clean])
+
+                starts = starts + lens_garb[0] + lens_garb[1]
+                ends = ends + lens_garb[0] + lens_garb[1]
+
+            if target_sample_rate==8000:
+                starts = starts // 2
+                ends = ends // 2
+            elif target_sample_rate==16000:
+                pass
+            else:
+                raise ValueError(f"Unsupported sample rate: {target_sample_rate}")
+
+            # load noise
+            noise = random_load_audio_from_list(
+                self.noise_list,
+                sample_rate=target_sample_rate)
+
+            # load room impulse response (RIR)
+            rir = None
+            if self.reverb_list:
+                rd_reverb = np.random.uniform(0,1)
+                if rd_reverb < revert_prob:
+                    rir = random_load_audio_from_list(
+                        self.reverb_list,
                         sample_rate=target_sample_rate)
 
-                    starts = np.array([seg['start'] for seg in label])
-                    ends = np.array([seg['end'] for seg in label])
+            snr_dbs = self.params.data['snr_dbs']
+            snr_db = snr_dbs[np.random.randint(0,len(snr_dbs))]
 
-                    if k==1: # destroy kws speech
-                        len_c = ends[0] - starts[0]
-                        len_d = np.random.randint( len_c//2, len_c) # length destroy
+            # repeat or crop clean and noise to target length
+            audio_sn, audio_s, starts, ends  = synthesize_audio_with_labels(
+                clean,
+                noise,
+                starts,
+                ends,
+                rir,
+                snr_db,
+                min_amp=self.params.data['min_amp'],
+                max_amp=self.params.data['max_amp'],
+                target_length=target_length,
+                sample_rate=target_sample_rate,
+                is_short_segments_remove=False,)
+            if self.params.data.debug:
+                import sounddevice as sd
+                sd.play(audio_sn, samplerate=target_sample_rate)
+            # vad = np.zeros_like(audio_sn, dtype=np.float32)
+            # vad[start:end] = 1.0  # Mark the valid region
+            
+            # import matplotlib.pyplot as plt
+            # plt.figure(figsize=(10, 4))
+            # plt.subplot(3, 1, 1)
+            # plt.plot(audio_sn, label='Clean Speech')
+            # plt.plot(vad)
+            # plt.title(f"Clean Speech Waveform - {wavname}")
+            # plt.ylim(-1.1, 1.1)
+            
+            # plt.subplot(3, 1, 2)
+            # plt.plot(audio_s, label='Clean Speech')
+            # plt.plot(vad)
+            # plt.title(f"Clean Speech Waveform - {wavname}")
 
-                        rn = np.random.randint(0, 2) # random choice to destroy speech
-                        rn1 = np.random.randint(0, 2) # random choice to remove target speech
-                        if rn1==1:
-                            idx1 = np.random.randint(0, len_garb_list)
-                            wavname_g, labels = self.garb_list[idx1]
-                            starts_g = np.array([seg['start'] for seg in labels])
-                            ends_g = np.array([seg['end'] for seg in labels])
+            
+            # plt.subplot(3, 1, 3)
+            # plt.plot(audio_reverb, label='Noisy Speech')
+            # plt.plot(vad)
+            # plt.show()
 
-                            garb = audio_read(wavname_g, sample_rate=target_sample_rate)
-                            garb, *_ = pad_or_crop(garb, target_length)
-
-                            if len(ends_g) > 0:
-                                garb = garb[starts_g[0]:ends_g[0]]
-                            if len(garb) > len_d:
-                                garb = garb[:len_d]
-                            else:
-                                garb = np.pad(garb, (0, len_d - len(garb)), mode='constant')
-                        if rn == 0: # destroy the front of the keyword speech
-                            clean[starts[0]: starts[0] + len_d] = 0.0
-                            # if rn1 == 1: # remove target speech
-                            #     clean[starts[0]: starts[0] + len_d] = garb
-                        else: # destroy the back of the keyword speech
-                            clean[ends[0] - len_d: ends[0]] = 0.0
-                            if rn1 == 1: # remove target speech
-                                clean[ends[0] - len_d: ends[0]] = garb
-                    starts = ends -1
-                    ends = starts + hop_size * target_frames_extension-1
-
-                    pad_len_front = np.random.randint(hop_size*target_frames_extension, hop_size*target_frames_extension*5)
-                    pad_len_back = np.random.randint(hop_size*target_frames_extension, hop_size*target_frames_extension*5)
-
-                    clean = np.concatenate(
-                        [np.zeros(pad_len_front), clean, np.zeros(pad_len_back)])
-
-                    starts += pad_len_front
-                    ends += pad_len_front
-
-                    garbs = []
-                    lens_garb = []
-                    for g in range(2):
-                        idx1 = np.random.randint(0, len_garb_list)
-                        wavname_g, labels = self.garb_list[idx1]
-
-                        garb = audio_read(wavname_g, sample_rate=target_sample_rate)
-                        garb, *_ = pad_or_crop(garb, target_length)
-
-                        len_garb = target_length >> 2
-
-                        s = np.random.randint(0, len(garb) - len_garb)
-                        gain = np.random.randint(0, 2)
-                        garbs.append(garb[s:s+len_garb] * gain)
-
-                        lens_garb.append(len_garb)
-                    clean = np.concatenate([garbs[0], clean, garbs[1]])
-
-                    if k == 0:
-                        starts = starts + lens_garb[0]
-                        ends = ends + lens_garb[0]
-                    else: # k == 1: destroyed speech and removed target
-                        starts = np.array([])
-                        ends = np.array([])
-                else:
-                    wavname, labels = self.garb_list[(idx*3+k)%len_garb_list]
-                    clean = audio_read(wavname, sample_rate=target_sample_rate)
-                    starts = np.array([seg['start'] for seg in labels])
-                    ends = np.array([seg['end'] for seg in labels])
-                    # import pdb; pdb.set_trace()
-                    # random.shuffle(labels)
-                    # clean = clean[starts[0]:ends[0]]
-
-                    starts = np.array([], dtype=np.int64)
-                    ends = np.array([], dtype=np.int64)
-
-                if target_sample_rate==8000:
-                    starts = starts // 2
-                    ends = ends // 2
-                elif target_sample_rate==16000:
-                    pass
-                else:
-                    raise ValueError(f"Unsupported sample rate: {target_sample_rate}")
-
-                # load noise
-                noise = random_load_audio_from_list(
-                    self.noise_list,
-                    sample_rate=target_sample_rate)
-
-                # load room impulse response (RIR)
-                rir = None
-                if self.reverb_list:
-                    rd_reverb = np.random.uniform(0,1)
-                    if rd_reverb < revert_prob:
-                        rir = random_load_audio_from_list(
-                            self.reverb_list,
-                            sample_rate=target_sample_rate)
-
-                snr_dbs = self.params.data['snr_dbs']
-                snr_db = snr_dbs[np.random.randint(0,len(snr_dbs))]
-
-                # repeat or crop clean and noise to target length
-                audio_sn, audio_s, starts, ends  = synthesize_audio_with_labels(
-                    clean,
-                    noise,
-                    starts,
-                    ends,
-                    rir,
-                    snr_db,
-                    min_amp=self.params.data['min_amp'],
-                    max_amp=self.params.data['max_amp'],
-                    target_length=target_length,
-                    sample_rate=target_sample_rate,
-                    is_short_segments_remove=False,)
-                if self.params.data.debug:
-                    import sounddevice as sd
-                    sd.play(audio_sn, samplerate=target_sample_rate)
-                # vad = np.zeros_like(audio_sn, dtype=np.float32)
-                # vad[start:end] = 1.0  # Mark the valid region
-                
-                # import matplotlib.pyplot as plt
-                # plt.figure(figsize=(10, 4))
-                # plt.subplot(3, 1, 1)
-                # plt.plot(audio_sn, label='Clean Speech')
-                # plt.plot(vad)
-                # plt.title(f"Clean Speech Waveform - {wavname}")
-                # plt.ylim(-1.1, 1.1)
-                
-                # plt.subplot(3, 1, 2)
-                # plt.plot(audio_s, label='Clean Speech')
-                # plt.plot(vad)
-                # plt.title(f"Clean Speech Waveform - {wavname}")
+            if is_dc_removal:
+                audio_sn = dc_remove(audio_sn)
+                audio_s = dc_remove(audio_s)
+            # print(f"[Process {self.proc_pid}] {wavname} -> {snr_db}dB")
     
-                
-                # plt.subplot(3, 1, 3)
-                # plt.plot(audio_reverb, label='Noisy Speech')
-                # plt.plot(vad)
-                # plt.show()
+            if self.debug:
+                hop_size=self.params.train['feature']['hop_size']
 
-                if is_dc_removal:
-                    audio_sn = dc_remove(audio_sn)
-                    audio_s = dc_remove(audio_s)
-                # print(f"[Process {self.proc_pid}] {wavname} -> {snr_db}dB")
-     
-                if self.debug:
-                    hop_size=self.params.train['feature']['hop_size']
+                self._debug_plot(
+                    audio_sn, audio_s, snr_db,
+                    label=(starts // hop_size, ends // hop_size))
 
-                    self._debug_plot(
-                        audio_sn, audio_s, snr_db,
-                        label=(starts // hop_size, ends // hop_size))
-
-                else:
-                    tfrecord_name = re.sub(r'^wavs', path_tfrecord,
-                        re.sub(r'\.(wav|flac)$', f'_{snr_db}-db_{self.info}_{k}_proc_id{self.proc_pid}.tfrecord', wavname))
-                    create_raw_tfrecord(tfrecord_name, audio_sn, (starts, ends))
-                    self.success_dict[self.proc_pid] += [tfrecord_name]
+            else:
+                tfrecord_name = re.sub(r'^wavs', path_tfrecord,
+                    re.sub(r'\.(wav|flac)$', f'_{snr_db}-db_{self.info}_proc_id{self.proc_pid}.tfrecord', wavname))
+                create_raw_tfrecord(tfrecord_name, audio_sn, (starts, ends))
+                self.success_dict[self.proc_pid] += [tfrecord_name]
 
     def _debug_plot(
             self,
@@ -244,7 +257,6 @@ class FeatMultiProcsClass(multiprocessing.Process):
         their spectrograms for debugging.
         """
 
-        from ...utils.feature_utils import FeatureExtractor
         feat_extractor = FeatureExtractor(
             params=self.params,
         )
@@ -264,7 +276,7 @@ class FeatMultiProcsClass(multiprocessing.Process):
         logspec_s = 20 * tf_log10_eps(tf.abs(spec_s[0])).numpy()
         logmel_sn = 10 * feat_sn[0].numpy()
 
-        plot_spectrograms(
+        fig, axes = plot_spectrograms(
             images=[logspec_sn.T, logspec_s.T, logmel_sn.T],
             titles=[f"noisy logspec {snr_db}dB", "clean logspec", "noisy feat"],
             vmin_vmax=[(vmin, vmax), (vmin, vmax), (vmin, vmax)],
@@ -272,7 +284,10 @@ class FeatMultiProcsClass(multiprocessing.Process):
             cmap="pink_r",  # or your preferred colormap
             show_fig=False   # set to False if you just want to save
             )
-        plt.plot(vad * 22)
+        axes[0].plot(vad * 257)
+        axes[1].plot(vad * 257)
+        axes[2].plot(vad * feat_extractor.dim_feat)
+        
         plt.show()
 
 def data(params: SKTaskParams) -> None:
@@ -371,7 +386,7 @@ def data(params: SKTaskParams) -> None:
         
         reverb_list_set = reverb_list[train_set]
         for noise_type in list(noise_type2list.keys()):
-            print(f"Processing [{train_set}] set with [{noise_type}] noise")
+            log.info(f"Processing [{train_set}] set with [{noise_type}] noise")
             noise_list = noise_type2list[noise_type][train_set]
             manager = multiprocessing.Manager()
             success_dict = manager.dict({i: [] for i in range(params_data['num_processes'])})

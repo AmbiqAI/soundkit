@@ -1,13 +1,20 @@
+"""Train ID task model."""
 import os
+import logging
 import datetime
 from pathlib import Path
 from typing import Any
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
-from soundkit.utils.download_tf_model import save_train_log, load_train_log
-from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
+from soundkit.utils.download_tf_model import (
+        save_train_log,
+        load_train_log
+    )
+from soundkit.utils.download_tf_model import (
+        build_model,
+        load_model_checkpoint
+)
 from soundkit.utils.feature_utils import FeatureExtractor
-# from soundkit.utils.losses import LossFactory
 from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.WarmUpCosineDecay import WarmUpCosineDecay
 from soundkit.utils.tf_complex_utils import complex_to_realarray
@@ -15,7 +22,16 @@ from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_dataset
-from .utils.nnid_utils import gen_target_nnid, get_corr_fast, cross_entropy_nnid
+from .utils.nnid_utils import (
+        gen_target_nnid,
+        get_corr_fast,
+        cross_entropy_nnid
+    )
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
 
 @tf.function
 def train_step(
@@ -51,7 +67,6 @@ def train_step(
         corr = tf.math.abs(net.weight_cos + 10**-5) * corr + net.bias_cos
 
         est_target = tf.math.softmax(corr, axis=-1)
-
         loss, steps = cross_entropy_nnid(
                                 target,
                                 est_target)
@@ -128,7 +143,7 @@ def run_epoch(
 
         feat_sn, _, _, end_frames, mask = batch
 
-        if params.train.reset_every_batch:
+        if params.train.reset_states_every_batch:
             # Reset the state buffer for the next batch
             states_audio_sn = reset_nn_states(model, zero_state=training)
 
@@ -209,7 +224,7 @@ def run_epoch(
                     feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[idx])).numpy()
                 # feat_sn = feat_sn[::model.stride_time]
 
-                fig = plot_spectrograms(
+                fig, axies = plot_spectrograms(
                     images=[feat_sn.T],
                     titles=[ "feat"],
                     vmin_vmax=[(-80, 10)],
@@ -239,15 +254,16 @@ def train(params: SKTaskParams):
     """Train beat task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
-    print(f"Training VAD model with params: {params} and more")
+    log.info(f"Training VAD model with params: {params} and more")
 
     params_train = params.train
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tfboard_dir = f"{params.train['path']['tensorboard_dir']}/logs/{current_time}"
     train_summary_writer = tf.summary.create_file_writer(tfboard_dir)
+    params.train.batchsize = params.data.num_sentences * params.data.ppls_per_group
     batchsize = params.train['batchsize']
 
     # 1. Define feature extractor
@@ -259,8 +275,6 @@ def train(params: SKTaskParams):
     # 2. Build the model
 
     # Load from YAML file
-    is_complex = True if params_train['feature']['type'] =='spec' else False
-
 
     target_length_frames= int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate) //  params.train.feature.hop_size
     model = build_model(
@@ -278,24 +292,21 @@ def train(params: SKTaskParams):
         'val':  Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
     }
 
-    count = 0
-    for v in params.data.corpora:
-        if v['type'] == 'noise':
-            count+=1
+    counts = sum(1 for v in params.data.corpora if v['type'] == 'noise')
 
-    num_augment = len(params.data.snr_dbs) * count
+    num_augmentation = len(params.data.snr_dbs) * counts
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
         num_sentences=params.data.num_sentences,
         ppls_per_group=params.data.ppls_per_group,
-        num_utterances_in_sentence=num_augment,
+        num_utterances_in_sentence=num_augmentation,
         hop_size = params.train.feature.hop_size,
     )
     ds_val, batches_val = create_dataset(
         tfrecord_list['val'],
         num_sentences=params.data.num_sentences,
         ppls_per_group=params.data.ppls_per_group,
-        num_utterances_in_sentence=num_augment,
+        num_utterances_in_sentence=num_augmentation,
         hop_size = params.train.feature.hop_size,
     )
 
@@ -320,16 +331,19 @@ def train(params: SKTaskParams):
         raise ValueError(
             f"Loss function {params.train.loss_function['type']} is not supported for KWS task. Use 'cross_entropy' instead."
         )
-    if params.train.lr_schedule=='cos':
+    if params.train.lr_schedule=='cosine':
         lr_schedule = WarmUpCosineDecay(
             initial_lr = float(params_train['initial_lr']),
             total_steps = params_train['epochs'] * batches_train,
             warmup_steps =params_train['warmup_epochs'] * batches_train,
             alpha=1e-5,
             initial_step=epoch_loaded_1 * batches_train,)
-    elif params.train.lr_schedule=='const':
+    elif params.train.lr_schedule=='constant':
         lr_schedule=float(params_train['initial_lr'])
-
+    else:
+        raise ValueError(
+            f"Learning rate schedule {params.train.lr_schedule} is not supported. Use 'cosine' or 'constant' instead."
+        )
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -356,7 +370,7 @@ def train(params: SKTaskParams):
             'train_summary_writer': train_summary_writer,
             "target" : target,
             }
-        print(f"Epoch {epoch}/{params_train['epochs']}\n")
+        log.info(f"Epoch {epoch}/{params_train['epochs']}\n")
 
         # Training phase
         if not params.train['debug']:

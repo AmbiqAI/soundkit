@@ -1,4 +1,5 @@
-from pathlib import Path
+"""Export KWS task model."""
+import logging
 import tensorflow as tf
 from  soundkit.utils.tflite_convert import tflite_convert, warp_tf_model   
 from soundkit.defines import SKTaskParams
@@ -6,11 +7,16 @@ from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.tf_copy_model import copy_model_weights
 from soundkit.utils.feature_utils import FeatureExtractor
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger(__name__)
+
 def export(params: SKTaskParams):
     """Export SE task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
     params_export = params.export
 
@@ -35,7 +41,10 @@ def export(params: SKTaskParams):
         time_steps = time_steps)
 
     load_model_checkpoint(
-        model_train, params_export['epoch_loaded'], checkpoint_dir)
+        model_train,
+        params_export['epoch_loaded'],
+        checkpoint_dir,
+        criterion_epoch="val_acc")
 
     model = build_model(
         params,
@@ -55,6 +64,7 @@ def export(params: SKTaskParams):
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype=params.export.dtype,
-        path_tflite=path_tflite)
+        path_tflite=path_tflite,
+        data_calibration=params.export.calibration_samples,)
 
-    print(f"Exported model to {path_tflite}")
+    log.info(f"Exported model to {path_tflite}")

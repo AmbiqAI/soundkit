@@ -1,11 +1,13 @@
 """Evaluate SE task model with given parameters."""
 import re
 import os
+import logging
 from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import soundfile as sf
 import torch
+from torchaudio.pipelines import SQUIM_OBJECTIVE
 from torchmetrics.functional.audio.dnsmos import deep_noise_suppression_mean_opinion_score
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
@@ -19,16 +21,24 @@ from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
+
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    filename="se_evaluate.log",
+    )
+log = logging.getLogger(__name__)
 
 def evaluate(params: SKTaskParams):
     """Evaluate SE task model with given parameters.
 
     Args:
-        params (HKTaskParams): Task parameters
+        params (SKTaskParams): Task parameters
     """
-    print(f"Evaluating SE model with params: {params} and more")
+    logging.debug(f"Evaluating SE model with params: {params} and more")
     params_evaluate = params.evaluate
     num_lookahead = params.train['num_lookahead']
     feat_params = params.train['feature']
@@ -90,11 +100,21 @@ def evaluate(params: SKTaskParams):
     # 2. Build model architecture
     # Load Model architecture from YAML file
 
+    if params.train["truncate_time"] >= params.data["target_length_in_secs"]:
+        raise ValueError(
+            f"truncate_time {params.train['truncate_time']} cannot be greater than target_length_in_secs {params.data['target_length_in_secs']}"
+        )
+
+    if params.train['truncate_time'] is not None:
+        time_steps = int(params.train['truncate_time'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+    else:
+        time_steps = int(params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+
     model_train = build_model(
         params,
         batchsize=batchsize_train,
         dim_feat=dim_feat,
-        time_steps = params.data['target_length_in_secs'] * params.data.signal.sampling_rate //  params.train.feature.hop_size)
+        time_steps=time_steps)
 
     # load weights from the checkpoint
 
@@ -118,12 +138,15 @@ def evaluate(params: SKTaskParams):
                  'en': np.zeros( (1, 4), dtype=np.float64),}
     stoi_hyp = {'sn': np.zeros( (1, 1), dtype=np.float64),
                  'en': np.zeros( (1, 1), dtype=np.float64),}
-    
+
     pesq_hyp = {'sn': np.zeros( (1, ), dtype=np.float64),
                  'en': np.zeros( (1,), dtype=np.float64),}
     si_sdr_hyp = {'sn': np.zeros( (1,), dtype=np.float64),
                  'en': np.zeros( (1,), dtype=np.float64),}
 
+    # open a file result.txt to save final results
+    result_file_path = os.path.join(result_folder, "result.txt")
+    result_file = open(result_file_path, "w")
     
     for step, batch in enumerate(dataset):
         print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
@@ -135,70 +158,170 @@ def evaluate(params: SKTaskParams):
         )
 
         audio_sn, audio_s, _ = batch
+        # save to wav for int16, 16kHz
+        tmp = audio_sn[0].numpy()
+        sf.write("tmp_sn.wav", tmp, params.data['signal']['sampling_rate'])
+        xx, fs = sf.read("tmp_sn.wav", dtype='int16')  # to make sure the file is written before proceeding
+        # save .c file for evb test
+
+        with open("audio_data.c", "w") as f:
+            f.write("int16_t audio_data[] = {\n")
+            f.write(",\n".join(str(sample) for sample in xx))
+            f.write("\n};\n")
+            f.write(f"const int audio_data_len = {len(xx)};\n")
+        
 
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
         # Apply lookahead
+        buffer_sn.reset()
         spec_sn_delay = buffer_sn.apply(spec_sn)
 
         if params.train['standardization']:
             # Standardize features
             mean_stats = stats['nMean_feat']
             inv_std_stats = stats['nInvStd']
-            feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
+            if params.train['standardization_type'] == 'mean':
+                feat_sn_norm = feat_sn - mean_stats
+            else:
+                feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
         else:
             feat_sn_norm = feat_sn
 
         time_steps = feat_sn_norm.shape[1]
-        if 0:
-            tfmask = []
-            for f in range(time_steps):
-                print(f"\rframe {f}/{time_steps}, ", end='')
-                feat = feat_sn_norm[:, f:f+1, :]
-                m = model(feat, training=False)
-                tfmask+= [m]
-            tfmask = tf.concat(tfmask, axis=1)
 
+        model = build_model(
+            params,
+            batchsize=batchsize,
+            dim_feat=dim_feat,
+            time_steps=1500)
+
+        copy_model_weights(
+            model_dst=model,
+            model_src=model_train)
+
+        if feat_sn_norm.dtype == tf.complex64:
+            inputs_nn = tf.stack(
+                [tf.math.real(feat_sn_norm),
+                    tf.math.imag(feat_sn_norm)],
+                axis=-1)
         else:
-            model = build_model(
-                params,
-                batchsize=batchsize,
-                dim_feat=dim_feat,
-                time_steps=time_steps)
+            inputs_nn = feat_sn_norm
+    
 
-            copy_model_weights(
-                model_dst=model,
-                model_src=model_train)
+        T = inputs_nn.shape[1]
+        blks = int(np.ceil(T / 1500))
 
-            tfmask = model(feat_sn_norm, training=False)
-        pspec_sn_delay = tf.abs(spec_sn_delay)
-        phase_sn_delay = tf.math.angle(spec_sn_delay)
+        tfmask_list = []
+        for b in range(blks):
+            start = b * 1500
+            end = min((b + 1) * 1500, T)
+            inputs_nn_blk = inputs_nn[:, start:end]
 
-        pspec_en_delay = tfmask * pspec_sn_delay
+            rank = tf.rank(inputs_nn_blk)
 
-        spec_en_delay = polar_to_complex(
-            pspec_en_delay, phase_sn_delay)
+            if rank == 4:
+                inputs_nn_blk = tf.pad(
+                inputs_nn_blk,
+                paddings=[[0, 0],
+                          [0, 1500 - (end - start)],
+                          [0, 0],
+                          [0, 0]],
+                mode='CONSTANT',
+                constant_values=0)
+            else:
+                inputs_nn_blk = tf.pad(
+                inputs_nn_blk,
+                paddings=[[0, 0],
+                          [0, 1500 - (end - start)],
+                          [0, 0]],
+                mode='CONSTANT',
+                constant_values=0)
+
+
+            tfmask_blk = model(inputs_nn_blk, training=False)
+            tfmask_blk = tfmask_blk[:, :end - start, ...]
+            tfmask_list.append(tfmask_blk)
+        tfmask = tf.concat(tfmask_list, axis=1)
+
+        if feat_sn_norm.dtype == tf.complex64: # complex mask
+            if params.train.feature.type == 'erb_complex':
+                from soundkit.utils.erb import ERB
+                erb = ERB(erb_subband_1=65, erb_subband_2=64)
+                
+                rr = np.array([8574, 11464, 13598, 14132, 14528, 14528, 7798, 6448, 12946, 14278, 15628, 16560, 16436, 15700, 14938, 14756, 7096, 5200, 3574, 2772, 2192, 2192, 2192, 2192, 3150, 3930, 11340, 12660, 24442, 27198, 36617, 36617, 37823, 41171, 32664, 30120, 20066, 17000, 17624, 17104, 18444, 19850, 28474, 33597, 35189, 36269, 33393, 30564, 23486, 19694, 14060, 11304, 5408, 2362, -134, -134, -134, -134, 806, 1536, 13398, 18162, 16964, 17644, 18286, 17762, 16506, 15750, 13796, 16192, 14132, 13974, 20206, 21434, 28412, 30150, 32847, 29512, 28412, 25694, 14528, 14528, 7096, 5200, 3574, 2772, 1968, 1782, 844, 298, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, 8406, 11066, 3856, 1052, -282,], dtype=np.int32)
+                ii = np.array([-22, 0, 0, -22, -22, -22, 0, 0, 0, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -74, -112, -186, -186, -186, -262, -170, -150, -74, 0, -22, -22, 0, 0, -22, -96, -74, -74, -58, 22, 22, 22, 22, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 22, 22, 22, 22, -58, -38, -58, -58, -58, -74, -74, -134, -96, -112, -96, -22, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -22, -22, 0, 0, 0, ], dtype=np.int32)
+                
+                aa = np.stack((rr, ii), axis=0).astype(np.float32) / 32768.0
+                oo = (erb.bs(aa) * 32768.0).numpy().astype(np.int32)
+
+                
+                tfmask = tf.transpose(tfmask, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
+                tfmask = erb.bs(tfmask)
+                tfmask = tf.transpose(tfmask, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
+
+            tfmask = tf.complex(
+                tfmask[..., 0],
+                tfmask[..., 1])
+            spec_en_delay = tfmask * spec_sn_delay
+        else: # real mask
+            pspec_sn_delay = tf.abs(spec_sn_delay)
+            phase_sn_delay = tf.math.angle(spec_sn_delay)
+            if params.train.feature.type == 'hybrid_mag':
+                mat_inv = feat_extractor.mel_filter_inv
+                tfmask = tf.matmul(tfmask, mat_inv)
+            elif params.train.feature.type == 'erb_mag':
+                from soundkit.utils.erb import ERB
+                erb = ERB(erb_subband_1=65, erb_subband_2=64)
+                tfmask = erb.bs(tfmask[..., 0])
+            pspec_en_delay = tfmask * pspec_sn_delay
+            
+            spec_en_delay = polar_to_complex(
+                pspec_en_delay, phase_sn_delay)
 
         audio_en = tf_istft(
             spec_en_delay,
             feat_params['frame_size'],
             feat_params['hop_size'],
             feat_params['fft_size'])
+
         if step < 10:
             # draw spectrograms and tfmask
             name = re.sub(r'(\.wav$|\.flac$)', '.pdf', wavs[step])
             save_path = f"{result_folder}/{name}"
-
-            plot_spectrograms(
-                images=[
-                    20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
-                    tfmask.numpy()[0].T,
-                    20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
-                ],
-                titles=["Noisy logspec", "TFMask", "Enhanced logspec"],
-                vmin_vmax=[(-80, 10), (0, 1), (-80, 10)],
-                save_path=save_path,
-            )
+            if feat_sn_norm.dtype == tf.complex64: # complex mask
+                pspec_sn_delay = tf.abs(spec_sn_delay)
+                pspec_en_delay = tf.abs(spec_en_delay)
+                tfmask_real = tf.math.real(tfmask)
+                tfmask_imag = tf.math.imag(tfmask)
+                rng_mask_real = (
+                    tf.reduce_min(tfmask_real).numpy(),
+                    tf.reduce_max(tfmask_real).numpy())
+                rng_mask_imag = (
+                    tf.reduce_min(tfmask_imag).numpy(),
+                    tf.reduce_max(tfmask_imag).numpy())
+                plot_spectrograms(
+                    images=[
+                        20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
+                        tfmask_real.numpy()[0].T,
+                        tfmask_imag.numpy()[0].T,
+                        20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
+                    ],
+                    titles=["Noisy logspec", "TFMask Real", "TFMask Imag", "Enhanced logspec"],
+                    vmin_vmax=[(-80, 10), rng_mask_real, rng_mask_imag, (-80, 10)],
+                    save_path=save_path,
+                )
+            else: # real mask
+                plot_spectrograms(
+                    images=[
+                        20 * tf_log10_eps(pspec_sn_delay).numpy()[0].T,
+                        tfmask.numpy()[0].T,
+                        20 * tf_log10_eps(pspec_en_delay).numpy()[0].T,
+                    ],
+                    titles=["Noisy logspec", "TFMask", "Enhanced logspec"],
+                    vmin_vmax=[(-80, 10), (0, 1), (-80, 10)],
+                    save_path=save_path,
+                )
 
             # Save noisy audio
             name = re.sub(r'(\.wav$|\.flac$)', '_sn.wav', wavs[step])
@@ -208,7 +331,7 @@ def evaluate(params: SKTaskParams):
                 save_path,
                 audio_sn_np,
                 params.data['signal']['sampling_rate'])
-            print(f"Saved noisy audio to {save_path}")
+            logging.info(f"Saved noisy audio to {save_path}")
 
             # save enhanced audio
             name = re.sub(r'(\.wav$|\.flac$)', '_en.wav', wavs[step])
@@ -218,13 +341,12 @@ def evaluate(params: SKTaskParams):
                 save_path,
                 audio_en_np,
                 params.data['signal']['sampling_rate'])
-            print(f"Saved enhanced audio to {save_path}")
-        from torchaudio.pipelines import SQUIM_OBJECTIVE
+            logging.info(f"Saved enhanced audio to {save_path}")
+
         objective_model = SQUIM_OBJECTIVE.get_model()
-        
+
         # stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(torch.from_numpy(audio_sn.numpy()))
-        
-        
+
         for type_s in ['sn', 'en']:
             if type_s == 'sn':
                 audio = audio_sn
@@ -232,9 +354,7 @@ def evaluate(params: SKTaskParams):
                 audio = audio_en
 
             # Calculate DNSMOS score
-            
-          
-            
+
             torch_tensor = torch.from_numpy(audio.numpy())
             scores = deep_noise_suppression_mean_opinion_score(
                 torch_tensor,
@@ -263,13 +383,15 @@ def evaluate(params: SKTaskParams):
 
     # Print results
     print("\nAveraged Evaluation Results:")
+    
+    result_file.write(f"Epoch {params.evaluate.epoch_loaded}: Averaged Evaluation Results:\n")
     for metric in metrics:
         val_sn = scores[metric]['sn']
         val_en = scores[metric]['en']
-        
+
         if metric == 'DNSMOS':
+            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]\n")
             print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
         else:
-            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
-    
-  
+            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en}\n")
+            logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")

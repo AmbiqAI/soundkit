@@ -1,18 +1,35 @@
 import os
+import logging
 import argparse
 from pathlib import Path
 from argdantic import ArgField, ArgParser
 from omegaconf import OmegaConf, DictConfig
+from soundkit.utils.s3 import (
+        S3Manager,
+        sync_metadata
+    )
 from .defines import SKTaskParams, SKMode
 
 from .tasks import TaskFactory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
+log = logging.getLogger(__name__)
 
 # === Global to pass dotlist overrides ===
 extra_overrides: list[str] = []
 
 parser = ArgParser()
 
-def parse_config(path: str, overrides: list[str] = None) -> DictConfig:
+def parse_config(
+        path: str,
+        overrides: list[str] = None) -> DictConfig:
+    """ 
+    Parse YAML configuration file with optional overrides. 
+    """
+
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config file not found: {path}")
     raw = OmegaConf.load(path)
@@ -21,17 +38,50 @@ def parse_config(path: str, overrides: list[str] = None) -> DictConfig:
     if overrides:
         override_cfg = OmegaConf.from_dotlist(overrides)
         cfg = OmegaConf.merge(cfg, override_cfg)
+    OmegaConf.set_struct(cfg, True)  # <--- Enforce struct mode for safety
     OmegaConf.resolve(cfg)
+    OmegaConf.to_object(cfg)
+
+
     return cfg
 
 # === Real logic (can be called from anywhere) ===
-def run_task(mode: str, task: str, config: str, tensorboard: bool, view: bool = False):
+def run_task(
+        mode: str,
+        task: str,
+        config: str,
+        tensorboard: bool,
+        view: bool = False):
+
     print(f"🔧 Mode: {mode}, Task: {task}")
     print(f"🛠️  Overrides: {extra_overrides}")
 
+    # Always ensure metadata is present first
+    sync_metadata()
+
+    config_path = Path(config)
+    abs_config_path = config_path.resolve()
+    # Handle the Model Zoo 'zoo' logic
+    if "zoo" in abs_config_path.parts:
+        zoo_idx = abs_config_path.parts.index("zoo")
+        # local_target becomes /your/path/zoo/task_name/
+        local_target = Path(*abs_config_path.parts[:zoo_idx + 2])
+        
+        # Use the modulized manager
+        s3 = S3Manager()
+
+        s3.download_folder(s3_prefix=f"soundkit/{task}/", local_dir=local_target)
+
+        if task == "id": # ensure VAD model is also downloaded
+            s3.download_folder(s3_prefix=f"soundkit/vad/", local_dir=Path("./zoo/vad/"))
     params = parse_config(config, overrides=extra_overrides)
     task_handler = TaskFactory.get(task)
-
+    if task == "id":
+        if params.train.batchsize != params.data.ppls_per_group * params.data.num_sentences:
+            params.train.batchsize = params.data.ppls_per_group * params.data.num_sentences
+            log.warning(
+                f"Adjusted train batchsize to {params.train.batchsize} based on ppls_per_group and num_sentences."
+                )
     match mode:
         case SKMode.data:
             task_handler.data(params)
@@ -53,10 +103,10 @@ def run_task(mode: str, task: str, config: str, tensorboard: bool, view: bool = 
                     script="audioview_se"
                 elif task == "id":
                     script="audioview_nnid"
-    
-                if params.demo.platform == "evb":
-                    print("🔌 Running EVB demo...")
-                    os.system(f"python -m soundkit.tools.{script}")
+
+                print("🔌 Running EVB demo...")
+
+                os.system(f"python -m soundkit.tools.{script}")
             else:
                 task_handler.demo(params)
 
