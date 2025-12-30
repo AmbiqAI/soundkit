@@ -69,6 +69,7 @@ def run_task(
         
         # Use the modulized manager
         s3 = S3Manager()
+
         s3.download_folder(s3_prefix=f"soundkit/{task}/", local_dir=local_target)
 
         if task == "id": # ensure VAD model is also downloaded
