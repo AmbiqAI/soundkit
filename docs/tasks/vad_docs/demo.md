@@ -64,4 +64,5 @@ The fast deploying tflite on your PC for real-time testing.
   ```
 1. Press Button-0 on your EVB
 1. Follow the GUI instructions
+1. If you have any connection issue or no waveform showing. See the [**Troubleshooting**](../troubleshooting.md)
 ---

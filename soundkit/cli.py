@@ -64,7 +64,7 @@ def run_task(
     # Handle the Model Zoo 'zoo' logic
     if "zoo" in abs_config_path.parts:
         if task == "kws":
-            print("info: The KWS model is unavailable in the remote Model Zoo due to licensing restrictions.")
+            print("info: The KWS model, Hey Galaxy, is unavailable in the remote Model Zoo due to licensing restrictions.")
             print("      Please provide a local configuration file to proceed with this task.")
             exit(1)
         zoo_idx = abs_config_path.parts.index("zoo")
