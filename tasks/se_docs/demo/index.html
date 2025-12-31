@@ -658,45 +658,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#troubleshooting-connection-waveform-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🛠️ Troubleshooting: Connection &amp; Waveform Issues
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🛠️ Troubleshooting: Connection &amp; Waveform Issues">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-identify-the-device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Identify the Device
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fix-access-denied-udev-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fix "Access Denied" (udev Rules)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1836,45 +1797,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#troubleshooting-connection-waveform-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🛠️ Troubleshooting: Connection &amp; Waveform Issues
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🛠️ Troubleshooting: Connection &amp; Waveform Issues">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-identify-the-device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Identify the Device
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fix-access-denied-udev-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fix "Access Denied" (udev Rules)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1934,11 +1856,11 @@
 </table>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">demo</span><span class="p">:</span>
-<span class="nt">epoch_loaded</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">best</span>
-<span class="nt">platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pc</span><span class="w"> </span><span class="c1"># or evb</span>
-<span class="nt">tflite_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./soundkit/tasks/se/tflite</span>
-<span class="nt">evb_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./soundkit/tasks/se/evb</span>
-<span class="nt">pre_gain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">epoch_loaded</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">best</span>
+<span class="w">    </span><span class="nt">platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pc</span><span class="w"> </span><span class="c1"># or evb</span>
+<span class="w">    </span><span class="nt">tflite_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./soundkit/tasks/se/tflite</span>
+<span class="w">    </span><span class="nt">evb_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./soundkit/tasks/se/evb</span>
+<span class="w">    </span><span class="nt">pre_gain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </code></pre></div>
 <hr />
 <h2 id="deployment-modes">💻 Deployment Modes</h2>
@@ -1956,48 +1878,8 @@
 </code></pre></div></li>
 <li>Open your browser on <a href="https://ambiqai.github.io/web-ble-dashboards/nnse-usb/">nnse-usb-dashboard</a></li>
 <li>Switch raw or enhance audio via pressing Button-0 on EVB</li>
-<li>If you have any connection issue or no waveform showing. See the <strong>Troubleshooting</strong> below:</li>
+<li>If you have any connection issue or no waveform showing. See the <a href="../../troubleshooting/"><strong>Troubleshooting</strong></a></li>
 </ul>
-<hr />
-<h2 id="troubleshooting-connection-waveform-issues">🛠️ <strong>Troubleshooting: Connection &amp; Waveform Issues</strong></h2>
-<p>If the waveform is missing or you get "Access Denied" in the browser, follow these steps to verify your hardware and permissions.</p>
-<h3 id="1-identify-the-device"><strong>1. Identify the Device</strong></h3>
-<p>First, ensure your Linux system sees the Ambiq device. Open a terminal and run:</p>
-<div class="highlight"><pre><span></span><code>lsusb<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;TinyUSB&quot;</span>
-</code></pre></div>
-<p><strong>What to look for:</strong>
-You should see a line similar to this:
-<code>Bus 003 Device 030: ID cafe:4011 TinyUSB TinyUSB Device</code></p>
-<ul>
-<li><strong>If nothing appears:</strong> Check your USB cable (ensure it is a data cable) and try a different port.</li>
-<li><strong>If it appears:</strong> Note the ID <code>cafe:4011</code>. This confirms the hardware is connected.</li>
-</ul>
-<h3 id="2-fix-access-denied-udev-rules"><strong>2. Fix "Access Denied" (udev Rules)</strong></h3>
-<p>Chrome cannot access the raw USB data without specific permissions. You must create a udev rule to grant access.</p>
-<ol>
-<li>
-<p><strong>Create the rule file:</strong>
-    <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>nano<span class="w"> </span>/etc/udev/rules.d/99-tinyusb.rules
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Paste the following line:</strong>
-    <div class="highlight"><pre><span></span><code>SUBSYSTEM==&quot;usb&quot;, ATTR{idVendor}==&quot;cafe&quot;, ATTR{idProduct}==&quot;4011&quot;, MODE=&quot;0666&quot;, GROUP=&quot;plugdev&quot;
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Save and exit:</strong> Press <code>Ctrl+O</code>, <code>Enter</code>, then <code>Ctrl+X</code>.</p>
-</li>
-<li>
-<p><strong>Reload and trigger the new rules:</strong>
-    <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload-rules
-sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Replug your device.</strong></p>
-</li>
-</ol>
 <hr />
 
 
