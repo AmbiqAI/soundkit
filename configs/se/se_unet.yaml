@@ -14,10 +14,10 @@ data:
   reverb_prob: 0.2
   num_processes: 8
   corpora:
-    - {name: train-clean-360, type: speech, split: train}
+    # - {name: train-clean-360, type: speech, split: train}
     - {name: train-clean-100, type: speech, split: train}
     - {name: dev-clean, type: speech, split: val,}
-    - {name: thchs30, type: speech, split: train-val}
+    # - {name: thchs30, type: speech, split: train-val}
     - {name: ESC-50-master, type: noise, split: train-val}
     # - {name: FSD50K, type: noise, split: train-val}
     # - {name: musan, type: noise, split: train-val}

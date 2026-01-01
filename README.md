@@ -113,8 +113,6 @@ Pre-trained models are available for SE, VAD, ID, and KWS tasks. Each model incl
 * Evaluation reports (accuracy, F1-score, latency)
 * Deployment instructions
 
-Visit the [Model Zoo](https://ambiqai.github.io/soundkit/zoo) to explore and benchmark available models.
-
 ---
 
 ## <span class="sk-h2-span">Guides</span>
