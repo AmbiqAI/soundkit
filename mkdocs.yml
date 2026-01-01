@@ -2,7 +2,7 @@ site_name: SoundKit
 repo_url: https://github.com/AmbiqAI/soundkit
 theme:
   name: material
-  logo: assets/logo.png  # optional
+  logo: assets/ambiq.png  # optional
   favicon: assets/favicon.ico  # optional
   features:
     - content.code.copy
@@ -44,6 +44,7 @@ nav:
         - Evaluate: tasks/id_docs/evaluate.md
         - Export: tasks/id_docs/export.md
         - Demo: tasks/id_docs/demo.md
+      - Troubleshooting: tasks/troubleshooting.md
   - Datasets:
       - Corpora: datasets/corpora.md
       - BYOD: datasets/byod.md
@@ -67,3 +68,5 @@ markdown_extensions:
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+extra_css:
+  - styles/logo.css

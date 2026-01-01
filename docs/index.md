@@ -4,7 +4,7 @@
 
 Whether you're prototyping on a PC or deploying to an ultra-efficient [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/)., SoundKit provides a streamlined path from development to deployment.
 
-For production-grade deployment, SoundKit utilizes HeliaRT, Ambiq's ultra-efficient edge AI runtime. Optimized specifically for the Apollo family of SoCs, HeliaRT delivers:
+For production-grade deployment, SoundKit utilizes **HeliaRT**, Ambiq's ultra-efficient edge AI runtime. Optimized specifically for the Apollo family of SoCs, HeliaRT delivers:
 
 - Up to 3x faster inference compared to standard LiteRT (formerly TFLM) implementations.
 
@@ -12,7 +12,7 @@ For production-grade deployment, SoundKit utilizes HeliaRT, Ambiq's ultra-effici
 
 - Improved the model quantization for int16x8 support specifically designed for high-fidelity audio and speech processing.
 
-Integrated with NeuralSPOT
+Integrated with **NeuralSPOT**
 To simplify embedded development even further, SoundKit integrates with NeuralSPOT — Ambiq’s open-source software development kit for AI acceleration and system-level optimization. NeuralSPOT provides drivers, utilities, and example projects tailored for deploying ML workloads efficiently on Ambiq hardware.
 
 
