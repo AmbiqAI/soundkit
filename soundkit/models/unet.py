@@ -190,7 +190,7 @@ class unet(tf.keras.Model):
         outputs = self.encoder(x)
 
         # bottleneck rnn
-        
+
         if self.params.bottleneck == 'lstm':
             timesteps = tf.shape(outputs[-1])[1]
             out = tf.reshape(
@@ -200,8 +200,8 @@ class unet(tf.keras.Model):
                 out = self.dropout(out, training=training)
 
             out, h_state, c_state = self.rnn(out, initial_state=self.states)
-            h_state = tf.clip_by_value(h_state, -1, 1)  # assume 8 bit quantization
-            c_state = tf.clip_by_value(c_state, -128, 128 - 2**-8)  # assume 8 bit quantization
+            # h_state = tf.clip_by_value(h_state, -1, 1)  # assume 8 bit quantization
+            # c_state = tf.clip_by_value(c_state, -128, 128 - 2**-8)  # assume 8 bit quantization
             self.states[0].assign(h_state)
             self.states[1].assign(c_state)
             input_dec = tf.reshape(
