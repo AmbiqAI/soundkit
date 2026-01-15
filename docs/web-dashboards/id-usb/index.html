@@ -25,11 +25,26 @@
         padding: 8px;
         border: 1px solid #222;
         border-radius: 4px;
+        transition: all 0.2s ease;
     }
     .score-id { font-size: 10px; color: #666; }
     .score-name { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; }
     .score-val { font-size: 16px; font-weight: bold; color: #555; }
     
+    /* TRIGGER STYLING */
+    .trigger-badge {
+        background: var(--red);
+        color: white;
+        font-size: 10px;
+        margin-top: 4px;
+        padding: 2px;
+        border-radius: 2px;
+        font-weight: bold;
+        animation: blink 0.5s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
     :root { --bg: #0a0a0b; --w: #141417; --neon: #d8f41d; --red: #FF355E; --green: #00d28a; --blue: #00f0ff; --text: #DAE3E3; }
     * { box-sizing: border-box; font-family: 'Roboto Mono', monospace; }
     body { color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 30px; }
@@ -75,7 +90,6 @@
     .test-btn:hover { background: var(--blue); color: #000; }
     .testing { background: var(--blue) !important; color: #000 !important; }
 
-    /* NEW STOP BUTTON STYLE */
     .stop-btn { flex: 0.5; background: #333; color: #fff; border: 1px solid #555; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; transition: 0.2s; }
     .stop-btn:hover { background: var(--red); border-color: var(--red); }
 
@@ -271,8 +285,7 @@
 
         function performEnroll(name) {
             const id = getEnrollId(name);
-            
-            currentUserID = id; // Store which ID we are enrolling
+            currentUserID = id; 
             if (id === -2) {
                 pendingEnrollmentName = name;
                 const listDiv = document.getElementById('delList');
@@ -286,70 +299,49 @@
             }
 
             const total_enroll = getTotalEnrolled(); 
-            // MODE = 1 (Enroll)
             const payload = new Uint8Array([0, 0, 0, 0, currentMode, id, total_enroll]); 
 
             connectedPort.send(payload).then(() => {
-                console.log(`Sent Enroll for ${name} (ID:${id}, Total:${total_enroll})`);
                 const btn = document.getElementById('enrollBtn');
                 btn.innerText = `ENROLLING: ${name}`;
                 btn.classList.add('enrolling');
-                
-                // Reset other buttons
-                const testB = document.getElementById('testBtn');
-                testB.innerText = "TEST";
-                testB.classList.remove('testing');
+                document.getElementById('testBtn').innerText = "TEST";
+                document.getElementById('testBtn').classList.remove('testing');
             });
         }
 
         document.getElementById('enrollBtn').onclick = () => {
-            
             if(!connectedPort) return alert("Please Connect USB first!");
             const name = document.getElementById('enrollName').value.trim();
             if(!name) return alert("Warning: Please enter a name first!");
-            currentMode = 1; // Set mode to ENROLL
+            currentMode = 1; 
             performEnroll(name);
         };
 
         const testBtn = document.getElementById('testBtn');
         testBtn.onclick = () => {
-             currentMode = 2; // Set mode to TEST
+             currentMode = 2; 
              if(!connectedPort) return alert("Please Connect USB first!");
-             
              const total = getTotalEnrolled();
-             // MODE = 2 (Test)
              const payload = new Uint8Array([0, 0, 0, 0, currentMode, 0, total]);
-             
              connectedPort.send(payload).then(() => {
-                console.log(`Sent TEST Command (Total:${total})`);
                 testBtn.innerText = "TESTING...";
                 testBtn.classList.add('testing');
-                
-                // Reset enroll button
                 const enrollB = document.getElementById('enrollBtn');
                 enrollB.innerText = "ENROLL";
                 enrollB.classList.remove('enrolling');
             });
         };
 
-        // --- NEW: STOP BUTTON LOGIC ---
         const stopBtn = document.getElementById('stopBtn');
         stopBtn.onclick = () => {
-            currentMode = 0; // Set mode to IDLE
+            currentMode = 0; 
             if(!connectedPort) return alert("Please Connect USB first!");
-            
-            // SEND MODE 0 (IDLE / STOP)
-            // Packet: [0,0,0,0, MODE=0, ID=0, TOTAL=0] (7 bytes)
             const total = getTotalEnrolled();
             const payload = new Uint8Array([0, 0, 0, 0, 0, 0, total]);
-            
             connectedPort.send(payload).then(() => {
-                console.log("Sent STOP Command");
-                
-                // Force Reset UI
                 testBtn.innerText = "TEST";
                 testBtn.classList.remove('testing');
-                
                 const enrollB = document.getElementById('enrollBtn');
                 enrollB.innerText = "ENROLL";
                 enrollB.classList.remove('enrolling');
@@ -367,26 +359,23 @@
 
         document.getElementById('confirmDelBtn').onclick = () => {
             const nameToDelete = delInput.value.toUpperCase().trim();
-            
             if (enrollDict.hasOwnProperty(nameToDelete)) {
                 const freedId = enrollDict[nameToDelete];
                 delete enrollDict[nameToDelete];
                 usedIds[freedId] = false;
-                
                 updateDictDisplay();
                 delModal.style.display = 'none';
                 delInput.value = "";
-
                 if (pendingEnrollmentName) {
                     performEnroll(pendingEnrollmentName);
                     pendingEnrollmentName = null;
                 }
             } else {
-                alert(`Name '${nameToDelete}' not found. Please pick from the list above.`);
+                alert(`Name '${nameToDelete}' not found.`);
             }
         };
 
-        // --- STANDARD LOGIC ---
+        // --- AUDIO STATE ---
         const replayMenu = document.getElementById('replayMenu');
         replayMenu.style.display = 'none';
         let ringBufferL = new Float32Array(Math.ceil(TOTAL_SAMPLES));
@@ -399,14 +388,11 @@
         let queueEnh = [];
         let currentGainDB = 10;
         let currentGainFactor = Math.pow(10, currentGainDB / 20.0);
-        let urlStereo = null;
-        let urlRaw = null;
-        let urlEnh = null;
+        let urlStereo = null, urlRaw = null, urlEnh = null;
         let connectedPort = null; 
 
         const cWaveRaw = document.getElementById('waveRaw').getContext('2d');
         const cWaveEnh = document.getElementById('waveEnh').getContext('2d');
-        
         const generator = new MediaStreamTrackGenerator({ kind: 'audio' });
         const audioWriter = generator.writable.getWriter();
         document.getElementById('monitor').srcObject = new MediaStream([generator]);
@@ -423,77 +409,70 @@
             const type = dataView.getUint8(0);
             if (type === 0x4) { 
                 const samplesPerFrame = 320; 
-                // --- 1. NEW: Retrieve Metadata ---
-                // Offset Calculation: 4 (Header) + 1280 (Data Index) = 1284
                 const metaOffset = 1284;
                 
-                // Ensure the packet is large enough to contain the metadata
                 if (dataView.byteLength >= metaOffset + 7) {
-                    const acc_utterances_enroll = dataView.getInt8(metaOffset);      // index 1280
-                    const displayID = dataView.getInt8(metaOffset + 1);  // index 1281
+                    const acc_utterances_enroll = dataView.getInt8(metaOffset);      
+                    const displayID = dataView.getInt8(metaOffset + 1);  
                     
-                    // 1. Update the UI counter
-                    // Make sure you have <span id="enrollCount"></span> in your HTML!
                     const enrollDisplay = document.getElementById('enrollCount');
                     if (enrollDisplay) enrollDisplay.innerText = acc_utterances_enroll;
 
-                    // 2. AUTO-STOP LOGIC
+                    // AUTO-STOP Logic
                     if (currentMode === 1 && acc_utterances_enroll === 4) {
-                        console.log("Enrollment target (4) reached. Sending STOP...");
-                        
-                        // Construct the STOP payload (Mode 0)
-                        total = getTotalEnrolled();
-                        const stopPayload = new Uint8Array([0, 0, 0, 0, 0, 0, total]);
-                        
+                        const total_enr = getTotalEnrolled();
+                        const stopPayload = new Uint8Array([0, 0, 0, 0, 0, 0, total_enr]);
                         connectedPort.send(stopPayload).then(() => {
-                            currentMode = 0; // Set local state to IDLE
-                            
-                            // Reset the UI buttons
+                            currentMode = 0;
                             const enrollB = document.getElementById('enrollBtn');
                             enrollB.innerText = "ENROLL";
                             enrollB.classList.remove('enrolling');
-                            
-                            alert("Enrollment Complete! (4/4 Utterances recorded)");
+                            alert("Enrollment Complete! (4/4)");
                         });
                     }
 
-                    // 3. SCORE VISUALIZATION LOGIC
+                    // SCORE VISUALIZATION: Threshold 0.8
                     if (displayID === 1) {
                         const scoreDiv = document.getElementById('scoreDisplay');
-                        scoreDiv.style.display = 'grid'; // Make it visible
-                        scoreDiv.innerHTML = ''; // Clear previous results
+                        scoreDiv.style.display = 'grid'; 
+                        scoreDiv.innerHTML = ''; 
 
-                        // Loop through all 5 slots
                         for (let i = 0; i < 5; i++) {
                             const rawVal = dataView.getInt8(metaOffset + 2 + i);
                             const score = (rawVal / 128.0).toFixed(2);
                             
-                            // Lookup Name
                             let name = "EMPTY";
                             for (const [key, val] of Object.entries(enrollDict)) {
                                 if (val === i) name = key;
                             }
 
-                            // Highlight High Scores (e.g. > 0.6)
-                            let valColor = "#555"; // Grey (low confidence)
-                            if(score > 0.6) valColor = "var(--neon)"; // Neon (high confidence)
+                            let valColor = "#555"; 
+                            let borderColor = "#222";
+                            let triggerBadge = "";
+
+                            if(score > 0.8) { 
+                                valColor = "var(--neon)"; 
+                                borderColor = "var(--neon)";
+                                triggerBadge = `<div class="trigger-badge">TRIGGER</div>`;
+                            }
                             
                             scoreDiv.innerHTML += `
-                                <div class="score-box" style="border-color:${valColor}">
+                                <div class="score-box" style="border-color:${borderColor}">
                                     <span class="score-id">ID ${i}</span>
                                     <span class="score-name">${name}</span>
                                     <span class="score-val" style="color:${valColor}">${score}</span>
-                                </div>
-                            `;
+                                    ${triggerBadge}
+                                </div>`;
                         }
                     }
                 }
+
+                // Audio Data
                 const leftCh = new Float32Array(samplesPerFrame);
                 const rightCh = new Float32Array(samplesPerFrame);
-                const byteOffset = 4; 
                 for (let i = 0; i < samplesPerFrame; i++) {
-                    const rawL = dataView.getInt16(byteOffset + (i * 4), true);
-                    const rawR = dataView.getInt16(byteOffset + (i * 4) + 2, true);
+                    const rawL = dataView.getInt16(4 + (i * 4), true);
+                    const rawR = dataView.getInt16(4 + (i * 4) + 2, true);
                     leftCh[i] = (rawL / 32768.0) * currentGainFactor;
                     rightCh[i] = (rawR / 32768.0);
                 }
@@ -508,6 +487,7 @@
                 queueRaw.push(leftCh);
                 queueEnh.push(rightCh);
                 if(isRecording) audioWorker.postMessage({ type: 'PROCESS_CHUNK', payload: { left: leftCh, right: rightCh } });
+                
                 const planar = new Float32Array(samplesPerFrame * 2);
                 planar.set(leftCh, 0);
                 planar.set(rightCh, samplesPerFrame);
@@ -516,6 +496,7 @@
                     numberOfFrames: samplesPerFrame, timestamp: audioTime * 1000000, data: planar
                 })).catch(e=>{});
                 audioTime += samplesPerFrame / SAMPLE_RATE;
+
             } else if (type === 0x2 || type === 0x3) { 
                 if (dataView.byteLength >= 7) {
                     const lat = dataView.getUint32(3, true); 
@@ -524,14 +505,12 @@
                         const percent = (lat / 10000.0) * 100;
                         const elLoad = document.getElementById('aiLoad');
                         elLoad.innerText = percent.toFixed(1) + "%";
-                        if (percent > 100) elLoad.style.color = "var(--red)";
-                        else elLoad.style.color = "var(--text)";
+                        elLoad.style.color = (percent > 100) ? "var(--red)" : "var(--text)";
                     }
                 }
             }
         }
 
-        let packetCount = 0;
         function handleIncomingChunk(dataView) {
             const newBytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
             if (rxPtr + newBytes.length > rxBuffer.length) rxPtr = 0; 
@@ -543,15 +522,11 @@
                 const type = rxBuffer[0];
                 let needed = 0;
                 if (type === 0x4) needed = PACKET_SIZE_AUDIO;      
-                else if (type === 0x2) needed = PACKET_SIZE_LATENCY; 
-                else if (type === 0x3) needed = PACKET_SIZE_LATENCY; 
+                else if (type === 0x2 || type === 0x3) needed = PACKET_SIZE_LATENCY; 
                 else if (type === 0x1) needed = 5; 
 
                 if (needed > 0 && rxPtr >= needed) {
-                    const packet = rxBuffer.slice(0, needed);
-                    const view = new DataView(packet.buffer);
-                    processPacket(view);
-                    packetCount++;
+                    processPacket(new DataView(rxBuffer.slice(0, needed).buffer));
                     rxBuffer.set(rxBuffer.subarray(needed, rxPtr), 0);
                     rxPtr -= needed;
                     processed = true;
@@ -570,65 +545,38 @@
                 queueRaw.splice(0, drop);
                 queueEnh.splice(0, drop);
             }
-            let processed = 0;
-            const maxPerFrame = 5; 
-            while(queueEnh.length > 0 && processed < maxPerFrame) {
-                queueRaw.shift(); 
-                queueEnh.shift(); 
-                processed++;
-            }
+            while(queueEnh.length > 0) { queueRaw.shift(); queueEnh.shift(); }
             document.getElementById('qLag').innerText = queueEnh.length;
-            
-            // Inside renderLoop function
-            drawWaveform(cWaveRaw, ringBufferL, '#FF355E', false); // Raw = Waveform
-            drawWaveform(cWaveEnh, ringBufferR, '#00d28a', true);  // Enh = VAD Pulse
-            
+            drawWaveform(cWaveRaw, ringBufferL, '#FF355E', false); 
+            drawWaveform(cWaveEnh, ringBufferR, '#00d28a', true);  
             requestAnimationFrame(renderLoop);
         }
         renderLoop();
 
         function drawWaveform(ctx, buffer, color, isVAD = false) {
-            const w = ctx.canvas.width;
-            const h = ctx.canvas.height;
-            const halfH = h / 2;
-            
-            ctx.fillStyle = '#000'; 
-            ctx.fillRect(0, 0, w, h);
-            
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2; // Make the logic line a bit thicker
-            ctx.beginPath();
-            
-            const bufSize = buffer.length;
-            const step = Math.floor(bufSize / w);
-
+            const w = ctx.canvas.width, h = ctx.canvas.height, halfH = h / 2;
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+            const bufSize = buffer.length, step = Math.floor(bufSize / w);
             for (let x = 0; x < w; x++) {
                 let readIdx = (writePtr + (x * step)) % bufSize;
                 let val = buffer[readIdx];
-
                 if (isVAD) {
-                    // SIMPLE STRAIGHT LINE LOGIC
-                    // If val > 0, draw high. If val is 0, draw low.
                     let y = (val > 0.1) ? (halfH - 40) : (halfH + 20);
-                    
-                    if (x === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y); // This connects the dots into a straight line
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 } else {
-                    // NORMAL AUDIO LOGIC (Keep original for the Red channel)
                     let min = 1, max = -1;
                     for (let j = 0; j < step; j += 16) {
                         let s = buffer[(readIdx + j) % bufSize];
-                        if (s < min) min = s;
-                        if (s > max) max = s;
+                        if (s < min) min = s; if (s > max) max = s;
                     }
-                    ctx.moveTo(x, halfH + (min * halfH));
-                    ctx.lineTo(x, halfH + (max * halfH));
+                    ctx.moveTo(x, halfH + (min * halfH)); ctx.lineTo(x, halfH + (max * halfH));
                 }
             }
             ctx.stroke();
         }
+
         document.getElementById('pairButton').onclick = () => {
-            if(!window.serial) return alert("Web Serial Not Found");
             serial.requestPort().then(p => p.connect().then(() => {
                 connectedPort = p; 
                 document.getElementById('status').innerText = "CONNECTED";
@@ -641,24 +589,15 @@
         recBtn.onclick = () => {
             if (!isRecording) { 
                 audioWorker.postMessage({ type: 'START_RECORDING' }); 
-                isRecording = true; 
-                recBtn.innerText = "STOP RECORDING"; 
-                recBtn.classList.add('recording');
-                replayMenu.style.display = 'none'; 
+                isRecording = true; recBtn.innerText = "STOP RECORDING"; recBtn.classList.add('recording');
             } else { 
                 audioWorker.postMessage({ type: 'GENERATE_WAV' }); 
-                isRecording = false; 
-                recBtn.innerText = "START RECORDING"; 
-                recBtn.classList.remove('recording'); 
+                isRecording = false; recBtn.innerText = "START RECORDING"; recBtn.classList.remove('recording'); 
             }
         };
 
         audioWorker.onmessage = (e) => {
             if (e.data.type === 'WAV_RESULT') {
-                if(e.data.stereo.size < 1000) return; 
-                if(urlStereo) URL.revokeObjectURL(urlStereo);
-                if(urlRaw) URL.revokeObjectURL(urlRaw);
-                if(urlEnh) URL.revokeObjectURL(urlEnh);
                 urlStereo = URL.createObjectURL(e.data.stereo);
                 urlRaw = URL.createObjectURL(e.data.monoL);
                 urlEnh = URL.createObjectURL(e.data.monoR);
@@ -668,32 +607,20 @@
 
         let wsInstance = null;
         const modal = document.getElementById('waveModal');
-        const modalTitle = document.getElementById('modalTitle');
         function openModal(url, title, color) {
             modal.style.display = 'flex';
-            modalTitle.innerText = title;
-            modalTitle.style.color = color;
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalTitle').style.color = color;
             if (wsInstance) wsInstance.destroy();
-            wsInstance = WaveSurfer.create({
-                container: '#waveContainer',
-                waveColor: color,
-                progressColor: '#fff',
-                url: url,
-                height: 150,
-                barWidth: 2,
-                cursorColor: '#fff'
-            });
-            wsInstance.on('ready', () => { wsInstance.play(); });
+            wsInstance = WaveSurfer.create({ container: '#waveContainer', waveColor: color, progressColor: '#fff', url: url, height: 150 });
+            wsInstance.on('ready', () => wsInstance.play());
         }
-        window.closeModal = () => {
-            modal.style.display = 'none';
-            if (wsInstance) wsInstance.pause();
-        };
-        document.getElementById('playRawBtn').onclick = () => { if(urlRaw) openModal(urlRaw, "RAW AUDIO REPLAY", "#FF355E"); };
-        document.getElementById('playEnhBtn').onclick = () => { if(urlEnh) openModal(urlEnh, "VAD AUDIO REPLAY", "#00d28a"); };
-        document.getElementById('modalPlayBtn').onclick = () => { if(wsInstance) wsInstance.playPause(); };
+        window.closeModal = () => { modal.style.display = 'none'; if (wsInstance) wsInstance.pause(); };
+        document.getElementById('playRawBtn').onclick = () => openModal(urlRaw, "RAW AUDIO", "#FF355E");
+        document.getElementById('playEnhBtn').onclick = () => openModal(urlEnh, "VAD AUDIO", "#00d28a");
+        document.getElementById('modalPlayBtn').onclick = () => wsInstance && wsInstance.playPause();
         document.getElementById('dlBtn').onclick = () => {
-            const a = document.createElement('a'); a.href = urlStereo; a.download = `NNSE_Capture_${Date.now()}.wav`; a.click();
+            const a = document.createElement('a'); a.href = urlStereo; a.download = `NNSE_${Date.now()}.wav`; a.click();
         };
     </script>
 </body>
