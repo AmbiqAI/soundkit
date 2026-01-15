@@ -25,16 +25,11 @@
         padding: 8px;
         border: 1px solid #222;
         border-radius: 4px;
-        min-height: 80px; /* Ensure consistent height for trigger text */
-        justify-content: center;
     }
     .score-id { font-size: 10px; color: #666; }
     .score-name { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; }
     .score-val { font-size: 16px; font-weight: bold; color: #555; }
     
-    /* NEW TRIGGER TEXT STYLE */
-    .score-trigger { font-size: 10px; font-weight: bold; letter-spacing: 1px; height: 12px; }
-
     :root { --bg: #0a0a0b; --w: #141417; --neon: #d8f41d; --red: #FF355E; --green: #00d28a; --blue: #00f0ff; --text: #DAE3E3; }
     * { box-sizing: border-box; font-family: 'Roboto Mono', monospace; }
     body { color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 30px; }
@@ -479,22 +474,15 @@
                                 if (val === i) name = key;
                             }
 
-                            // --- NEW THRESHOLD LOGIC (0.8) ---
+                            // Highlight High Scores (e.g. > 0.6)
                             let valColor = "#555"; // Grey (low confidence)
-                            let statusText = "&nbsp;"; // Blank placeholder
-
-                            if(score > 0.8) {
-                                valColor = "var(--neon)"; // Neon Green
-                                statusText = "TRIGGERED"; // Explicit trigger text
-                            }
-                            // ---------------------------------
+                            if(score > 0.6) valColor = "var(--neon)"; // Neon (high confidence)
                             
                             scoreDiv.innerHTML += `
                                 <div class="score-box" style="border-color:${valColor}">
                                     <span class="score-id">ID ${i}</span>
                                     <span class="score-name">${name}</span>
                                     <span class="score-val" style="color:${valColor}">${score}</span>
-                                    <span class="score-trigger" style="color:${valColor}">${statusText}</span>
                                 </div>
                             `;
                         }
