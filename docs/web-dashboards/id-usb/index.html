@@ -10,7 +10,7 @@
     * { box-sizing: border-box; font-family: 'Roboto Mono', monospace; }
     body { color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 30px; }
     
-    .dashboard { width: 950px; display: grid; grid-template-columns: 1fr; grid-gap: 15px; }
+    .dashboard { width: 900px; display: grid; grid-template-columns: 1fr; grid-gap: 15px; }
     .header-bar { background: var(--w); border: 1px solid #2a2a2e; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; border-radius: 4px; }
     #pairButton { background: var(--neon); border: none; color: #000; font-weight: bold; padding: 8px 24px; border-radius: 4px; cursor: pointer; }
     
@@ -22,7 +22,7 @@
     
     .is-triggering { 
         border-color: var(--red) !important; 
-        background: rgba(255, 53, 94, 0.2) !important; 
+        background: rgba(255, 53, 94, 0.15); 
         animation: trigger-flash 0.5s infinite alternate;
     }
     @keyframes trigger-flash { from { opacity: 1; } to { opacity: 0.6; } }
@@ -37,39 +37,22 @@
     canvas { width: 100%; height: 120px; background: #000; display: block; border: 1px solid #222; }
     .perf-metrics { margin-top: 10px; padding: 15px; background: #000; font-size: 13px; color: #888; display: flex; justify-content: space-between; border: 1px solid #333; }
     .metric-val { font-weight: bold; color: #fff; font-size: 16px; margin-left: 5px; }
-    
-    .controls-row { display: flex; gap: 10px; margin-top: 15px; align-items: stretch; width: 100%; height: 60px; }
-    
-    /* SLIDER CONTAINERS */
-    .gain-container { 
-        flex: 1.5; 
-        min-width: 160px;
-        display: flex; 
-        flex-direction: column; 
-        justify-content: center;
-        gap: 5px; 
-        background: #000; 
-        padding: 8px 12px; 
-        border-radius: 4px; 
-        border: 1px solid #333; 
-    }
-    .gain-label { font-size: 9px; color: #888; display: flex; justify-content: space-between; text-transform: uppercase; }
-    
-    input[type=range] { width: 100%; cursor: pointer; margin: 0; }
-    #gainSlider { accent-color: var(--neon); }
-    #threshSlider { accent-color: var(--blue); }
-
-    .btn { border: none; padding: 0 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; flex: 1; font-size: 11px; }
+    .controls-row { display: flex; gap: 15px; margin-top: 15px; align-items: center; width: 100%; }
+    .gain-container { flex: 1; display: flex; flex-direction: column; gap: 5px; background: #000; padding: 10px; border-radius: 4px; border: 1px solid #333; }
+    input[type=range] { width: 100%; accent-color: var(--neon); cursor: pointer; }
+    .btn { border: none; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; flex: 1; }
     .enroll-btn { background: var(--text); color: #000; }
     .test-btn { background: #333; color: var(--blue); border: 1px solid var(--blue); }
     .stop-btn { background: #333; color: #fff; border: 1px solid #555; }
     .export-btn { background: var(--neon); color: #000; }
-    
     .recording { background: var(--red) !important; color: #fff !important; }
-    .enrolling { background: var(--green) !important; color: #000 !important;}
+    .enrolling { background: var(--green) !important; }
     .testing { background: var(--blue) !important; color: #000 !important; }
+    .name-input { width: 120px; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; }
     
-    .name-input { width: 100px; padding: 0 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; font-weight: bold; }
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #141417; border: 1px solid #444; width: 450px; padding: 25px; border-radius: 8px; text-align: center; }
   </style>
 </head>
 <body>
@@ -96,12 +79,11 @@
 
             <div class="controls-row">
                 <div class="gain-container">
-                    <div class="gain-label"><span>Gain</span><span id="gainVal" style="color:var(--neon)">+10 dB</span></div>
+                    <div style="font-size:10px; color:#888;">GAIN: <span id="gainVal" style="color:var(--neon)">+10 dB</span></div>
                     <input type="range" id="gainSlider" min="-20" max="40" value="10">
                 </div>
-
                 <div class="gain-container" style="border-color: var(--blue);">
-                    <div class="gain-label"><span>ID Threshold</span><span id="threshVal" style="color:var(--blue)">0.80</span></div>
+                    <div style="font-size:10px; color:#888;">ID THRESHOLD: <span id="threshVal" style="color:var(--blue)">0.80</span></div>
                     <input type="range" id="threshSlider" min="0" max="100" value="80">
                 </div>
                 
@@ -112,20 +94,24 @@
                 <button id="recordBtn" class="btn export-btn">Start Recording</button>
             </div>
             
-            <div id="dictDisplay" style="font-size: 11px; color: #666; margin-top: 12px; padding-left: 5px;">Slots: [Empty]</div>
+            <div id="dictDisplay" style="font-size: 11px; color: #666; margin-top: 8px;">Slots: [Empty]</div>
             <div id="scoreDisplay" class="score-grid"></div>
+            <div id="replayMenu" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:15px;">
+                <button id="playRawBtn" class="btn stop-btn">REPLAY RAW</button>
+                <button id="playEnhBtn" class="btn stop-btn">REPLAY VAD</button>
+                <button id="dlBtn" class="btn export-btn">DOWNLOAD WAV</button>
+            </div>
         </div>
     </div>
 
-    <script src="../../../serial.js"></script>
+    <script src="serial.js"></script>
     <script>
-        let currentMode = 0;
+        let currentMode = 0, currentUserID = 0;
         let userThreshold = 0.80;
         let lastTriggerTimes = [0, 0, 0, 0, 0];
-        
         const enrollDict = {};
         const usedIds = new Array(5).fill(false);
-        const audioWorker = new Worker('../../../worker.js');
+        const audioWorker = new Worker('worker.js');
         const SAMPLE_RATE = 16000, TOTAL_SAMPLES = 800 * 320;
         
         let ringBufferL = new Float32Array(TOTAL_SAMPLES), ringBufferR = new Float32Array(TOTAL_SAMPLES);
@@ -165,18 +151,17 @@
                             currentMode = 0;
                             document.getElementById('enrollBtn').innerText = "ENROLL";
                             document.getElementById('enrollBtn').classList.remove('enrolling');
+                            alert("Enrollment Complete!");
                         });
                     }
 
                     if (displayID === 1) {
                         const scoreDiv = document.getElementById('scoreDisplay');
-                        scoreDiv.style.display = 'grid'; 
-                        scoreDiv.innerHTML = '';
+                        scoreDiv.style.display = 'grid'; scoreDiv.innerHTML = '';
                         const now = Date.now();
 
                         for (let i = 0; i < 5; i++) {
-                            const rawScore = dataView.getInt8(metaOffset + 2 + i);
-                            const score = (rawScore / 128.0).toFixed(2);
+                            const score = (dataView.getInt8(metaOffset + 2 + i) / 128.0).toFixed(2);
                             if (score > userThreshold) lastTriggerTimes[i] = now;
                             const isFlashing = (now - lastTriggerTimes[i]) < 3000;
 
@@ -202,13 +187,14 @@
                 }
                 writePtr = (writePtr + 320) % TOTAL_SAMPLES;
                 queueRaw.push(left); queueEnh.push(right);
+                if(isRecording) audioWorker.postMessage({ type: 'PROCESS_CHUNK', payload: { left, right } });
             }
         }
 
+        // WebUSB Logic
         document.getElementById('pairButton').onclick = () => {
             serial.requestPort().then(p => p.connect().then(() => {
-                connectedPort = p; 
-                document.getElementById('status').innerText = "CONNECTED";
+                connectedPort = p; document.getElementById('status').innerText = "CONNECTED";
                 p.onReceive = (data) => {
                     const bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
                     rxBuffer.set(bytes, rxPtr); rxPtr += bytes.length;
@@ -220,6 +206,7 @@
             }));
         };
 
+        // Command Buttons
         document.getElementById('enrollBtn').onclick = () => {
             const name = document.getElementById('enrollName').value.toUpperCase().trim();
             if (!name) return alert("Enter Name");
@@ -233,7 +220,6 @@
             const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold*255), 1, id, getTotalEnrolled()]);
             connectedPort.send(payload);
             document.getElementById('enrollBtn').classList.add('enrolling');
-            document.getElementById('enrollBtn').innerText = "ENROLLING";
         };
 
         document.getElementById('testBtn').onclick = () => {
@@ -241,7 +227,6 @@
             const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold*255), 2, 0, getTotalEnrolled()]);
             connectedPort.send(payload);
             document.getElementById('testBtn').classList.add('testing');
-            document.getElementById('testBtn').innerText = "TESTING";
         };
 
         document.getElementById('stopBtn').onclick = () => {
@@ -249,9 +234,7 @@
             const payload = new Uint8Array([0, 0, 0, 0, 0, 0, getTotalEnrolled()]);
             connectedPort.send(payload);
             document.getElementById('testBtn').classList.remove('testing');
-            document.getElementById('testBtn').innerText = "TEST";
             document.getElementById('enrollBtn').classList.remove('enrolling');
-            document.getElementById('enrollBtn').innerText = "ENROLL";
         };
 
         function draw() {
