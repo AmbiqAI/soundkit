@@ -6,54 +6,131 @@
   <script src="https://unpkg.com/wavesurfer.js@7"></script>
 
   <style>
+    /* NEW: Score Display Styles */
+    .score-grid {
+        display: none; /* Hidden until detection */
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+        padding: 15px;
+        background: #080808;
+        border: 1px solid #333;
+        border-radius: 4px;
+        text-align: center;
+    }
+    .score-box {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px;
+        border: 1px solid #222;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    .score-id { font-size: 10px; color: #666; }
+    .score-name { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; }
+    .score-val { font-size: 16px; font-weight: bold; color: #555; }
+    
+    /* TRIGGER STYLING */
+    .trigger-badge {
+        background: var(--red);
+        color: white;
+        font-size: 10px;
+        margin-top: 4px;
+        padding: 2px;
+        border-radius: 2px;
+        font-weight: bold;
+        animation: blink 0.5s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
     :root { --bg: #0a0a0b; --w: #141417; --neon: #d8f41d; --red: #FF355E; --green: #00d28a; --blue: #00f0ff; --text: #DAE3E3; }
     * { box-sizing: border-box; font-family: 'Roboto Mono', monospace; }
     body { color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 30px; }
     
     .dashboard { width: 900px; display: grid; grid-template-columns: 1fr; grid-gap: 15px; }
+    
     .header-bar { background: var(--w); border: 1px solid #2a2a2e; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; border-radius: 4px; }
     #pairButton { background: var(--neon); border: none; color: #000; font-weight: bold; padding: 8px 24px; border-radius: 4px; cursor: pointer; }
     
     .widget { background: var(--w); border: 1px solid #2a2a2e; padding: 20px; border-radius: 4px; display: flex; flex-direction: column; }
     
-    /* Score Grid & Flash Animation */
-    .score-grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px; padding: 15px; background: #080808; border: 1px solid #333; border-radius: 4px; text-align: center; }
-    .score-box { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid #222; border-radius: 4px; transition: all 0.2s; }
-    
-    .is-triggering { 
-        border-color: var(--red) !important; 
-        background: rgba(255, 53, 94, 0.15); 
-        animation: trigger-flash 0.5s infinite alternate;
+    .vis-grid { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        grid-template-rows: 1fr; 
+        gap: 8px; 
+        background: #000; 
+        padding: 8px; 
+        border: 1px solid #333;
+        margin-bottom: 15px; 
     }
-    @keyframes trigger-flash { from { opacity: 1; } to { opacity: 0.6; } }
-
-    .trigger-badge { background: var(--red); color: white; font-size: 10px; padding: 2px; border-radius: 2px; font-weight: bold; margin-top: 4px; }
-    .score-id { font-size: 10px; color: #666; }
-    .score-name { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; }
-    .score-val { font-size: 16px; font-weight: bold; }
-
-    /* UI Components */
-    .vis-grid { display: grid; grid-template-columns: 1fr; gap: 8px; background: #000; padding: 8px; border: 1px solid #333; margin-bottom: 15px; }
-    canvas { width: 100%; height: 120px; background: #000; display: block; border: 1px solid #222; }
-    .perf-metrics { margin-top: 10px; padding: 15px; background: #000; font-size: 13px; color: #888; display: flex; justify-content: space-between; border: 1px solid #333; }
-    .metric-val { font-weight: bold; color: #fff; font-size: 16px; margin-left: 5px; }
-    .controls-row { display: flex; gap: 15px; margin-top: 15px; align-items: center; width: 100%; }
-    .gain-container { flex: 1; display: flex; flex-direction: column; gap: 5px; background: #000; padding: 10px; border-radius: 4px; border: 1px solid #333; }
-    input[type=range] { width: 100%; accent-color: var(--neon); cursor: pointer; }
-    .btn { border: none; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; flex: 1; }
-    .enroll-btn { background: var(--text); color: #000; }
-    .test-btn { background: #333; color: var(--blue); border: 1px solid var(--blue); }
-    .stop-btn { background: #333; color: #fff; border: 1px solid #555; }
-    .export-btn { background: var(--neon); color: #000; }
-    .recording { background: var(--red) !important; color: #fff !important; }
-    .enrolling { background: var(--green) !important; }
-    .testing { background: var(--blue) !important; color: #000 !important; }
-    .name-input { width: 120px; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; }
     
-    /* Modals */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background: #141417; border: 1px solid #444; width: 450px; padding: 25px; border-radius: 8px; text-align: center; }
-  </style>
+    .panel-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; }
+    .panel-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; padding-left: 4px; }
+    canvas { width: 100%; height: 120px; background: #000; display: block; image-rendering: pixelated; border: 1px solid #222; }
+
+    .perf-metrics { 
+        margin-top: 10px; padding: 15px; background: #000; font-size: 13px; color: #888; 
+        display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;
+    }
+    .metric-box { text-align: right; }
+    .metric-val { font-weight: bold; color: #fff; font-size: 16px; margin-left: 5px; }
+
+    .controls-row { display: flex; gap: 15px; margin-top: 15px; align-items: center; }
+    
+    .export-btn { flex: 1; background: var(--neon); color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; }
+    .recording { background: var(--red) !important; color: #fff !important; }
+
+    .enroll-btn { flex: 1; background: var(--text); color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; }
+    .enrolling { background: var(--green) !important; color: #000 !important; }
+
+    .test-btn { flex: 1; background: #333; color: var(--blue); border: 1px solid var(--blue); padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; transition: 0.2s; }
+    .test-btn:hover { background: var(--blue); color: #000; }
+    .testing { background: var(--blue) !important; color: #000 !important; }
+
+    .stop-btn { flex: 0.5; background: #333; color: #fff; border: 1px solid #555; padding: 12px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; transition: 0.2s; }
+    .stop-btn:hover { background: var(--red); border-color: var(--red); }
+
+    .name-input { width: 120px; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+    .name-input::placeholder { color: #555; }
+    .dict-display { font-size: 11px; color: #666; margin-top: 8px; font-family: monospace; }
+    .dict-entry { margin-right: 10px; }
+    .dict-id { color: var(--neon); font-weight: bold; }
+
+    #replayMenu { display: none; margin-top: 15px; padding: 15px; background: #1a1a1e; border: 1px solid #333; border-radius: 4px; }
+    .replay-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .replay-btn { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #333; color: #fff; transition: 0.2s; }
+    .replay-btn:hover { background: #444; }
+    .replay-btn.raw { border-bottom: 3px solid var(--red); }
+    .replay-btn.enh { border-bottom: 3px solid var(--green); }
+    .replay-btn.dl { background: var(--neon); color: #000; }
+
+    .gain-container { flex: 2; display: flex; flex-direction: column; gap: 5px; background: #000; padding: 10px; border-radius: 4px; border: 1px solid #333; }
+    .gain-label { font-size: 10px; color: #888; display: flex; justify-content: space-between; }
+    input[type=range] { width: 100%; accent-color: var(--neon); cursor: pointer; }
+    audio { width: 100%; filter: invert(100%); }
+
+    /* MODAL OVERLAYS */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+    .modal-content { background: #141417; border: 1px solid #444; width: 800px; padding: 25px; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 20px; }
+    .modal-header { font-size: 18px; font-weight: bold; text-transform: uppercase; display: flex; justify-content: space-between; }
+    #waveContainer { width: 100%; height: 150px; background: #000; border: 1px solid #333; border-radius: 4px; }
+    .modal-controls { display: flex; justify-content: center; gap: 20px; }
+    .close-btn { background: transparent; border: 1px solid #666; color: #888; padding: 5px 15px; cursor: pointer; border-radius: 4px; }
+    .close-btn:hover { color: #fff; border-color: #fff; }
+
+    /* DELETE MODAL SPECIFIC */
+    .del-content { width: 450px !important; text-align: center; }
+    .del-warning { color: var(--red); font-weight: bold; margin-bottom: 10px; font-size: 18px; }
+    .del-input { width: 100%; padding: 15px; background: #000; border: 1px solid #444; color: #fff; border-radius: 4px; margin: 15px 0; font-size: 16px; text-transform: uppercase; }
+    
+    .del-list-container { text-align: left; background: #080808; padding: 10px; border: 1px solid #333; margin-bottom: 15px; font-size: 12px; color: #888; max-height: 100px; overflow-y: auto; }
+    .del-list-item { display: block; border-bottom: 1px solid #222; padding: 4px 0; }
+    .del-list-item:last-child { border-bottom: none; }
+    .del-list-name { color: #fff; font-weight: bold; }
+</style>
 </head>
 <body>
 
@@ -65,191 +142,486 @@
         </header>
 
         <div class="widget">
+            
             <div class="vis-grid">
-                <canvas id="waveRaw"></canvas>
-                <canvas id="waveEnh"></canvas>
+                <div class="panel-wrapper">
+                    <div class="panel-label" style="color:var(--red)">SPEECH WAVEFORM (RAW)</div>
+                    <canvas id="waveRaw" width="800" height="120"></canvas>
+                </div>
+            </div>
+
+            <div class="vis-grid">
+                <div class="panel-wrapper">
+                    <div class="panel-label" style="color:var(--green)">SPEECH WAVEFORM (ENHANCED/VAD)</div>
+                    <canvas id="waveEnh" width="800" height="120"></canvas>
+                </div>
             </div>
             
             <div class="perf-metrics">
                 <div>Queue Lag: <span id="qLag" class="metric-val" style="color:var(--neon)">0</span></div>
+                
                 <div>Utterances: <span id="enrollCount" class="metric-val" style="color:var(--blue)">0</span>/4</div>
-                <div>AI Latency: <span id="aiLat" class="metric-val" style="color:var(--green)">0</span> us</div>
-                <div>AI Load: <span id="aiLoad" class="metric-val">0%</span></div>
+                
+                <div class="metric-box">
+                    <span>AI Latency:</span> 
+                    <span id="aiLat" class="metric-val" style="color:var(--green)">0</span> us
+                </div>
+                <div class="metric-box">
+                    <span>AI Load (10ms):</span> 
+                    <span id="aiLoad" class="metric-val" style="color:var(--text)">0%</span>
+                </div>
             </div>
 
             <div class="controls-row">
                 <div class="gain-container">
-                    <div style="font-size:10px; color:#888;">GAIN: <span id="gainVal" style="color:var(--neon)">+10 dB</span></div>
-                    <input type="range" id="gainSlider" min="-20" max="40" value="10">
-                </div>
-                <div class="gain-container" style="border-color: var(--blue);">
-                    <div style="font-size:10px; color:#888;">ID THRESHOLD: <span id="threshVal" style="color:var(--blue)">0.80</span></div>
-                    <input type="range" id="threshSlider" min="0" max="100" value="80">
+                    <div class="gain-label"><span>DIGITAL GAIN (LEFT CH ONLY)</span><span id="gainVal" style="color:var(--neon); font-weight:bold;">+10 dB</span></div>
+                    <input type="range" id="gainSlider" min="-20" max="40" value="10" step="1">
                 </div>
                 
                 <input type="text" id="enrollName" class="name-input" placeholder="NAME">
-                <button id="enrollBtn" class="btn enroll-btn">ENROLL</button>
-                <button id="testBtn" class="btn test-btn">TEST</button>
-                <button id="stopBtn" class="btn stop-btn">STOP</button>
-                <button id="recordBtn" class="btn export-btn">Start Recording</button>
+                
+                <button id="enrollBtn" class="enroll-btn">ENROLL</button>
+                <button id="testBtn" class="test-btn">TEST</button>
+                <button id="stopBtn" class="stop-btn">STOP</button>
+                <button id="recordBtn" class="export-btn">Start Recording</button>
             </div>
             
-            <div id="dictDisplay" style="font-size: 11px; color: #666; margin-top: 8px;">Slots: [Empty]</div>
+            <div id="dictDisplay" class="dict-display">Slots: [Empty]</div>
+
             <div id="scoreDisplay" class="score-grid"></div>
-            <div id="replayMenu" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:15px;">
-                <button id="playRawBtn" class="btn stop-btn">REPLAY RAW</button>
-                <button id="playEnhBtn" class="btn stop-btn">REPLAY VAD</button>
-                <button id="dlBtn" class="btn export-btn">DOWNLOAD WAV</button>
+
+            <div id="replayMenu">
+                <div class="replay-grid">
+                    <button id="playRawBtn" class="replay-btn raw"><span>&#9658;</span> REPLAY RAW</button>
+                    <button id="playEnhBtn" class="replay-btn enh"><span>&#9658;</span> REPLAY VAD</button>
+                    <button id="dlBtn" class="replay-btn dl"><span>&#11015;</span> DOWNLOAD STEREO</button>
+                </div>
+            </div>
+            
+            <audio controls id="monitor" style="display:none"></audio>
+        </div>
+    </div>
+
+    <div id="waveModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle">REPLAY</span>
+                <button class="close-btn" onclick="closeModal()">CLOSE</button>
+            </div>
+            <div id="waveContainer"></div>
+            <div class="modal-controls">
+                <button id="modalPlayBtn" class="export-btn" style="width: 150px;">PLAY / PAUSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content del-content">
+            <div class="del-warning">DICTIONARY FULL (5/5)</div>
+            <div style="color:#aaa; font-size:12px;">CURRENT ENROLLMENTS:</div>
+            
+            <div id="delList" class="del-list-container"></div>
+            
+            <div style="color:#aaa;">Enter name to remove:</div>
+            <input type="text" id="delNameInput" class="del-input" placeholder="ENTER NAME TO DELETE">
+            
+            <div style="display:flex; gap:15px; width:100%;">
+                <button id="cancelDelBtn" class="close-btn" style="flex:1">CANCEL</button>
+                <button id="confirmDelBtn" class="export-btn" style="flex:1; background:var(--red); color:#fff;">DELETE & CONTINUE</button>
             </div>
         </div>
     </div>
 
     <script src="serial.js"></script>
     <script>
-        let currentMode = 0, currentUserID = 0;
-        let userThreshold = 0.80;
-        let lastTriggerTimes = [0, 0, 0, 0, 0];
-        const enrollDict = {};
-        const usedIds = new Array(5).fill(false);
+        // --- GUI State Variables ---
+        let currentMode = 0; // 0: Idle/Stop, 1: Enroll, 2: Test
+        let currentUserID = 0;
         const audioWorker = new Worker('worker.js');
-        const SAMPLE_RATE = 16000, TOTAL_SAMPLES = 800 * 320;
-        
-        let ringBufferL = new Float32Array(TOTAL_SAMPLES), ringBufferR = new Float32Array(TOTAL_SAMPLES);
-        let writePtr = 0, rxPtr = 0, rxBuffer = new Uint8Array(8192);
-        let queueRaw = [], queueEnh = [], isRecording = false;
-        let currentGainFactor = Math.pow(10, 10 / 20.0), connectedPort = null;
+        const SAMPLE_RATE = 16000; 
+        const TOTAL_SAMPLES = 800 * 320; 
+        const PACKET_SIZE_AUDIO = 1280 + 20 + 4; 
+        const PACKET_SIZE_LATENCY = 7; 
 
-        const cRaw = document.getElementById('waveRaw').getContext('2d');
-        const cEnh = document.getElementById('waveEnh').getContext('2d');
+        // --- DICTIONARY & ENROLL LOGIC ---
+        const MAX_PEOPLE = 5;
+        const enrollDict = {}; 
+        const usedIds = new Array(MAX_PEOPLE).fill(false);
+        let pendingEnrollmentName = null; 
 
-        // UI Listeners
-        document.getElementById('gainSlider').oninput = (e) => {
-            const db = parseInt(e.target.value);
-            currentGainFactor = Math.pow(10, db / 20.0);
-            document.getElementById('gainVal').innerText = (db > 0 ? '+' : '') + db + ' dB';
+        function getSortedEntries() {
+            return Object.entries(enrollDict).sort((a, b) => a[1] - b[1]);
+        }
+
+        function updateDictDisplay() {
+            const display = document.getElementById('dictDisplay');
+            const entries = getSortedEntries().map(([name, id]) => {
+                return `<span class="dict-entry"><span class="dict-id">ID ${id}</span>: ${name}</span>`;
+            }).join(" | ");
+            display.innerHTML = entries || "Slots: [Empty]";
+        }
+
+        function getEnrollId(name) {
+            const upName = name.toUpperCase().trim();
+            if (enrollDict.hasOwnProperty(upName)) return enrollDict[upName]; 
+
+            let freeId = -1;
+            for(let i=0; i<MAX_PEOPLE; i++) {
+                if(!usedIds[i]) { freeId = i; break; }
+            }
+
+            if (freeId !== -1) {
+                enrollDict[upName] = freeId;
+                usedIds[freeId] = true;
+                updateDictDisplay();
+                return freeId;
+            }
+            return -2; // Full
+        }
+
+        function getTotalEnrolled() {
+            return Object.keys(enrollDict).length;
+        }
+
+        function performEnroll(name) {
+            const id = getEnrollId(name);
+            currentUserID = id; 
+            if (id === -2) {
+                pendingEnrollmentName = name;
+                const listDiv = document.getElementById('delList');
+                listDiv.innerHTML = ""; 
+                getSortedEntries().forEach(([uName, uId]) => {
+                    listDiv.innerHTML += `<div class="del-list-item"><span style="color:var(--neon)">ID ${uId}</span>: <span class="del-list-name">${uName}</span></div>`;
+                });
+                document.getElementById('deleteModal').style.display = 'flex';
+                document.getElementById('delNameInput').focus();
+                return;
+            }
+
+            const total_enroll = getTotalEnrolled(); 
+            const payload = new Uint8Array([0, 0, 0, 0, currentMode, id, total_enroll]); 
+
+            connectedPort.send(payload).then(() => {
+                const btn = document.getElementById('enrollBtn');
+                btn.innerText = `ENROLLING: ${name}`;
+                btn.classList.add('enrolling');
+                document.getElementById('testBtn').innerText = "TEST";
+                document.getElementById('testBtn').classList.remove('testing');
+            });
+        }
+
+        document.getElementById('enrollBtn').onclick = () => {
+            if(!connectedPort) return alert("Please Connect USB first!");
+            const name = document.getElementById('enrollName').value.trim();
+            if(!name) return alert("Warning: Please enter a name first!");
+            currentMode = 1; 
+            performEnroll(name);
         };
 
-        document.getElementById('threshSlider').oninput = (e) => {
-            userThreshold = (e.target.value / 100).toFixed(2);
-            document.getElementById('threshVal').innerText = userThreshold;
+        const testBtn = document.getElementById('testBtn');
+        testBtn.onclick = () => {
+             currentMode = 2; 
+             if(!connectedPort) return alert("Please Connect USB first!");
+             const total = getTotalEnrolled();
+             const payload = new Uint8Array([0, 0, 0, 0, currentMode, 0, total]);
+             connectedPort.send(payload).then(() => {
+                testBtn.innerText = "TESTING...";
+                testBtn.classList.add('testing');
+                const enrollB = document.getElementById('enrollBtn');
+                enrollB.innerText = "ENROLL";
+                enrollB.classList.remove('enrolling');
+            });
         };
 
-        function getTotalEnrolled() { return Object.keys(enrollDict).length; }
+        const stopBtn = document.getElementById('stopBtn');
+        stopBtn.onclick = () => {
+            currentMode = 0; 
+            if(!connectedPort) return alert("Please Connect USB first!");
+            const total = getTotalEnrolled();
+            const payload = new Uint8Array([0, 0, 0, 0, 0, 0, total]);
+            connectedPort.send(payload).then(() => {
+                testBtn.innerText = "TEST";
+                testBtn.classList.remove('testing');
+                const enrollB = document.getElementById('enrollBtn');
+                enrollB.innerText = "ENROLL";
+                enrollB.classList.remove('enrolling');
+            });
+        };
+
+        const delModal = document.getElementById('deleteModal');
+        const delInput = document.getElementById('delNameInput');
+
+        document.getElementById('cancelDelBtn').onclick = () => {
+            delModal.style.display = 'none';
+            pendingEnrollmentName = null;
+            delInput.value = "";
+        };
+
+        document.getElementById('confirmDelBtn').onclick = () => {
+            const nameToDelete = delInput.value.toUpperCase().trim();
+            if (enrollDict.hasOwnProperty(nameToDelete)) {
+                const freedId = enrollDict[nameToDelete];
+                delete enrollDict[nameToDelete];
+                usedIds[freedId] = false;
+                updateDictDisplay();
+                delModal.style.display = 'none';
+                delInput.value = "";
+                if (pendingEnrollmentName) {
+                    performEnroll(pendingEnrollmentName);
+                    pendingEnrollmentName = null;
+                }
+            } else {
+                alert(`Name '${nameToDelete}' not found.`);
+            }
+        };
+
+        // --- AUDIO STATE ---
+        const replayMenu = document.getElementById('replayMenu');
+        replayMenu.style.display = 'none';
+        let ringBufferL = new Float32Array(Math.ceil(TOTAL_SAMPLES));
+        let ringBufferR = new Float32Array(Math.ceil(TOTAL_SAMPLES));
+        let writePtr = 0;
+        let isRecording = false;
+        let rxBuffer = new Uint8Array(8192); 
+        let rxPtr = 0;
+        let queueRaw = [];
+        let queueEnh = [];
+        let currentGainDB = 10;
+        let currentGainFactor = Math.pow(10, currentGainDB / 20.0);
+        let urlStereo = null, urlRaw = null, urlEnh = null;
+        let connectedPort = null; 
+
+        const cWaveRaw = document.getElementById('waveRaw').getContext('2d');
+        const cWaveEnh = document.getElementById('waveEnh').getContext('2d');
+        const generator = new MediaStreamTrackGenerator({ kind: 'audio' });
+        const audioWriter = generator.writable.getWriter();
+        document.getElementById('monitor').srcObject = new MediaStream([generator]);
+        let audioTime = 0;
+
+        document.getElementById('gainSlider').addEventListener('input', (e) => {
+            currentGainDB = parseInt(e.target.value);
+            currentGainFactor = Math.pow(10, currentGainDB / 20.0);
+            const sign = currentGainDB > 0 ? '+' : '';
+            document.getElementById('gainVal').innerText = `${sign}${currentGainDB} dB`;
+        });
 
         function processPacket(dataView) {
             const type = dataView.getUint8(0);
-            if (type === 0x4) {
+            if (type === 0x4) { 
+                const samplesPerFrame = 320; 
                 const metaOffset = 1284;
+                
                 if (dataView.byteLength >= metaOffset + 7) {
-                    const utterances = dataView.getInt8(metaOffset);
-                    const displayID = dataView.getInt8(metaOffset + 1);
-                    document.getElementById('enrollCount').innerText = utterances;
+                    const acc_utterances_enroll = dataView.getInt8(metaOffset);      
+                    const displayID = dataView.getInt8(metaOffset + 1);  
+                    
+                    const enrollDisplay = document.getElementById('enrollCount');
+                    if (enrollDisplay) enrollDisplay.innerText = acc_utterances_enroll;
 
-                    if (currentMode === 1 && utterances === 4) {
-                        const payload = new Uint8Array([0, 0, 0, 0, 0, 0, getTotalEnrolled()]);
-                        connectedPort.send(payload).then(() => {
+                    // AUTO-STOP Logic
+                    if (currentMode === 1 && acc_utterances_enroll === 4) {
+                        const total_enr = getTotalEnrolled();
+                        const stopPayload = new Uint8Array([0, 0, 0, 0, 0, 0, total_enr]);
+                        connectedPort.send(stopPayload).then(() => {
                             currentMode = 0;
-                            document.getElementById('enrollBtn').innerText = "ENROLL";
-                            document.getElementById('enrollBtn').classList.remove('enrolling');
-                            alert("Enrollment Complete!");
+                            const enrollB = document.getElementById('enrollBtn');
+                            enrollB.innerText = "ENROLL";
+                            enrollB.classList.remove('enrolling');
+                            alert("Enrollment Complete! (4/4)");
                         });
                     }
 
+                    // SCORE VISUALIZATION: Threshold 0.8
                     if (displayID === 1) {
                         const scoreDiv = document.getElementById('scoreDisplay');
-                        scoreDiv.style.display = 'grid'; scoreDiv.innerHTML = '';
-                        const now = Date.now();
+                        scoreDiv.style.display = 'grid'; 
+                        scoreDiv.innerHTML = ''; 
 
                         for (let i = 0; i < 5; i++) {
-                            const score = (dataView.getInt8(metaOffset + 2 + i) / 128.0).toFixed(2);
-                            if (score > userThreshold) lastTriggerTimes[i] = now;
-                            const isFlashing = (now - lastTriggerTimes[i]) < 3000;
-
+                            const rawVal = dataView.getInt8(metaOffset + 2 + i);
+                            const score = (rawVal / 128.0).toFixed(2);
+                            
                             let name = "EMPTY";
-                            for (const [k, v] of Object.entries(enrollDict)) { if (v === i) name = k; }
+                            for (const [key, val] of Object.entries(enrollDict)) {
+                                if (val === i) name = key;
+                            }
 
+                            let valColor = "#555"; 
+                            let borderColor = "#222";
+                            let triggerBadge = "";
+
+                            if(score > 0.8) { 
+                                valColor = "var(--neon)"; 
+                                borderColor = "var(--neon)";
+                                triggerBadge = `<div class="trigger-badge">TRIGGER</div>`;
+                            }
+                            
                             scoreDiv.innerHTML += `
-                                <div class="score-box ${isFlashing ? 'is-triggering' : ''}">
+                                <div class="score-box" style="border-color:${borderColor}">
                                     <span class="score-id">ID ${i}</span>
                                     <span class="score-name">${name}</span>
-                                    <span class="score-val" style="color:${isFlashing ? 'var(--red)' : 'var(--text)'}">${score}</span>
-                                    ${isFlashing ? '<div class="trigger-badge">TRIGGER</div>' : ''}
+                                    <span class="score-val" style="color:${valColor}">${score}</span>
+                                    ${triggerBadge}
                                 </div>`;
                         }
                     }
                 }
-                const left = new Float32Array(320), right = new Float32Array(320);
-                for (let i = 0; i < 320; i++) {
-                    left[i] = (dataView.getInt16(4 + (i * 4), true) / 32768.0) * currentGainFactor;
-                    right[i] = (dataView.getInt16(4 + (i * 4) + 2, true) / 32768.0);
-                    let idx = (writePtr + i) % TOTAL_SAMPLES;
-                    ringBufferL[idx] = left[i]; ringBufferR[idx] = right[i];
+
+                // Audio Data
+                const leftCh = new Float32Array(samplesPerFrame);
+                const rightCh = new Float32Array(samplesPerFrame);
+                for (let i = 0; i < samplesPerFrame; i++) {
+                    const rawL = dataView.getInt16(4 + (i * 4), true);
+                    const rawR = dataView.getInt16(4 + (i * 4) + 2, true);
+                    leftCh[i] = (rawL / 32768.0) * currentGainFactor;
+                    rightCh[i] = (rawR / 32768.0);
                 }
-                writePtr = (writePtr + 320) % TOTAL_SAMPLES;
-                queueRaw.push(left); queueEnh.push(right);
-                if(isRecording) audioWorker.postMessage({ type: 'PROCESS_CHUNK', payload: { left, right } });
+
+                const bufSize = ringBufferL.length;
+                for (let i = 0; i < samplesPerFrame; i++) {
+                    let idx = (writePtr + i) % bufSize;
+                    ringBufferL[idx] = leftCh[i];
+                    ringBufferR[idx] = rightCh[i];
+                }
+                writePtr = (writePtr + samplesPerFrame) % bufSize;
+                queueRaw.push(leftCh);
+                queueEnh.push(rightCh);
+                if(isRecording) audioWorker.postMessage({ type: 'PROCESS_CHUNK', payload: { left: leftCh, right: rightCh } });
+                
+                const planar = new Float32Array(samplesPerFrame * 2);
+                planar.set(leftCh, 0);
+                planar.set(rightCh, samplesPerFrame);
+                audioWriter.write(new AudioData({
+                    format: "f32-planar", sampleRate: SAMPLE_RATE, numberOfChannels: 2,
+                    numberOfFrames: samplesPerFrame, timestamp: audioTime * 1000000, data: planar
+                })).catch(e=>{});
+                audioTime += samplesPerFrame / SAMPLE_RATE;
+
+            } else if (type === 0x2 || type === 0x3) { 
+                if (dataView.byteLength >= 7) {
+                    const lat = dataView.getUint32(3, true); 
+                    if (lat > 0 && lat < 1000000) {
+                        document.getElementById('aiLat').innerText = lat;
+                        const percent = (lat / 10000.0) * 100;
+                        const elLoad = document.getElementById('aiLoad');
+                        elLoad.innerText = percent.toFixed(1) + "%";
+                        elLoad.style.color = (percent > 100) ? "var(--red)" : "var(--text)";
+                    }
+                }
             }
         }
 
-        // WebUSB Logic
+        function handleIncomingChunk(dataView) {
+            const newBytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+            if (rxPtr + newBytes.length > rxBuffer.length) rxPtr = 0; 
+            rxBuffer.set(newBytes, rxPtr);
+            rxPtr += newBytes.length;
+            let processed = true;
+            while (processed && rxPtr > 0) {
+                processed = false;
+                const type = rxBuffer[0];
+                let needed = 0;
+                if (type === 0x4) needed = PACKET_SIZE_AUDIO;      
+                else if (type === 0x2 || type === 0x3) needed = PACKET_SIZE_LATENCY; 
+                else if (type === 0x1) needed = 5; 
+
+                if (needed > 0 && rxPtr >= needed) {
+                    processPacket(new DataView(rxBuffer.slice(0, needed).buffer));
+                    rxBuffer.set(rxBuffer.subarray(needed, rxPtr), 0);
+                    rxPtr -= needed;
+                    processed = true;
+                } else if (needed === 0) {
+                    let shift = 1;
+                    while(shift < rxPtr && rxBuffer[shift] !== 0x04) shift++;
+                    rxBuffer.set(rxBuffer.subarray(shift, rxPtr), 0);
+                    rxPtr -= shift;
+                }
+            }
+        }
+
+        function renderLoop() {
+            if (queueEnh.length > 20) {
+                const drop = queueEnh.length - 20;
+                queueRaw.splice(0, drop);
+                queueEnh.splice(0, drop);
+            }
+            while(queueEnh.length > 0) { queueRaw.shift(); queueEnh.shift(); }
+            document.getElementById('qLag').innerText = queueEnh.length;
+            drawWaveform(cWaveRaw, ringBufferL, '#FF355E', false); 
+            drawWaveform(cWaveEnh, ringBufferR, '#00d28a', true);  
+            requestAnimationFrame(renderLoop);
+        }
+        renderLoop();
+
+        function drawWaveform(ctx, buffer, color, isVAD = false) {
+            const w = ctx.canvas.width, h = ctx.canvas.height, halfH = h / 2;
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+            const bufSize = buffer.length, step = Math.floor(bufSize / w);
+            for (let x = 0; x < w; x++) {
+                let readIdx = (writePtr + (x * step)) % bufSize;
+                let val = buffer[readIdx];
+                if (isVAD) {
+                    let y = (val > 0.1) ? (halfH - 40) : (halfH + 20);
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                } else {
+                    let min = 1, max = -1;
+                    for (let j = 0; j < step; j += 16) {
+                        let s = buffer[(readIdx + j) % bufSize];
+                        if (s < min) min = s; if (s > max) max = s;
+                    }
+                    ctx.moveTo(x, halfH + (min * halfH)); ctx.lineTo(x, halfH + (max * halfH));
+                }
+            }
+            ctx.stroke();
+        }
+
         document.getElementById('pairButton').onclick = () => {
             serial.requestPort().then(p => p.connect().then(() => {
-                connectedPort = p; document.getElementById('status').innerText = "CONNECTED";
-                p.onReceive = (data) => {
-                    const bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-                    rxBuffer.set(bytes, rxPtr); rxPtr += bytes.length;
-                    while (rxPtr >= 1308) {
-                        processPacket(new DataView(rxBuffer.slice(0, 1308).buffer));
-                        rxBuffer.set(rxBuffer.subarray(1308, rxPtr), 0); rxPtr -= 1308;
-                    }
-                };
+                connectedPort = p; 
+                document.getElementById('status').innerText = "CONNECTED";
+                document.getElementById('pairButton').style.background = "#FF355E";
+                p.onReceive = handleIncomingChunk; 
             }));
         };
 
-        // Command Buttons
-        document.getElementById('enrollBtn').onclick = () => {
-            const name = document.getElementById('enrollName').value.toUpperCase().trim();
-            if (!name) return alert("Enter Name");
-            let id = enrollDict[name];
-            if (id === undefined) {
-                id = usedIds.indexOf(false);
-                if (id === -1) return alert("Full");
-                enrollDict[name] = id; usedIds[id] = true;
+        const recBtn = document.getElementById('recordBtn');
+        recBtn.onclick = () => {
+            if (!isRecording) { 
+                audioWorker.postMessage({ type: 'START_RECORDING' }); 
+                isRecording = true; recBtn.innerText = "STOP RECORDING"; recBtn.classList.add('recording');
+            } else { 
+                audioWorker.postMessage({ type: 'GENERATE_WAV' }); 
+                isRecording = false; recBtn.innerText = "START RECORDING"; recBtn.classList.remove('recording'); 
             }
-            currentMode = 1;
-            const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold*255), 1, id, getTotalEnrolled()]);
-            connectedPort.send(payload);
-            document.getElementById('enrollBtn').classList.add('enrolling');
         };
 
-        document.getElementById('testBtn').onclick = () => {
-            currentMode = 2;
-            const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold*255), 2, 0, getTotalEnrolled()]);
-            connectedPort.send(payload);
-            document.getElementById('testBtn').classList.add('testing');
+        audioWorker.onmessage = (e) => {
+            if (e.data.type === 'WAV_RESULT') {
+                urlStereo = URL.createObjectURL(e.data.stereo);
+                urlRaw = URL.createObjectURL(e.data.monoL);
+                urlEnh = URL.createObjectURL(e.data.monoR);
+                replayMenu.style.display = 'block'; 
+            }
         };
 
-        document.getElementById('stopBtn').onclick = () => {
-            currentMode = 0;
-            const payload = new Uint8Array([0, 0, 0, 0, 0, 0, getTotalEnrolled()]);
-            connectedPort.send(payload);
-            document.getElementById('testBtn').classList.remove('testing');
-            document.getElementById('enrollBtn').classList.remove('enrolling');
-        };
-
-        function draw() {
-            [ {c:cRaw, b:ringBufferL, clr:'#FF355E'}, {c:cEnh, b:ringBufferR, clr:'#00d28a'} ].forEach(cfg => {
-                cfg.c.fillStyle='#000'; cfg.c.fillRect(0,0,800,120);
-                cfg.c.strokeStyle=cfg.clr; cfg.c.beginPath();
-                for(let x=0; x<800; x++) {
-                    let v = cfg.b[(writePtr + x * 128) % TOTAL_SAMPLES];
-                    cfg.c.lineTo(x, 60 + v * 60);
-                }
-                cfg.c.stroke();
-            });
-            requestAnimationFrame(draw);
+        let wsInstance = null;
+        const modal = document.getElementById('waveModal');
+        function openModal(url, title, color) {
+            modal.style.display = 'flex';
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalTitle').style.color = color;
+            if (wsInstance) wsInstance.destroy();
+            wsInstance = WaveSurfer.create({ container: '#waveContainer', waveColor: color, progressColor: '#fff', url: url, height: 150 });
+            wsInstance.on('ready', () => wsInstance.play());
         }
-        draw();
+        window.closeModal = () => { modal.style.display = 'none'; if (wsInstance) wsInstance.pause(); };
+        document.getElementById('playRawBtn').onclick = () => openModal(urlRaw, "RAW AUDIO", "#FF355E");
+        document.getElementById('playEnhBtn').onclick = () => openModal(urlEnh, "VAD AUDIO", "#00d28a");
+        document.getElementById('modalPlayBtn').onclick = () => wsInstance && wsInstance.playPause();
+        document.getElementById('dlBtn').onclick = () => {
+            const a = document.createElement('a'); a.href = urlStereo; a.download = `NNSE_${Date.now()}.wav`; a.click();
+        };
     </script>
 </body>
 </html>
