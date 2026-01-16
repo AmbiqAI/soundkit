@@ -1,8 +1,0 @@
-name: cnn2d
-channels: [1, 8, 8, 8, 8]
-dim_out_rnn: 80
-dim_out: 2
-kernel_size: [1, 5]
-activation: glu
-unroll_rnn: false
-dropout: 0.0
