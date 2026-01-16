@@ -177,6 +177,11 @@
                     <div class="gain-label"><span>DIGITAL GAIN (LEFT CH ONLY)</span><span id="gainVal" style="color:var(--neon); font-weight:bold;">+10 dB</span></div>
                     <input type="range" id="gainSlider" min="-20" max="40" value="10" step="1">
                 </div>
+
+                <div class="gain-container" style="border-color: var(--blue);">
+                    <div class="gain-label"><span>ID THRESHOLD</span><span id="threshVal" style="color:var(--blue); font-weight:bold;">0.80</span></div>
+                    <input type="range" id="threshSlider" min="0" max="100" value="80" step="1" style="accent-color: var(--blue);">
+                </div>
                 
                 <input type="text" id="enrollName" class="name-input" placeholder="NAME">
                 
@@ -237,6 +242,7 @@
         // --- GUI State Variables ---
         let currentMode = 0; // 0: Idle/Stop, 1: Enroll, 2: Test
         let currentUserID = 0;
+        let userThreshold = 0.80; // THRESHOLD VARIABLE ADDED
         const audioWorker = new Worker('worker.js');
         const SAMPLE_RATE = 16000; 
         const TOTAL_SAMPLES = 800 * 320; 
@@ -299,7 +305,8 @@
             }
 
             const total_enroll = getTotalEnrolled(); 
-            const payload = new Uint8Array([0, 0, 0, 0, currentMode, id, total_enroll]); 
+            // Mode Byte at index 4, Threshold byte at index 3
+            const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold * 255), currentMode, id, total_enroll]); 
 
             connectedPort.send(payload).then(() => {
                 const btn = document.getElementById('enrollBtn');
@@ -323,7 +330,7 @@
              currentMode = 2; 
              if(!connectedPort) return alert("Please Connect USB first!");
              const total = getTotalEnrolled();
-             const payload = new Uint8Array([0, 0, 0, 0, currentMode, 0, total]);
+             const payload = new Uint8Array([0, 0, 0, Math.floor(userThreshold * 255), currentMode, 0, total]);
              connectedPort.send(payload).then(() => {
                 testBtn.innerText = "TESTING...";
                 testBtn.classList.add('testing');
@@ -373,6 +380,12 @@
             } else {
                 alert(`Name '${nameToDelete}' not found.`);
             }
+        };
+
+        // THRESHOLD SLIDER LISTENER ADDED HERE
+        document.getElementById('threshSlider').oninput = (e) => {
+            userThreshold = (e.target.value / 100).toFixed(2);
+            document.getElementById('threshVal').innerText = userThreshold;
         };
 
         // --- AUDIO STATE ---
@@ -431,7 +444,7 @@
                         });
                     }
 
-                    // SCORE VISUALIZATION: Threshold 0.8
+                    // SCORE VISUALIZATION: Dynamic Threshold check
                     if (displayID === 1) {
                         const scoreDiv = document.getElementById('scoreDisplay');
                         scoreDiv.style.display = 'grid'; 
@@ -450,7 +463,8 @@
                             let borderColor = "#222";
                             let triggerBadge = "";
 
-                            if(score > 0.8) { 
+                            // USE userThreshold HERE
+                            if(score > userThreshold) { 
                                 valColor = "var(--neon)"; 
                                 borderColor = "var(--neon)";
                                 triggerBadge = `<div class="trigger-badge">TRIGGER</div>`;
