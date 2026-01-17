@@ -1,5 +1,0 @@
-/* Enlarge the logo in the header. Adjust width as needed. */
-.md-header__button.md-logo img, .md-logo img {
-  width: 120px !important;
-  height: auto !important;
-}
