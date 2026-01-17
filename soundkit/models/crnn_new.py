@@ -63,6 +63,18 @@ class CRNN(tf.keras.Model):
                     activation='tanh',
                     recurrent_activation='sigmoid',
                 ))
+            elif layer_def['type'] == 'gru':
+                self.output_dims.append(layer_def['units'])
+
+                self.layers_list.append(tf.keras.layers.GRU(
+                    units=layer_def['units'],
+                    return_sequences=True,
+                    unroll=params.unroll_rnn,
+                    stateful=False,
+                    return_state=True,
+                    activation='tanh',
+                    recurrent_activation='sigmoid',
+                ))
 
             elif layer_def['type'] == 'fc':
                 self.output_dims.append(layer_def['units'])
@@ -124,6 +136,14 @@ class CRNN(tf.keras.Model):
                 self.h_states.append(h_state)
                 self.c_states.append(c_state)
                 h_idx += 1
+            elif layer_def['type'] == 'gru':
+                h_state = tf.Variable(
+                    tf.zeros((params.batchsize, layer_def['units']), dtype=tf.float32),
+                    trainable=False,
+                    name=f"h_state_{h_idx}",
+                )
+                self.h_states.append(h_state)
+                h_idx += 1
         # self.reset_states(zero_state=False)
 
     def reset_states(self, zero_state=False):
@@ -173,6 +193,14 @@ class CRNN(tf.keras.Model):
                                 training = training)
                 h_state.assign(h_state_update)
                 c_state.assign(c_state_update)
+                idx_lstm += 1
+            elif config['type'] == 'gru':
+                h_state = self.h_states[idx_lstm]
+                x, h_state_update = layer(
+                                x,
+                                initial_state = h_state,
+                                training = training)
+                h_state.assign(h_state_update)
                 idx_lstm += 1
             else:
                 x = layer(x, training=training)
