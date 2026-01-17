@@ -198,6 +198,7 @@ def load_train_coros(corpus: str) -> list:
         list: List of wave file paths.
     """
     path = corpus2path_map[corpus['name']]
+
     if not os.path.exists(path):
         raise FileNotFoundError(
             f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")

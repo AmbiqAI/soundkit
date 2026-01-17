@@ -77,9 +77,8 @@ def export(params: SKTaskParams):
         ds_train, *_ = create_dataset(
             tfrecord_list['train'],
             batchsize=params.train['batchsize'],
+            hop_size=params.train['feature']['hop_size'],
             is_shuffle=True,
-            num_per_epoch_files=params.train.num_per_epoch_files.train,
-            truncate_samples=truncate_samples,
         )
         # 1. Flatten the dataset and extract the exact number of required calibration samples.
         # We discard additional labels/metadata using a map, keeping only the raw features.

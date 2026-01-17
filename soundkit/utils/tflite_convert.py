@@ -72,6 +72,7 @@ def tflite_convert(
     def dataset_example():
         shapes = model._feed_input_shapes
         shape_inputs = shapes[0]
+        timesteps = shape_inputs[1]
         if data_calibration is None:
             
             for _ in range(100):
@@ -83,16 +84,16 @@ def tflite_convert(
         # Load a few real samples from your validation set
         else:
             for sequence in data_calibration: # 10 long sequences
-
                 # Manually loop through the sequence frame-by-frame
 
                 # to simulate how the model will be used in TFLite
 
-                for t in range(sequence.shape[0]):
+                for t in range(sequence.shape[0] // timesteps):
 
                     # Reshape frame to (1, 1, 257)
-                    
-                    frame = sequence[t].reshape(shape_inputs).astype(np.float32)
+                    start = t * timesteps
+                    end = (t + 1) * timesteps
+                    frame = sequence[start:end].reshape(shape_inputs).astype(np.float32)
                     yield {"x_input": frame}
 
     model.summary()
