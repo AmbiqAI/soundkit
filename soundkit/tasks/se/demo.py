@@ -50,6 +50,7 @@ def demo(params: SKTaskParams):
     params.export['epoch_loaded'] = params.demo['epoch_loaded']
     params.export['tflite_dir'] = params.demo['tflite_dir']
     params.export["calibration_samples"] = params.demo["calibration_samples"]
+    params.export["num_frames_infer"] = params.demo["num_frames_infer"]
     params.export["dtype"] = params.demo["dtype"]
     export(params)
 
@@ -178,6 +179,7 @@ def demo_evb(
         lookahead=params.train['num_lookahead'],
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
+        num_frames_infer=params.demo["num_frames_infer"],
         feature_type=params.train['feature']['type'],
     )
 

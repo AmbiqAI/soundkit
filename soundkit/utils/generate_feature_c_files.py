@@ -21,6 +21,7 @@ def generate_feature_c_files(
     stft_win_coeff_name: str = "stft_win_coeff_w480_h160",
     filterbank_name: str | None = "filter_banks",
     feature_type: str = "mel",
+    num_frames_infer: int = 1,
     task: str = "se",
 ):
     if num_mfltrBank < 0:
@@ -28,7 +29,7 @@ def generate_feature_c_files(
         feature_qbits=15
     else:
         feature_extraction=1
-        feature_qbits=8
+        feature_qbits=15
 
     if filterbank_name is None:
         filter_name_def='\n'
@@ -110,6 +111,7 @@ PARAMS_NNSP {param_struct_name} = {{
 #define NUM_LOOKAHEAD {lookahead}
 #define FEATURE_EXTRACTION {feature_extraction}
 #define FEATURE_QBIT {feature_qbits}
+#define NUM_FRAMES_INFER {num_frames_infer}
 extern PARAMS_NNSP {param_struct_name};
 
 #endif  // __DEF_NN3_SE__

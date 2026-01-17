@@ -209,6 +209,7 @@ class ExportConfig:
     calibration_samples: int | None = None
     epoch_loaded: Any = "random"
     tflite_dir: str = ""
+    num_frames_infer: int = 1 # number of frames to infer at once
     # Check epoch_loaded
     def __post_init__(self):
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
@@ -232,6 +233,7 @@ class DemoConfig:
     nbits: int = 16
     qbits: int = 8
     calibration_samples: int | None = None
+    num_frames_infer: int = 1 # number of frames to infer at once
     num_utterances_registered: int = 4 # number of registered utterances for VAD ID
     frames_vad_trigger_id: int = 180 # number of frames to trigger VAD for ID
     # Check epoch_loaded

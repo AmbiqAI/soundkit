@@ -27,7 +27,6 @@ volatile int example_status = 0; // Prevent the compiler from optimizing out whi
 int nn_input_dim;
 int nn_output_dim;
 #define FEATURE_QBIT 15 // Q-bit for feature extraction
-#define NUM_FRAMES_INFER 1
 
 int AudioPipe_wrapper_init(AudioTaskClass *self)
 { 

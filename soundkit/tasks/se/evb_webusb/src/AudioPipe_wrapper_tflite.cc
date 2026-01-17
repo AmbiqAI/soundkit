@@ -17,7 +17,7 @@ extern int tflm_validator_model_init(ns_model_state_t *ms);
 // Feature class instance
 FeatureClass FEAT_INST;
 IIR_CLASS dcrm_inst;
-#define NUM_FRAMES_INFER 1
+
 // TFLM Config
 static ns_model_state_t tflm;
 

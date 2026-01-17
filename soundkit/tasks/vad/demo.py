@@ -40,6 +40,7 @@ def demo(params: SKTaskParams):
     params.export['tflite_dir'] = params.demo['tflite_dir']
     params.export["dtype"] = params.demo["dtype"]
     params.export["calibration_samples"] = params.demo["calibration_samples"]
+    params.export["num_frames_infer"] = params.demo["num_frames_infer"]
     export(params)
     if params.demo.platform == 'evb':
         demo_evb(params, tflite_path_src)
@@ -158,6 +159,7 @@ def demo_evb(
         stft_win_coeff_name=stft_win_name,
         filterbank_name=filterbank_name,
         task=params.project,
+        num_frames_infer=params.demo["num_frames_infer"],
         feature_type=params.train['feature']['type'],
     )
 
