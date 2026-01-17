@@ -326,10 +326,6 @@ def demo_pc(
         params.export["dtype"] = params.demo["dtype"]
         export(params)
 
-        interpreter = tf.lite.Interpreter(
-            model_path=str(tflite_path_src)
-            )
-
         if params.train.standardization:
             stats = load_feat_stats(
                 params.train['path']['checkpoint_dir'],
@@ -337,7 +333,7 @@ def demo_pc(
         else:
             stats = None
 
-        return feat_extractor, stats, tflite_path_src
+        return feat_extractor, stats, str(tflite_path_src)
 
     class IDModel:
         """VAD model class in tflite for processing audio input and returning VAD output."""
@@ -387,12 +383,8 @@ def demo_pc(
 
             self.models_tflite = {}
             for key, tflite_path_src in self.tflite_path_srcs.items():
-                interpreter = tf.lite.Interpreter(
-                    model_path=str(tflite_path_src)
-                )
-                interpreter.allocate_tensors()
                 self.models_tflite[key] = TFLiteAudioModel(
-                    interpreter=interpreter,
+                    interpreter_path=tflite_path_src,
                     dtype=params_list[key].demo.dtype,)
 
         def __call__(self,

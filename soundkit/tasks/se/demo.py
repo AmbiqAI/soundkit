@@ -333,18 +333,13 @@ def demo_pc(
     )
     hop_size = params.train.feature.hop_size
 
-    interpreter = tf.lite.Interpreter(
-        model_path=str(tflite_path_src)
-    )
-    interpreter.allocate_tensors()  # Needed before execution!
-
     if params.train.standardization:
         stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
     else:
         stats = None
 
     model_tflite = TFLiteAudioModel(
-        interpreter=interpreter,
+        interpreter_path=str(tflite_path_src),
         dtype=params.demo['dtype'],
     )
 

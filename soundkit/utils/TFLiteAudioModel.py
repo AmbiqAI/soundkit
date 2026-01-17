@@ -25,7 +25,7 @@ class TFLiteAudioModel:
     """
     def __init__(
         self,
-        interpreter: tf.lite.Interpreter,
+        interpreter_path: str,
         dtype: str = "float32",
         *args, **kwargs
     ):
@@ -36,19 +36,19 @@ class TFLiteAudioModel:
         TFLite model inference, and basic post-processing.
 
         Args:
-            interpreter (tf.lite.Interpreter): Loaded TFLite interpreter.
+            interpreter_path (str): Path to the TFLite interpreter file.
             hop_size (int): Output granularity in samples (used for reshaping).
             stats (dict | None): Optional normalization stats with keys 'nMean_feat' and 'nInvStd'.
             dtype (str): Input/output precision, e.g., 'float32', 'int8', or 'int16'.
         """
         super().__init__(*args, **kwargs)
-        
-        self.interpreter = interpreter
+        self.interpreter_path = interpreter_path
+        self.interpreter = tf.lite.Interpreter(model_path=interpreter_path)
+        self.interpreter.allocate_tensors()  # Needed before execution!
         self.dtype = dtype
 
-        self.input_details = interpreter.get_input_details()[0]
-        self.output_details = interpreter.get_output_details()[0]
-
+        self.input_details = self.interpreter.get_input_details()[0]
+        self.output_details = self.interpreter.get_output_details()[0]
 
         print_model_inputs(self.interpreter)
 
@@ -94,5 +94,6 @@ class TFLiteAudioModel:
     def reset(self):
         """Reset the TFLite model state."""
         # self.interpreter.reset_all_variables() # doesn't work
+        self.interpreter = tf.lite.Interpreter(model_path=self.interpreter_path)
         self.interpreter.allocate_tensors()  # Reallocate tensors to reset state
 

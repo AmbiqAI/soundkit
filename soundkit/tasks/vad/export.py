@@ -93,7 +93,7 @@ def export(params: SKTaskParams):
         data_calibration=params.export.calibration_samples,
     )
 
-    vad_model = build_vad_tflite(params, tflite_path_src)
+    vad_model = build_vad_tflite(params, str(tflite_path_src))
 
     if params.export.eval:
         corpus={"name": "vad_dev-clean", "type": "speech", "split": "val"}
@@ -172,10 +172,6 @@ def build_vad_tflite(
         mel_bins=mel_bins,
     )
 
-    interpreter = tf.lite.Interpreter(
-        model_path=str(tflite_path_src))
-
-    interpreter.allocate_tensors()  # Needed before execution!
 
     if params.train.standardization:
         stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
@@ -183,7 +179,7 @@ def build_vad_tflite(
         stats = None
 
     model_tflite = TFLiteAudioModel(
-        interpreter=interpreter,
+        interpreter_path=str(tflite_path_src),
         dtype=params.export.dtype,
     )
 

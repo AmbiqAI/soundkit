@@ -315,17 +315,13 @@ def demo_pc(
     # 1.1. Build the model
     # Load from YAML file
 
-    interpreter = tf.lite.Interpreter(
-        model_path=str(tflite_path_src))
-    interpreter.allocate_tensors()  # Needed before execution!
-
     if params.train.standardization:
         stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
     else:
         stats = None
 
     model_tflite = TFLiteAudioModel(
-        interpreter=interpreter,
+        interpreter_path=str(tflite_path_src),
         dtype=params.demo.dtype,
     )
 
@@ -336,19 +332,28 @@ def demo_pc(
                 model_tflite: TFLiteAudioModel,
                 feat_extractor: FeatureExtractor_np,
                 stats: dict | None = None):
+            self.num_frames_infer = params.demo.num_frames_infer
             self.model_tflite = model_tflite
             self.stats = stats
             self.feat_extractor = feat_extractor
             if params.data.signal.dc_removal:
                 self.dc_remover = DCRemover()
-            self.reset()
+            
             self.trigger_counts = 0
-
+            self.trigger = 0
+            self.reset()
         def reset(self):
             """Reset the model state if needed."""
             # This is a no-op for TFLite models, but can be overridden if needed.
             self.feat_extractor.reset()
             self.model_tflite.reset()
+            self.count_infer=0
+            self.outputs = np.zeros(160, dtype=np.float32)
+            if self.num_frames_infer > 1:
+                self.features_queue = [
+                    feat_extractor(np.zeros(params.train.feature.hop_size, dtype=np.float32))[0] \
+                        for _ in range(self.num_frames_infer)]
+
             if params.data.signal.dc_removal:
                 self.dc_remover.reset()
 
@@ -361,26 +366,35 @@ def demo_pc(
             if params.data.signal.dc_removal:
                 inputs = self.dc_remover.process(inputs)
             features,_ = self.feat_extractor(inputs)
-
+            
             if self.stats is not None:
                 features = (features - self.stats['nMean_feat']) * self.stats['nInvStd']
+            if self.num_frames_infer > 1:
+                self.features_queue.pop(0)
+                self.features_queue.append(features)
+                features = np.concatenate(self.features_queue, axis=0)
+            if self.count_infer == 0:
+                # input to the tflite model
+                features = features.reshape((1, self.num_frames_infer, -1)) # reshape to (batch_size, time_steps, dim_feat)
 
-            # input to the tflite model
-            features = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-            outputs = self.model_tflite(features)
-            outputs = outputs.flatten()
-            if 1:
-                if outputs[0] < outputs[1]:
-                    outputs = np.ones(160, dtype=np.float32)*0.95
-                else:
-                    outputs = np.zeros(160, dtype=np.float32)
-            else: # softmax
-                sum_exp = np.exp(outputs[0]) + np.exp(outputs[1])
-                outputs[0] = np.exp(outputs[0]) / sum_exp
-                outputs[1] = np.exp(outputs[1]) / sum_exp
-                outputs = np.ones(160, dtype=np.float32)*outputs[1]
-            outputs = outputs.reshape(shape)
-            return outputs
+                outputs = self.model_tflite(features)
+                outputs = outputs.flatten()
+
+                if 1:
+                    if outputs[0] < outputs[1]:
+                        self.outputs = np.ones(160, dtype=np.float32)*0.95
+                    else:
+                        self.outputs = np.zeros(160, dtype=np.float32)
+                else: # softmax
+                    sum_exp = np.exp(outputs[0]) + np.exp(outputs[1])
+                    outputs[0] = np.exp(outputs[0]) / sum_exp
+                    outputs[1] = np.exp(outputs[1]) / sum_exp
+                    self.outputs = np.ones(160, dtype=np.float32)*outputs[1]
+            self.count_infer+=1
+            if self.count_infer==self.num_frames_infer:
+                self.count_infer=0
+            self.outputs = self.outputs.reshape(shape)
+            return self.outputs
 
     kws_model = KwsModel(
         model_tflite=model_tflite,

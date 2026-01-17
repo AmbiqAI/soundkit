@@ -52,13 +52,13 @@ def export(params: SKTaskParams):
         params,
         batchsize=batchsize,
         dim_feat=dim_feat,
-        time_steps=1,
+        time_steps=params.export.num_frames_infer,
         export=True)
     copy_model_weights(model_dst=model, model_src=model_train)
 
     model_wrap = warp_tf_model(
         model,
-        time_steps=1,
+        time_steps=params.export.num_frames_infer,
         dim_feat=dim_feat)
 
     path_tflite = f'{params.export["tflite_dir"]}/{params.name}_{params.export.dtype}.tflite'

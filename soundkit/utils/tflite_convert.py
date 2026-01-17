@@ -71,9 +71,9 @@ def tflite_convert(
 
     def dataset_example():
         shapes = model._feed_input_shapes
-
+        shape_inputs = shapes[0]
         if data_calibration is None:
-            shape_inputs = shapes[0]
+            
             for _ in range(100):
                 x = np.random.uniform(
                     min_val, max_val,
@@ -91,8 +91,8 @@ def tflite_convert(
                 for t in range(sequence.shape[0]):
 
                     # Reshape frame to (1, 1, 257)
-                    shape = shapes[0]
-                    frame = sequence[t].reshape(shape).astype(np.float32)
+                    
+                    frame = sequence[t].reshape(shape_inputs).astype(np.float32)
                     yield {"x_input": frame}
 
     model.summary()
