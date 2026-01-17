@@ -74,6 +74,7 @@ int AudioPipe_wrapper_init(void)
         params_nn3_se.winsize_stft, // FEATURE_WINSIZE,
         params_nn3_se.hopsize_stft, // FEATURE_HOPSIZE,
         params_nn3_se.fftsize, // FEATURE_FFTSIZE,
+        NUM_FRAMES_INFER, // num_frames_infer
         params_nn3_se.pt_stft_win_coeff,
         params_nn3_se.p_melBanks,
         params_nn3_se.feature_type);

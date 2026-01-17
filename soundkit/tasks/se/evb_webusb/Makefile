@@ -28,7 +28,13 @@ sources += $(wildcard src/ns-core/$(BOARD)/$(COMPDIR)/*.c)
 sources += $(wildcard src/ns-core/$(BOARD)/$(COMPDIR)/*.cc)
 sources += $(wildcard src/ns-core/$(BOARD)/$(COMPDIR)/*.cpp)
 sources += $(wildcard src/ns-core/$(BOARD)/$(COMPDIR)/*.s)
-
+# --- ADD THIS SECTION ---
+# Add ns-nnsp sources
+sources += $(wildcard ../../../ns-nnsp/src/*.c)
+sources += $(wildcard ../../../ns-nnsp/src/*.cc)
+sources += $(wildcard ../../../ns-nnsp/src/*.cpp)
+sources += $(wildcard ../../../ns-nnsp/src/*.s)
+# ------------------------
 
 targets  := $(BINDIR)/$(local_app_name).axf
 targets  += $(BINDIR)/$(local_app_name).bin
@@ -38,7 +44,9 @@ dependencies = $(subst .o,.d,$(objects))
 
 CFLAGS     += $(addprefix -D,$(DEFINES))
 CFLAGS     += $(addprefix -I includes/,$(INCLUDES))
-
+# --- ADD THIS LINE ---
+# Add ns-nnsp include path
+CFLAGS     += -I../../../ns-nnsp/includes-api
 ifeq ($(ARCH),apollo5)
 ifeq ($(TOOLCHAIN),arm)
 LINKER_FILE := src/ns-core/$(BOARD)/$(COMPDIR)/linker_script_$(BOOTLOADER).sct

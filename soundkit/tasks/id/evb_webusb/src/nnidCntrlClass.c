@@ -249,6 +249,7 @@ int16_t nnidCntrlClass_exec(
 
 		AudioPipe_wrapper_reset(pt_vad);
 		AudioPipe_wrapper_reset(pt_id);
+		nnidCntrlClass_resetPcmBufClass(pt_inst);
 
 	}
 	return is_detected;

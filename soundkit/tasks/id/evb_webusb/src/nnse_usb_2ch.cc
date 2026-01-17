@@ -27,7 +27,7 @@
 
 // --- CONFIGURATION ---
 #define NUM_CHANNELS 1
-#define MAX_ENCODED_LEN 1300 
+#define MAX_ENCODED_LEN 1536 
 #define XBUFSIZE 2560 
 
 // --- GLOBAL VARIABLES ---
@@ -67,7 +67,7 @@ typedef struct __attribute__((packed)) usb_data {
     uint8_t data[MAX_ENCODED_LEN];
 } usb_data_t;
 
-alignas(16) usb_data_t data;
+alignas(16) static usb_data_t data;
 
 // --- TASKS & HANDLES ---
 TaskHandle_t audio_task_handle;  
@@ -152,9 +152,9 @@ typedef struct {
 
 volatile packet_meta_t g_packetMeta = {0};
 
-
+alignas(16) static int16_t rawPCM[LEN_STFT_HOP];
 void audioTask(void *pvParameters) {
-    static int16_t rawPCM[LEN_STFT_HOP];
+    
     float16_t corr[5];
     
     while (1) {
@@ -287,12 +287,10 @@ extern "C" {
             {
                 ns_printf("id = %d: \n", buf[5]);
                 g_cmdID   = buf[5]; // 0-indexed
+                nnidControl_inst.id_enroll_ppl = g_cmdID;
+                g_totalEnrolled = buf[6];
+                nnidControl_inst.total_enroll_ppls = g_totalEnrolled;
             }
-            nnidControl_inst.id_enroll_ppl = g_cmdID;
-
-            g_totalEnrolled = buf[6];
-            nnidControl_inst.total_enroll_ppls = g_totalEnrolled;
-            
             g_newCommand = true;
         }
 
@@ -321,8 +319,8 @@ extern "C" {
 
 void setup_task(void *pvParameters) {
     ns_lp_printf("Setting up Tasks...\n");
-    xTaskCreate(audioTask, "AudioTask", 8912, 0, 3, &audio_task_handle);
-    xTaskCreate(encodeAndXferTask, "SenderTask", 2048, 0, 3, &encode_task_handle);
+    xTaskCreate(audioTask, "AudioTask", 6144, 0, 3, &audio_task_handle);
+    xTaskCreate(encodeAndXferTask, "SenderTask", 4096, 0, 3, &encode_task_handle);
     vTaskSuspend(NULL);
     while (1);
 }
@@ -357,7 +355,7 @@ int main(void) {
     nnidCntrlClass_init(&nnidControl_inst);
     nnidCntrlClass_reset(&nnidControl_inst);
 
-    xTaskCreate(setup_task, "Setup", 512, 0, 1, &my_xSetupTask);
+    xTaskCreate(setup_task, "Setup", 2048, 0, 1, &my_xSetupTask);
 
     vTaskStartScheduler();
     while (1) {};
