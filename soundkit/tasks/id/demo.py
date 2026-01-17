@@ -337,7 +337,7 @@ def demo_pc(
         else:
             stats = None
 
-        return feat_extractor, stats, interpreter
+        return feat_extractor, stats, tflite_path_src
 
     class IDModel:
         """VAD model class in tflite for processing audio input and returning VAD output."""
@@ -366,15 +366,15 @@ def demo_pc(
 
         def vad_init(self):
             """Initialize the model state."""
-            self.interpreters = {}
+            self.tflite_path_srcs = {}
             self.stats_list = {}
             self.feat_extractors = {}
 
             for key, params in params_list.items():
-                feat_extractor, stats, interpreter = init_model_artifacts(params)
+                feat_extractor, stats, tflite_path_src = init_model_artifacts(params)
                 self.feat_extractors[key] = feat_extractor
                 self.stats_list[key] = stats
-                self.interpreters[key] = interpreter
+                self.tflite_path_srcs[key] = tflite_path_src
 
         def vad_reset(self):
             """Reset the model state."""
@@ -386,7 +386,10 @@ def demo_pc(
                 self.dc_removers['id'].reset()
 
             self.models_tflite = {}
-            for key, interpreter in self.interpreters.items():
+            for key, tflite_path_src in self.tflite_path_srcs.items():
+                interpreter = tf.lite.Interpreter(
+                    model_path=str(tflite_path_src)
+                )
                 interpreter.allocate_tensors()
                 self.models_tflite[key] = TFLiteAudioModel(
                     interpreter=interpreter,

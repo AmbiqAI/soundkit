@@ -57,12 +57,8 @@ The fast deploying tflite on your PC for real-time testing.
   ```bash
   soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb
   ```
-1. Turn on a the other terminal. Type
-  ```bash
-  soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb --view
-  
-  ```
-1. Press Button-0 on your EVB
+1. Go to [https://ambiqai.github.io/soundkit/docs/web-dashboards/sd-usb/](https://ambiqai.github.io/soundkit/docs/web-dashboards/sd-usb/)
+
 1. Follow the GUI instructions
 1. If you have any connection issue or no waveform showing. See the [**Troubleshooting**](../troubleshooting.md)
 ---

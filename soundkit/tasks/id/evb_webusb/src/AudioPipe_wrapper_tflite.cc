@@ -14,7 +14,7 @@
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 #include <math.h>
 // extern int tflm_validator_model_init(ns_model_state_t *ms);
-
+#define NUM_FRAMES_INFER 1
 #define MAX_NN_DIM_OUT 1024 // Number of output classes for the NN model
 // Feature class instance
 
