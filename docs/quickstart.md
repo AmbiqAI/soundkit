@@ -1,0 +1,227 @@
+# Quickstart Guide
+
+
+## **Install SoundKit**
+
+!!! note "SE Mode Selection"
+
+    === "From GitHub (Development Mode)"
+
+        ```bash
+        git clone https://github.com/AmbiqAI/soundkit.git
+        cd soundkit
+        ./install.sh
+        source .venv/bin/activate # start the soundkit on virtural env
+        ```
+    === "From PyPI"
+
+        ```bash
+        pip install soundkit
+        ```
+---
+
+## **Requirements**
+
+- Python  **3.10^+**
+
+**Optional (for EVB demo support):**
+
+- [Arm GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)  **12.2**
+- [Segger J-Link](https://www.segger.com/downloads/jlink/)  **7.92**
+
+---
+
+## **Use SoundKit with CLI**
+
+SoundKit provides a unified CLI for handling various ML tasks.
+
+!!! note "Syntax"
+
+    ```bash
+    soundkit --task [TASK] --mode [MODE] --config [CONFIG]
+    ```
+
+- **TASK**  One of: `se`, `vad`, `kws`, `id`  
+- **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`  
+- **CONFIG**  Path to your YAML config
+
+---
+
+## **Example: Speech Enhancement (SE) Workflow**
+
+!!! note "Common CLI Usage"
+
+    === "Data"
+
+        ```bash
+        soundkit -t se -m data -c configs/se/se.yaml
+        ```
+
+    === "Train"
+
+        ```bash
+        soundkit -t se -m train -c configs/se/se.yaml
+        ```
+
+        Open TensorBoard in another terminal:
+
+        ```bash
+        soundkit -t se -m train --tensorboard -c configs/se/se.yaml
+        ```
+
+        Visit [http://localhost:6006](http://localhost:6006)
+
+    === "Evaluate"
+
+        ```bash
+        soundkit -t se -m evaluate -c configs/se/se.yaml
+        ```
+
+    === "Export"
+
+        ```bash
+        soundkit -t se -m export -c configs/se/se.yaml
+        ```
+
+    === "Demo"
+
+        ```bash
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb # for amibiq evb deployment
+        soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # for pc deployment
+        
+        ```
+
+---
+
+##  Configuration Parameters (Simplified)
+
+Understand key settings in your SoundKit YAML config for SE tasks:
+
+### **Top-Level**
+
+- `name`: Name of the experiment (used in folder names)
+- `project`: Task type, e.g., `se`, `kws`, `vad`, `id`
+- `job_dir`: Where outputs (models, logs) are saved
+
+### **Data (`data`)**
+
+- `path_tfrecord`: Where TFRecords are stored
+- `corpora`: List of datasets (type: `speech`, `noise`, `reverb`)
+- `snr_dbs`: List of SNR values for noise mixing (e.g., `[0, 5, 10]`)
+- `target_length_in_secs`: Length of each audio clip (e.g., `5`)
+- `reverb_prob`: Probability to apply reverb
+- `min_amp`/`max_amp`: Controls audio amplitude range
+- `signal.sampling_rate`: Sampling rate (e.g., `16000`)
+
+### **Training (`train`)**
+
+- `initial_lr`: Learning rate
+- `batchsize`: Batch size
+- `epochs`: Total number of epochs
+- `loss_function`: Type of loss and its parameters (e.g., `mrl_mse`)
+- `feature`: Feature extraction settings (e.g., `type`, `frame_size`)
+- `model.config_file`: NN Model architecture YAML (e.g., `config_crnn.yaml`)
+
+### **Evaluation (`evaluate`)**
+
+- `data.dir`: Path to evaluation audio samples
+- `data.files`: List of test audio files
+- `result_folder`: Where results are saved
+
+### **Export (`export`)**
+
+- `tflite_dir`: Exported model path (TFLite format)
+- `epoch_loaded`: Which model checkpoint to export
+
+### **Demo (`demo`)**
+
+- `epoch_loaded`: Which model checkpoint to export
+- `platform`: `pc` or `evb` (Evaluation Board)
+- `evb_dir`: Output directory for EVB firmware
+- `param_struct_name`: Struct name for exported parameters
+---
+
+## **Overriding Config Values via OmegaConf**
+
+SoundKit uses [OmegaConf](https://omegaconf.readthedocs.io/) for configuration management. You can override any value in the config file **directly from the CLI** using `key=value` syntax (dot notation).
+
+**Example: Change platform to `evb` at runtime**
+
+```bash
+soundkit -t se -m demo -c configs/se.yaml demo.platform=evb
+```
+
+**Example: Override training batch size**
+
+```bash
+soundkit -t se -m train -c configs/se.yaml train.batchsize=64
+```
+
+To polish the **Model Zoo** section, I’ve refined the structure to be more professional, added descriptive subheadings, and used clear formatting to distinguish between the various tasks and model variants.
+
+---
+
+## 🦁 **Model Zoo**
+
+The Model Zoo contains pre-trained, high-performance models ready for immediate evaluation. You can run these on your local PC to verify performance before deploying to hardware.
+
+!!! tip "Switching to Hardware"
+    To deploy any of these models to an Ambiq Apollo EVB, simply append `demo.platform=evb` to the command.
+
+### 🎧 **Sound Enhancement (SE)**
+
+Clean noisy audio streams using state-of-the-art architectures.
+
+* **CRNN Model** (Balanced performance/efficiency):
+```bash
+soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc
+
+```
+
+
+* **UNet Model** (High-fidelity enhancement):
+```bash
+soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc
+
+```
+
+
+
+### 🗣️ **Voice Activity Detection (VAD)**
+
+Detect the presence of human speech in diverse environments.
+
+* **Frequency Domain** (Robust to stationary noise):
+```bash
+soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc
+
+```
+
+
+* **Time Domain** (End-to-end efficiency):
+```bash
+soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc
+
+```
+
+
+
+### 🔑 **Keyword Spotting (KWS)**
+
+Low-latency wake-word and command recognition.
+
+```bash
+soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
+
+```
+
+### 🆔 **Speaker Identification (ID)**
+
+Secure voice-biometrics and speaker classification.
+
+```bash
+soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
+
+```
+
+---

@@ -20,7 +20,6 @@ from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.audio import audio_read
-from .datasets import create_dataset
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,57 +85,12 @@ def export(params: SKTaskParams):
         is_complex=is_complex)
 
     path_tflite=f'{params.export["tflite_dir"]}/{params.name}_{params.export["dtype"]}.tflite'
-    
-    # Prepare calibration data for quantization if needed
-    if params.export.calibration_samples is not None:
-        tfrecord_list = {
-            'train': 
-                Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['train'],
-            'val': 
-                Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
-        }
-        truncate_samples = int(
-            params.train['truncate_time'] * params.data.signal.sampling_rate) \
-                if params.train['truncate_time'] is not None else None
-
-        ds_train, _ = create_dataset(
-            tfrecord_list['train'],
-            batchsize=params.train['batchsize'],
-            hop_size=params.train['feature']['hop_size'],
-            is_shuffle=True,
-        )
-        # 1. Flatten the dataset and extract the exact number of required calibration samples.
-        # We discard additional labels/metadata using a map, keeping only the raw features.
-        ds_collected = ds_train.unbatch() \
-                            .take(params.export.calibration_samples) \
-                            .map(lambda x, *args: x) \
-                            .batch(params.export.calibration_samples)
-
-        # 2. Materialize the dataset into a single Tensor.
-        # next(iter()) is used here to efficiently pull the first (and only) batch 
-        # into memory as a TensorFlow constant.
-        audio_sn_tf = next(iter(ds_collected))
-
-        # 3. Compute features using the GPU-accelerated extractor.
-        # We process the entire calibration set as one batch and convert to a 
-        # NumPy array only at the final step for downstream compatibility.
-        data_calibration = feat_extractor(audio_sn_tf)[0].numpy()
-
-        # for complex features-handling, split real and imaginary parts
-        if np.iscomplexobj(data_calibration):
-            data_calibration = np.stack(
-                [np.real(data_calibration), np.imag(data_calibration)],
-                axis=-1)
-
-    else:
-        data_calibration = None
-    
     tflite_fp16_model = tflite_convert(
         model_wrap,
         dtype=params.export.dtype,
         path_tflite=path_tflite,
         qbits=params.export.qbit_input,
-        data_calibration=data_calibration,
+        data_calibration=params.export.calibration_samples,
     )
 
     vad_model = build_vad_tflite(params, tflite_path_src)

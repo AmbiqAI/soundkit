@@ -1,0 +1,31 @@
+name: crnn
+output_gain: 2.0
+layer_configs:
+  - type: dropout
+    rate: 0.1
+
+  - type: conv2d
+    filters: 84
+    kernel_size: [6, 103]
+    strides: [1, 1]
+    activation: relu
+
+  - type: dropout
+    rate: 0.2
+
+  - type: lstm
+    units: 84
+
+  - type: dropout
+    rate: 0.25
+
+  - type: fc
+    units: 84
+    activation: relu
+
+  - type: dropout
+    rate: 0.25
+
+  - type: fc
+    units: 103
+    activation: sigmoid

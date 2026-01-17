@@ -1,0 +1,9 @@
+name: unet
+kernel_size_time: 2
+num_chs: [1, 42, 42, 42, 42]
+separable: true
+activation: relu
+unroll_rnn: false
+normalization_layer:
+dropout: 0.0
+bottleneck: lstm  # options: 'dpgrnn', 'lstm'
