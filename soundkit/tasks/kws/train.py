@@ -124,7 +124,6 @@ def run_epoch(
         # Extract features using streaming state
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
-        
 
         if params.train['standardization']:
             # Standardize features

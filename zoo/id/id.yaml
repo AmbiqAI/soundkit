@@ -99,10 +99,10 @@ export:
 demo:
   num_utterances_registered: 4
   frames_vad_trigger_id: 180
-  platform: pc # evb or pc
+  platform: evb # evb or pc
   epoch_loaded: 0
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb
+  evb_dir: ${job_dir}/evb_webusb
   pre_gain: 1
   dtype: int16
   filename: def_nn2_nnid

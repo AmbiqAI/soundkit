@@ -12,6 +12,7 @@
 #include "iir.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 #include <math.h>
+#define NUM_FRAMES_INFER 1
 extern int tflm_validator_model_init(ns_model_state_t *ms);
 // #define FEATURE_QBIT 15 // Q-bit for feature extraction
 // #define NN_DIM_OUT 2 // Number of output classes for the NN model
