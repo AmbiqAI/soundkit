@@ -3,21 +3,15 @@
 
 ## **Install SoundKit**
 
-!!! note "SE Mode Selection"
+---
 
-    === "From GitHub (Development Mode)"
+    ```bash
+    git clone https://github.com/AmbiqAI/soundkit.git
+    cd soundkit
+    ./install.sh
+    source .venv/bin/activate # start the soundkit on virtural env
+    ```
 
-        ```bash
-        git clone https://github.com/AmbiqAI/soundkit.git
-        cd soundkit
-        ./install.sh
-        source .venv/bin/activate # start the soundkit on virtural env
-        ```
-    === "From PyPI"
-
-        ```bash
-        pip install soundkit
-        ```
 ---
 
 ## **Requirements**
