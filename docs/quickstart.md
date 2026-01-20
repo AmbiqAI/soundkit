@@ -1,10 +1,7 @@
 # Quickstart Guide
 
-
 ## **Install SoundKit**
-
----
-
+!!! note "Syntax"
     ```bash
     git clone https://github.com/AmbiqAI/soundkit.git
     cd soundkit
