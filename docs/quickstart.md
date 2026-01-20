@@ -173,55 +173,120 @@ The Model Zoo contains pre-trained, high-performance models ready for immediate 
 Clean noisy audio streams using state-of-the-art architectures.
 
 * **CRNN Model** (Balanced performance/efficiency):
-```bash
-soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc
+!!! note "Common CLI Usage"
 
-```
+    === "pc"
+
+        ```bash
+        soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=pc
+        ```
+
+    === "evb"
+
+        ```bash
+        soundkit -t se -m demo -c zoo/se/crnn/se.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/](https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/)
+
+---
 
 
 * **UNet Model** (High-fidelity enhancement):
-```bash
-soundkit -t se -m demo -c zoo/se/unet/se_unet.yaml demo.platform=pc
 
-```
+!!! note "Common CLI Usage"
 
+    === "pc"
 
+        ```bash
+        soundkit -t se -m demo -c zoo/se/unet/se.yaml demo.platform=pc
+        ```
+
+    === "evb"
+
+        ```bash
+        soundkit -t se -m demo -c zoo/se/unet/se.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/](https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/)
+
+---
 
 ### 🗣️ **Voice Activity Detection (VAD)**
 
 Detect the presence of human speech in diverse environments.
 
 * **Frequency Domain** (Robust to stationary noise):
-```bash
-soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc
+!!! note "Common CLI Usage"
 
-```
+    === "pc"
 
+        ```bash
+        soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=pc
+        ```
+
+    === "evb"
+
+        ```bash
+        soundkit -t vad -m demo -c zoo/vad/freq_model/vad.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/](https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/)
+
+---
 
 * **Time Domain** (End-to-end efficiency):
-```bash
-soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc
+!!! note "Common CLI Usage"
 
-```
+    === "pc"
 
+        ```bash
+        soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=pc
+        ```
+
+    === "evb"
+
+        ```bash
+        soundkit -t vad -m demo -c zoo/vad/time_model/vad.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/](https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/)
+
+---
+### 🆔 **Speaker Identification (ID)**
+
+Secure voice-biometrics and speaker classification.
+
+!!! note "Common CLI Usage"
+
+    === "pc"
+
+        ```bash
+        soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
+        ```
+
+    === "evb"
+
+        ```bash
+        soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/id-usb/](https://ambiqai.github.io/soundkit/web-dashboards/id-usb/)
+
+---
 
 
 ### 🔑 **Keyword Spotting (KWS)**
 
 Low-latency wake-word and command recognition.
+!!! note "Common CLI Usage"
 
-```bash
-soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
+    === "pc"
 
-```
+        ```bash
+        soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=pc
+        ```
 
-### 🆔 **Speaker Identification (ID)**
+    === "evb"
 
-Secure voice-biometrics and speaker classification.
-
-```bash
-soundkit -t id -m demo -c zoo/id/id.yaml demo.platform=pc
-
-```
+        ```bash
+        soundkit -t kws -m demo -c zoo/kws/kws.yaml demo.platform=evb
+        ```
+        go to  [https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/](https://ambiqai.github.io/soundkit/web-dashboards/sd-usb/)
 
 ---
