@@ -6,9 +6,6 @@ from tqdm import tqdm
 import numpy as np
 import tensorflow as tf
 import soundfile as sf
-import torch
-from torchaudio.pipelines import SQUIM_OBJECTIVE
-from torchmetrics.functional.audio.dnsmos import deep_noise_suppression_mean_opinion_score
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import build_model, load_model_checkpoint
 from soundkit.utils.feature_utils import FeatureExtractor
@@ -100,7 +97,7 @@ def evaluate(params: SKTaskParams):
     # 2. Build model architecture
     # Load Model architecture from YAML file
 
-    if params.train["truncate_time"] >= params.data["target_length_in_secs"]:
+    if params.train["truncate_time"] > params.data["target_length_in_secs"]:
         raise ValueError(
             f"truncate_time {params.train['truncate_time']} cannot be greater than target_length_in_secs {params.data['target_length_in_secs']}"
         )

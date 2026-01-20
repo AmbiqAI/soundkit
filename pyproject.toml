@@ -12,10 +12,6 @@ dependencies = [
     # Core & ML
     "tensorflow[and-cuda]~=2.15.1",
     "tensorboard>=2.15,<2.16",
-    "torch~=2.7.0",
-    "torchvision~=0.22.0",
-    "torchaudio~=2.7.0",
-    "torchmetrics~=1.7.1",
 
     # Scientific and Data Utilities
     "numpy>=1.21,<2.0",

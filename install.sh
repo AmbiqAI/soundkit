@@ -77,7 +77,7 @@ echo "📦 Upgrading pip..."
 python -m pip install --upgrade pip
 
 echo "📦 Installing Python dependencies..."
-python -m pip install -e . --extra-index-url https://download.pytorch.org/whl/cu118
+python -m pip install -e .
 
 echo "---"
 echo "✅ Installation complete."

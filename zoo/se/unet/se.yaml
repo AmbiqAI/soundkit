@@ -40,6 +40,7 @@ train:
   batchsize: 32
   epochs: 160
   warmup_epochs: 5
+  truncate_time: 5.0  # in seconds, set to null to use full length
   epoch_loaded: 0
   loss_function:
     type: compressed_mse

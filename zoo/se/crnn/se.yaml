@@ -75,8 +75,8 @@ evaluate:
 
   data: 
     dir: "./wavs/se/test_wavs"
-    files: [wind_1_90sec_ch0.wav, wind_2_60sec_ch0.wav, wind_3_240sec_ch0.wav, keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
-    # files: [wind_noise.wav, keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    # files: [wind_1_90sec_ch0.wav, wind_2_60sec_ch0.wav, wind_3_240sec_ch0.wav, keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
     result_folder: ${job_dir}/test_results/${name}
 
 export:
