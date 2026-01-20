@@ -265,6 +265,7 @@ int AudioPipe_wrapper_frameProc(
         outputs[1] /= den;
         if (outputs[1] >= 0.5f) {
             trigger_kws = 1;
+            ns_printf("KWS triggered!");
         }
         else
         {

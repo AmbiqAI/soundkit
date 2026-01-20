@@ -21,10 +21,10 @@ from soundkit.utils.basic_dsp import dc_remove
 from soundkit.utils.audio import audio_read
 from soundkit.utils.plot_api import plot_spectrograms
 from soundkit.utils.tf_basic_math import tf_log10_eps
-
+from soundkit.utils.erb import ERB
 from .datasets import create_raw_tfrecord
 from .datasets import create_dataset
-
+from soundkit.utils.dnsmos_batch import DNSMOS_Batch
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -148,9 +148,22 @@ def evaluate(params: SKTaskParams):
     result_file_path = os.path.join(result_folder, "result.txt")
     result_file = open(result_file_path, "w")
     
-    for step, batch in enumerate(dataset):
-        print(f"\rEvaluating (batch) {step}/{batches}, ", end='')
+    model = build_model(
+            params,
+            batchsize=batchsize,
+            dim_feat=dim_feat,
+            time_steps=1500)
 
+    copy_model_weights(
+        model_dst=model,
+        model_src=model_train)
+
+
+    for step, batch in enumerate(dataset):
+        print(f"\rEvaluatingfloat32 (batch) {step}/{batches}, ", end='')
+
+        model.reset_states()
+        buffer_sn.reset()
         # Initialize left-over state buffers for streaming STFT
         states_audio_sn = tf.zeros(
             [batchsize, feat_params["frame_size"] - feat_params["hop_size"]],
@@ -174,7 +187,7 @@ def evaluate(params: SKTaskParams):
         feat_sn, spec_sn, states_audio_sn = feat_extractor(
             audio_sn, states=states_audio_sn)
         # Apply lookahead
-        buffer_sn.reset()
+        
         spec_sn_delay = buffer_sn.apply(spec_sn)
 
         if params.train['standardization']:
@@ -190,16 +203,6 @@ def evaluate(params: SKTaskParams):
 
         time_steps = feat_sn_norm.shape[1]
 
-        model = build_model(
-            params,
-            batchsize=batchsize,
-            dim_feat=dim_feat,
-            time_steps=1500)
-
-        copy_model_weights(
-            model_dst=model,
-            model_src=model_train)
-
         if feat_sn_norm.dtype == tf.complex64:
             inputs_nn = tf.stack(
                 [tf.math.real(feat_sn_norm),
@@ -208,14 +211,14 @@ def evaluate(params: SKTaskParams):
         else:
             inputs_nn = feat_sn_norm
     
-
+        block_size = 1500
         T = inputs_nn.shape[1]
-        blks = int(np.ceil(T / 1500))
+        blks = int(np.ceil(T / block_size))
 
         tfmask_list = []
         for b in range(blks):
-            start = b * 1500
-            end = min((b + 1) * 1500, T)
+            start = b * block_size
+            end = min((b + 1) * block_size, T)
             inputs_nn_blk = inputs_nn[:, start:end]
 
             rank = tf.rank(inputs_nn_blk)
@@ -224,7 +227,7 @@ def evaluate(params: SKTaskParams):
                 inputs_nn_blk = tf.pad(
                 inputs_nn_blk,
                 paddings=[[0, 0],
-                          [0, 1500 - (end - start)],
+                          [0, block_size - (end - start)],
                           [0, 0],
                           [0, 0]],
                 mode='CONSTANT',
@@ -233,7 +236,7 @@ def evaluate(params: SKTaskParams):
                 inputs_nn_blk = tf.pad(
                 inputs_nn_blk,
                 paddings=[[0, 0],
-                          [0, 1500 - (end - start)],
+                          [0, block_size - (end - start)],
                           [0, 0]],
                 mode='CONSTANT',
                 constant_values=0)
@@ -246,16 +249,7 @@ def evaluate(params: SKTaskParams):
 
         if feat_sn_norm.dtype == tf.complex64: # complex mask
             if params.train.feature.type == 'erb_complex':
-                from soundkit.utils.erb import ERB
-                erb = ERB(erb_subband_1=65, erb_subband_2=64)
-                
-                rr = np.array([8574, 11464, 13598, 14132, 14528, 14528, 7798, 6448, 12946, 14278, 15628, 16560, 16436, 15700, 14938, 14756, 7096, 5200, 3574, 2772, 2192, 2192, 2192, 2192, 3150, 3930, 11340, 12660, 24442, 27198, 36617, 36617, 37823, 41171, 32664, 30120, 20066, 17000, 17624, 17104, 18444, 19850, 28474, 33597, 35189, 36269, 33393, 30564, 23486, 19694, 14060, 11304, 5408, 2362, -134, -134, -134, -134, 806, 1536, 13398, 18162, 16964, 17644, 18286, 17762, 16506, 15750, 13796, 16192, 14132, 13974, 20206, 21434, 28412, 30150, 32847, 29512, 28412, 25694, 14528, 14528, 7096, 5200, 3574, 2772, 1968, 1782, 844, 298, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, -134, 8406, 11066, 3856, 1052, -282,], dtype=np.int32)
-                ii = np.array([-22, 0, 0, -22, -22, -22, 0, 0, 0, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -74, -112, -186, -186, -186, -262, -170, -150, -74, 0, -22, -22, 0, 0, -22, -96, -74, -74, -58, 22, 22, 22, 22, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 22, 22, 22, 22, -58, -38, -58, -58, -58, -74, -74, -134, -96, -112, -96, -22, -22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -22, -22, 0, 0, 0, ], dtype=np.int32)
-                
-                aa = np.stack((rr, ii), axis=0).astype(np.float32) / 32768.0
-                oo = (erb.bs(aa) * 32768.0).numpy().astype(np.int32)
-
-                
+                erb = ERB(erb_subband_1=65, erb_subband_2=64)    
                 tfmask = tf.transpose(tfmask, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
                 tfmask = erb.bs(tfmask)
                 tfmask = tf.transpose(tfmask, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
@@ -271,7 +265,6 @@ def evaluate(params: SKTaskParams):
                 mat_inv = feat_extractor.mel_filter_inv
                 tfmask = tf.matmul(tfmask, mat_inv)
             elif params.train.feature.type == 'erb_mag':
-                from soundkit.utils.erb import ERB
                 erb = ERB(erb_subband_1=65, erb_subband_2=64)
                 tfmask = erb.bs(tfmask[..., 0])
             pspec_en_delay = tfmask * pspec_sn_delay
@@ -342,56 +335,5 @@ def evaluate(params: SKTaskParams):
                 audio_en_np,
                 params.data['signal']['sampling_rate'])
             logging.info(f"Saved enhanced audio to {save_path}")
-
-        objective_model = SQUIM_OBJECTIVE.get_model()
-
-        # stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(torch.from_numpy(audio_sn.numpy()))
-
-        for type_s in ['sn', 'en']:
-            if type_s == 'sn':
-                audio = audio_sn
-            else:
-                audio = audio_en
-
-            # Calculate DNSMOS score
-
-            torch_tensor = torch.from_numpy(audio.numpy())
-            scores = deep_noise_suppression_mean_opinion_score(
-                torch_tensor,
-                params.data['signal']['sampling_rate'],
-                False)
-            print(scores)
-            tmp = objective_model(torch.from_numpy(audio.numpy()))
-            stoi_hyp[type_s] += tmp[0].detach().numpy()
-            pesq_hyp[type_s] += tmp[1].detach().numpy()
-            si_sdr_hyp[type_s] += tmp[2].detach().numpy()
-
-            np_scores[type_s] += tf.reduce_sum(scores, axis=0, keepdims=True).numpy()
-
-    metrics = ['STOI', 'PESQ', 'SI-SDR', 'DNSMOS']
-    scores = {
-        'STOI': stoi_hyp,
-        'PESQ': pesq_hyp,
-        'SI-SDR': si_sdr_hyp,
-        'DNSMOS': np_scores
-    }
-
-    # Normalize scores
-    for type_s in ['sn', 'en']:
-        for key in scores:
-            scores[key][type_s] /= (batches * batchsize)
-
-    # Print results
-    print("\nAveraged Evaluation Results:")
-    
-    result_file.write(f"Epoch {params.evaluate.epoch_loaded}: Averaged Evaluation Results:\n")
-    for metric in metrics:
-        val_sn = scores[metric]['sn']
-        val_en = scores[metric]['en']
-
-        if metric == 'DNSMOS':
-            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]\n")
-            print(f"{metric} Score: noisy {val_sn} | enhanced {val_en} [p808_mos, mos_sig, mos_bak, mos_ovr]")
-        else:
-            result_file.write(f"{metric} Score: noisy {val_sn} | enhanced {val_en}\n")
-            logging.info(f"{metric} Score: noisy {val_sn} | enhanced {val_en}")
+    runner = DNSMOS_Batch(use_gpu=False, batch_size=4)
+    runner.run_folder(result_folder)

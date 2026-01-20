@@ -110,8 +110,8 @@ class unet(tf.keras.Model):
             c_states = tf.Variable(
                                 tf.random.uniform(
                                     [self.params.batchsize, self.F * self.chs],
-                                    minval=-128,
-                                    maxval=128 - 2**-8), # assume 8 bit quantization
+                                    minval=-20,
+                                    maxval=20), # assume 8 bit quantization
                                 dtype = tf.float32,
                                 trainable = False)
             if zero_state:
@@ -153,8 +153,8 @@ class unet(tf.keras.Model):
             c_states = tf.Variable(
                                     tf.random.uniform(
                                         [self.params.batchsize, self.F * self.chs],
-                                        minval=-128,
-                                        maxval=128 - 2**-8), # assume 8 bit quantization
+                                        minval=-20,
+                                        maxval=20), # assume 8 bit quantization
                                     dtype = tf.float32,
                                     trainable = False)
             if zero_state:

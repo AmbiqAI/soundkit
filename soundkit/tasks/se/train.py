@@ -205,12 +205,52 @@ def run_epoch(
 
         model.reset_states()
         return states_audio_sn, states_audio_s
-    cali_data=[]
+
+    def random_peak_normalize(
+            states_audio_sn,
+            min_val=0.1,
+            max_val=0.9):
+        """
+        states_audio_sn: (B, T)
+        - If max amplitude > eps: Randomly scale peak to [min_val, max_val].
+        - If max amplitude <= eps: Do nothing (scale = 1.0).
+        """
+        eps = 1e-9
+
+        # 1. Find max amplitude (B, 1)
+        max_val = tf.reduce_max(tf.abs(states_audio_sn), axis=1, keepdims=True)
+
+        # 2. Generate random targets (B, 1)
+        target_peak = tf.random.uniform(
+            tf.shape(max_val), minval=min_val, maxval=max_val, dtype=states_audio_sn.dtype
+        )
+
+        # 3. Calculate the scale for the "normal" case
+        # We add eps to the denominator to prevent DivisionByZero/Inf in the calculation
+        scale_computed = target_peak / (max_val + eps)
+
+        # 4. Apply Logic:
+        # If max_val > eps  -> Use the computed random scale
+        # If max_val <= eps -> Use 1.0 (keep original signal exactly as is)
+        final_scale = tf.where(max_val > eps, scale_computed, 1.0)
+
+        return final_scale
+    states_audio_sn, states_audio_s = reset_states()
     for step, batch in enumerate(dataset):
         if params.train['reset_states_every_batch']:
-            states_audio_sn, states_audio_s = reset_states()
+            rn = tf.random.uniform([], 0, 1.0)
+            if rn < 0.5:
+                states_audio_sn, states_audio_s = reset_states()
 
         audio_sn, audio_s, _ = batch
+        gain = random_peak_normalize(
+            states_audio_sn,
+            min_val = params.data.min_amp,
+            max_val = params.data.max_amp)
+        
+        audio_sn = audio_sn * gain
+        audio_s = audio_s * gain
+        
         step_start = time.perf_counter()
 
         # Extract features using streaming state

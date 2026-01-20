@@ -240,22 +240,6 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
 
     }
 
-    // if (ps->num_mfltrBank ==257)
-    // {
-    //     pt_feature = pspec;
-    // }
-    // else
-    // {
-    //     melSpecProc(pspec, ps->feature, ps->p_melBanks, ps->num_mfltrBank);
-    //     pt_feature = ps->feature;
-    // }
-    #if AMBIQ_NNSP_DEBUG == 1
-    for (i = 0; i < ps->num_mfltrBank; i++) {
-        fprintf(file_melSpec_c, "%d ", ps->feature[i]);
-    }
-    fprintf(file_melSpec_c, "\n");
-    #endif
-    // log10_vec(ps->feature, pt_feature, ps->dim_feat, 15);
 #if AMBIQ_NNSP_DEBUG == 1
     for (i = 0; i < ps->dim_feat; i++) {
         fprintf(file_feat_c, "%d ", ps->feature[i]);
