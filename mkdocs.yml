@@ -1,4 +1,5 @@
 site_name: SoundKit
+site_url: https://ambiqai.github.io/soundkit/
 repo_url: https://github.com/AmbiqAI/soundkit
 theme:
   name: material
