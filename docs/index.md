@@ -61,3 +61,9 @@ To simplify embedded development even further, SoundKit integrates with NeuralSP
 - Run TFLite on real-time on PC.
 - Flash to [Apollo5](https://ambiq.com/apollo510/) for embedded testing.
 
+## Web Dashboards
+To visualize data from your Apollo5 EVB via WebUSB, use our dashboards:
+
+* [Launch ID Dashboard](web-dashboards/id-usb/index.html)
+* [Launch NNSE Dashboard](web-dashboards/nnse-usb/index.html)
+* [Launch SD Dashboard](web-dashboards/sd-usb/index.html)

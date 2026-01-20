@@ -8,6 +8,10 @@ theme:
     - content.code.copy
 nav:
   - Home: index.md
+  - Dashboards:
+      - ID USB Dashboard: web-dashboards/id-usb/index.html
+      - NNSE USB Dashboard: web-dashboards/nnse-usb/index.html
+      - SD USB Dashboard: web-dashboards/sd-usb/index.html
   - Quickstart: quickstart.md
   - Tasks:
       - SE:
