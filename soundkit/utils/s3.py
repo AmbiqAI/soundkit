@@ -1,15 +1,21 @@
 # soundkit/utils/s3.py
-import boto3
 import logging
 from pathlib import Path
 from tqdm import tqdm
 
+import boto3
+from botocore import UNSIGNED
+from botocore.config import Config
+
 log = logging.getLogger(__name__)
 
 class S3Manager:
-    def __init__(self, bucket_name="ambiqai-model-zoo"):
+    def __init__(self, bucket_name="ambiqai-model-zoo", s3_config: Config | None = None):
         self.bucket_name = bucket_name
-        self.s3_client = boto3.client('s3')
+        # Default to unsigned requests for public buckets to avoid credential lookup.
+        if s3_config is None:
+            s3_config = Config(signature_version=UNSIGNED)
+        self.s3_client = boto3.client("s3", config=s3_config)
 
     def download_folder(self, s3_prefix: str, local_dir: Path):
         """Recursively downloads a folder from S3 with a progress bar."""
