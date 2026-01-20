@@ -59,7 +59,7 @@ Run on the PC-based test or [Ambiq's family of ultra-low power SoCs](https://amb
   ```bash
   soundkit -t id -m demo -c configs/id/id.yaml demo.platform=evb # run on Ambiq EVB
   ```
-1. Go to [https://ambiqai.github.io/soundkit/docs/web-dashboards/id-usb/](https://ambiqai.github.io/soundkit/docs/web-dashboards/id-usb/)
+1. Go to [https://ambiqai.github.io/soundkit/web-dashboards/id-usb/](https://ambiqai.github.io/soundkit/web-dashboards/id-usb/)
 1. Follow the GUI instructions
 - If you have any connection issue or no waveform showing. See the [**Troubleshooting**](../troubleshooting.md)
 ---

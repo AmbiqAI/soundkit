@@ -48,7 +48,7 @@ demo:
     ```bash
     soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb # or evb
     ```
-- Go to [https://ambiqai.github.io/soundkit/docs/web-dashboards/nnse-usb/](https://ambiqai.github.io/soundkit/docs/web-dashboards/nnse-usb/)
+- Go to [https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/](https://ambiqai.github.io/soundkit/web-dashboards/nnse-usb/)
 - Switch raw or enhance audio via pressing Button-0 on EVB
 - If you have any connection issue or no waveform showing. See the [**Troubleshooting**](../troubleshooting.md)
 ---
