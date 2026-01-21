@@ -45,11 +45,13 @@ def unzip_with_progress(
 
 def url_download(
         url: str,
-        target_name: str) -> None:
+        target_name: str,
+        user_agent: str | None = None) -> None:
     """
     download file from url
     """
-    response = requests.get(url, stream=True)
+    headers = {"User-Agent": user_agent} if user_agent else None
+    response = requests.get(url, stream=True, headers=headers)
     print(f"Downloading {url}")
     # Sizes in bytes.
     total_size = int(response.headers.get("content-length", 0))
@@ -156,9 +158,10 @@ def corpus_download(
                 "FSD50K.dev_audio.z05",
                 "FSD50K.dev_audio.zip",
             ]
+            user_agent = "soundkit-fsd50k-download/1.0"
             for fname in fsd50_lst:
-                url = f'https://zenodo.org/record/4060432/files/{fname}?download=1'
-                url_download(url, f"./{tmp_download}/{fname}")
+                url = f'https://zenodo.org/records/4060432/files/{fname}?download=1'
+                url_download(url, f"./{tmp_download}/{fname}", user_agent=user_agent)
             os.system(f"zip -s 0 ./{tmp_download}/FSD50K.dev_audio.zip --out ./{tmp_download}/unsplit.zip")
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
 
