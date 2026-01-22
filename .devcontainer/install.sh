@@ -17,6 +17,8 @@ fi
 
 echo "🔧 Installing system dependencies..."
 sudo apt update
+sudo apt install -y git-lfs
+git lfs install
 
 # Python and build dependencies
 sudo apt install -y python3 python3-venv python3-tk python3-pyqt5
