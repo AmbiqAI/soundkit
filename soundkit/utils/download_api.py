@@ -4,9 +4,11 @@ Download the required SE training dataset
 import os
 import re
 import shutil
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import tarfile
 import zipfile
 import requests
+import time
 from tqdm import tqdm
 
 def unzip_with_progress(
@@ -46,25 +48,65 @@ def unzip_with_progress(
 def url_download(
         url: str,
         target_name: str,
-        user_agent: str | None = None) -> None:
+        user_agent: str | None = None,
+        retries: int = 3,
+        timeout: int = 30) -> None:
     """
     download file from url
     """
-    headers = {"User-Agent": user_agent} if user_agent else None
-    response = requests.get(url, stream=True, headers=headers)
-    print(f"Downloading {url}")
-    # Sizes in bytes.
-    total_size = int(response.headers.get("content-length", 0))
-    block_size = 1024  # 1 Kibibyte
+    headers = {"User-Agent": user_agent} if user_agent else {}
+    block_size = 1024 * 1024  # 1 MiB
 
-    with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
-        with open(target_name, "wb") as file:
-            for data in response.iter_content(block_size):
-                progress_bar.update(len(data))
-                file.write(data)
+    for attempt in range(1, retries + 1):
+        existing_size = 0
+        mode = "wb"
+        if os.path.exists(target_name):
+            existing_size = os.path.getsize(target_name)
+            if existing_size > 0:
+                headers["Range"] = f"bytes={existing_size}-"
+                mode = "ab"
 
-    if total_size != 0 and progress_bar.n != total_size:
-        raise RuntimeError("Could not download file")
+        try:
+            response = requests.get(url, stream=True, headers=headers, timeout=timeout)
+            print(f"Downloading {url} (attempt {attempt}/{retries})")
+            response.raise_for_status()
+
+            total_size = int(response.headers.get("content-length", 0))
+            if response.status_code == 200 and existing_size > 0:
+                # Server ignored Range; restart download.
+                mode = "wb"
+                existing_size = 0
+
+            with tqdm(
+                total=total_size + existing_size if total_size else None,
+                unit="B",
+                unit_scale=True,
+                initial=existing_size,
+            ) as progress_bar:
+                with open(target_name, mode) as file:
+                    for data in response.iter_content(block_size):
+                        if not data:
+                            continue
+                        progress_bar.update(len(data))
+                        file.write(data)
+            return
+        except (requests.RequestException, RuntimeError) as exc:
+            if isinstance(exc, requests.HTTPError) and exc.response is not None:
+                if exc.response.status_code == 416 and os.path.exists(target_name):
+                    # Requested range not satisfiable; restart from scratch.
+                    print("Server rejected Range request; restarting download from scratch.")
+                    try:
+                        os.remove(target_name)
+                    except OSError:
+                        pass
+                    if "Range" in headers:
+                        headers.pop("Range", None)
+                    continue
+            if attempt >= retries:
+                raise
+            wait_s = 2 ** attempt
+            print(f"Download error: {exc}. Retrying in {wait_s}s...")
+            time.sleep(wait_s)
 
 def corpus_download(
         corpus: str,
@@ -159,9 +201,21 @@ def corpus_download(
                 "FSD50K.dev_audio.zip",
             ]
             user_agent = "soundkit-fsd50k-download/1.0"
-            for fname in fsd50_lst:
-                url = f'https://zenodo.org/records/4060432/files/{fname}?download=1'
-                url_download(url, f"./{tmp_download}/{fname}", user_agent=user_agent)
+            max_workers = 3
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = []
+                for fname in fsd50_lst:
+                    url = f'https://zenodo.org/records/4060432/files/{fname}?download=1'
+                    futures.append(
+                        executor.submit(
+                            url_download,
+                            url,
+                            f"./{tmp_download}/{fname}",
+                            user_agent,
+                        )
+                    )
+                for future in as_completed(futures):
+                    future.result()
             os.system(f"zip -s 0 ./{tmp_download}/FSD50K.dev_audio.zip --out ./{tmp_download}/unsplit.zip")
             unzip_with_progress(f"./{tmp_download}/unsplit.zip", "./wavs/noise/FSD50K/")
 

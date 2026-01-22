@@ -48,7 +48,7 @@ Depending on your configuration and post-processing, the following files may be 
 
 Exported models can be integrated with:
 
-- TensorFlow Lite Micro (TFLM) on MCU targets (e.g., Ambiq Apollo, STM32)
+- TensorFlow Lite Micro (TFLM) on MCU targets (e.g., Ambiq Apollo)
 - Custom DSP pipelines
 - In-browser inference via WebUSB using `.tflite` and JavaScript
 
