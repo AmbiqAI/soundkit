@@ -1,11 +1,11 @@
 name: galaxy
 project: kws
-job_dir: ./soundkit/tasks/${project}
+job_dir: ./results/tasks/${project}
 
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 757
@@ -44,19 +44,19 @@ train:
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
-  loss_function: 
+  loss_function:
     type: focal # or cross_entropy
     # params: {} # for cross_entropy
-    params: 
+    params:
       gamma: 2.0
       alpha: 0.75 # for focal loss
 
   path:
-  
+
     checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
     tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
-  
+
   feature:
     frame_size: 480
     hop_size: 160
@@ -68,7 +68,7 @@ train:
     # n_mels: 72
 
   standardization: true
-  
+
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
@@ -84,7 +84,7 @@ train:
 evaluate:
   epoch_loaded: best
 
-  data: 
+  data:
     dir: "./wavs/kws/test_wavs"
     files: [galaxy_example.wav, galaxy_counter_example.wav]
     result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
@@ -100,7 +100,7 @@ demo:
   platform: pc # evb or pc
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb
+  evb_dir: ./soundkit/tasks/kws/evb_webusb
   pre_gain: 1
   dtype: int16
   filename: def_nn_${project}

@@ -1,11 +1,11 @@
 name: crnn
 project: vad
-job_dir: ./soundkit/tasks/vad
+job_dir: ./results/tasks/vad
 
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 1000
@@ -41,12 +41,12 @@ train:
   warmup_epochs: 5
   epoch_loaded: random
   spec_aug: false
-  loss_function: 
+  loss_function:
     # type: focal
     # params: {gamma: 2.0, alpha: 0.75} # for focal loss
     type: cross_entropy
     params: {}
-    
+
   path:
     checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
     tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
@@ -63,7 +63,7 @@ train:
     # n_mels: 72
 
   standardization: true
-  
+
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_vad.yaml
@@ -74,7 +74,7 @@ train:
 evaluate:
   epoch_loaded: best
   eval: true
-  data: 
+  data:
     dir: "./wavs/vad/test_wavs"
     files: [speech.wav, speech_pubNoise.wav]
     result_folder: ${job_dir}/test_results/${name}_${train.loss_function.type}
@@ -90,7 +90,7 @@ demo:
   platform: pc # evb or pc
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb
+  evb_dir: ./soundkit/tasks/vad/evb_webusb
   pre_gain: 1
   dtype: int16
   filename: def_nn1_nnvad
