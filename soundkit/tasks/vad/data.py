@@ -213,6 +213,8 @@ def data(params: SKTaskParams) -> None:
     """
     params_data = params.data
     force_download = params_data['force_download']
+    tfrecord_dir = Path(params_data['path_tfrecord'])
+    tfrecord_dir.mkdir(parents=True, exist_ok=True)
 
     if force_download:
         corpora = params_data['corpora']
