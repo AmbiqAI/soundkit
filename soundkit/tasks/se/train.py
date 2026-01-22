@@ -1,5 +1,5 @@
 """
-SoundKit SE Training Script
+soundKIT SE Training Script
 --------------------------
 Organized main training loop for Speech Enhancement (SE) task using TensorFlow/Keras.
 Features:
@@ -27,7 +27,7 @@ try:
 except Exception:
     _NVML_AVAILABLE = False
 
-# === SoundKit Core Imports ===
+# === soundKIT Core Imports ===
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import (
     save_train_log,
@@ -247,10 +247,10 @@ def run_epoch(
             states_audio_sn,
             min_val = params.data.min_amp,
             max_val = params.data.max_amp)
-        
+
         audio_sn = audio_sn * gain
         audio_s = audio_s * gain
-        
+
         step_start = time.perf_counter()
 
         # Extract features using streaming state
@@ -270,7 +270,7 @@ def run_epoch(
 
         if params.train['standardization']:
             # Standardize features
-            
+
             mean_stats = stats['nMean_feat']
             inv_std_stats = stats['nInvStd']
             if params.train['standardization_type'] == "mean":
@@ -374,7 +374,7 @@ def run_epoch(
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
                 )
-                
+
             else:
                 fig, axes = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask.T],
@@ -456,7 +456,7 @@ def train(params: SKTaskParams):
     }
     truncate_samples = int(params.train['truncate_time'] * params.data.signal.sampling_rate) if params.train['truncate_time'] is not None else None
 
-    # if params.train.num_per_epoch_files.train > 
+    # if params.train.num_per_epoch_files.train >
 
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
@@ -501,7 +501,7 @@ def train(params: SKTaskParams):
         lr_schedule = params_train['initial_lr']
     else:
         raise ValueError(f"Unknown lr_schedule: {params_train['lr_schedule']}")
-    
+
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,

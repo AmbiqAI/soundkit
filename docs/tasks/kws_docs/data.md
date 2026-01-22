@@ -1,7 +1,7 @@
 
 # Data Preparation for Keyword Spotting (KWS)
 
-The data preparation step in **SoundKit** for KWS involves generating training and validation datasets by mixing keyword utterances with background noise and non-keyword speech at controlled SNR levels.
+The data preparation step in **soundKIT** for KWS involves generating training and validation datasets by mixing keyword utterances with background noise and non-keyword speech at controlled SNR levels.
 
 This process supports reproducible and diverse datasets suitable for training robust keyword detection models.
 
@@ -31,7 +31,7 @@ Here are the key settings for the `data` section:
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name:
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 757

@@ -24,7 +24,7 @@ soundkit -t se -m data -c configs/se/se.yaml
 | `force_download` | If `true`, forces re-download of corpora |
 | `reverb_prob` | Probability of applying room reverb using impulse responses |
 | `num_processes` | Number of parallel processes used for synthesis |
-| `corpora` | List of dataset definitions for training and evaluation. Each entry specifies `name` (dataset name, must match a loader in SoundKit), `type` (speech, noise, or reverb), and `split` (train, val, or train-val). Default names and types are provided in `soundkit.defines`. |
+| `corpora` | List of dataset definitions for training and evaluation. Each entry specifies `name` (dataset name, must match a loader in soundKIT), `type` (speech, noise, or reverb), and `split` (train, val, or train-val). Default names and types are provided in `soundkit.defines`. |
 | `snr_dbs` | List of SNRs (in dB) for mixing clean speech with noise |
 | `target_length_in_secs` | Duration of each synthesized example (in seconds) |
 | `min_amp`, `max_amp` | Amplitude scaling range used to randomly scale synthesized signals |
@@ -35,7 +35,7 @@ soundkit -t se -m data -c configs/se/se.yaml
 
 📦 **How Corpora Are Defined**
 
-SoundKit uses the corpora field in YAML config files to specify the datasets to be used during training and evaluation. Each dataset is defined by:
+soundKIT uses the corpora field in YAML config files to specify the datasets to be used during training and evaluation. Each dataset is defined by:
 
 - name: The registered name of the dataset (must match a loader function)
 
@@ -45,7 +45,7 @@ SoundKit uses the corpora field in YAML config files to specify the datasets to 
 
 🔧 **Default Corpora**
 
-Below is a list of default corpora supported by SoundKit. You can find detailed descriptions in the Corpora documentation [Corpora](../../datasets/corpora.md):
+Below is a list of default corpora supported by soundKIT. You can find detailed descriptions in the Corpora documentation [Corpora](../../datasets/corpora.md):
 
 ```yaml
 corpora:
@@ -62,7 +62,7 @@ corpora:
 
 🧩 **Custom Datasets**
 
-Want to use your own data? SoundKit makes it easy to register your own speech, noise, or reverb datasets. See the [BYOD](../../datasets/byod.md) guide for details.
+Want to use your own data? soundKIT makes it easy to register your own speech, noise, or reverb datasets. See the [BYOD](../../datasets/byod.md) guide for details.
 
 ---
 

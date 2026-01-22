@@ -1,7 +1,7 @@
 
 # Real-Time Demo for Keyword Spotting (KWS)
 
-The demo module in **SoundKit** allows real-time evaluation of your trained KWS model using either a PC microphone or Ambiq Evaluation Board (EVB). This is ideal for validating performance in live conditions.
+The demo module in **soundKIT** allows real-time evaluation of your trained KWS model using either a PC microphone or Ambiq Evaluation Board (EVB). This is ideal for validating performance in live conditions.
 
 ---
 
@@ -57,13 +57,13 @@ demo:
 Run on the PC-based test for real-time KWS task.
 
 ```bash
-soundkit -t kws -m demo -c configs/kws.yaml demo.platform=pc # run on PC 
+soundkit -t kws -m demo -c configs/kws.yaml demo.platform=pc # run on PC
 ```
 
 ### EVB
 Run on the PC-based test or [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) for real-time KWS task. You can choose on PC or EVB based on command-line overwrite
 
-1. Type 
+1. Type
   ```bash
   soundkit -t kws -m demo -c configs/kws.yaml demo.platform=evb # run on Ambiq EVB
   ```

@@ -1,4 +1,4 @@
-"""SoundKit SE Task Module"""
+"""soundKIT SE Task Module"""
 from soundkit.tasks.task import SKTask
 from soundkit.defines import SKTaskParams
 from .data import data
@@ -8,7 +8,7 @@ from .export import export
 from .demo import demo
 
 class SeTask(SKTask):
-    """SoundKit SE Task"""
+    """soundKIT SE Task"""
 
     @staticmethod
     def description() -> str:

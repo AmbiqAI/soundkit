@@ -1,7 +1,7 @@
 
 # Bring Your Own Model (BYOM)
 
-SoundKit is designed for modularity — you can easily plug in your own model into the training, evaluation, export, and demo pipeline. This guide demonstrates how to add a custom model using `SimpleFC` as an example.
+soundKIT is designed for modularity — you can easily plug in your own model into the training, evaluation, export, and demo pipeline. This guide demonstrates how to add a custom model using `SimpleFC` as an example.
 
 ## Step 1: Define Your Model
 
@@ -43,7 +43,7 @@ ModelFactory.register("SimpleFC", SimpleFC)
 ModelParamFactory.register("SimpleFC", SimpleFCParams)
 ```
 
-## Step 3: Configure your model architecture 
+## Step 3: Configure your model architecture
 
 ```yaml
 # soundkit/models/arch_configs/config_simplefc.yaml

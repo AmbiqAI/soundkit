@@ -1,32 +1,32 @@
 # Speaker Verification (ID)
 
-The [Speaker Verification (ID)](./id_docs/introduction.md) module in **SoundKit** enables robust, on-device voice-based identity recognition. Designed for low-power edge devices, this module verifies whether a given voice sample matches a registered speaker.
+The [Speaker Verification (ID)](./id_docs/introduction.md) module in **soundKIT** enables robust, on-device voice-based identity recognition. Designed for low-power edge devices, this module verifies whether a given voice sample matches a registered speaker.
 
 It supports:
 
-* ✅ [Data preparation](./id_docs/data.md)  
-* ✅ [Model training](./id_docs/train.md)  
-* ✅ [Evaluation](./id_docs/evaluate.md)  
-* ✅ [Model export](./id_docs/export.md)  
+* ✅ [Data preparation](./id_docs/data.md)
+* ✅ [Model training](./id_docs/train.md)
+* ✅ [Evaluation](./id_docs/evaluate.md)
+* ✅ [Model export](./id_docs/export.md)
 * ✅ [PC/EVB-based demo inference](./id_docs/demo.md)
 
 Built for deployment on [Ambiq’s ultra-low power MCUs](https://ambiq.com/soc/), the ID module ensures fast, secure, and private authentication directly on-device.
 
-📘 **Try it now:** Explore the [ID Tutorial Notebook](../../notebooks/SoundKit_ID_Tutorial.ipynb) to get started.
+📘 **Try it now:** Explore the [ID Tutorial Notebook](/notebooks/SoundKit_ID_Tutorial/) to get started.
 
 ---
 
 ## Features
 
-- Voiceprint-based speaker identity verification  
-- ResNet-style embedding model with contrastive loss  
-- Enrollment and matching modes  
-- TFLite and C-array export for embedded inference  
+- Voiceprint-based speaker identity verification
+- ResNet-style embedding model with contrastive loss
+- Enrollment and matching modes
+- TFLite and C-array export for embedded inference
 - PC-based and EVB-based real-time demo pipelines
 
 ---
 
-## Install SoundKit
+## Install soundKIT
 
 Refer to the [QuickStart Guide](../quickstart.md) for installation and setup instructions.
 
@@ -94,7 +94,7 @@ Use the `soundkit` CLI to run ID tasks through different modes using a configura
 
         ```bash
         soundkit -t id -m demo -c configs/id.yaml demo.platform=pc
-        # or 
+        # or
         soundkit -t id -m demo -c configs/id.yaml demo.platform=evb
         ```
 

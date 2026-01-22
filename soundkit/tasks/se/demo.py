@@ -456,6 +456,5 @@ def demo_pc(
         proc_st=se_model,
         reset_st=se_model.reset,
         frame_size=hop_size,
-        title="SoundKit SE Demo",
+        title="soundKIT SE Demo",
     )
-     

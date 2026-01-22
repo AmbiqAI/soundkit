@@ -1,4 +1,4 @@
-""""SoundKit configuration definitions."""
+""""soundKIT configuration definitions."""
 import sys
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
@@ -250,7 +250,7 @@ class DemoConfig:
 
 @dataclass
 class SKTaskParams:
-    """SoundKit task parameters."""
+    """soundKIT task parameters."""
     name: str = "experiment"
     project: str = "soundkit"
     job_dir: Path = field(default_factory=tempfile.gettempdir)
@@ -263,7 +263,7 @@ class SKTaskParams:
     demo: DemoConfig = field(default_factory=DemoConfig)
 
 class SKMode(StrEnum):
-    """SoundKit execution modes."""
+    """soundKIT execution modes."""
     data: str = "data"
     train: str = "train"
     evaluate: str = "evaluate"

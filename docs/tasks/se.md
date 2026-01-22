@@ -1,6 +1,6 @@
 # Speech Enhancement (SE)
 
-The [Speech Enhancement (SE)](./se_docs/introduction.md) module in **SoundKit** enables denoising of speech signals for real-time and embedded applications. It is designed for both research and deployment, supporting:
+The [Speech Enhancement (SE)](./se_docs/introduction.md) module in **soundKIT** enables denoising of speech signals for real-time and embedded applications. It is designed for both research and deployment, supporting:
 
 * ✅ [Data preparation](./se_docs/data.md)
 * ✅ [Model training](./se_docs/train.md)
@@ -10,7 +10,7 @@ The [Speech Enhancement (SE)](./se_docs/introduction.md) module in **SoundKit** 
 
 This module is optimized for deployment on [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/), enabling efficient and low-latency speech enhancement on edge devices.
 
-📘 **Try it now:** Explore the [SE Tutorial Notebook](../../notebooks/SoundKit_SE_Tutorial.ipynb) for a hands-on walkthrough.
+📘 **Try it now:** Explore the [SE Tutorial Notebook](/notebooks/SoundKit_SE_Tutorial/) for a hands-on walkthrough.
 
 ---
 
@@ -19,15 +19,15 @@ This module is optimized for deployment on [Ambiq's family of ultra-low power So
 
 ## Features
 
-- Noise suppression for clean speech recovery  
-- Real-time frame-by-frame inference  
-- Modular support for [CRNN](../models/crnn.md) and [UNet](../models/unet.md) architectures  
-- Export for embedded deployment (TFLite, CMSIS, etc.)  
-- Demo on [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) via WebUSB  
+- Noise suppression for clean speech recovery
+- Real-time frame-by-frame inference
+- Modular support for [CRNN](../models/crnn.md) and [UNet](../models/unet.md) architectures
+- Export for embedded deployment (TFLite, CMSIS, etc.)
+- Demo on [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/) via WebUSB
 
 ---
 
-## Install SoundKit
+## Install soundKIT
 
 Follow the instructions in the [QuickStart](../quickstart.md) to set up your environment.
 
@@ -45,7 +45,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
     data:
       path_tfrecord: ${job_dir}/tfrecords
       tfrecord_datalist_name: # list of saved tfrecords
-        train: train_tfrecord.csv 
+        train: train_tfrecord.csv
         val: val_tfrecord.csv
       num_samples_per_noise:
         train: 1000
@@ -88,7 +88,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         model_dir:       ${job_dir}/models_trained/${train.path.full_name}
         tensorboard_dir: ${job_dir}/tensorboard/${train.path.full_name}
       num_lookahead: 2
-      
+
       feature:
         frame_size: 480
         hop_size: 160
@@ -100,17 +100,17 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         # n_mels: 72
 
       standardization: true
-      
+
       model:
         config_dir: ./soundkit/models/arch_configs
         config_file: config_unet.yaml
-      
+
       debug: false
 
     evaluate:
       epoch_loaded: best
 
-      data: 
+      data:
         dir: "./wavs/se/test_wavs"
         files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
         # # dir: ./wavs/LibriSpeech/test-clean
@@ -148,14 +148,14 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         ```
 
         To monitor training progress in real-time, open a new terminal and launch TensorBoard:
-    
+
         ```bash
         soundkit -t se -m train --tensorboard -c configs/se/se.yaml
         ```
         This will open TensorBoard with logs from the specified training run. Visit http://localhost:6006 in your browser to view metrics and visualizations.
 
         See [Train](./se_docs/train.md) in detail.
-  
+
     === "Evaluate"
         Evaluate the model on a test set and compute metrics such as SI-SDR, STOI, PESQ, or DNSMOS.
 
@@ -166,7 +166,7 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
 
     === "Export"
 
-        
+
         Convert the trained model into formats suitable for embedded or web deployment (e.g., TFLite, C arrays).
 
         ```bash
@@ -185,5 +185,3 @@ The `soundkit` CLI provides multiple modes for running the SE task. All modes ar
         ```
         See [Demo](./se_docs/demo.md) in detail.
 ---
-
-

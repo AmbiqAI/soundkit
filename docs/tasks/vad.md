@@ -1,6 +1,6 @@
 # Voice Activity Detection (VAD)
 
-The [Voice Activity Detection (VAD)](./vad_docs/introduction.md) module in **SoundKit** enables robust detection of speech activity in noisy audio environments, suitable for real-time and embedded deployments. It supports:
+The [Voice Activity Detection (VAD)](./vad_docs/introduction.md) module in **soundKIT** enables robust detection of speech activity in noisy audio environments, suitable for real-time and embedded deployments. It supports:
 
 * ✅ [Data preparation](./vad_docs/data.md)
 * ✅ [Model training](./vad_docs/train.md)
@@ -10,21 +10,21 @@ The [Voice Activity Detection (VAD)](./vad_docs/introduction.md) module in **Sou
 
 Optimized for edge deployment on [Ambiq's ultra-low power SoCs](https://ambiq.com/soc/), VAD ensures efficient voice detection even in constrained environments.
 
-📘 **Try it now:** Explore the [VAD Tutorial Notebook](../../notebooks/SoundKit_VAD_Tutorial.ipynb) to get started.
+📘 **Try it now:** Explore the [VAD Tutorial Notebook](/notebooks/SoundKit_VAD_Tutorial/) to get started.
 
 ---
 
 ## Features
 
-- Frame-level voice activity prediction  
-- Real-time processing for embedded or browser-based use  
-- Modular architecture: use or extend CRNN-based backbones  
-- TFLite and C-array export for low-power MCUs  
+- Frame-level voice activity prediction
+- Real-time processing for embedded or browser-based use
+- Modular architecture: use or extend CRNN-based backbones
+- TFLite and C-array export for low-power MCUs
 - Seamless PC or EVB demo support
 
 ---
 
-## Install SoundKit
+## Install soundKIT
 
 See the [QuickStart Guide](../quickstart.md) to set up your environment.
 
@@ -43,7 +43,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
     data:
       path_tfrecord: ${job_dir}/tfrecords
       tfrecord_datalist_name:
-        train: train_tfrecord.csv 
+        train: train_tfrecord.csv
         val: val_tfrecord.csv
       num_samples_per_noise:
         train: 50000
@@ -77,7 +77,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
       epochs: 150
       warmup_epochs: 5
       epoch_loaded: random
-      loss_function: 
+      loss_function:
         type: cross_entropy
         params: {}
 
@@ -110,7 +110,7 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
 
     evaluate:
       epoch_loaded: best
-      data: 
+      data:
         dir: "./wavs/vad/test_wavs"
         files: [rpc_audio_raw.wav, speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
       result_folder: ${job_dir}/test_results/${train.path.full_name}
@@ -175,8 +175,8 @@ The `soundkit` CLI supports multiple modes for running the VAD task. Each is con
 
         ```bash
         soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=pc
-        # or 
+        # or
         soundkit -t vad -m demo -c configs/vad/vad.yaml demo.platform=evb
-        
+
         ```
         See [Demo](./vad_docs/demo.md) to get started.

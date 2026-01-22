@@ -55,9 +55,9 @@ The output can be visualized as a mask overlay on the spectrogram or a framewise
 
 ---
 
-## 🧰 SoundKit for VAD
+## 🧰 soundKIT for VAD
 
-SoundKit provides an end-to-end VAD pipeline that includes:
+soundKIT provides an end-to-end VAD pipeline that includes:
 
 - TFRecord-based synthetic data creation with speech + noise + reverb
 - Frame-level feature extraction (e.g., log-power spectrogram)

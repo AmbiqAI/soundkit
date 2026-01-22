@@ -51,9 +51,9 @@ The figure below illustrates the difference between a clean and noisy spectrogra
 
 ---
 
-## 🧰 SoundKit for SE
+## 🧰 soundKIT for SE
 
-SoundKit provides a full pipeline for building and deploying deep learning-based SE models:
+soundKIT provides a full pipeline for building and deploying deep learning-based SE models:
 
 * TFRecord-based data generation
 * Feature extraction (e.g., log-power spectrogram, Mel spectrogram)

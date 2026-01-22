@@ -1,5 +1,5 @@
 """
-Compound loss utilities for SoundKit.
+Compound loss utilities for soundKIT.
 Implements CompoundLoss for combining multiple loss functions with weights, and a factory for config-driven instantiation.
 """
 import tensorflow as tf

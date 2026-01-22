@@ -1,7 +1,7 @@
 
 # Training for Keyword Spotting (KWS)
 
-The training step in **SoundKit** for KWS involves optimizing a CRNN-based model to detect keywords in audio streams under varied and noisy conditions.
+The training step in **soundKIT** for KWS involves optimizing a CRNN-based model to detect keywords in audio streams under varied and noisy conditions.
 
 This module supports focal or cross-entropy loss, dynamic SNR data mixing, and TensorBoard visualization.
 
@@ -32,7 +32,7 @@ train:
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
-  loss_function: 
+  loss_function:
     type: focal
     params: {gamma: 3.0, alpha: 0.75}
 
@@ -64,7 +64,7 @@ train:
 
   reset_every_batch: false
 ```
-## Training Parameters 
+## Training Parameters
 | Parameter                    | Description                                              | Value / Example |
 | ---------------------------- | -------------------------------------------------------- | --------------- |
 | `initial_lr`                 | Initial learning rate                                    | `4e-4`          |
@@ -108,4 +108,3 @@ train:
 - **Model Override**: CRNN hyperparameters like dropout and temporal stride can be customized.
 
 Refer to the [Data Preparation](./data.md) section before starting training.
-

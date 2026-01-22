@@ -1,6 +1,6 @@
 # Quickstart Guide
 
-## **Install SoundKit**
+## **Install soundKIT**
 !!! note "Syntax"
     ```bash
     git clone https://github.com/AmbiqAI/soundkit.git
@@ -22,9 +22,9 @@
 
 ---
 
-## **Use SoundKit with CLI**
+## **Use soundKIT with CLI**
 
-SoundKit provides a unified CLI for handling various ML tasks.
+soundKIT provides a unified CLI for handling various ML tasks.
 
 !!! note "Syntax"
 
@@ -32,8 +32,8 @@ SoundKit provides a unified CLI for handling various ML tasks.
     soundkit --task [TASK] --mode [MODE] --config [CONFIG]
     ```
 
-- **TASK**  One of: `se`, `vad`, `kws`, `id`  
-- **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`  
+- **TASK**  One of: `se`, `vad`, `kws`, `id`
+- **MODE**  One of: `data`, `train`, `evaluate`, `export`, `demo`
 - **CONFIG**  Path to your YAML config
 
 ---
@@ -79,14 +79,14 @@ SoundKit provides a unified CLI for handling various ML tasks.
         ```bash
         soundkit -t se -m demo -c configs/se/se.yaml demo.platform=evb # for amibiq evb deployment
         soundkit -t se -m demo -c configs/se/se.yaml demo.platform=pc # for pc deployment
-        
+
         ```
 
 ---
 
 ##  Configuration Parameters (Simplified)
 
-Understand key settings in your SoundKit YAML config for SE tasks:
+Understand key settings in your soundKIT YAML config for SE tasks:
 
 ### **Top-Level**
 
@@ -134,7 +134,7 @@ Understand key settings in your SoundKit YAML config for SE tasks:
 
 ## **Overriding Config Values via OmegaConf**
 
-SoundKit uses [OmegaConf](https://omegaconf.readthedocs.io/) for configuration management. You can override any value in the config file **directly from the CLI** using `key=value` syntax (dot notation).
+soundKIT uses [OmegaConf](https://omegaconf.readthedocs.io/) for configuration management. You can override any value in the config file **directly from the CLI** using `key=value` syntax (dot notation).
 
 **Example: Change platform to `evb` at runtime**
 

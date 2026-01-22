@@ -1,7 +1,7 @@
 
 # Model Export for Keyword Spotting (KWS)
 
-The export step in **SoundKit** converts your trained KWS model into formats optimized for embedded deployment, including TensorFlow Lite (TFLite) and C header files for use with Ambiq SDKs.
+The export step in **soundKIT** converts your trained KWS model into formats optimized for embedded deployment, including TensorFlow Lite (TFLite) and C header files for use with Ambiq SDKs.
 
 ---
 

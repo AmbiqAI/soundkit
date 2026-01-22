@@ -1,10 +1,27 @@
-site_name: SoundKit
+site_name: soundKIT
 site_url: https://ambiqai.github.io/soundkit/
 repo_url: https://github.com/AmbiqAI/soundkit
+copyright: Copyright &copy; 2025 Ambiq
+
 theme:
   name: material
-  logo: assets/ambiq.png  # optional
-  favicon: assets/favicon.ico  # optional
+  logo: assets/logo-white.png
+  favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+      repo: fontawesome/brands/github-alt
   features:
     - content.code.copy
 nav:
@@ -54,6 +71,10 @@ nav:
       - UNet: models/unet.md
       - BYOM: models/byom.md
   - Loss Functions: loss.md
+  - Notebooks:
+      - KWS Tutorial: notebooks/SoundKit_KWS_Tutorial.ipynb
+      - SE Tutorial: notebooks/SoundKit_SE_Tutorial.ipynb
+      - VAD Tutorial: notebooks/SoundKit_VAD_Tutorial.ipynb
   - Dashboards:
       - ID USB Dashboard: web-dashboards/id-usb/index.html
       - NNSE USB Dashboard: web-dashboards/nnse-usb/index.html
@@ -69,8 +90,13 @@ markdown_extensions:
   - pymdownx.highlight
   - codehilite
 
+plugins:
+  - search
+  - mkdocs-jupyter:
+      include_requirejs: true
+      include_source: true
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 extra_css:
-  - styles/logo.css
+  - css/custom.css
