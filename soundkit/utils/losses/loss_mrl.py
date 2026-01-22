@@ -74,7 +74,7 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
             fft_length=n_fft,
         )
 
-    def call(self, y_true, y_pred):
+    def call(self, y_true, y_pred, scale=None):
         """
         Compute multi-resolution STFT loss between predicted and true complex STFTs.
 
@@ -88,6 +88,11 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
         # Convert STFTs back to time-domain waveforms
         wav_true = self.istft_batch(y_true)
         wav_pred = self.istft_batch(y_pred)
+
+        if scale is not None:
+            wav_true = wav_true * scale
+            wav_pred = wav_pred * scale
+
         losses = []
         # Compute loss at each STFT resolution
         for cfg in self.stft_configs:

@@ -125,7 +125,7 @@ class CompressedMSE(tf.keras.losses.Loss):
         self.exp = float(exp)
         self.eps = float(eps)
 
-    def call(self, x, y):
+    def call(self, x, y, scale=None):
         """
         Compute compressed MSE over all elements.
 
@@ -140,6 +140,11 @@ class CompressedMSE(tf.keras.losses.Loss):
             raise ValueError("Input tensors must be of complex dtype.")
         if y.dtype is not tf.complex64:
             raise ValueError("Input tensors must be of complex dtype.")
+        
+        if scale is not None:
+            x = x * scale
+            y = y * scale
+        
         mag_x = tf.pow(
             complex_magnitude(x, self.eps),
             self.exp)

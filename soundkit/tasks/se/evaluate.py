@@ -274,6 +274,12 @@ def evaluate(params: SKTaskParams):
             feat_params['frame_size'],
             feat_params['hop_size'],
             feat_params['fft_size'])
+        # audio_sn = tf_istft(
+        #     spec_sn_delay,
+        #     feat_params['frame_size'],
+        #     feat_params['hop_size'],
+        #     feat_params['fft_size'])
+        # audio_en += (audio_sn * 0.001)  # to avoid complete silence
 
         if step < 10:
             # draw spectrograms and tfmask
