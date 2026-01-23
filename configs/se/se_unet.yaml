@@ -1,11 +1,11 @@
 name: unet_relu_noncausal_sep_specmel_th50
 project: se
-job_dir: ./soundkit/tasks/se
+job_dir: ./results/tasks/se
 
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 1000
@@ -31,7 +31,7 @@ data:
   signal:
     sampling_rate: 16000
     dc_removal: true
-  
+
   debug: false
 
 train:
@@ -40,19 +40,19 @@ train:
   epochs: 160
   warmup_epochs: 5
   epoch_loaded: random
-  loss_function: 
+  loss_function:
     type: compressed_mse
-    params: 
+    params:
       exp: 0.6
       eps: 1e-8
 
   path:
-    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
-    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
+    checkpoint_dir: ${job_dir}/models_trained/${name}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}
 
   num_lookahead: 1
 
-  feature: 
+  feature:
     frame_size: 480
     hop_size: 160
     fft_size: 512
@@ -61,7 +61,7 @@ train:
     n_mels: 32
 
   standardization: true
-  
+
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_unet_relu_noncausal_sep_specmel_th50.yaml
@@ -71,7 +71,7 @@ train:
 evaluate:
   epoch_loaded: best
 
-  data: 
+  data:
     dir: "./wavs/se/test_wavs"
     files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
     result_folder: ${job_dir}/test_results/${name}
@@ -86,5 +86,5 @@ demo:
   epoch_loaded: best
   platform: evb # or pc
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb_webusb
+  evb_dir: ./soundkit/tasks/se/evb_webusb
   pre_gain: 1

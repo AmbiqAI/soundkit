@@ -102,3 +102,4 @@ metadata/*.csv
 # Ignore egg-info
 soundkit.egg-info/
 .venv/
+results/
