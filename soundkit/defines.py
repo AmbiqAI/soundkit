@@ -25,6 +25,7 @@ class DataConfig:
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
     num_samples_per_noise: Any = None
     force_download: bool = False
+    accept_qualcomm_license: bool = False
     reverb_prob: float = 0.0
     num_processes: int = 1
     corpora: List[Dict[str, Any]] = field(default_factory=list)

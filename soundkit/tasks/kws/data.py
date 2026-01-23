@@ -14,7 +14,11 @@ from soundkit.utils.audio import pad_or_crop
 from soundkit.defines import SKTaskParams
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.basic_dsp import dc_remove
-from soundkit.utils.download_api import corpus_download, DOWNLOADABLE_CORPORA
+from soundkit.utils.download_api import (
+    corpus_download,
+    DOWNLOADABLE_CORPORA,
+    QUALCOMM_KWS_CORPORA,
+)
 from soundkit.utils.audio import (
         audio_read,
         random_load_audio_from_list,
@@ -299,19 +303,46 @@ def data(params: SKTaskParams) -> None:
     """
     params_data = params.data
     force_download = params_data['force_download']
+    accept_qualcomm_license = params_data.get('accept_qualcomm_license', False)
     tfrecord_dir = Path(params_data['path_tfrecord'])
     tfrecord_dir.mkdir(parents=True, exist_ok=True)
 
     corpora = params_data['corpora']
     if force_download:
+        needs_qualcomm = any(d['name'] in QUALCOMM_KWS_CORPORA for d in corpora)
         for d in corpora:
             corpus = d['name']
             type_cropus = d['type']
+            if corpus in QUALCOMM_KWS_CORPORA:
+                continue
             corpus_download(corpus, type_cropus)
+        if needs_qualcomm:
+            corpus_download(
+                "qualcomm_keyword_speech_dataset",
+                "speech",
+                accept_qualcomm_license=accept_qualcomm_license,
+            )
     else:
+        qualcomm_downloaded = False
         for d in corpora:
             corpus = d['name']
             type_cropus = d['type']
+            if corpus in QUALCOMM_KWS_CORPORA:
+                if not corpus_exists(corpus):
+                    if not accept_qualcomm_license:
+                        raise FileNotFoundError(
+                            "Qualcomm Keyword Speech Dataset not found. "
+                            "Set data.accept_qualcomm_license=true to allow automatic download."
+                        )
+                    if not qualcomm_downloaded:
+                        log.info("Qualcomm KWS dataset missing; downloading.")
+                        corpus_download(
+                            "qualcomm_keyword_speech_dataset",
+                            "speech",
+                            accept_qualcomm_license=True,
+                        )
+                        qualcomm_downloaded = True
+                continue
             if corpus in DOWNLOADABLE_CORPORA and not corpus_exists(corpus):
                 log.info("Corpus %s missing; downloading.", corpus)
                 corpus_download(corpus, type_cropus)

@@ -69,6 +69,7 @@ data:
 | `tfrecord_datalist_name`  | Filenames listing TFRecord entries                       | `train: train_tfrecord.csv`, `val: val_tfrecord.csv` |
 | `num_samples_per_noise`   | Number of samples per noise type                         | `train: 757`, `val: 177`                             |
 | `force_download`          | Force data re-download if `true`                         | `false`                                              |
+| `accept_qualcomm_license` | Allow automatic download of Qualcomm KWS dataset         | `false`                                              |
 | `reverb_prob`             | Probability of adding reverberation                      | `0.0`                                                |
 | `num_processes`           | Number of parallel processes for data prep               | `8`                                                  |
 | `corpora`                 | List of keyword, garbage, noise, and reverb data sources | See detailed list below                              |

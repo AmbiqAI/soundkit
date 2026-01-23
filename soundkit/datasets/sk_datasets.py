@@ -11,10 +11,10 @@ corpus2path_map= {
     "dev-clean": "wavs/LibriSpeech/dev-clean",
     "test-clean": "wavs/LibriSpeech/test-clean",
     "thchs30": "wavs/data_thchs30",
-    "train-galaxy": "metadata/galaxy_train.csv",
-    "val-galaxy": "metadata/galaxy_val.csv",
-    "train-coros": "metadata/coros_train.csv",
-    "val-coros": "metadata/coros_val.csv",
+    "train-galaxy": "wavs/kws/qualcomm_keyword_speech_dataset",
+    "val-galaxy": "wavs/kws/qualcomm_keyword_speech_dataset",
+    "train-coros": "wavs/kws/qualcomm_keyword_speech_dataset",
+    "val-coros": "wavs/kws/qualcomm_keyword_speech_dataset",
     "vad_train-clean-100": "wavs/LibriSpeech/train-clean-100",
     "vad_train-clean-360": "wavs/LibriSpeech/train-clean-360",
     "vad_train-other-500": "wavs/LibriSpeech/train-other-500",
@@ -178,7 +178,10 @@ def load_train_galaxy(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+            "Qualcomm Keyword Speech Dataset not found. "
+            "Set data.accept_qualcomm_license=true to allow automatic download, "
+            "or visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads "
+            "to obtain it manually.")
 
     return load_wav_label_csv('metadata/galaxy_train.csv')
 
@@ -193,7 +196,10 @@ def load_val_galaxy(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+            "Qualcomm Keyword Speech Dataset not found. "
+            "Set data.accept_qualcomm_license=true to allow automatic download, "
+            "or visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads "
+            "to obtain it manually.")
 
 
     return load_wav_label_csv('metadata/galaxy_val.csv')
@@ -210,7 +216,10 @@ def load_train_coros(corpus: str) -> list:
 
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+            "Qualcomm Keyword Speech Dataset not found. "
+            "Set data.accept_qualcomm_license=true to allow automatic download, "
+            "or visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads "
+            "to obtain it manually.")
 
     return load_wav_label_csv('metadata/coros_train.csv')
 
@@ -225,7 +234,10 @@ def load_val_coros(corpus: str) -> list:
     path = corpus2path_map[corpus['name']]
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Due to licensing restrictions, the dataset cannot be downloaded automatically. Please visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads to obtain the dataset.")
+            "Qualcomm Keyword Speech Dataset not found. "
+            "Set data.accept_qualcomm_license=true to allow automatic download, "
+            "or visit https://www.qualcomm.com/developer/software/keyword-speech-dataset/downloads "
+            "to obtain it manually.")
 
 
     return load_wav_label_csv('metadata/coros_val.csv')

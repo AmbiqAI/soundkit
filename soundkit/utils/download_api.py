@@ -29,6 +29,23 @@ DOWNLOADABLE_CORPORA = {
     "rirs_noises",
     "FSD50K",
 }
+QUALCOMM_KWS_CORPORA = {
+    "train-galaxy",
+    "val-galaxy",
+    "train-coros",
+    "val-coros",
+}
+QUALCOMM_KWS_URL = (
+    "https://softwarecenter.qualcomm.com/api/download/software/dataset/"
+    "AIDataset/Qualcomm_Keyword_Speech_Dataset/qualcomm_keyword_speech_dataset.zip"
+)
+QUALCOMM_KWS_ARCHIVE = "qualcomm_keyword_speech_dataset.zip"
+QUALCOMM_KWS_METADATA = {
+    "galaxy_train.csv",
+    "galaxy_val.csv",
+    "coros_train.csv",
+    "coros_val.csv",
+}
 
 def unzip_with_progress(
         zip_file_path: str,
@@ -127,9 +144,29 @@ def url_download(
             print(f"Download error: {exc}. Retrying in {wait_s}s...")
             time.sleep(wait_s)
 
+def _copy_qualcomm_metadata(search_root: str, metadata_dir: str = "metadata") -> None:
+    os.makedirs(metadata_dir, exist_ok=True)
+    if all(os.path.exists(os.path.join(metadata_dir, fname)) for fname in QUALCOMM_KWS_METADATA):
+        # Metadata already provided (e.g., synced from S3).
+        return
+    found = 0
+    for root, _, files in os.walk(search_root):
+        for fname in files:
+            if fname in QUALCOMM_KWS_METADATA:
+                src = os.path.join(root, fname)
+                dst = os.path.join(metadata_dir, fname)
+                shutil.copyfile(src, dst)
+                found += 1
+    if found == 0:
+        print(
+            "Warning: Qualcomm metadata CSVs were not found after extraction. "
+            "Expected galaxy/coros CSVs in the archive."
+        )
+
 def corpus_download(
         corpus: str,
         type_cropus: str = 'noise',
+        accept_qualcomm_license: bool = False,
         ) -> None:
     """
     download se dataset
@@ -169,6 +206,25 @@ def corpus_download(
             url = f'https://www.openslr.org/resources/12/{target_name}'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
+
+        case (
+          'qualcomm_keyword_speech_dataset'
+        | 'train-galaxy'
+        | 'val-galaxy'
+        | 'train-coros'
+        | 'val-coros'
+        ):
+            if not accept_qualcomm_license:
+                raise PermissionError(
+                    "Qualcomm Keyword Speech Dataset requires license acceptance. "
+                    "Set data.accept_qualcomm_license=true to enable automatic download."
+                )
+            dst_folder = "./wavs/kws"
+            os.makedirs(dst_folder, exist_ok=True)
+            target_path = f'./{tmp_download}/{QUALCOMM_KWS_ARCHIVE}'
+            url_download(QUALCOMM_KWS_URL, target_path)
+            unzip_with_progress(target_path, dst_folder)
+            _copy_qualcomm_metadata(dst_folder)
 
         case 'thchs30' | 'vad_thchs30':  # for vad
             if corpus == 'vad_thchs30':
