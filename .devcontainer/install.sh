@@ -17,7 +17,7 @@ fi
 
 echo "🔧 Installing system dependencies..."
 sudo apt update
-sudo apt install -y git-lfs
+sudo apt install -y git-lfs xxd
 git lfs install
 
 # Python and build dependencies
