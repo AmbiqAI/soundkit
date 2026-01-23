@@ -11,6 +11,25 @@ import requests
 import time
 from tqdm import tqdm
 
+DOWNLOADABLE_CORPORA = {
+    "train-clean-100",
+    "train-clean-360",
+    "dev-clean",
+    "train-other-500",
+    "vad_train-clean-100",
+    "vad_train-clean-360",
+    "vad_dev-clean",
+    "vad_train-other-500",
+    "thchs30",
+    "vad_thchs30",
+    "musan",
+    "wham_noise",
+    "ESC-50-master",
+    "ESC-50",
+    "rirs_noises",
+    "FSD50K",
+}
+
 def unzip_with_progress(
         zip_file_path: str,
         extract_to: str) -> None:

@@ -42,6 +42,15 @@ ERROR_CORPUS_NOT_FOUND = (
     "      force_download: true\n"
 )
 
+def get_corpus_path(name: str) -> str | None:
+    """Return the expected path for a corpus name, if known."""
+    return corpus2path_map.get(name)
+
+def corpus_exists(name: str) -> bool:
+    """Check whether the expected corpus path exists on disk."""
+    path = get_corpus_path(name)
+    return path is not None and os.path.exists(path)
+
 def load_wav_label_csv(lst: str, filter=None) -> list:
     """
     Load VAD data from a CSV file.

@@ -10,10 +10,10 @@ import tensorflow as tf
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.defines import SKTaskParams
 from soundkit.utils.basic_dsp import dc_remove
-from soundkit.utils.download_api import corpus_download
+from soundkit.utils.download_api import corpus_download, DOWNLOADABLE_CORPORA
 from soundkit.utils.audio import audio_read, random_load_audio_from_list, synthesize_audio
 from soundkit.utils.plot_api import plot_spectrograms
-from soundkit.datasets import SKDatasetFactory
+from soundkit.datasets import SKDatasetFactory, corpus_exists
 from soundkit.utils.feature_utils import FeatureExtractor
 from .datasets import create_raw_tfrecord
 from soundkit.utils.wind import wind_noise
@@ -180,12 +180,19 @@ def data(params: SKTaskParams) -> None:
     tfrecord_dir = Path(params_data['path_tfrecord'])
     tfrecord_dir.mkdir(parents=True, exist_ok=True)
 
+    corpora = params_data['corpora']
     if force_download:
-        corpora = params_data['corpora']
         for d in corpora:
             corpus = d['name']
             type_cropus = d['type']
             corpus_download(corpus, type_cropus)
+    else:
+        for d in corpora:
+            corpus = d['name']
+            type_cropus = d['type']
+            if corpus in DOWNLOADABLE_CORPORA and not corpus_exists(corpus):
+                log.info("Corpus %s missing; downloading.", corpus)
+                corpus_download(corpus, type_cropus)
 
     speech_list = {'train': [], 'val': []}
     noise_type2list = {}
