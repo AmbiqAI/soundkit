@@ -3,13 +3,15 @@
 [![](./assets/soundkit-logo-light.png#only-light)](https://ambiqai.github.io/soundkit/)
 [![](./assets/soundkit-logo-dark.png#only-dark)](https://ambiqai.github.io/soundkit/)
 
-*An AI Development Kit for real-time audio processing on ultra-low power devices*
+*An AI Development Kit for real-time audio processing on Ambiq ultra-low power devices*
 
 ## Overview
 
-**soundKIT** is a lightweight audio processing framework optimized for embedded AI. Built on **TensorFlow Lite (TFLite)** and **TensorFlow Lite for Microcontrollers (TFLM)**, it enables always-on voice capabilities for power-constrained devices.
+Introducing **soundKIT**, an Audio AI Development Kit (ADK) that helps you train, evaluate, and deploy real-time audio models on [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). It ships with datasets, efficient model architectures, and reference tasks out of the box, plus optimization and deployment routines for edge inference. The kit also includes pre-trained models and task-level demos to help you get started quickly.
 
-Whether you're prototyping on a PC or deploying to an ultra-efficient [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/)., soundKIT provides a streamlined path from development to deployment.
+At its core, soundKIT is a playground: swap datasets, architectures, tasks, and training recipes via YAML, the CLI, or directly in code.
+
+Whether you're prototyping on a PC or deploying to [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/), soundKIT provides a consistent path from data preparation to evaluation and deployment.
 
 For production-grade deployment, soundKIT utilizes **HeliaRT**, Ambiq's ultra-efficient edge AI runtime. Optimized specifically for the Apollo family of SoCs, HeliaRT delivers:
 
@@ -17,13 +19,27 @@ For production-grade deployment, soundKIT utilizes **HeliaRT**, Ambiq's ultra-ef
 
 - Custom AI kernels that leverage Apollo510’s vector acceleration hardware.
 
-- Improved the model quantization for int16x8 support specifically designed for high-fidelity audio and speech processing.
-
-Integrated with **NeuralSPOT**
-To simplify embedded development even further, soundKIT integrates with NeuralSPOT — Ambiq’s open-source software development kit for AI acceleration and system-level optimization. NeuralSPOT provides drivers, utilities, and example projects tailored for deploying ML workloads efficiently on Ambiq hardware.
+- Improved model quantization for int16x8 support designed for high-fidelity audio and speech processing.
 
 
 ## Key Features
+
+- **Playground for iteration**
+  Swap datasets, models, tasks, and training recipes via YAML, CLI, or Python.
+
+- **End-to-end workflow**
+  Data prep, feature extraction, training, evaluation, and export in one place.
+
+- **Embedded-first optimization**
+  Quantization-aware workflows, streaming inference patterns, and memory-conscious models.
+
+- **Hardware acceleration ready**
+  HeliaRT kernels and NeuralSPOT integration for Apollo-class MCUs.
+
+- **Open and extensible**
+  Add new datasets, tasks, and architectures without rewriting the pipeline.
+
+## Supported Tasks
 
 - **Speech Enhancement (SE)**
   Denoising and dereverberation for clearer speech in noisy environments.
@@ -39,37 +55,53 @@ To simplify embedded development even further, soundKIT integrates with NeuralSP
 
 ## Development Flow
 
-1. **Start on PC**
-   Prototype and validate models using TensorFlow Lite (TFLite) directly on your desktop. This enables fast, real-time verification of model accuracy, performance, and behavior before targeting embedded hardware.
+1. **Prototype on PC**
+   Iterate quickly with real-time input and consistent configs.
 
-2. **Deploy to [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/).**
-   Move to **Ambiq’s Apollo5 MCU** with **TFLM** to achieve up to **10x lower power consumption** using Ambiq **Subthreshold Power Optimized Technology (SPOT)**.
+2. **Train and evaluate**
+   Run data prep, training, and benchmarking from the same CLI workflow.
 
-3. **Optimize & Tune**
-   Use our example pipelines, quantized models, and configuration templates to accelerate development.
+3. **Export and demo**
+   Generate deployable artifacts and validate on PC or EVB with matching settings.
 
 ## Why soundKIT?
 
-- **TFLite / TFLM Native**: Built for TensorFlow's embedded runtimes. We also provide 16x8 bit quantization scheme for minimizing accuracy loss.
+- **Made for iteration**: Mix datasets, tasks, and architectures without rewriting the pipeline.
 - **Embedded-First**: Validated on real hardware.
-- **Modular Design**: Plug-and-play components tailored for your needs.
+- **Modular Design**: Plug-and-play components for data, models, and tasks.
 - **Ultra-Low Power**: Ideal for wearables and battery-powered applications.
 
 ## Use Cases
 
-- Smart earbuds with always-on keyword spotting
-- Voice-controlled wearables and health trackers
-- Embedded smart home assistants
-- Low-power environmental sound monitoring
+- Smart home, wearables, and smart glasses
+- Industrial and facilities monitoring
+- Automotive in-cabin voice control and noise suppression
+- Healthcare and wellness devices
+- Security and public safety screening
+- Consumer audio accessories and conferencing
+
+## Modes
+
+soundKIT provides a consistent CLI with task-level modes:
+
+- **data**: dataset setup and preparation
+- **train**: model training workflows
+- **evaluate**: benchmarking, metrics, and validation
+- **export**: deployment artifact generation
+- **demo**: real-time inference on PC or EVB
+
+## Datasets
+
+soundKIT includes a flexible dataset factory that supports common speech, noise, and reverb corpora (for example LibriSpeech, THCHS-30, MUSAN, FSD50K, ESC-50, RIRS_NOISES). Datasets are not redistributed; users download and use them under their respective licenses.
 
 ## Get Started
 
 - Clone the repo and follow [QuickStart](./quickstart.md) to set up.
-- Run TFLite on real-time on PC.
-- Flash to [Apollo5](https://ambiq.com/apollo510/) for embedded testing.
+- Run real-time inference on PC.
+- Validate on [Apollo5](https://ambiq.com/apollo510/) with the same configs.
 
 ## Web Dashboards
-To visualize data from your Apollo5 EVB via WebUSB, use our dashboards:
+To visualize data from your Apollo5 EVB via WebUSB, use the dashboards:
 
 * [Launch ID Dashboard](web-dashboards/id-usb/index.html)
 * [Launch NNSE Dashboard](web-dashboards/nnse-usb/index.html)
