@@ -118,22 +118,6 @@ def train_step(
 
             loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
-            tmp = tf_istft(
-                    batch["spec_s_delay"],
-                    frame_length=batch['frame_size'],
-                    frame_step=batch['hop_size'],
-                    fft_length=batch['fft_size'],
-                )
-
-            max_val  = tf.reduce_max(
-                tf.abs(tmp),
-                axis=1,
-                keepdims=True)
-
-            scale = tf.where(
-                max_val > 1e-3,
-                1.0 / max_val,
-                1.0)
 
             if feat_type == "erb_mag":
                 est = erb.bs(est[..., 0])
@@ -148,8 +132,7 @@ def train_step(
             spec_en = spec_en_delay
             loss = loss_fn(
                 spec_s_delay,
-                spec_en_delay,
-                scale=scale )
+                spec_en_delay)
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
@@ -294,15 +277,18 @@ def run_epoch(
                 feat_sn,
             )
 
+
+        # mag = tf.abs(feat_sn)
+        # scale = (mag**0.5) / (mag + 2**-15)  # All float32 math
+        # feat_sn = feat_sn * tf.cast(scale, tf.complex64) # Cast and apply
         if params.train['standardization']:
             # Standardize features
-            
-            mean_stats = stats['nMean_feat']
-            inv_std_stats = stats['nInvStd']
-            if params.train['standardization_type'] == "mean":
-                feat_sn_norm = feat_sn - mean_stats
-            else: # "mve"
-                feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
+            if params.train['standardization_type'] in ["mve", "mean", "std"]:
+                mean_stats = stats['nMean_feat']
+                inv_std_stats = stats['nInvStd']
+                feat_sn_norm = (feat_sn - mean_stats) * tf.complex(inv_std_stats, 0.0)
+            elif params.train['standardization_type'] == "constant":
+                feat_sn_norm = feat_sn / 32
         else:
             # No standardization, use raw features
             feat_sn_norm = feat_sn
@@ -393,13 +379,15 @@ def run_epoch(
 
             if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
                 feat_sn = 10* feat_sn[0].numpy()
+                feat_sn_norm_d = 10* feat_sn_norm[0].numpy()
             elif params.train['feature']['type'] in ('pspec', 'spec', "erb_complex", "hybrid_mag", "erb_mag"):
                 feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+                feat_sn_norm_d = 20*tf_log10_eps( tf.abs(feat_sn_norm[0])).numpy()
             if feat_sn_norm.dtype == tf.complex64:
                 fig, axes = plot_spectrograms(
-                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask_real.T, mask_imag.T],
+                    images=[pspec_s.T, pspec_sn.T, feat_sn_norm_d.T, pspec_en.T, mask_real.T, mask_imag.T],
                     titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask real", "mask imag"],
-                    vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_real_range, mask_imag_range],
+                    vmin_vmax=[(-80, 10), (-80, 10), (feat_sn_norm_d.min(), feat_sn_norm_d.max()), (-80, 10), mask_real_range, mask_imag_range],
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
                 )
@@ -485,7 +473,7 @@ def train(params: SKTaskParams):
     }
     truncate_samples = int(params.train['truncate_time'] * params.data.signal.sampling_rate) if params.train['truncate_time'] is not None else None
 
-    # if params.train.num_per_epoch_files.train > 
+    # if params.train.num_per_epoch_files.train
 
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],
@@ -508,12 +496,14 @@ def train(params: SKTaskParams):
             ds_train,
             batches_train,
             folder_nn=checkpoint_dir,
-            feat_extractor=feat_extractor,)
+            feat_extractor=feat_extractor,
+            standardization_type=params_train['standardization_type'],)
     else:
         stats = {
             'nMean_feat': tf.zeros([dim_feat], dtype=tf.float32),
             'nInvStd': tf.ones([dim_feat], dtype=tf.float32),
         }
+
     # 5. Define loss function
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
@@ -530,7 +520,7 @@ def train(params: SKTaskParams):
         lr_schedule = params_train['initial_lr']
     else:
         raise ValueError(f"Unknown lr_schedule: {params_train['lr_schedule']}")
-    
+
     # 6. Define optimizer
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=lr_schedule,
@@ -594,4 +584,5 @@ def train(params: SKTaskParams):
 
         # 5. Save model weights
         os.makedirs("checkpoints", exist_ok=True)
+
         model.save_weights(f"{checkpoint_dir}/checkpoints/model_checkpoint_ep{epoch}")

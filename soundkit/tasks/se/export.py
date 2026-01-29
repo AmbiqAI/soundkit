@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 import numpy as np
+import tensorflow as tf
 from soundkit.utils.tflite_convert import (
     tflite_convert,
     warp_tf_model
@@ -39,7 +40,11 @@ def export(params: SKTaskParams):
 
     # 1.1. Build the model
     # Load from YAML file
-
+    if params.train.standardization:
+        from soundkit.utils.calculate_feat_stats import load_feat_stats
+        stats = load_feat_stats(checkpoint_dir, 'stats.pkl')
+    else:
+        stats = None
     if params.train['truncate_time'] is not None:
         time_steps = int(
             params.train['truncate_time'] \
@@ -110,12 +115,42 @@ def export(params: SKTaskParams):
         # next(iter()) is used here to efficiently pull the first (and only) batch 
         # into memory as a TensorFlow constant.
         audio_sn_tf = next(iter(ds_collected))
+        # random scale for calibration
+
+        scales = tf.random.uniform(
+            shape=(audio_sn_tf.shape[0], 1),
+            minval=params.data['min_amp'],
+            maxval=params.data['max_amp'],
+            dtype=audio_sn_tf.dtype)
+        maxval=tf.reduce_max(
+                tf.abs(audio_sn_tf),
+                axis=1,
+                keepdims=True)
+
+        scales_final = tf.where(
+            maxval > 1e-3,
+            scales / maxval,
+            1.0)
+        audio_sn_tf = audio_sn_tf * scales_final
+
 
         # 3. Compute features using the GPU-accelerated extractor.
         # We process the entire calibration set as one batch and convert to a 
         # NumPy array only at the final step for downstream compatibility.
         data_calibration = feat_extractor(audio_sn_tf)[0].numpy()
-
+        if stats is not None:
+                data_calibration = (data_calibration - stats['nMean_feat']) * stats['nInvStd']
+        if params.train['standardization']:
+            # Standardize features
+            if params.train['standardization_type'] in ["mve", "mean", "std"]:
+                mean_stats = stats['nMean_feat']
+                inv_std_stats = stats['nInvStd']
+                data_calibration = (data_calibration - mean_stats) * inv_std_stats
+            elif params.train['standardization_type'] == "constant":
+                data_calibration = data_calibration / 32
+        else:
+            # No standardization, use raw features
+            data_calibration = data_calibration
         # for complex features-handling, split real and imaginary parts
         if np.iscomplexobj(data_calibration):
             data_calibration = np.stack(

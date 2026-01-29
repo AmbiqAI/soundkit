@@ -99,11 +99,13 @@ class DNSMOS_Batch:
         t_inf_end = time.time()
 
         # ============================================================
-        # 📝 UPDATED PRINTING LOGIC (With BAK)
+        # 📝 UPDATED PRINTING LOGIC (With BAK & Global Averages)
         # ============================================================
         print("\n" + "="*65)
         print(f"{'FILENAME':<30} | {'OVR':<8} | {'SIG':<8} | {'BAK':<8}")
         print("-" * 65)
+
+        summary_stats = []
 
         # Sorts alphabetically by file path
         for fpath, (start, end) in sorted(file_map.items()):
@@ -111,27 +113,21 @@ class DNSMOS_Batch:
 
             # Index 0 = SIG, Index 1 = BAK, Index 2 = OVR
             avg_sig = np.mean(file_scores[:, 0])
-            avg_bak = np.mean(file_scores[:, 1])  # <--- Added BAK extraction
+            avg_bak = np.mean(file_scores[:, 1])
             avg_ovr = np.mean(file_scores[:, 2])
+            
+            summary_stats.append([avg_ovr, avg_sig, avg_bak])
 
             name = os.path.basename(fpath)
             if len(name) > 28: name = name[:25] + "..."
 
             print(f"{name:<30} | {avg_ovr:.4f}   | {avg_sig:.4f}   | {avg_bak:.4f}")
 
-        t_total = time.time() - t_start_total
-        t_load = t_load_end - t_load_start
-        t_inf = t_inf_end - t_inf_start
-
-        print("=" * 65)
-        print(f"⏱️  PERFORMANCE REPORT")
-        print(f"   Total Audio:      {total_audio_duration:.2f}s")
-        print(f"   Loading (CPU):    {t_load:.3f}s")
-        print(f"   Inference (GPU):  {t_inf:.3f}s")
-        print(f"   Wall Time:        {t_total:.3f}s")
-        if t_total > 0:
-            print(f"   Speed:            {total_audio_duration / t_total:.1f}x Real-time")
-        print("=" * 65)
+        # 📊 FINAL AVERAGE CALCULATION
+        if summary_stats:
+            final_avgs = np.mean(summary_stats, axis=0)
+            print("-" * 65)
+            print(f"{'AVERAGE SCORE':<30} | {final_avgs[0]:.4f}   | {final_avgs[1]:.4f}   | {final_avgs[2]:.4f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -6,6 +6,8 @@ class ActivationFactory:
 
         if name == "relu":
             self.fn = tf.nn.relu
+        elif name == "relu6":
+            self.fn = tf.nn.relu6
         elif name == "tanh":
             self.fn = tf.nn.tanh
         elif name == "sigmoid":

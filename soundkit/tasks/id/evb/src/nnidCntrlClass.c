@@ -72,7 +72,7 @@ void nnidCntrlClass_reset(nnidCntrlClass* pt_inst)
 	// PCM_BUF reset
 	PcmBufClass_reset(pt_inst->pt_pcmBuf);
 
-	pt_inst->vad_onhold_frs = 20; // VAD on-hold time in frames
+	pt_inst->vad_onhold_frs = 0; // VAD on-hold time in frames
 }
 
 float16_t inner_product(

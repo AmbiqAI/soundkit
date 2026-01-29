@@ -155,6 +155,13 @@ class FeatureExtractor:
         erb_spec = self.erb.bm(spec_combined)
         erb_spec = tf.transpose(erb_spec, perm=[0,2,3,1])  # (B, T, F_erb, 2)
         erb_complex = tf.complex(erb_spec[...,0], erb_spec[...,1])
+        
+        scale = self.params.train.feature.scale
+        exp_complex = self.params.train.feature.exp_complex
+        if self.params.train.feature.exp_complex != 1.0:
+            mag = tf.abs(erb_complex)
+            scale = (mag**exp_complex) / (mag + 2**-15) * scale   # All float32 math
+            erb_complex = erb_complex * tf.cast(scale, tf.complex64) # Cast and apply
         return erb_complex, spec
 
     def _extract_erb_mag(

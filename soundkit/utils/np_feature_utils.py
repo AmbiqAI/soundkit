@@ -22,6 +22,8 @@ class FeatureExtractor_np:
             frame_len=480,
             hop_len=160,
             fft_len=512,
+            exp_complex=1.0,
+            scale=1,
             sampling_rate=16000,
             mel_bins=72,
             thresh_mel=50,
@@ -37,7 +39,8 @@ class FeatureExtractor_np:
             stream=stream,
             bypass_stft=bypass_stft
         )
-
+        self.exp_complex = exp_complex
+        self.scale = scale
         self.sampling_rate = sampling_rate
         self.feat_type=feat_type
         self._extractors = {
@@ -115,24 +118,34 @@ class FeatureExtractor_np:
         spec = self.stft_exec.process(audio_sn)
 
         return spec, spec.copy()
-    
+
     def _extract_erb_complex(
             self,
             audio_sn: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
+        # 1. Get STFT
         spec = self.stft_exec.process(audio_sn)
         spec_real = np.real(spec)
         spec_imag = np.imag(spec)
+
+        # 2. Prepare for ERB bank (matching your TF stack axis)
         spec_combined = np.stack([spec_real, spec_imag], axis=0)
         erb_spec = self.erb.bm(spec_combined)
-        
-        # import pdb; pdb.set_trace()
-        # erb_spec = np.transpose(erb_spec, (0,2, 3, 1))  # Shape: [T, F, 2]
-        # real = fakefix(erb_spec[0], 16, 8)
-        # imag = fakefix(erb_spec[1], 16, 8)
+
+        # 3. Reconstruct complex ERB from the BM output
+        # Based on your TF code: erb_spec[...,0] was real, erb_spec[...,1] was imag
+        # If self.erb.bm returns [2, T, F], then:
         real = erb_spec[0]
         imag = erb_spec[1]
         erb_complex = real + 1j * imag
+
+        # 4. Apply Power Compression (if exp_complex != 1.0)
+        if self.exp_complex != 1.0:
+            mag = np.abs(erb_complex)
+            # Using 2**-15 to match your TF epsilon/small constant
+            scale = (mag**self.exp_complex) / (mag + 2**-15) * self.scale
+            erb_complex = erb_complex * scale
+
         return erb_complex, spec.copy()
     
     def _extract_erb_mag(
