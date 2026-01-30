@@ -22,6 +22,7 @@ class SignalConfig:
 class DataConfig:
     """Data configuration for training and evaluation."""
     path_tfrecord: str = ""
+    license_agreement: Dict[str, str] = field(default_factory=dict)
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
     num_samples_per_noise: Any = None
     force_download: bool = False

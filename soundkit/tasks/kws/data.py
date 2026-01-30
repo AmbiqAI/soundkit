@@ -1,9 +1,11 @@
 ''' prepare tfrecords data for KWS task '''
+import sys
 import logging
 import random
 import re
 import multiprocessing
 from pathlib import Path
+from sympy import true
 from tqdm import tqdm
 import numpy as np
 import soundfile as sf
@@ -298,14 +300,39 @@ def data(params: SKTaskParams) -> None:
 
     """
     params_data = params.data
-    force_download = params_data['force_download']
+    force_download = params_data.get('force_download', False)
+    
+    # 1. Get the status from YAML
+    license_cfg = params_data.get('license_agreement', {})
+    qualcomm_status = license_cfg.get('qualcomm_kws', 'NONE')
+    # Use the resolved key from OmegaConf
+    sdk_key = license_cfg.get('q_license_key', 'NOT_SET')
+
+    print(f"DEBUG: force_download={force_download}, license={qualcomm_status}")
 
     if force_download:
-        corpora = params_data['corpora']
-        for d in corpora:
+        qual_downloaded = False
+        for d in params_data['corpora']:
             corpus = d['name']
-            type_cropus = d['type']
-            corpus_download(corpus, type_cropus)
+            if "galaxy" in corpus or d.get('source') == 'qualcomm':
+                # Check for "NONE"
+                if qual_downloaded is True:
+                    continue  # Already downloaded
+                
+                if qualcomm_status != "ACCEPTED":
+                    print(f"\n{'='*60}\n[LICENSE ERROR] You must accept the Qualcomm license.\nSet 'qualcomm_kws: ACCEPTED' in kws.yaml\n{'='*60}")
+                    sys.exit(1)
+
+                # Check for "NOT_SET" (The environment variable)
+                if sdk_key == "NOT_SET":
+                    print(f"\n{'!'*60}\n[AUTH ERROR] QUALCOMM_SDK_KEY is not set in your environment!\nRun: export QUALCOMM_SDK_KEY='your_token'\n{'!'*60}")
+                    sys.exit(1)
+                qual_downloaded = True
+                corpus_download(corpus, d['type'], auth_token=sdk_key)
+            else:
+                corpus_download(corpus, d['type'])
+    else:
+        print("INFO: force_download is false. Skipping data preparation.")
 
     speech_list = {'train': [], 'val': []}
     garb_list = {'train': [], 'val': []}
