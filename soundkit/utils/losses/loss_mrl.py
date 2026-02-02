@@ -85,9 +85,23 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
         Returns:
             tf.Tensor: Scalar loss averaged over all resolutions.
         """
+
         # Convert STFTs back to time-domain waveforms
         wav_true = self.istft_batch(y_true)
         wav_pred = self.istft_batch(y_pred)
+        max_val  = tf.reduce_max(
+                tf.abs(wav_true),
+                axis=1,
+                keepdims=True)
+
+        scale = tf.where(
+            max_val > 1e-3,
+            1.0 / max_val,
+            1.0)
+
+        wav_true = wav_true * scale
+        wav_pred = wav_pred * scale
+
         losses = []
         # Compute loss at each STFT resolution
         for cfg in self.stft_configs:

@@ -38,6 +38,7 @@ def feat_stats_estimator(
         dataset: tf.data.Dataset,
         num_batches: int,
         folder_nn: str,
+        standardization_type: str = "mve",
         feat_extractor: FeatureExtractor=None,
         dim_feat=40)->None:
     """
@@ -59,45 +60,59 @@ def feat_stats_estimator(
     tot = tf.Variable(0, dtype = tf.float64, trainable=False)
 
     # mean calculation
-    for i, batch in enumerate(tqdm(dataset, total=num_batches, desc="Mean estimating (batch)")):
-        if feat_extractor is None:
-            feat_sn = batch[0]
-            mask = batch[-1]
-        else:
-            audio_sn = batch[0]
-            mask = 1
-            feat_sn, *_ = feat_extractor(
-                audio_sn)
+    if standardization_type in ["mve", "mean"]:
+        for i, batch in enumerate(tqdm(dataset, total=num_batches, desc="Mean estimating (batch)")):
+            if feat_extractor is None:
+                feat_sn = batch[0]
+                mask = batch[-1]
+            else:
+                audio_sn = batch[0]
+                mask = 1
+                feat_sn, *_ = feat_extractor(
+                    audio_sn)
 
-        sub_tot = calculate_mean(feat_sn, mask)
-        mean_stats = mean_stats + tf.cast(sub_tot, tf.float64)
-        shape = tf.shape(feat_sn)
-        tmp = shape[0] * shape[1]
-        tot = tot + tf.cast(tmp, tf.float64)
-
-    mean_stats = mean_stats / tot
-    mean_stats = tf.cast(mean_stats, tf.float32)
-    mean_stats = fakefix_tf(mean_stats, 32, 15)
+            sub_tot = calculate_mean(feat_sn, mask)
+            mean_stats = mean_stats + tf.cast(sub_tot, tf.float64)
+            shape = tf.shape(feat_sn)
+            tmp = shape[0] * shape[1]
+            tot = tot + tf.cast(tmp, tf.float64)
+            if i == 600:
+                break
+        mean_stats = mean_stats / tot
+        mean_stats = tf.cast(mean_stats, tf.float32)
+        mean_stats = fakefix_tf(mean_stats, 32, 15)
+    else:
+        mean_stats = tf.cast(mean_stats, tf.float32)
+        mean_stats = fakefix_tf(mean_stats, 32, 15)
 
     # std calculation
-    for i, batch in enumerate(tqdm(dataset, total=num_batches, desc="STD estimating (batch)")):
-        if feat_extractor is None:
+    tot = tf.Variable(0, dtype = tf.float64, trainable=False)
+    if standardization_type in ["mve", "std"]:
+        for i, batch in enumerate(tqdm(dataset, total=num_batches, desc="STD estimating (batch)")):
+            if feat_extractor is None:
 
-            feat_sn = batch[0]
-            mask = batch[-1]
-        else:
-            audio_sn = batch[0]
-            mask = 1
-            feat_sn, *_ = feat_extractor(
-                audio_sn)
-        sub_tot = calculate_std(feat_sn, mean_stats, mask)
+                feat_sn = batch[0]
+                mask = batch[-1]
+            else:
+                audio_sn = batch[0]
+                mask = 1
+                feat_sn, *_ = feat_extractor(
+                    audio_sn)
+            sub_tot = calculate_std(feat_sn, mean_stats, mask)
 
-        inv_std_stats = inv_std_stats + tf.cast(tmp, tf.float64)
-
-    inv_std_stats = 1.0 / (2**-15 + tf.math.sqrt(inv_std_stats / tot))
-    inv_std_stats = tf.cast(inv_std_stats, tf.float32)
-    inv_std_stats = fakefix_tf(inv_std_stats, 32, 15)
-
+            inv_std_stats = inv_std_stats + tf.cast(sub_tot, tf.float64)
+            shape = tf.shape(feat_sn)
+            tmp = shape[0] * shape[1]
+            tot = tot + tf.cast(tmp, tf.float64)
+            if i == 600:
+                break
+        inv_std_stats = 1.0 / (2**-15 + tf.math.sqrt(inv_std_stats / tot))
+        inv_std_stats = tf.cast(inv_std_stats, tf.float32)
+        inv_std_stats = fakefix_tf(inv_std_stats, 32, 15)
+    else:
+        inv_std_stats = tf.cast(inv_std_stats * 0 + 1, tf.float32)
+        inv_std_stats = fakefix_tf(inv_std_stats, 32, 15)
+    inv_std_stats = tf.minimum(inv_std_stats, 5)
     # save mean and std
     stats = {'nMean_feat': mean_stats.numpy(), 'nInvStd': inv_std_stats.numpy()}
 

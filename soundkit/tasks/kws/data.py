@@ -1,9 +1,11 @@
 ''' prepare tfrecords data for KWS task '''
+import sys
 import logging
 import random
 import re
 import multiprocessing
 from pathlib import Path
+from sympy import true
 from tqdm import tqdm
 import numpy as np
 import soundfile as sf

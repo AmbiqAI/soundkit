@@ -52,7 +52,9 @@ from soundkit.utils.tf_complex_utils import (
     complex_magnitude,
     complex_angle,
 )
-
+from soundkit.utils.tf_stft import (
+    tf_istft,
+)
 from .datasets import create_dataset
 
 logging.basicConfig(
@@ -116,6 +118,7 @@ def train_step(
 
             loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
         else:
+
             if feat_type == "erb_mag":
                 est = erb.bs(est[..., 0])
             est = tf.complex(est, 0.0)
@@ -123,11 +126,13 @@ def train_step(
 
             spec_s_delay = polar_to_complex(
                 complex_magnitude(batch["spec_s_delay"]),
-                complex_angle(batch["spec_sn_delay"]),
+                complex_angle(batch["spec_s_delay"]),
             )
 
             spec_en = spec_en_delay
-            loss = loss_fn(spec_s_delay, spec_en_delay)
+            loss = loss_fn(
+                spec_s_delay,
+                spec_en_delay)
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
@@ -215,10 +220,13 @@ def run_epoch(
         - If max amplitude > eps: Randomly scale peak to [min_val, max_val].
         - If max amplitude <= eps: Do nothing (scale = 1.0).
         """
-        eps = 1e-9
+        eps = 1e-3
 
         # 1. Find max amplitude (B, 1)
-        max_val = tf.reduce_max(tf.abs(states_audio_sn), axis=1, keepdims=True)
+        max_val = tf.reduce_max(
+            tf.abs(states_audio_sn),
+            axis=1,
+            keepdims=True)
 
         # 2. Generate random targets (B, 1)
         target_peak = tf.random.uniform(
@@ -227,7 +235,7 @@ def run_epoch(
 
         # 3. Calculate the scale for the "normal" case
         # We add eps to the denominator to prevent DivisionByZero/Inf in the calculation
-        scale_computed = target_peak / (max_val + eps)
+        scale_computed = target_peak / (max_val)
 
         # 4. Apply Logic:
         # If max_val > eps  -> Use the computed random scale
@@ -235,6 +243,7 @@ def run_epoch(
         final_scale = tf.where(max_val > eps, scale_computed, 1.0)
 
         return final_scale
+
     states_audio_sn, states_audio_s = reset_states()
     for step, batch in enumerate(dataset):
         if params.train['reset_states_every_batch']:
@@ -244,7 +253,7 @@ def run_epoch(
 
         audio_sn, audio_s, _ = batch
         gain = random_peak_normalize(
-            states_audio_sn,
+            audio_s,
             min_val = params.data.min_amp,
             max_val = params.data.max_amp)
 
@@ -268,6 +277,10 @@ def run_epoch(
                 feat_sn,
             )
 
+
+        # mag = tf.abs(feat_sn)
+        # scale = (mag**0.5) / (mag + 2**-15)  # All float32 math
+        # feat_sn = feat_sn * tf.cast(scale, tf.complex64) # Cast and apply
         if params.train['standardization']:
             # Standardize features
 
@@ -283,9 +296,12 @@ def run_epoch(
 
         batch_data = {
             "spec_sn_delay": spec_sn_delay,
-            "spec_s_delay": spec_s_delay,
+            "spec_s_delay":  spec_s_delay,
             "feat_sn": feat_sn_norm,
-            "mask": 1.0
+            "mask": 1.0,
+            "hop_size": stft_feat['hop_size'],
+            "frame_size": stft_feat['frame_size'],
+            "fft_size": stft_feat['fft_size'],
         }
 
         loss, logits, spec_en = train_step(
@@ -364,13 +380,15 @@ def run_epoch(
 
             if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
                 feat_sn = 10* feat_sn[0].numpy()
+                feat_sn_norm_d = 10* feat_sn_norm[0].numpy()
             elif params.train['feature']['type'] in ('pspec', 'spec', "erb_complex", "hybrid_mag", "erb_mag"):
                 feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
+                feat_sn_norm_d = 20*tf_log10_eps( tf.abs(feat_sn_norm[0])).numpy()
             if feat_sn_norm.dtype == tf.complex64:
                 fig, axes = plot_spectrograms(
-                    images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask_real.T, mask_imag.T],
+                    images=[pspec_s.T, pspec_sn.T, feat_sn_norm_d.T, pspec_en.T, mask_real.T, mask_imag.T],
                     titles=["clean logspec", "noisy logspec", "feat", "enhanced logspec", "mask real", "mask imag"],
-                    vmin_vmax=[(-80, 10), (-80, 10), (-80, 10), (-80, 10), mask_real_range, mask_imag_range],
+                    vmin_vmax=[(-80, 10), (-80, 10), (feat_sn_norm_d.min(), feat_sn_norm_d.max()), (-80, 10), mask_real_range, mask_imag_range],
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
                 )
@@ -479,12 +497,14 @@ def train(params: SKTaskParams):
             ds_train,
             batches_train,
             folder_nn=checkpoint_dir,
-            feat_extractor=feat_extractor,)
+            feat_extractor=feat_extractor,
+            standardization_type=params_train['standardization_type'],)
     else:
         stats = {
             'nMean_feat': tf.zeros([dim_feat], dtype=tf.float32),
             'nInvStd': tf.ones([dim_feat], dtype=tf.float32),
         }
+
     # 5. Define loss function
     loss_fn = LossFactory.get(
         params.train["loss_function"]["type"],
@@ -565,4 +585,5 @@ def train(params: SKTaskParams):
 
         # 5. Save model weights
         os.makedirs("checkpoints", exist_ok=True)
+
         model.save_weights(f"{checkpoint_dir}/checkpoints/model_checkpoint_ep{epoch}")

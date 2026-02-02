@@ -125,7 +125,7 @@ class CompressedMSE(tf.keras.losses.Loss):
         self.exp = float(exp)
         self.eps = float(eps)
 
-    def call(self, x, y):
+    def call(self, x, y, scale=None):
         """
         Compute compressed MSE over all elements.
 
@@ -140,6 +140,11 @@ class CompressedMSE(tf.keras.losses.Loss):
             raise ValueError("Input tensors must be of complex dtype.")
         if y.dtype is not tf.complex64:
             raise ValueError("Input tensors must be of complex dtype.")
+        
+        if scale is not None:
+            x = x * scale
+            y = y * scale
+        
         mag_x = tf.pow(
             complex_magnitude(x, self.eps),
             self.exp)
@@ -352,6 +357,8 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
             hop_size=160,
             is_norm=False,
             scalar_invariant=False,
+            vad_threshold=0.0001, # RMS threshold
+            vad_weight=0.0,      # Penalty for silence
             name="time_smooth_mae_loss",
             **kwargs):
 
@@ -363,6 +370,50 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
         self.hop_size = hop_size
         self.scalar_invariant = scalar_invariant
         self.p = power_law_exp
+        self.vad_threshold = vad_threshold
+        self.vad_weight = vad_weight
+
+    def _compute_smooth_frame_vad(
+            self,
+            y_true_wave,
+            hangover_frames=5):
+        """
+        Calculates a smoothed frame-based weight mask.
+        hangover_frames: Number of frames (10ms each) to keep VAD active after speech.
+        """
+        # 1. Slice into frames and calculate RMS
+        frames = tf.signal.frame(y_true_wave, frame_length=self.hop_size, frame_step=self.hop_size)
+        frame_rms = tf.sqrt(
+            tf.reduce_mean(
+                tf.square(frames), axis=-1) + self.eps)
+
+        # 2. Initial binary decision [batch, num_frames, 1]
+        is_speech = tf.cast(frame_rms > self.vad_threshold, tf.float32)
+        is_speech = tf.expand_dims(is_speech, axis=-1)
+
+        # 3. TEMPORAL SMOOTHING (Hangover)
+        # Use a 1D Max Pooling to "spread" the 1.0 values forward and backward
+        # A window size of 5 frames = 50ms hangover/lookahead
+        smoothed_speech = tf.nn.max_pool1d(
+            is_speech,
+            ksize=hangover_frames,
+            strides=1,
+            padding='SAME'
+        )
+        smoothed_speech = tf.squeeze(smoothed_speech, axis=-1)
+
+        # 4. Apply weight (0.0 for silence, 1.0 for speech)
+        frame_mask = smoothed_speech * 1.0 + (1.0 - smoothed_speech) * self.vad_weight
+
+        # 5. Upsample to sample-level
+        sample_mask = tf.repeat(frame_mask, repeats=self.hop_size, axis=-1)
+
+        # Pad to match original waveform length
+        pad_len = tf.shape(y_true_wave)[1] - tf.shape(sample_mask)[1]
+        sample_mask = tf.pad(sample_mask, [[0, 0], [0, pad_len]], constant_values=self.vad_weight)
+
+        return sample_mask
+
     def call(self, y_true, y_pred):
 
         # --- Input validation ---
@@ -437,8 +488,19 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
             loss = tf.sqrt(diff * diff + self.eps * self.eps) - self.eps
             return tf.reduce_mean(loss)
 
+
+        # --- Compute VAD Weighting ---
+        vad_mask = self._compute_smooth_frame_vad(y_true_norm)
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # plt.plot(vad_mask[0,:].numpy(), label='VAD Mask')
+        # plt.plot(y_true_norm[0,:].numpy(), label='True Signal')
+        # plt.legend()
+        # plt.show()
+
         diff = power_law_compress(y_true_norm, self.p) - power_law_compress(y_pred_norm, self.p)
         loss = tf.sqrt(diff * diff + self.eps * self.eps) - self.eps
-
+        loss = loss * vad_mask
         # mean over batch + time
+
         return tf.reduce_mean(loss)

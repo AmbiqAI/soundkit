@@ -495,8 +495,8 @@ def main(args):
     # choose the channel to playback
     ch_select       = Array('i', [1]) # 0: raw data, 1: enhanced data
 
-    
     tty = find_tinyusb_port()
+
     # we use two multiprocesses to handle real-time visualization and recording
     # 1. proc_draw   : to visualize
     # 2. proc_evb2pc : to capture data from evb and recording

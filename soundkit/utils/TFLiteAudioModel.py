@@ -52,7 +52,6 @@ class TFLiteAudioModel:
 
         print_model_inputs(self.interpreter)
 
-        
     def __call__(
             self,
             input_tensor: np.ndarray) -> np.ndarray:

@@ -171,6 +171,13 @@ def corpus_download(
     """
     download se dataset
     """
+    if auth_token:
+        print(f"--> Downloading {corpus} using provided Qualcomm token...")
+        # Your logic here to hit the gated URL using the token
+        # e.g., requests.get(url, headers={"Authorization": f"Bearer {auth_token}"})
+    else:
+        print(f"--> Downloading {corpus} from public source...")
+        # Your existing public download logic
     wavs = "wavs"
     tmp_download = "tmp"
     os.makedirs(wavs, exist_ok=True)
@@ -263,6 +270,13 @@ def corpus_download(
             target_name = f'{corpus}.zip'
             target_path = f'./{tmp_download}/{target_name}'
             url = f'https://www.openslr.org/resources/28/{target_name}'
+            url_download(url, target_path )
+            unzip_with_progress(target_path, dst_folder)
+
+        case "val-galaxy" | "train-galaxy":
+            target_name = f'qualcomm_keyword_speech_dataset.zip'
+            target_path = f'./{tmp_download}/{target_name}'
+            url = f'https://softwarecenter.qualcomm.com/api/download/software/dataset/AIDataset/Qualcomm_Keyword_Speech_Dataset/qualcomm_keyword_speech_dataset.zip'
             url_download(url, target_path )
             unzip_with_progress(target_path, dst_folder)
 

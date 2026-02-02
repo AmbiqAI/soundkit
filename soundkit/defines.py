@@ -22,6 +22,7 @@ class SignalConfig:
 class DataConfig:
     """Data configuration for training and evaluation."""
     path_tfrecord: str = ""
+    license_agreement: Dict[str, str] = field(default_factory=dict)
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
     num_samples_per_noise: Any = None
     force_download: bool = False
@@ -99,6 +100,8 @@ class FeatureConfig:
     bins: int = 72
     bins_fft: int = 50
     n_mels: int = 32
+    exp_complex: float = 1.0
+    scale: float = 1.0
     def __post_init__(self):
         allowed_types = {
             "spec",
@@ -166,8 +169,8 @@ class TrainConfig:
             raise ValueError("batchsize must be > 0")
         if self.lr_schedule not in ("cosine", "constant"):
             raise ValueError("lr_schedule must be 'cosine' or 'constant'")
-        if self.standardization_type not in ("mve", "mean"):
-            raise ValueError("standardization_type must be 'mve' or 'mean'")
+        if self.standardization_type not in ("mve", "mean", "std", "constant"):
+            raise ValueError("standardization_type must be 'mve', 'mean', 'std', or 'constant'")
         # Check epoch_loaded
         if isinstance(self.epoch_loaded, int) and self.epoch_loaded < 0:
             raise ValueError(
@@ -190,6 +193,8 @@ class EvaluateConfig:
     """Evaluation configuration parameters."""
     epoch_loaded: Any = "random"
     eval: bool = False
+    dtype: str = "int16"
+    calibration_samples: Optional[int] = None
     threshold_id: float = 0.8  # threshold for id verification
     data: EvaluateDataConfig = field(default_factory=EvaluateDataConfig)
     # Check epoch_loaded
