@@ -3,9 +3,6 @@ project: kws
 job_dir: ./results/tasks/${project}
 
 data:
-  license_agreement:
-    qualcomm_kws: "NONE" # User must change this to "ACCEPTED"
-    q_license_key: ${oc.env:QUALCOMM_SDK_KEY, "NOT_SET"}
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
     train: train_tfrecord.csv
