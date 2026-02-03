@@ -88,7 +88,7 @@ evaluate:
 
 export:
   dtype: int16
-  eval: false
+  eval: true
   epoch_loaded: 0
   qbit_input: 8
   tflite_dir: zoo/vad/freq_model

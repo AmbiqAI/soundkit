@@ -13,7 +13,7 @@
 
 ## **Requirements**
 
-- Python  **3.10^+**
+- Python  **3.11^+**
 
 **Optional (for EVB demo support):**
 

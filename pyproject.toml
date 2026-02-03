@@ -7,7 +7,7 @@ name = "soundkit"
 version = "0.1.0"
 description = "soundKIT CLI tool"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 authors = [
   {name = "Ambiq AI", email = "paul.chen@ambiq.com"}
 ]
