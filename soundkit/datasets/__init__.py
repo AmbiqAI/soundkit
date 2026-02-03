@@ -2,6 +2,8 @@ from typing import Callable, Dict
 
 # === Import built-in + BYOD registry functions ===
 from .sk_datasets import (
+    get_corpus_path,
+    corpus_exists,
     load_train_clean_100,
     load_vad_train_clean_100, # for vad
     load_vad_train_clean_360, # for vad

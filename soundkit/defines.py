@@ -1,4 +1,4 @@
-""""SoundKit configuration definitions."""
+""""soundKIT configuration definitions."""
 import sys
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
@@ -26,6 +26,7 @@ class DataConfig:
     tfrecord_datalist_name: Dict[str, str] = field(default_factory=dict)
     num_samples_per_noise: Any = None
     force_download: bool = False
+    accept_qualcomm_license: bool = False
     reverb_prob: float = 0.0
     num_processes: int = 1
     corpora: List[Dict[str, Any]] = field(default_factory=list)
@@ -255,7 +256,7 @@ class DemoConfig:
 
 @dataclass
 class SKTaskParams:
-    """SoundKit task parameters."""
+    """soundKIT task parameters."""
     name: str = "experiment"
     project: str = "soundkit"
     job_dir: Path = field(default_factory=tempfile.gettempdir)
@@ -268,7 +269,7 @@ class SKTaskParams:
     demo: DemoConfig = field(default_factory=DemoConfig)
 
 class SKMode(StrEnum):
-    """SoundKit execution modes."""
+    """soundKIT execution modes."""
     data: str = "data"
     train: str = "train"
     evaluate: str = "evaluate"

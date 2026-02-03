@@ -1,6 +1,6 @@
-# 📦 Bring Your Own Dataset (BYOD) in SoundKit
+# 📦 Bring Your Own Dataset (BYOD) in soundKIT
 
-SoundKit supports a flexible BYOD (Bring Your Own Dataset) system. You can define custom datasets—speech, noise, or reverb—by adding loader functions and explicitly registering them in `soundkit/datasets/__init__.py`, similar to how models are registered.
+soundKIT supports a flexible BYOD (Bring Your Own Dataset) system. You can define custom datasets—speech, noise, or reverb—by adding loader functions and explicitly registering them in `soundkit/datasets/__init__.py`, similar to how models are registered.
 
 ---
 
@@ -88,4 +88,4 @@ The `type` must be one of: `speech`, `noise`, or `reverb`. The `split` field def
 
 ---
 
-By following this factory-style pattern, BYOD in SoundKit becomes robust, traceable, and simple to scale.
+By following this factory-style pattern, BYOD in soundKIT becomes robust, traceable, and simple to scale.

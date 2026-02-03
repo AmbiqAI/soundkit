@@ -26,8 +26,8 @@ parser = ArgParser()
 def parse_config(
         path: str,
         overrides: list[str] = None) -> DictConfig:
-    """ 
-    Parse YAML configuration file with optional overrides. 
+    """
+    Parse YAML configuration file with optional overrides.
     """
 
     if not os.path.exists(path):
@@ -70,7 +70,7 @@ def run_task(
         zoo_idx = abs_config_path.parts.index("zoo")
         # local_target becomes /your/path/zoo/task_name/
         local_target = Path(*abs_config_path.parts[:zoo_idx + 2])
-        
+
         # Use the modulized manager
         s3 = S3Manager()
 
@@ -130,7 +130,7 @@ def main():
     global extra_overrides
 
     ap = argparse.ArgumentParser(
-        description="SoundKit CLI - data, train, evaluate, export, and demo AI tasks.",
+        description="soundKIT CLI - data, train, evaluate, export, and demo AI tasks.",
     )
 
     ap.add_argument(

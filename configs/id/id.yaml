@@ -5,7 +5,7 @@ job_dir: ./soundkit/tasks/${project}
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: train_tfrecord.yaml 
+    train: train_tfrecord.yaml
     val: val_tfrecord.yaml
   num_samples_per_noise:
     train:
@@ -43,9 +43,9 @@ train:
   epochs: 150
   warmup_epochs: 5
   epoch_loaded: random
-  
+
   # only cross_entropy in this task
-  loss_function: 
+  loss_function:
     type: cross_entropy # or cross_entropy
     params: {} # for cross_entropy
 
@@ -53,7 +53,7 @@ train:
     checkpoint_dir:  ${job_dir}/models_trained/${name}_${train.loss_function.type}
     tensorboard_dir: ${job_dir}/tensorboard/${name}_${train.loss_function.type}
   num_lookahead: 0
-  
+
   feature:
     frame_size: 480
     hop_size: 160
@@ -65,7 +65,7 @@ train:
     # n_mels: 72
 
   standardization: true
-  
+
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_crnn_id.yaml
@@ -83,11 +83,11 @@ evaluate:
 
   threshold_id: 0.8 # threshold for id verification
 
-  data: 
+  data:
     dir: "./wavs/id/test_wavs"
     reg_files: [registration1.wav, registration2.wav, registration3.wav, registration4.wav] # list of registration files
     test_files: [test1.wav, test2.wav] # list of test files to evaluate
-    
+
 export:
   dtype: int16
   eval: false
@@ -101,7 +101,7 @@ demo:
   platform: pc # evb or pc
   epoch_loaded: best
   tflite_dir: ${job_dir}/tflite
-  evb_dir: ${job_dir}/evb
+  evb_dir: ./soundkit/tasks/id/evb_webusb
   pre_gain: 1
   dtype: int16
   filename: def_nn2_nnid

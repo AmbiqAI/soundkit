@@ -119,4 +119,4 @@ To visualize training progress again:
 soundkit -t id -m train --tensorboard -c configs/id/id.yaml
 ```
 
-Let SoundKit help you build robust, low-power speaker ID models for embedded and on-device voice authentication.
+Let soundKIT help you build robust, low-power speaker ID models for embedded and on-device voice authentication.

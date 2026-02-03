@@ -1,16 +1,16 @@
 
 <!-- <p align="center">
-  <a href="https://github.com/AmbiqAI/soundkit"><img src="./docs/assets/soundkit-banner.png" alt="SoundKit"></a>
+  <a href="https://github.com/AmbiqAI/soundkit"><img src="./docs/assets/soundkit-banner.png" alt="soundKIT"></a>
 </p> -->
 
 ---
 
-**Documentation**: <a href="https://ambiqai.github.io/soundkit" target="_blank">https://ambiqai.github.io/soundkit</a>  
+**Documentation**: <a href="https://ambiqai.github.io/soundkit" target="_blank">https://ambiqai.github.io/soundkit</a>
 **Source Code**: <a href="https://github.com/AmbiqAI/soundkit" target="_blank">https://github.com/AmbiqAI/soundkit</a>
 
 ---
 
-**SoundKit** is an AI Development Kit (ADK) designed to help developers build, train, and deploy real-time audio classification models onto [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). The kit includes task-specific datasets, energy-efficient model architectures, and built-in tools for optimization and deployment. It also integrates with [NeuralSPOT](https://github.com/AmbiqAI/neuralSPOT), Ambiq’s open-source AI SDK, to streamline the deployment of inference models onto embedded hardware. Developers can use pre-trained models or create custom audio models tailored to their specific edge application.
+**soundKIT** is an AI Development Kit (ADK) designed to help developers build, train, and deploy real-time audio classification models onto [Ambiq's family of ultra-low power SoCs](https://ambiq.com/soc/). The kit includes task-specific datasets, energy-efficient model architectures, and built-in tools for optimization and deployment. It also integrates with [NeuralSPOT](https://github.com/AmbiqAI/neuralSPOT), Ambiq’s open-source AI SDK, to streamline the deployment of inference models onto embedded hardware. Developers can use pre-trained models or create custom audio models tailored to their specific edge application.
 
 **Key Features:**
 * **Real-time**: Run low-latency inference on embedded edge devices.
@@ -32,7 +32,7 @@ The following are also required to compile/flash binaries for EVB demos:
 
 * [Arm GNU Toolchain ^12.2](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 * [Segger J-Link ^7.92](https://www.segger.com/downloads/jlink/)
-<!-- 
+<!--
 !!! note
     A [VSCode Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) is defined in [./.devcontainer](https://github.com/AmbiqAI/soundkit/tree/main/.devcontainer). -->
 
@@ -51,7 +51,7 @@ source .venv/bin/activate # start the soundkit on virtural env
 
 ## <span class="sk-h2-span">Usage</span>
 
-SoundKit can be used via CLI or directly as a Python package. It supports a flexible configuration-based workflow to streamline training and deployment.
+soundKIT can be used via CLI or directly as a Python package. It supports a flexible configuration-based workflow to streamline training and deployment.
 
 Refer to the [Quickstart Guide](https://ambiqai.github.io/soundkit/quickstart/) to get started quickly.
 
@@ -59,7 +59,7 @@ Refer to the [Quickstart Guide](https://ambiqai.github.io/soundkit/quickstart/) 
 
 ## <span class="sk-h2-span">Tasks</span>
 
-SoundKit supports three core **audio tasks**, each with reference pipelines for training, evaluation, export, and deployment:
+soundKIT supports three core **audio tasks**, each with reference pipelines for training, evaluation, export, and deployment:
 
 - **SE (Sound Enhancement)**: Speech enhancemnt.
 - **VAD (Voice Activity Detection)**: Detect presence or absence of human voice in audio streams.
@@ -83,7 +83,7 @@ Each task supports the following operational **modes**:
 
 ## <span class="sk-h2-span">Datasets</span>
 
-SoundKit includes a flexible dataset factory that supports both speech and non-speech corpora, as well as labeled data for supervised tasks. The following datasets are supported for SE, VAD, and KWS tasks:
+soundKIT includes a flexible dataset factory that supports both speech and non-speech corpora, as well as labeled data for supervised tasks. The following datasets are supported for SE, VAD, and KWS tasks:
 
 ### Speech Corpora
 * [**LibriSpeech**](https://www.openslr.org/12) (train-clean-100, train-clean-360, train-other-500, dev-clean, test-clean): Large-scale read English speech corpus.

@@ -29,9 +29,9 @@ $$
 
 KWS enables:
 
-- Always-on voice interfaces in smart speakers, earbuds, and wearables  
-- Privacy-preserving local voice triggers without cloud processing  
-- Ultra-low-power wake word detection for battery-constrained applications  
+- Always-on voice interfaces in smart speakers, earbuds, and wearables
+- Privacy-preserving local voice triggers without cloud processing
+- Ultra-low-power wake word detection for battery-constrained applications
 - Real-time command recognition in embedded systems
 
 ---
@@ -40,9 +40,9 @@ KWS enables:
 
 KWS must perform reliably under:
 
-- **Speech clutter**: background conversations and overlapping talkers  
-- **Noise corruption**: audio with non-speech sound sources  
-- **Far-field speech**: distant or reverberant keyword utterances  
+- **Speech clutter**: background conversations and overlapping talkers
+- **Noise corruption**: audio with non-speech sound sources
+- **Far-field speech**: distant or reverberant keyword utterances
 - **Rare-event scenarios**: few positive keyword examples in long audio
 
 ---
@@ -51,21 +51,21 @@ KWS must perform reliably under:
 
 Given $y(t)$, the system performs framewise detection of keywords within a window (e.g., every 10 ms). The output is:
 
-- A per-frame binary mask (1 = keyword present)  
+- A per-frame binary mask (1 = keyword present)
 - Or a score/probability curve that peaks around keyword regions
 
 This is useful for visualization, alignment, and event-based inference.
 
 ---
 
-## 🧰 SoundKit for KWS
+## 🧰 soundKIT for KWS
 
-SoundKit offers a complete KWS pipeline:
+soundKIT offers a complete KWS pipeline:
 
-- Synthetic dataset generation with keyword injection in noise  
-- Time-frequency feature extraction (e.g., log-power spectrogram)  
-- CRNN-based model training with focal loss  
-- Evaluation and framewise prediction visualization  
+- Synthetic dataset generation with keyword injection in noise
+- Time-frequency feature extraction (e.g., log-power spectrogram)
+- CRNN-based model training with focal loss
+- Evaluation and framewise prediction visualization
 - Model export to TFLite and embedded C headers for EVB use
 
 ---

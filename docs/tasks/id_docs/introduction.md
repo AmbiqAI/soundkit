@@ -56,9 +56,9 @@ Thresholds are tuned to balance false acceptance and false rejection.
 
 ---
 
-## 🧰 SoundKit for ID
+## 🧰 soundKIT for ID
 
-SoundKit provides a complete speaker verification pipeline:
+soundKIT provides a complete speaker verification pipeline:
 
 - Speaker-labeled data preparation with noise/reverb augmentation
 - Feature extraction and embedding model training (e.g., ResNet or CRNN)
@@ -68,4 +68,4 @@ SoundKit provides a complete speaker verification pipeline:
 
 ---
 
-Speaker Verification with SoundKit enables low-power, private, and responsive user authentication at the edge—without compromising on accuracy.
+Speaker Verification with soundKIT enables low-power, private, and responsive user authentication at the edge—without compromising on accuracy.

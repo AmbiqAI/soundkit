@@ -16,14 +16,18 @@ from soundkit.utils.audio import pad_or_crop
 from soundkit.defines import SKTaskParams
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.basic_dsp import dc_remove
-from soundkit.utils.download_api import corpus_download
+from soundkit.utils.download_api import (
+    corpus_download,
+    DOWNLOADABLE_CORPORA,
+    QUALCOMM_KWS_CORPORA,
+)
 from soundkit.utils.audio import (
         audio_read,
         random_load_audio_from_list,
         synthesize_audio_with_labels,
     )
 from soundkit.utils.plot_api import plot_spectrograms
-from soundkit.datasets import SKDatasetFactory
+from soundkit.datasets import SKDatasetFactory, corpus_exists
 from .datasets import create_raw_tfrecord
 
 logging.basicConfig(   
@@ -300,39 +304,50 @@ def data(params: SKTaskParams) -> None:
 
     """
     params_data = params.data
-    force_download = params_data.get('force_download', False)
-    
-    # 1. Get the status from YAML
-    license_cfg = params_data.get('license_agreement', {})
-    qualcomm_status = license_cfg.get('qualcomm_kws', 'NONE')
-    # Use the resolved key from OmegaConf
-    sdk_key = license_cfg.get('q_license_key', 'NOT_SET')
+    force_download = params_data['force_download']
+    accept_qualcomm_license = params_data.get('accept_qualcomm_license', False)
+    tfrecord_dir = Path(params_data['path_tfrecord'])
+    tfrecord_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"DEBUG: force_download={force_download}, license={qualcomm_status}")
-
+    corpora = params_data['corpora']
     if force_download:
-        qual_downloaded = False
-        for d in params_data['corpora']:
+        needs_qualcomm = any(d['name'] in QUALCOMM_KWS_CORPORA for d in corpora)
+        for d in corpora:
             corpus = d['name']
-            if "galaxy" in corpus or d.get('source') == 'qualcomm':
-                # Check for "NONE"
-                if qual_downloaded is True:
-                    continue  # Already downloaded
-                
-                if qualcomm_status != "ACCEPTED":
-                    print(f"\n{'='*60}\n[LICENSE ERROR] You must accept the Qualcomm license.\nSet 'qualcomm_kws: ACCEPTED' in kws.yaml\n{'='*60}")
-                    sys.exit(1)
-
-                # Check for "NOT_SET" (The environment variable)
-                if sdk_key == "NOT_SET":
-                    print(f"\n{'!'*60}\n[AUTH ERROR] QUALCOMM_SDK_KEY is not set in your environment!\nRun: export QUALCOMM_SDK_KEY='your_token'\n{'!'*60}")
-                    sys.exit(1)
-                qual_downloaded = True
-                corpus_download(corpus, d['type'], auth_token=sdk_key)
-            else:
-                corpus_download(corpus, d['type'])
+            type_cropus = d['type']
+            if corpus in QUALCOMM_KWS_CORPORA:
+                continue
+            corpus_download(corpus, type_cropus)
+        if needs_qualcomm:
+            corpus_download(
+                "qualcomm_keyword_speech_dataset",
+                "speech",
+                accept_qualcomm_license=accept_qualcomm_license,
+            )
     else:
-        print("INFO: force_download is false. Skipping data preparation.")
+        qualcomm_downloaded = False
+        for d in corpora:
+            corpus = d['name']
+            type_cropus = d['type']
+            if corpus in QUALCOMM_KWS_CORPORA:
+                if not corpus_exists(corpus):
+                    if not accept_qualcomm_license:
+                        raise FileNotFoundError(
+                            "Qualcomm Keyword Speech Dataset not found. "
+                            "Set data.accept_qualcomm_license=true to allow automatic download."
+                        )
+                    if not qualcomm_downloaded:
+                        log.info("Qualcomm KWS dataset missing; downloading.")
+                        corpus_download(
+                            "qualcomm_keyword_speech_dataset",
+                            "speech",
+                            accept_qualcomm_license=True,
+                        )
+                        qualcomm_downloaded = True
+                continue
+            if corpus in DOWNLOADABLE_CORPORA and not corpus_exists(corpus):
+                log.info("Corpus %s missing; downloading.", corpus)
+                corpus_download(corpus, type_cropus)
 
     speech_list = {'train': [], 'val': []}
     garb_list = {'train': [], 'val': []}

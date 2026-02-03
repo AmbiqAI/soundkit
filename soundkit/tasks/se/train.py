@@ -1,5 +1,5 @@
 """
-SoundKit SE Training Script
+soundKIT SE Training Script
 --------------------------
 Organized main training loop for Speech Enhancement (SE) task using TensorFlow/Keras.
 Features:
@@ -27,7 +27,7 @@ try:
 except Exception:
     _NVML_AVAILABLE = False
 
-# === SoundKit Core Imports ===
+# === soundKIT Core Imports ===
 from soundkit.defines import SKTaskParams
 from soundkit.utils.download_tf_model import (
     save_train_log,
@@ -283,12 +283,13 @@ def run_epoch(
         # feat_sn = feat_sn * tf.cast(scale, tf.complex64) # Cast and apply
         if params.train['standardization']:
             # Standardize features
-            if params.train['standardization_type'] in ["mve", "mean", "std"]:
-                mean_stats = stats['nMean_feat']
-                inv_std_stats = stats['nInvStd']
-                feat_sn_norm = (feat_sn - mean_stats) * tf.complex(inv_std_stats, 0.0)
-            elif params.train['standardization_type'] == "constant":
-                feat_sn_norm = feat_sn / 32
+
+            mean_stats = stats['nMean_feat']
+            inv_std_stats = stats['nInvStd']
+            if params.train['standardization_type'] == "mean":
+                feat_sn_norm = feat_sn - mean_stats
+            else: # "mve"
+                feat_sn_norm = (feat_sn - mean_stats) * inv_std_stats
         else:
             # No standardization, use raw features
             feat_sn_norm = feat_sn
@@ -391,7 +392,7 @@ def run_epoch(
                     show_colorbar=True,
                     show_fig=False       # set False if only saving
                 )
-                
+
             else:
                 fig, axes = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn.T, pspec_en.T, mask.T],
@@ -473,7 +474,7 @@ def train(params: SKTaskParams):
     }
     truncate_samples = int(params.train['truncate_time'] * params.data.signal.sampling_rate) if params.train['truncate_time'] is not None else None
 
-    # if params.train.num_per_epoch_files.train
+    # if params.train.num_per_epoch_files.train >
 
     ds_train, batches_train = create_dataset(
         tfrecord_list['train'],

@@ -48,7 +48,7 @@ Depending on your configuration, the following files may be generated:
 
 Exported models are suitable for:
 
-- TensorFlow Lite Micro (TFLM) deployment on embedded processors (e.g., Ambiq, STM32)
+- TensorFlow Lite Micro (TFLM) deployment on embedded processors (e.g., Ambiq Apollo)
 - Voice activity detection in custom firmware/DSP applications
 - WebUSB demos using `.tflite` models in-browser
 

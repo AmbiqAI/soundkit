@@ -1,11 +1,11 @@
-"""SoundKit Task base class module."""
+"""soundKIT Task base class module."""
 import abc # abstract base class
 
 from soundkit.defines import SKTaskParams
 
 
 class SKTask(abc.ABC):
-    """SoundKit Task base class. All tasks should inherit from this class."""
+    """soundKIT Task base class. All tasks should inherit from this class."""
 
     @staticmethod
     def description() -> str:

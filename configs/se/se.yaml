@@ -1,11 +1,11 @@
 name: se_nn_arch72_mel
 project: se
-job_dir: ./soundkit/tasks/se
+job_dir: ./results/tasks/se
 
 data:
-  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name: # list of saved tfrecords
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 1000
@@ -25,7 +25,7 @@ data:
     # - {name: dns_challenge, type: noise, split: train-val}
     # - {name: wind_noise, type: noise, split: train-val}
     - {name: rirs_noises, type: reverb, split: train-val}
-    
+
   snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
   target_length_in_secs: 10
   min_amp: 0.03
@@ -38,7 +38,7 @@ data:
   debug: false
 
 train:
-  num_per_epoch_files: 
+  num_per_epoch_files:
     train: 1000
   truncate_time: 8.0  # in seconds, set to null to use full length
   initial_lr: 4e-4
@@ -49,16 +49,16 @@ train:
   loss_function:
 
     type: compressed_mse
-    params: 
+    params:
       exp: 0.6
       eps: 1e-8
-  
+
   path:
-    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
-    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
+    checkpoint_dir: ${job_dir}/models_trained/${name}
+    tensorboard_dir: ${job_dir}/tensorboard/${name}
   num_lookahead: 2
 
-  feature: 
+  feature:
     frame_size: 480
     hop_size: 160
     fft_size: 512
@@ -69,13 +69,13 @@ train:
   model:
     config_dir: ./soundkit/models/arch_configs
     config_file: config_se_nn_arch72_mel.yaml
-  
+
   debug: false
 
 evaluate:
   epoch_loaded: best
 
-  data: 
+  data:
     dir: "./wavs/se/test_wavs"
     files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
     result_folder: ${job_dir}/test_results/${name}
@@ -84,12 +84,12 @@ export:
   dtype: int16
   qbit_input: 8
   epoch_loaded: best
-  tflite_dir: ./soundkit/tasks/se/tflite
+  tflite_dir: ${job_dir}/tflite
 
 demo:
   epoch_loaded: best
   dtype: int16
   platform: evb # or pc
-  tflite_dir: ./soundkit/tasks/se/tflite
+  tflite_dir: ${job_dir}/tflite
   evb_dir: ./soundkit/tasks/se/evb_webusb
   pre_gain: 1

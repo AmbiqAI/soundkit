@@ -1,6 +1,6 @@
-# 📚 Supported Datasets in SoundKit
+# 📚 Supported Datasets in soundKIT
 
-This document lists the datasets officially supported by SoundKit for speech enhancement tasks. These include speech, noise, and reverb datasets commonly used in research and real-world scenarios.
+This document lists the datasets officially supported by soundKIT for speech enhancement tasks. These include speech, noise, and reverb datasets commonly used in research and real-world scenarios.
 
 > ⚠️ **Please ensure that you have the right to use and distribute these datasets.** Always consult and respect the original dataset licenses.
 
@@ -88,6 +88,6 @@ This document lists the datasets officially supported by SoundKit for speech enh
 
 ## 🔒 Licensing Reminder
 
-SoundKit does not distribute any of the datasets listed above. **Users are responsible** for downloading and using the datasets according to their respective licenses.
+soundKIT does not distribute any of the datasets listed above. **Users are responsible** for downloading and using the datasets according to their respective licenses.
 
 If you are publishing research or commercializing a system based on these datasets, please check licensing requirements and attribution rules for each one.

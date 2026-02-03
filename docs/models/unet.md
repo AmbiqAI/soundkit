@@ -1,6 +1,6 @@
 # UNet Model Configuration
 
-This document describes the configuration options for a simple UNet-style model used in SoundKit.
+This document describes the configuration options for a simple UNet-style model used in soundKIT.
 
 ## Example Configuration (`config_unet.yaml`)
 

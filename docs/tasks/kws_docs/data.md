@@ -1,7 +1,7 @@
 
 # Data Preparation for Keyword Spotting (KWS)
 
-The data preparation step in **SoundKit** for KWS involves generating training and validation datasets by mixing keyword utterances with background noise and non-keyword speech at controlled SNR levels.
+The data preparation step in **soundKIT** for KWS involves generating training and validation datasets by mixing keyword utterances with background noise and non-keyword speech at controlled SNR levels.
 
 This process supports reproducible and diverse datasets suitable for training robust keyword detection models.
 
@@ -31,7 +31,7 @@ Here are the key settings for the `data` section:
 data:
   path_tfrecord: ${job_dir}/tfrecords
   tfrecord_datalist_name:
-    train: train_tfrecord.csv 
+    train: train_tfrecord.csv
     val: val_tfrecord.csv
   num_samples_per_noise:
     train: 757
@@ -69,6 +69,7 @@ data:
 | `tfrecord_datalist_name`  | Filenames listing TFRecord entries                       | `train: train_tfrecord.csv`, `val: val_tfrecord.csv` |
 | `num_samples_per_noise`   | Number of samples per noise type                         | `train: 757`, `val: 177`                             |
 | `force_download`          | Force data re-download if `true`                         | `false`                                              |
+| `accept_qualcomm_license` | Allow automatic download of Qualcomm KWS dataset         | `false`                                              |
 | `reverb_prob`             | Probability of adding reverberation                      | `0.0`                                                |
 | `num_processes`           | Number of parallel processes for data prep               | `8`                                                  |
 | `corpora`                 | List of keyword, garbage, noise, and reverb data sources | See detailed list below                              |

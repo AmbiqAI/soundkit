@@ -1,33 +1,33 @@
 
 # Keyword Spotting (KWS)
 
-The [Keyword Spotting (KWS)](./kws_docs/introduction.md) module in **SoundKit** enables accurate detection of predefined spoken keywords in diverse and noisy conditions. It is designed for real-time, low-power deployments using embedded platforms.
+The [Keyword Spotting (KWS)](./kws_docs/introduction.md) module in **soundKIT** enables accurate detection of predefined spoken keywords in diverse and noisy conditions. It is designed for real-time, low-power deployments using embedded platforms.
 
 It supports:
 
-* ✅ [Data preparation](./kws_docs/data.md)  
-* ✅ [Model training](./kws_docs/train.md)  
-* ✅ [Evaluation](./kws_docs/evaluate.md)  
-* ✅ [Model export](./kws_docs/export.md)  
+* ✅ [Data preparation](./kws_docs/data.md)
+* ✅ [Model training](./kws_docs/train.md)
+* ✅ [Evaluation](./kws_docs/evaluate.md)
+* ✅ [Model export](./kws_docs/export.md)
 * ✅ [PC/EVB-based demo inference](./kws_docs/demo.md)
 
 Engineered for deployment on [Ambiq's ultra-low power SoCs](https://ambiq.com/soc/), KWS offers high accuracy even in constrained edge environments.
 
-📘 **Try it now:** Explore the [KWS Tutorial Notebook](../../notebooks/SoundKit_KWS_Tutorial.ipynb) to get started.
+📘 **Try it now:** Explore the [KWS Tutorial Notebook](/notebooks/SoundKit_KWS_Tutorial/) to get started.
 
 ---
 
 ## Features
 
-- Keyword spotting with frame-level granularity  
-- CRNN-based acoustic modeling  
-- Support for long audio (15s) with extension frames  
-- TFLite and C-array export for embedded use  
+- Keyword spotting with frame-level granularity
+- CRNN-based acoustic modeling
+- Support for long audio (15s) with extension frames
+- TFLite and C-array export for embedded use
 - PC-based and EVB-based real-time demos
 
 ---
 
-## Install SoundKit
+## Install soundKIT
 
 Refer to the [QuickStart Guide](../quickstart.md) for installation and setup instructions.
 
@@ -94,9 +94,9 @@ Use the `soundkit` CLI to run KWS tasks through different modes using a configur
 
         ```bash
         soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=pc
-        # or 
+        # or
         soundkit -t kws -m demo -c configs/kws/kws.yaml demo.platform=evb
-        
+
         ```
 
         See [Demo](./kws_docs/demo.md) to test live detection.

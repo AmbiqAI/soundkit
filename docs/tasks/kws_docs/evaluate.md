@@ -1,6 +1,6 @@
 # Evaluation for Keyword Spotting (KWS)
 
-The evaluation step in **SoundKit** for KWS allows you to assess model performance on specific audio samples. It visualizes keyword activity predictions and provides insight into real-world accuracy.
+The evaluation step in **soundKIT** for KWS allows you to assess model performance on specific audio samples. It visualizes keyword activity predictions and provides insight into real-world accuracy.
 
 ---
 
@@ -21,7 +21,7 @@ This will output prediction visualizations and save results to the configured fo
 ```yaml
 evaluate:
   epoch_loaded: best
-  data: 
+  data:
     dir: "./wavs/vad/test_wavs"
     files: [rpc_audio_raw.wav, speech.wav, i_like_steak.wav, keyboard_steak.wav, steak_hairdryer.wav]
   result_folder: ${job_dir}/test_results/${train.path.full_name}
