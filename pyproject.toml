@@ -18,8 +18,8 @@ dependencies = [
     "tensorboard>=2.15,<2.16",
 
     # PyTorch & VAD (Added for Silero)
-    "torch @ https://download.pytorch.org/whl/cpu/torch-2.2.0%2Bcpu-cp310-cp310-linux_x86_64.whl",
-    "torchaudio @ https://download.pytorch.org/whl/cpu/torchaudio-2.2.0%2Bcpu-cp310-cp310-linux_x86_64.whl",
+    "torch>=2.2.0",
+    "torchaudio>=2.2.0",
     "silero-vad>=0.5.0",
 
     # Scientific and Data Utilities
@@ -56,6 +56,15 @@ dependencies = [
     # Git-based dependency
     "erpc @ git+https://github.com/ambiqai/erpc.git#subdirectory=erpc_python"
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }
 
 [project.optional-dependencies]
 docs = [
