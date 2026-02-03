@@ -17,6 +17,11 @@ dependencies = [
     "tensorflow[and-cuda]~=2.15.1",
     "tensorboard>=2.15,<2.16",
 
+    # PyTorch & VAD (Added for Silero)
+    "torch @ https://download.pytorch.org/whl/cpu/torch-2.2.0%2Bcpu-cp310-cp310-linux_x86_64.whl",
+    "torchaudio @ https://download.pytorch.org/whl/cpu/torchaudio-2.2.0%2Bcpu-cp310-cp310-linux_x86_64.whl",
+    "silero-vad>=0.5.0",
+
     # Scientific and Data Utilities
     "numpy>=1.21,<2.0",
     "scipy>=1.8,<2.0",

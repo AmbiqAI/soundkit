@@ -15,12 +15,14 @@ from soundkit.utils.download_tf_model import (
      load_model_checkpoint
 )
 from soundkit.utils.tf_copy_model import copy_model_weights
+from soundkit.utils.calculate_feat_stats import feat_stats_estimator
 from soundkit.utils.TFLiteAudioModel import TFLiteAudioModel
 from soundkit.utils.basic_dsp import DCRemover
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.np_feature_utils import FeatureExtractor_np
 from soundkit.datasets import SKDatasetFactory
 from soundkit.utils.audio import audio_read
+from soundkit.utils.calculate_feat_stats import mean_varinace_norm
 from .datasets import create_dataset
 logging.basicConfig(
     level=logging.INFO,
@@ -95,9 +97,6 @@ def export(params: SKTaskParams):
             'val': 
                 Path(params.data['path_tfrecord']) / params.data['tfrecord_datalist_name']['val'],
         }
-        truncate_samples = int(
-            params.train['truncate_time'] * params.data.signal.sampling_rate) \
-                if params.train['truncate_time'] is not None else None
 
         ds_train, _ = create_dataset(
             tfrecord_list['train'],
@@ -121,12 +120,29 @@ def export(params: SKTaskParams):
         # We process the entire calibration set as one batch and convert to a 
         # NumPy array only at the final step for downstream compatibility.
         data_calibration = feat_extractor(audio_sn_tf)[0].numpy()
-
+        # 4. Compute feature statistics for standardization
+        if params.train['standardization']:
+            stats = feat_stats_estimator(
+                ds_train,
+                batchsize_train,
+                folder_nn=checkpoint_dir,
+                feat_extractor=feat_extractor,)
+        else:
+            stats = {
+                'nMean_feat': tf.zeros([dim_feat], dtype=tf.float32),
+                'nInvStd': tf.ones([dim_feat], dtype=tf.float32),
+            }
         # for complex features-handling, split real and imaginary parts
         if np.iscomplexobj(data_calibration):
             data_calibration = np.stack(
                 [np.real(data_calibration), np.imag(data_calibration)],
                 axis=-1)
+        if params.train['standardization']:
+            # Standardize features
+            data_calibration = mean_varinace_norm(data_calibration, stats['nMean_feat'], stats['nInvStd'])
+        else:
+            # No standardization, use raw features
+            data_calibration = data_calibration
 
     else:
         data_calibration = None
@@ -137,6 +153,7 @@ def export(params: SKTaskParams):
         qbits=params.export.qbit_input,
         data_calibration=data_calibration,
     )
+    print(f"Exported TFLite model saved at: {tflite_path_src}")
 
     vad_model = build_vad_tflite(params, str(tflite_path_src))
 

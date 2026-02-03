@@ -171,13 +171,6 @@ def corpus_download(
     """
     download se dataset
     """
-    if auth_token:
-        print(f"--> Downloading {corpus} using provided Qualcomm token...")
-        # Your logic here to hit the gated URL using the token
-        # e.g., requests.get(url, headers={"Authorization": f"Bearer {auth_token}"})
-    else:
-        print(f"--> Downloading {corpus} from public source...")
-        # Your existing public download logic
     wavs = "wavs"
     tmp_download = "tmp"
     os.makedirs(wavs, exist_ok=True)
