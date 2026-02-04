@@ -35,12 +35,16 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
             enable-cache: true
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Install and Build 🔧
         env:
           CI: ""
           PUBLIC_URL: "${{ steps.pages.outputs.base_url }}/"
         run: |
-          uv sync --only-group docs
+          UV_PYTHON=python3.11 uv sync --only-group docs --locked
           uv run --no-sync mkdocs build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
