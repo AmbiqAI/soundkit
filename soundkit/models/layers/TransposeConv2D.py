@@ -13,6 +13,7 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             batch_size=1,
             time_steps=1,
             normalization_layer=None,
+            depthwise_activation=False,
             **kwargs):
         super(SeparableTransposeConv2D, self).__init__(**kwargs)
 
@@ -31,6 +32,12 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             use_bias=True
         else:
             use_bias=False
+
+        # if depthwise_activation:
+        #     activation = ActivationFactory(activation)
+        # else:
+        #     activation = None
+
         self.depthwise = tf.keras.layers.Conv2D(
             filters=num_channels_in,
             kernel_size=kernel_size,
@@ -55,7 +62,8 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
              time_steps + self.kernel_size_time - 1,
              len_filter_freq-1,
              num_channels_in))
-
+        # self.depthwise_activation = depthwise_activation
+        self.depthwise_activation = ActivationFactory(depthwise_activation)
     def call(self, inputs):
         """ Forward pass """
         # input shape = (B, T, F, C)
@@ -67,10 +75,12 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
 
         # inputs_up = self.padding(inputs_up)
         outputs = self.depthwise(inputs_up)
-
+        outputs = self.depthwise_activation(outputs)
         outputs = self.pointwise(outputs)
         outputs = self.norm(outputs)
         outputs = self.activation(outputs)
+        # tf.print("activation min:", tf.reduce_min(outputs))
+        # tf.print("activation max:", tf.reduce_max(outputs))
         return outputs
 
 class TransposeConv2D(tf.keras.layers.Layer):

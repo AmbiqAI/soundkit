@@ -38,6 +38,7 @@ class decoder_unet(tf.keras.layers.Layer):
                         batch_size=params.batchsize,
                         time_steps=params.time_steps,
                         normalization_layer=params.normalization_layer,
+                        depthwise_activation=params.depthwise_activation,
                         name=f"conv_tran_{i}"
                         ))
             else:
@@ -47,6 +48,7 @@ class decoder_unet(tf.keras.layers.Layer):
                             filters=num_ch,
                             kernel_size=(params.kernel_size_time, 3),
                             activation=params.activation,
+                            depthwise_activation=params.depthwise_activation,
                             name=f"conv_tran_{i}"
                             ))
                 else:

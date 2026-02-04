@@ -11,6 +11,7 @@ class UNetParams(BaseModel):
     kernel_size_time: int = 3
     num_chs: List[int] = [1, 16, 16, 16, 16]
     separable: bool = False
+    depthwise_activation: str = "linear"
     activation: str = 'relu'
     activation_final: str = 'relu'
     unroll_rnn: bool = False
@@ -22,6 +23,8 @@ class UNetParams(BaseModel):
     dilations: List[int] = [1, 2, 4, 8, 16, 32]
     filters_tcn: int = 64
     kernel_size_tcn: int = 2
+    max_cstate: float = 8.0
+    min_cstate: float = -8.0
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

@@ -52,9 +52,7 @@ from soundkit.utils.tf_complex_utils import (
     complex_magnitude,
     complex_angle,
 )
-from soundkit.utils.tf_stft import (
-    tf_istft,
-)
+
 from .datasets import create_dataset
 
 logging.basicConfig(
@@ -116,7 +114,10 @@ def train_step(
             spec_en_delay = est * batch["spec_sn_delay"]
             spec_en = spec_en_delay
 
-            loss = loss_fn(batch["spec_s_delay"], spec_en_delay )
+            loss = loss_fn(
+                batch["spec_s_delay"],
+                spec_en_delay,
+                clean=batch["clean"])
         else:
 
             if feat_type == "erb_mag":
@@ -132,7 +133,8 @@ def train_step(
             spec_en = spec_en_delay
             loss = loss_fn(
                 spec_s_delay,
-                spec_en_delay)
+                spec_en_delay,
+                clean=batch["clean"],)
 
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
@@ -144,6 +146,7 @@ def train_step(
                         net.trainable_variables))
 
     return loss, est, spec_en
+
 
 def run_epoch(
     config: dict[str, Any],
@@ -236,13 +239,14 @@ def run_epoch(
         # 3. Calculate the scale for the "normal" case
         # We add eps to the denominator to prevent DivisionByZero/Inf in the calculation
         scale_computed = target_peak / (max_val)
+        unit_scale = final_scale = tf.where(max_val > eps, 1 / max_val, 1.0)
 
         # 4. Apply Logic:
         # If max_val > eps  -> Use the computed random scale
         # If max_val <= eps -> Use 1.0 (keep original signal exactly as is)
         final_scale = tf.where(max_val > eps, scale_computed, 1.0)
 
-        return final_scale
+        return final_scale, unit_scale
 
     states_audio_sn, states_audio_s = reset_states()
     for step, batch in enumerate(dataset):
@@ -252,14 +256,26 @@ def run_epoch(
                 states_audio_sn, states_audio_s = reset_states()
 
         audio_sn, audio_s, _ = batch
-        gain = random_peak_normalize(
-            audio_s,
+        # deep copy of clean for VAD computation
+        clean = tf.identity(audio_s)
+
+        if 1:
+            noise = audio_sn - audio_s
+
+            ns_db=-30
+            factor = tf.pow(10.0, ns_db / 20.0)
+
+            audio_s = audio_s + noise * factor
+
+        gain, unit_gain = random_peak_normalize(
+            audio_sn,
             min_val = params.data.min_amp,
             max_val = params.data.max_amp)
 
         audio_sn = audio_sn * gain
         audio_s = audio_s * gain
 
+        
         step_start = time.perf_counter()
 
         # Extract features using streaming state
@@ -293,9 +309,11 @@ def run_epoch(
             # No standardization, use raw features
             feat_sn_norm = feat_sn
 
+
         batch_data = {
             "spec_sn_delay": spec_sn_delay,
             "spec_s_delay":  spec_s_delay,
+            "clean": clean,
             "feat_sn": feat_sn_norm,
             "mask": 1.0,
             "hop_size": stft_feat['hop_size'],

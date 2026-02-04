@@ -373,44 +373,39 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
         self.vad_threshold = vad_threshold
         self.vad_weight = vad_weight
 
-    def _compute_smooth_frame_vad(
+    def _compute_ratio_balanced_vad(
             self,
             y_true_wave,
-            hangover_frames=5):
+            target_ratio=0.1):
         """
-        Calculates a smoothed frame-based weight mask.
-        hangover_frames: Number of frames (10ms each) to keep VAD active after speech.
+        target_ratio: Total importance of noise relative to speech (e.g., 0.1).
+        Ensures noise weight (W_ns) is never greater than 1.0.
         """
-        # 1. Slice into frames and calculate RMS
+        # 1. Get binary mask [batch, frames]
         frames = tf.signal.frame(y_true_wave, frame_length=self.hop_size, frame_step=self.hop_size)
-        frame_rms = tf.sqrt(
-            tf.reduce_mean(
-                tf.square(frames), axis=-1) + self.eps)
+        frame_rms = tf.sqrt(tf.reduce_mean(tf.square(frames), axis=-1) + self.eps)
+        is_speech_f = tf.cast(frame_rms > self.vad_threshold, tf.float32)
 
-        # 2. Initial binary decision [batch, num_frames, 1]
-        is_speech = tf.cast(frame_rms > self.vad_threshold, tf.float32)
-        is_speech = tf.expand_dims(is_speech, axis=-1)
+        # 2. Count frames per audio file in the batch
+        L_s = tf.reduce_sum(is_speech_f, axis=-1, keepdims=True)
+        L_ns = tf.cast(tf.shape(is_speech_f)[1], tf.float32) - L_s
 
-        # 3. TEMPORAL SMOOTHING (Hangover)
-        # Use a 1D Max Pooling to "spread" the 1.0 values forward and backward
-        # A window size of 5 frames = 50ms hangover/lookahead
-        smoothed_speech = tf.nn.max_pool1d(
-            is_speech,
-            ksize=hangover_frames,
-            strides=1,
-            padding='SAME'
-        )
-        smoothed_speech = tf.squeeze(smoothed_speech, axis=-1)
+        # 3. Calculate and Clip the Noise Weight (W_ns)
+        # Base weight: W_ns = (L_s * 0.1) / L_ns
+        raw_weight_ns = (L_s * target_ratio) / (L_ns + self.eps)
 
-        # 4. Apply weight (0.0 for silence, 1.0 for speech)
-        frame_mask = smoothed_speech * 1.0 + (1.0 - smoothed_speech) * self.vad_weight
+        # Clip max weight to 1.0 so noise never "out-weights" speech
+        weight_ns = tf.minimum(raw_weight_ns, 0.1)
 
-        # 5. Upsample to sample-level
+        # 4. Create the final frame-level weight mask
+        frame_mask = is_speech_f * 1.0 + (1.0 - is_speech_f) * weight_ns
+
+        # 5. Expand back to sample-level [batch, samples]
         sample_mask = tf.repeat(frame_mask, repeats=self.hop_size, axis=-1)
 
-        # Pad to match original waveform length
+        # Pad tail to match original waveform length
         pad_len = tf.shape(y_true_wave)[1] - tf.shape(sample_mask)[1]
-        sample_mask = tf.pad(sample_mask, [[0, 0], [0, pad_len]], constant_values=self.vad_weight)
+        sample_mask = tf.pad(sample_mask, [[0, 0], [0, pad_len]])
 
         return sample_mask
 
@@ -490,7 +485,7 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
 
 
         # --- Compute VAD Weighting ---
-        vad_mask = self._compute_smooth_frame_vad(y_true_norm)
+        vad_mask = self._compute_ratio_balanced_vad(y_true_norm)
         # import matplotlib.pyplot as plt
         # plt.figure()
         # plt.plot(vad_mask[0,:].numpy(), label='VAD Mask')

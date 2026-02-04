@@ -30,7 +30,6 @@ class encoder_unet(tf.keras.layers.Layer):
                         rate=drop_rate,
                         name=f"dropout_{i}"
                         ))
-
             if params.separable:
                 layer.add(
                     SeparableConv2D(
@@ -40,6 +39,7 @@ class encoder_unet(tf.keras.layers.Layer):
                         activation=params.activation,
                         num_channels_in=num_ch_in,
                         normalization_layer=params.normalization_layer,
+                        depthwise_activation=params.depthwise_activation,
                         name=f"conv_{i}"
                         ))
             else:

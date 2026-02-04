@@ -50,6 +50,7 @@ def evaluate(params: SKTaskParams):
     """
     # === export TFLite File ===
     tflite_filename_src = f"{params.name}_{params.evaluate['dtype']}.tflite"
+
     tflite_path_src = Path(params.demo['tflite_dir']) / tflite_filename_src
     log.info(f"🧪 Exporting TFLite model from {tflite_path_src}")
     params.export['epoch_loaded'] = params.evaluate['epoch_loaded']
@@ -184,8 +185,9 @@ def evaluate(params: SKTaskParams):
                     # set minimum value on tfmask to avoid too small values
 
                     amp = np.sqrt(tfmask[...,0]**2 + tfmask[...,1]**2)
-                    amp = np.where(amp < 0.005, 0.005, amp)
-                    np.maximum(amp, 0.005)
+                    
+                    min_amp = 0.0
+                    amp = np.where(amp < min_amp, min_amp, amp)
                     phase = np.angle(tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1])
                     real = amp * np.cos(phase)
                     imag = amp * np.sin(phase)

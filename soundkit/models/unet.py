@@ -33,6 +33,8 @@ class unet(tf.keras.Model):
         
         self.F=self.freq_bins[-1]
         self.chs=params.num_chs[-1]
+        self.max_cstate = params.max_cstate  # for clipping
+        self.min_cstate = params.min_cstate
         self.states = self.make_states()
 
         if params.bottleneck == 'lstm':
@@ -42,6 +44,7 @@ class unet(tf.keras.Model):
                 stateful=False,
                 unroll=params.unroll_rnn,
                 return_sequences=True)
+            
         elif params.bottleneck == 'gru':
             self.rnn = tf.keras.layers.GRU(
                 self.F * self.chs,
@@ -110,8 +113,8 @@ class unet(tf.keras.Model):
             c_states = tf.Variable(
                                 tf.random.uniform(
                                     [self.params.batchsize, self.F * self.chs],
-                                    minval=-8.0,
-                                    maxval=8.0), # assume 8 bit quantization
+                                    minval=self.min_cstate,
+                                    maxval=self.max_cstate), # assume 8 bit quantization
                                 dtype = tf.float32,
                                 trainable = False)
             if zero_state:
@@ -153,8 +156,8 @@ class unet(tf.keras.Model):
             c_states = tf.Variable(
                                     tf.random.uniform(
                                         [self.params.batchsize, self.F * self.chs],
-                                        minval=-8.0,
-                                        maxval=8.0), # assume 8 bit quantization
+                                        minval=self.min_cstate,
+                                        maxval=self.max_cstate), # assume 8 bit quantization
                                     dtype = tf.float32,
                                     trainable = False)
             if zero_state:
@@ -181,7 +184,6 @@ class unet(tf.keras.Model):
         """ Forward pass"""
         if not self.complex:
             inputs = tf.expand_dims(inputs, axis=-1)
-
         x = inputs
 
         # states_de = states
@@ -200,13 +202,42 @@ class unet(tf.keras.Model):
                 out = self.dropout(out, training=training)
 
             out, h_state, c_state = self.rnn(out, initial_state=self.states)
+            # Use tf.print instead of python print
+            # tf.print("C-state min:", tf.reduce_min(c_state))
+            # tf.print("C-state max:", tf.reduce_max(c_state))
+            
+            # Only plot if we are in 'inference' or if the tensor is actually populated
+            # if c_state is not None and hasattr(c_state, 'numpy'):
+            #     try:
+            #         # Convert to numpy and ensure it's not a symbolic placeholder
+
+            #         val = c_state.numpy()
+                    
+            #         # Check if it has actual data (not just empty initialization)
+            #         if val.size > 0:
+            #             import matplotlib.pyplot as plt
+            #             plt.figure(figsize=(10, 4))
+                        
+            #             # Use flatten() to handle [batch, units] shape
+            #             plt.plot(val.flatten()) 
+                        
+            #             plt.title(f"LSTM Cell State (Min: {val.min():.2f}, Max: {val.max():.2f})")
+            #             plt.xlabel("Cell Unit Index")
+            #             plt.ylabel("Value")
+            #             plt.grid(True)
+            #             plt.show()
+                        
+            #     except Exception:
+            #         # Silently skip if it's still in a symbolic state
+            #         pass
+            # import pdb; pdb.set_trace()
             # h_state = tf.clip_by_value(h_state, -1, 1)  # assume 8 bit quantization
             # c_state = tf.clip_by_value(c_state, -128, 128 - 2**-8)  # assume 8 bit quantization
             self.states[0].assign(h_state)
-            
+        
             c_state = tf.maximum(
-                tf.minimum(c_state, 8),
-                -8)
+                tf.minimum(c_state, self.params.max_cstate),
+                self.params.min_cstate)
             self.states[1].assign(c_state)
             input_dec = tf.reshape(
                 out,

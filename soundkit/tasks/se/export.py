@@ -73,6 +73,39 @@ def export(params: SKTaskParams):
         export=True)
 
     copy_model_weights(model_dst=model, model_src=model_train)
+    if 0:
+        def apply_fake_quant(v, num_bits=8):
+            # 1. Determine the range (Symmetric)
+            # For weights, we usually use the max absolute value
+            max_val = tf.reduce_max(tf.abs(v))
+            min_val = -max_val
+            
+            # 2. Apply Fake Quantization
+            # This simulates the 8-bit rounding but stays in float32
+            v_fake = tf.quantization.fake_quant_with_min_max_vars(
+                v, 
+                min=min_val,
+                max=max_val,
+                num_bits=num_bits,
+                narrow_range=True # Use -127 to 127 (typical for TFLite weights)
+            )
+            # Calculate the scale used by the fake_quant op
+            range_val = max_val - min_val
+            scale = range_val / (2**num_bits - 2) # -2 for narrow_range
+
+            # Divide by scale to see the integer steps
+            v_integers = tf.round(v_fake / scale)
+
+            # 3. Assign back to the variable
+            v.assign(v_fake)
+            return v
+
+        import re
+        for v in model.trainable_variables:
+            if re.search('kernel', v.name):
+                v = apply_fake_quant(v)
+                v.assign(v)
+
     if params.train.feature.type in ('spec','erb_complex'):
         is_complex = True
     else:
