@@ -17,7 +17,7 @@ extern const int16_t filter_banks_inv[];
 PARAMS_NNSP params_nn3_se = {
     .samplingRate = 16000,
     .fftsize = 512,
-    .winsize_stft = 480,
+    .winsize_stft = 320,
     .hopsize_stft = 160,
     .num_mfltrBank = 129,
     .num_dnsmpl = 1,

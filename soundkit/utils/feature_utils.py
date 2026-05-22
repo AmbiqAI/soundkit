@@ -7,6 +7,12 @@ import numpy as np
 import tensorflow as tf
 from soundkit.utils.tf_stft import tf_stft
 from soundkit.utils.tf_stft import gen_stft_win
+from soundkit.utils.tf_complex_utils import (
+    complex_magnitude,
+    complex_angle,
+    polar_to_complex,
+    get_compressed_complex,
+)
 from soundkit.utils.tf_basic_math import tf_log10_eps
 from soundkit.utils.mel import gen_mel_bank
 from soundkit.utils.mel_spec_gen import melspec_gen
@@ -90,19 +96,25 @@ class FeatureExtractor:
                 hop=feat_params['hop_size'])
             self.dim_feat = feat_params['frame_size']
         elif feat_params['type'] == "erb_complex":
+            erb_sub1 = feat_params.get('erb_subband_1', 65)
+            erb_sub2 = feat_params.get('erb_subband_2', 64)
             self.erb = ERB(
-                erb_subband_1=65,
-                erb_subband_2=64)
+                erb_subband_1=erb_sub1,
+                erb_subband_2=erb_sub2,
+                nfft=feat_params['fft_size'])
             self.mel_filter = self.erb.filter_map
             self.mel_filter_inv = self.erb.filter_inv_map
-            self.dim_feat = 129
+            self.dim_feat = erb_sub1 + erb_sub2
         elif feat_params['type'] == "erb_mag":
+            erb_sub1 = feat_params.get('erb_subband_1', 65)
+            erb_sub2 = feat_params.get('erb_subband_2', 64)
             self.erb = ERB(
-                erb_subband_1=65,
-                erb_subband_2=64)
+                erb_subband_1=erb_sub1,
+                erb_subband_2=erb_sub2,
+                nfft=feat_params['fft_size'])
             self.mel_filter = self.erb.filter_map
             self.mel_filter_inv = self.erb.filter_inv_map
-            self.dim_feat = 129
+            self.dim_feat = erb_sub1 + erb_sub2
         else:
             dim_feat = (feat_params['fft_size'] // 2) + 1
             self.mel_filter = tf.eye(
@@ -152,16 +164,26 @@ class FeatureExtractor:
         spec_real = tf.math.real(spec)
         spec_imag = tf.math.imag(spec)
         spec_combined = tf.stack([spec_real, spec_imag], axis=1)
+        
+        
+        if 1:
+            exp_complex = self.params.train.feature.exp_complex
+            eps = self.params.train.feature.eps
+            if exp_complex != 1.0:
+                spec_combined = tf.sign(spec_combined) * (tf.abs(spec_combined)**exp_complex)
+        
         erb_spec = self.erb.bm(spec_combined)
         erb_spec = tf.transpose(erb_spec, perm=[0,2,3,1])  # (B, T, F_erb, 2)
         erb_complex = tf.complex(erb_spec[...,0], erb_spec[...,1])
         
         scale = self.params.train.feature.scale
-        exp_complex = self.params.train.feature.exp_complex
-        if self.params.train.feature.exp_complex != 1.0:
-            mag = tf.abs(erb_complex)
-            scale = (mag**exp_complex) / (mag + 2**-15) * scale   # All float32 math
-            erb_complex = erb_complex * tf.cast(scale, tf.complex64) # Cast and apply
+        if 0:
+            exp_complex = self.params.train.feature.exp_complex
+            eps = self.params.train.feature.eps
+            if exp_complex != 1.0:
+                erb_complex = get_compressed_complex(
+                    erb_complex, exp_complex, eps)
+
         return erb_complex, spec
 
     def _extract_erb_mag(

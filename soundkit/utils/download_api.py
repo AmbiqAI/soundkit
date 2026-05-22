@@ -72,6 +72,22 @@ def corpus_download(
     """
     download se dataset
     """
+    wavs = "wavs"
+    if type_cropus in ('noise', 'reverb'):
+        dst_folder = os.path.join(wavs, "noise", corpus)
+    else:
+        dst_folder = os.path.join(wavs, corpus)
+
+    # --- ADD THIS CHECK ---
+    if os.path.exists(dst_folder) and os.listdir(dst_folder):
+        print(f"✅ {corpus} already exists at {dst_folder}. Skipping download.")
+        return
+
+    # Before starting a download:
+    if os.path.exists(target_path):
+        print(f"Removing incomplete/existing archive: {target_path}")
+        os.remove(target_path)
+
     if auth_token:
         print(f"--> Downloading {corpus} using provided Qualcomm token...")
         # Your logic here to hit the gated URL using the token
@@ -79,7 +95,6 @@ def corpus_download(
     else:
         print(f"--> Downloading {corpus} from public source...")
         # Your existing public download logic
-    wavs = "wavs"
     tmp_download = "tmp"
     os.makedirs(wavs, exist_ok=True)
     os.makedirs(tmp_download, exist_ok=True)

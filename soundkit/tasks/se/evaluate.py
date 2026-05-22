@@ -4,6 +4,7 @@ import re
 import logging
 from pathlib import Path
 import numpy as np
+from tqdm import tqdm
 import soundfile as sf
 import tensorflow as tf
 from soundkit.defines import SKTaskParams
@@ -25,13 +26,14 @@ from soundkit.utils.erb import ERB
 from soundkit.utils.plot_api import plot_spectrograms, fig_to_image
 from soundkit.utils.audio import audio_read
 from soundkit.utils.dnsmos_batch import DNSMOS_Batch
+from soundkit.utils.download_tf_model import get_model_config
+from soundkit.utils.np_complex_utils import (
+    complex_magnitude,
+    complex_angle,
+    polar_to_complex,
+    get_compressed_complex,)
 from .export import export
 
-
-erb = ERB(
-    erb_subband_1=65,
-    erb_subband_2=64,
-    platform="numpy")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +41,11 @@ logging.basicConfig(
 )
 
 log = logging.getLogger(__name__)
+
+
+def is_deepfilter_enabled(params: SKTaskParams) -> bool:
+    """Return whether DeepFilter is enabled for the current model config."""
+    return bool(get_model_config(params).get("is_df", False))
 
 
 def evaluate(params: SKTaskParams):
@@ -61,6 +68,7 @@ def evaluate(params: SKTaskParams):
     export(params)
 
     checkpoint_dir = f"{params.train['path']['checkpoint_dir']}"
+    is_df = is_deepfilter_enabled(params)
 
     if params.train.feature.type=='hybrid':
         mel_bins = params.train.feature.n_mels
@@ -74,7 +82,10 @@ def evaluate(params: SKTaskParams):
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
         exp_complex=params.train.feature.exp_complex,
+        eps=params.train.feature.eps,
         scale=params.train.feature.scale,
+        erb_subband_1=params.train.feature.erb_subband_1,
+        erb_subband_2=params.train.feature.erb_subband_2,
         platform="numpy"
     )
     hop_size = params.train.feature.hop_size
@@ -110,14 +121,19 @@ def evaluate(params: SKTaskParams):
                 fft_len=params.train.feature.fft_size,
             )
 
-            if params.train.feature.type == 'erb_complex':
-                self.erb = erb
+            if params.train.feature.type in ('erb_complex', 'erb_mag'):
+                self.erb = ERB(
+                    erb_subband_1=params.train.feature.get('erb_subband_1', 65),
+                    erb_subband_2=params.train.feature.get('erb_subband_2', 64),
+                    nfft=params.train.feature.fft_size,
+                    platform="numpy")
 
-            if num_lookahead > 0:
-                _, z_spec = feat_extractor(
+            _, z_spec = feat_extractor(
                     np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
-                for i in range(num_lookahead):
-                    self.specs.append(z_spec.copy())
+            for i in range(max(self.num_lookahead + 1, 5 if is_df else 1)):
+                self.specs.append(z_spec.copy())
+
+            
             if params.data['signal']['dc_removal']:
                 self.dc_remover = DCRemover()
 
@@ -125,12 +141,19 @@ def evaluate(params: SKTaskParams):
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
             """Process input audio signal and return VAD output."""
+            
             inputs=inputs.flatten()
             if params.data['signal']['dc_removal']:
                 inputs = self.dc_remover.process(inputs)
             features,spec_update = self.feat_extractor(inputs)
+            # if params.train.feature.exp_complex != 1.0:
+            #     spec_update = get_compressed_complex(
+            #         spec_update,
+            #         params.train.feature.exp_complex,
+            #         params.train.feature.eps)
             self.specs.append(spec_update)
             spec = self.specs.pop(0)
+
             # if self.stats is not None:
             #     features = (features - self.stats['nMean_feat']) * self.stats['nInvStd']
             if params.train['standardization']:
@@ -140,13 +163,12 @@ def evaluate(params: SKTaskParams):
                     inv_std_stats = self.stats['nInvStd']
                     features = (features - mean_stats) * inv_std_stats
                 elif params.train['standardization_type'] == "constant":
-                    features = features / 32
+                    features = features
             else:
                 # No standardization, use raw features
                 features = features
             # input to the tflite model
             features_t = features.reshape((1, 1, -1)) # reshape to (batch_size, time_steps, dim_feat)
-
             # reshape to (batch_size, time_steps, dim_feat, 2) for complex input
             if np.iscomplexobj(features_t):
                 features_t = np.stack(
@@ -155,10 +177,17 @@ def evaluate(params: SKTaskParams):
             # features =fakefix_tf(features, 32, 21).numpy()
 
             tfmask = self.model_tflite(features_t)
+            
+            pcm_out, spec_en = self.post_procsessing(tfmask, self.specs)
 
-            pcm_out, spec_en = self.post_procsessing(tfmask, spec)
-
+            # if params.train.feature.exp_complex != 1.0:
+                
+            #     spec = get_compressed_complex(
+            #         spec,
+            #         1.0/params.train.feature.exp_complex,
+            #         params.train.feature.eps)
             if self.return_mask:
+
                 return pcm_out.reshape((-1,1)), tfmask, spec, spec_en, features
             else:
                 return pcm_out.reshape((-1,1))
@@ -166,70 +195,66 @@ def evaluate(params: SKTaskParams):
         def post_procsessing(
                 self,
                 tfmask: np.ndarray,
-                spec: np.ndarray) -> np.ndarray:
+                specs: np.ndarray) -> np.ndarray:
             """
             post processing after getting mask from tflite model
             Args:
                 tfmask (np.ndarray): output mask from tflite model
-                spec (np.ndarray): input complex spectrogram
+                specs (np.ndarray): input complex spectrograms
             Returns:
                 np.ndarray: time-domain waveform after ISTFT
             """
 
             if params.train.feature.type == 'erb_complex':
-                if 1:
-                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
-                    tfmask = erb.bs(tfmask)
-                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
-
-                    # set minimum value on tfmask to avoid too small values
-
-                    amp = np.sqrt(tfmask[...,0]**2 + tfmask[...,1]**2)
-                    
-                    min_amp = 0.0
-                    amp = np.where(amp < min_amp, min_amp, amp)
-                    phase = np.angle(tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1])
-                    real = amp * np.cos(phase)
-                    imag = amp * np.sin(phase)
-                    tfmask = np.stack([real, imag], axis=-1)
-            
-                    tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
-                else:
-                    # 1. Decode to full spectrogram first (B, 2, T, F_full)
-                    tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2])
-                    tfmask = erb.bs(tfmask)
-                    tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])
-                    
-                    # 2. Convert to Complex
-                    c_mask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
-                    
-                    # 3. Smooth ONLY the Magnitude
-                    # This prevents complex cancellation (which causes the 0 output)
-                    from scipy.ndimage import uniform_filter1d
-                    mag = np.abs(c_mask)
-                    
-                    # Smooth magnitude over time (axis 1) using a moving average
-                    # A size of 3 or 5 frames is enough to kill musical noise without killing speech
-                    mag_smoothed = uniform_filter1d(mag, size=3, axis=1)
-                    
-                    # 4. Re-apply smoothed magnitude to the original phase
-                    # This ensures the complex mask NEVER cancels itself out
-                    phase_mask = c_mask / (mag + 1e-12)
-                    c_mask = mag_smoothed * phase_mask
-                    
-                    # 5. Apply a hard floor (e.g., -30dB)
-                    # This is the final guard against "almost 0" values
-                    floor = 0.03
-                    tfmask = np.where(np.abs(c_mask) < floor, floor * phase_mask, c_mask)
                 
+                tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
+                tfmask = self.erb.bs(tfmask)
+                tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
 
             elif params.train.feature.type == 'erb_mag':
-                tfmask = erb.bs(tfmask[..., 0])
+                tfmask = self.erb.bs(tfmask[..., 0])
 
-            tfmask = tfmask.flatten()
+            exp_features = params.train.feature.exp_complex
+            eps = params.train.feature.eps
+            if not is_df:
+                tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
 
-            spec_en = spec * tfmask
-            pcm_out = self.istft.process(spec_en)
+                if exp_features == 1.0:
+                    spec_sn = specs[0]
+                else:
+                    spec_sn = get_compressed_complex(
+                        specs[0],
+                        exp_features,
+                        eps)
+
+                spec_en = spec_sn * tfmask
+            else:
+                for i in range(5):
+                    
+                    real = tfmask[..., i*2]
+                    imag = tfmask[..., i*2 + 1]
+                    tfmask_c = np.stack([real, imag], axis=-1)
+                    tfmask_c = real + 1j * imag
+                    if params.train.feature.exp_complex == 1.0:
+                        spec_sn = specs[i]
+                    else:
+                        spec_sn = get_compressed_complex(
+                            specs[i],
+                            exp_features,
+                            eps)
+                    if i==0:
+                        spec_en = spec_sn * tfmask_c
+                    else:
+                        spec_en += spec_sn * tfmask_c
+            spec_en = spec_en.flatten()
+            if exp_features != 1.0:
+                spec_en = get_compressed_complex(spec_en, 1.0/exp_features, eps)
+    
+            # Zero out frequencies above 7500Hz
+            freq_bin_7700 = int(7700 / (params.data.signal.sampling_rate / params.train.feature.fft_size))
+            spec_en[freq_bin_7700:] = 0.0
+
+            pcm_out = self.istft.process(spec_en.flatten())
 
             return pcm_out, spec_en
 
@@ -239,11 +264,10 @@ def evaluate(params: SKTaskParams):
             self.specs = []
             self.istft.reset()
             self.model_tflite.reset()
-            if self.num_lookahead > 0:
-                _, z_spec = feat_extractor(
-                    np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
-                for i in range(self.num_lookahead):
-                    self.specs.append(z_spec.copy())
+            _, z_spec = feat_extractor(
+                np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+            for i in range(max(self.num_lookahead + 1, 5 if is_df else 1)):
+                self.specs.append(z_spec.copy())
             if hasattr(self, 'dc_remover'):
                 self.dc_remover.reset()
 
@@ -256,12 +280,14 @@ def evaluate(params: SKTaskParams):
         return_mask=True,
     )
     os.makedirs(params.evaluate.data.result_folder, exist_ok=True)
+    
+    pre_gain = 1
     for file in params.evaluate.data.files:
         wavfile = os.path.join(params.evaluate.data.dir, file)
         y = audio_read(
             wavfile,
             sample_rate=params.data.signal.sampling_rate)
-
+        y = y * pre_gain
         se_model.reset()
         hopsize= params.train.feature.hop_size
 
@@ -270,8 +296,8 @@ def evaluate(params: SKTaskParams):
         out_specs = []
         out_features = []
         out_specs_en = []
-        for i in range(0, len(y), hopsize):
-        #     print( f"Processing {i}/{len(y)} samples", end='\r')
+        total_chunks = (len(y) + hopsize - 1) // hopsize
+        for i in tqdm(range(0, len(y), hopsize), total=total_chunks, desc=f"  [{file}]", unit="frame", ncols=120):
             chunk = y[i:i+hopsize]
             if len(chunk) < hopsize:
                 chunk = np.pad(
@@ -279,8 +305,13 @@ def evaluate(params: SKTaskParams):
                     (0, hopsize - len(chunk)),
                     mode='constant')
             pcm_out, tfmask, spec, spec_en, features = se_model(chunk)
+
             outs_pcm.append(pcm_out)
-            outs_tfmsk.append(tfmask)
+            if not is_df:
+                outs_tfmsk.append(tfmask)
+            else:
+                idx = 2
+                outs_tfmsk.append(tfmask[...,idx*2:idx*2+2])
             out_features.append(features)
             out_specs.append(spec)
             out_specs_en.append(spec_en)
@@ -290,15 +321,16 @@ def evaluate(params: SKTaskParams):
         out_specs = np.stack(out_specs, axis=0)
         out_specs_en = np.stack(out_specs_en, axis=0)
         out_features = np.stack(out_features, axis=0)
+
         if outs_tfmsk.ndim == 4:
             outs_tfmsk = outs_tfmsk[:,0]
             real_mask = outs_tfmsk[...,0]
             imag_mask = outs_tfmsk[...,1]
-            features = 20 * np.log10(np.abs(out_features))
+            features = np.abs(out_features)
         elif outs_tfmsk.ndim ==3:
             real_mask = outs_tfmsk
             imag_mask = None
-        
+
         logpspec_sn = 20.0 * np.log10(
             np.maximum(
                 np.abs(out_specs),
@@ -319,7 +351,6 @@ def evaluate(params: SKTaskParams):
             save_path=save_path,
             show_fig=False
         )
-
         sf.write(
             os.path.join(params.evaluate.data.result_folder, f"{filename}_en.wav"),
             outs_pcm,

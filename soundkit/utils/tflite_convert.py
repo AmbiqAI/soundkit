@@ -20,6 +20,7 @@ def convert_model(
         bytes: _description_
     """
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    
     converter.experimental_new_converter = True
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.experimental_enable_resource_variables = True
@@ -55,6 +56,68 @@ def convert_model(
 
     return converter.convert()
 
+def test_and_export_c(tflite_model_bytes, dtype="int8", output_dir="tflite_data"):
+    """
+    Runs a 2-frame stateful test and exports input/output to C files.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 1. Initialize Interpreter
+    interpreter = tf.lite.Interpreter(model_content=tflite_model_bytes)
+    interpreter.allocate_tensors()
+
+    input_details = interpreter.get_input_details()[0]
+    output_details = interpreter.get_output_details()[0]
+
+    # 2. Prepare Input
+    # Generate random float data first
+    input_shape = input_details['shape']
+    test_input_float = np.random.uniform(-1, 1, input_shape).astype(np.float32) * 5
+
+    # Quantize input for the C array if necessary
+    if dtype != "float32":
+        in_scale, in_zp = input_details['quantization']
+        input_data = ((test_input_float / in_scale) + in_zp).astype(input_details['dtype'])
+    else:
+        input_data = test_input_float
+
+    # 3. Helper to write C files
+    def write_c_array(name, data, filename):
+        c_type = "int8_t" if dtype == "int8" else "int16_t" if dtype == "int16" else "float"
+        flat = data.flatten()
+        with open(os.path.join(output_dir, filename), "w") as f:
+            f.write(f'#include <stdint.h>\n\nconst {c_type} {name}[] = {{\n    ')
+            for i, val in enumerate(flat):
+                f.write(f"{int(val)}, " if "int" in c_type else f"{val:.8f}f, ")
+                if (i + 1) % 12 == 0: f.write("\n    ")
+            f.write(f"\n}};\nconst int {name}_len = {len(flat)};\n")
+        print(f"💾 Exported: {filename}")
+
+    # 4. Run 2 Frames and Capture
+    results = []
+    interpreter.set_tensor(input_details['index'], input_data)
+    
+    print(f"\n--- Running Stateful Test ({dtype}) ---")
+    for i in range(2):
+        interpreter.invoke()
+        out = interpreter.get_tensor(output_details['index'])
+        results.append(out.copy())
+        print(f"Frame {i+1} - Mean: {np.mean(out):.4f}")
+
+    # 5. Export to C
+    write_c_array("input_frame", input_data, f"input_{dtype}.c")
+    write_c_array("output_frame1", results[0], f"output_f1_{dtype}.c")
+    write_c_array("output_frame2", results[1], f"output_f2_{dtype}.c")
+
+    # 6. Verification Logic
+    diff = np.abs(results[0] - results[1]).sum()
+    if diff > 1e-6:
+        print(f"✅ Success: Statefulness detected (Diff: {diff:.6f})")
+    else:
+        print("⚠️ Warning: Frames are identical. Check stateful settings.")
+
+    return results
+
 def tflite_convert(
         model: tf.keras.Model,
         dtype: str = "int8",
@@ -73,6 +136,7 @@ def tflite_convert(
         shapes = model._feed_input_shapes
         shape_inputs = shapes[0]
         timesteps = shape_inputs[1]
+
         if data_calibration is None:
             
             for _ in range(100):
@@ -83,25 +147,51 @@ def tflite_convert(
 
         # Load a few real samples from your validation set
         else:
-            for sequence in data_calibration: # 10 long sequences
-                # Manually loop through the sequence frame-by-frame
-
-                # to simulate how the model will be used in TFLite
+            max_calib_frames = 300
+            count = 0
+            for sequence in data_calibration:
+                # Reset all non-trainable variables (states) to zero
+                for var in model.variables:
+                    if not var.trainable:
+                        var.assign(tf.zeros_like(var))
 
                 for t in range(sequence.shape[0] // timesteps):
-
-                    # Reshape frame to (1, 1, 257)
                     start = t * timesteps
                     end = (t + 1) * timesteps
                     frame = sequence[start:end].reshape(shape_inputs).astype(np.float32)
                     yield {"x_input": frame}
+                    # count += 1
+                    # if count >= max_calib_frames:
+                    #     return
 
     model.summary()
+
+    # Check if model states are zeros, reset if not
+    print("\n--- Model State Check ---")
+    all_zero = True
+    for var in model.variables:
+        if not var.trainable:
+            is_zero = np.allclose(var.numpy(), 0.0)
+            norm = np.linalg.norm(var.numpy())
+            print(f"  {var.name:40s} | shape={str(var.shape):20s} | zero={is_zero} | norm={norm:.6f}")
+            if not is_zero:
+                all_zero = False
+    if not all_zero:
+        print("⚠️  Non-zero states detected, resetting to zero...")
+        for layer in model.layers:
+            if hasattr(layer, 'reset_states'):
+                layer.reset_states(zero_state=True)
+                break
+    else:
+        print("✅ All states are zero.")
+    print("-------------------------\n")
 
     net_tflite = convert_model(
         model,
         dataset_example,
         dtype=dtype)
+
+    test_and_export_c(net_tflite, dtype=dtype)
 
     os.makedirs(os.path.dirname(path_tflite), exist_ok=True)
 
@@ -128,7 +218,7 @@ def warp_tf_model(
         batch_size=batch_size,
         name='x_input') # batch_size fixed to 1
 
-    outputs= model(inputs_feat)
+    outputs= model(inputs_feat, training=False)
 
     model_wrap = tf.keras.Model(
         inputs=[

@@ -5,12 +5,13 @@
 
 '''
 import logging
+import re
 import os
 from pathlib import Path
-from typing import List, Tuple, Iterator
-import tensorflow as tf
+from typing import List, Tuple, Iterator, Optional
 import numpy as np
-from typing import List, Callable, Optional
+import tensorflow as tf
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(name)s %(message)s'
@@ -85,14 +86,22 @@ def parser(
     audio_s = audio_s[0]
     if truncate_samples is not None:
         len_raw = tf.shape(audio_sn)[0]
+        keep_samples = tf.where(
+            len_raw >= truncate_samples,
+            truncate_samples,
+            tf.maximum(tf.cast(tf.floor(tf.cast(len_raw, tf.float32) * 0.95), tf.int32), 1))
 
         start = tf.random.uniform([],
                                 minval=0,
-                                maxval=len_raw - truncate_samples + 1,
+                                maxval=len_raw - keep_samples + 1,
                                 dtype=tf.int32)
 
-        audio_sn = audio_sn[start:start+truncate_samples]
-        audio_s = audio_s[start:start+truncate_samples]
+        audio_sn = audio_sn[start:start+keep_samples]
+        audio_s = audio_s[start:start+keep_samples]
+        pad_len = truncate_samples - keep_samples
+        audio_sn = tf.pad(audio_sn, [[0, pad_len]])
+        audio_s = tf.pad(audio_s, [[0, pad_len]])
+        length = keep_samples
     return audio_sn, audio_s, length
 
 def create_tfrecords_pipeline(
@@ -100,7 +109,8 @@ def create_tfrecords_pipeline(
             batchsize: int = 2,
             num_per_epoch_files: Optional[int] = None,    # e.g., 40000 (random subset per epoch); None = use all files
             truncate_samples: Optional[int] = None,
-            is_shuffle: bool = False) -> Tuple[Iterator, tf.data.Dataset]:
+            is_shuffle: bool = False,
+            seed: Optional[int] = None) -> Tuple[Iterator, tf.data.Dataset]:
     """
     Tfrecord generator
     """
@@ -114,6 +124,7 @@ def create_tfrecords_pipeline(
     if is_shuffle:
         dataset = dataset.shuffle(
             len(filenames),
+            seed=seed,
             reshuffle_each_iteration=True)
     if num_per_epoch_files is not None:
         dataset = dataset.take(num_per_epoch_files)
@@ -140,29 +151,50 @@ def create_dataset(
         batchsize: int = 2,
         num_per_epoch_files: Optional[int] = None,    # e.g., 40000 (random subset per epoch); None = use all files
         truncate_samples: Optional[int] = None,
-        is_shuffle: bool = False) -> Tuple[tf.data.Dataset, int]:
+        is_shuffle: bool = False,
+        seed: Optional[int] = None) -> Tuple[tf.data.Dataset, int]:
     """
     Create dataset from tfrecord list
     """
-    
+
     if isinstance(tfrecords, (str, Path)):
         with open(tfrecords, 'r') as file: # pylint: disable=unspecified-encoding
             try:
                 lines = file.readlines()
+                if 1: # only use mandarin files
+                    import random as _rnd
+                    import random
+                    if is_shuffle:
+                        en = []
+                        ch = []
+                        for line in lines:
+                            if re.search(r'(LibriSpeech|german_speech|spanish_speech|italian_speech|french_data)', line):
+                                en.append(line)
+                            elif re.search(r'(mandarin|MAGICDATA)', line):
+                                ch.append(line)
+                        # import pdb; pdb.set_trace()
+                        random.seed(0)
+                        random.shuffle(en)
+                        random.shuffle(ch)
+                        lines = ch+en
 
             except:# pylint: disable=bare-except
                 log.warning('Can not find the list %s', tfrecords)
             else:
-                create_tfrecords_pipeline
+
                 total_batches = len(lines) // batchsize
                 len0 = total_batches * batchsize
                 fnames = [line.strip() for line in lines[:len0]]
-                
+
                 if num_per_epoch_files is not None:
                     if len(fnames) < num_per_epoch_files:
-                        raise ValueError(
-                            "num_per_epoch_files is larger than the total number of tfrecords.",
-                            " Reduce num_per_epoch_files or add more tfrecords")
+                        print(f"Warning: num_per_epoch_files ({num_per_epoch_files}) is larger than the number of available files ({len(fnames)}). Using all available files.")
+                        fnames = fnames[:num_per_epoch_files]
+                        num_per_epoch_files = len(fnames)
+                        total_batches = num_per_epoch_files // batchsize
+                        len0 = total_batches * batchsize
+                        fnames = [line.strip() for line in lines[:len0]]
+
     elif isinstance(tfrecords, list):
         fnames = tfrecords
         total_batches = len(fnames) // batchsize
@@ -174,7 +206,8 @@ def create_dataset(
             batchsize = batchsize,
             num_per_epoch_files = num_per_epoch_files,
             truncate_samples = truncate_samples,
-            is_shuffle = is_shuffle)
+            is_shuffle = is_shuffle,
+            seed = seed)
 
     if num_per_epoch_files is not None:
         total_batches = num_per_epoch_files // batchsize

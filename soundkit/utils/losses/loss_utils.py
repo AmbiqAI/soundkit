@@ -376,7 +376,7 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
     def _compute_ratio_balanced_vad(
             self,
             y_true_wave,
-            target_ratio=0.1):
+            target_ratio=0.025):
         """
         target_ratio: Total importance of noise relative to speech (e.g., 0.1).
         Ensures noise weight (W_ns) is never greater than 1.0.
@@ -409,7 +409,7 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
 
         return sample_mask
 
-    def call(self, y_true, y_pred):
+    def __call__(self, y_true, y_pred, clean=None, **kwargs):
 
         # --- Input validation ---
         if y_true.dtype == tf.complex64:
@@ -467,7 +467,7 @@ class TimeSmoothMAELoss(tf.keras.losses.Loss):
             # plt.plot(y_true_norm[0,:].numpy(), label='true')
             # plt.plot(y_pred_norm[0,:].numpy(), label='pred')
             # plt.legend()
-            # plt.show()  
+            # plt.show()
 
 
         else:

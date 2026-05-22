@@ -127,10 +127,7 @@ class CNN2D(tf.keras.Model):
                     NormalizationFactory(params.normalization_layer)
                 )
 
-            layer.add(
-                tf.keras.layers.Activation(
-                    ActivationFactory(activation),
-                    name=f"act_{i}"))
+            layer.add(ActivationFactory(activation))
 
             self.cnn_layers.append(layer)
 
@@ -151,10 +148,10 @@ class CNN2D(tf.keras.Model):
                         kernel_size=(self.len_time, 1),
                         strides=(1, 1),
                         padding='valid',
-                        activation=ActivationFactory(activation),
                         kernel_initializer=kernel_initializer,
                         name=f"conv_{i}"
                     )
+            self.layer_time_act = ActivationFactory(activation)
             self.state_time = tf.Variable(
                 initial_value=tf.zeros(
                     (batchsize, self.len_time-1, dim, ch_out)),
@@ -292,6 +289,7 @@ class CNN2D(tf.keras.Model):
                 x[:, -(self.len_time - 1):, :, :])
 
             x = self.layer_time(x, training=training)
+            x = self.layer_time_act(x)
 
             timesteps = tf.shape(x)[1]
             x = tf.reshape(x, (self.params.batchsize, timesteps, -1))

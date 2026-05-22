@@ -100,7 +100,10 @@ class FeatureConfig:
     bins_fft: int = 50
     n_mels: int = 32
     exp_complex: float = 1.0
+    eps: float = 1e-8
     scale: float = 1.0
+    erb_subband_1: int = 65
+    erb_subband_2: int = 64
     def __post_init__(self):
         allowed_types = {
             "spec",
@@ -145,6 +148,7 @@ class TrainConfig:
     lr_schedule: str = "cosine"
     batchsize: int = 8
     spec_aug: bool = False
+    aec_distort_prob: float = 0.0
     epochs: int = 10
     warmup_epochs: int = 0
     epoch_loaded: Any = "random"

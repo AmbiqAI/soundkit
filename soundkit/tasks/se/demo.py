@@ -18,16 +18,16 @@ from soundkit.utils.converter_fix_point import (
         fakefix_tf,
         int2str_array
     )
+from soundkit.utils.np_complex_utils import (
+    complex_magnitude,
+    complex_angle,
+    polar_to_complex,
+    get_compressed_complex,)
 from soundkit.utils.tf_stft import gen_stft_win
 from soundkit.utils.feature_utils import FeatureExtractor
 from soundkit.utils.mel import gen_mel_c
 from soundkit.utils.erb import ERB
 from .export import export
-
-erb = ERB(
-    erb_subband_1=65,
-    erb_subband_2=64,
-    platform="numpy")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -270,7 +270,9 @@ def demo_evb(
     subprocess.run([
         "../.venv/bin/ns_autodeploy",
         "--tflite-filename", f"./{tflite_filename}",
-        "--tensorflow-version", tflm_version
+        "--tensorflow-version", tflm_version,
+        "--model-location", "TCM",
+        "--arena-location", "TCM",
     ], check=True)
 
     # === Copy output files ===
@@ -329,6 +331,8 @@ def demo_pc(
         fft_len=params.train.feature.fft_size,
         sampling_rate=params.data.signal.sampling_rate,
         mel_bins=mel_bins,
+        erb_subband_1=params.train.feature.erb_subband_1,
+        erb_subband_2=params.train.feature.erb_subband_2,
         platform="numpy"
     )
     hop_size = params.train.feature.hop_size
@@ -362,14 +366,18 @@ def demo_pc(
                 fft_len=params.train.feature.fft_size,
             )
 
-            if params.train.feature.type == 'erb_complex':
-                self.erb = erb
+            if params.train.feature.type in ('erb_complex', 'erb_mag'):
+                self.erb = ERB(
+                    erb_subband_1=params.train.feature.get('erb_subband_1', 65),
+                    erb_subband_2=params.train.feature.get('erb_subband_2', 64),
+                    nfft=params.train.feature.fft_size,
+                    platform="numpy")
 
-            if num_lookahead > 0:
-                _, z_spec = feat_extractor(
-                    np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
-                for i in range(num_lookahead):
-                    self.specs.append(z_spec.copy())
+            warmup_count = max(num_lookahead, 1)
+            _, z_spec = feat_extractor(
+                np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+            for i in range(warmup_count):
+                self.specs.append(z_spec.copy())
             if params.data['signal']['dc_removal']:
                 self.dc_remover = DCRemover()
 
@@ -377,10 +385,20 @@ def demo_pc(
                      inputs: np.ndarray # input from microphone
                     ) -> np.ndarray: # output to AudioShowClass
             """Process input audio signal and return VAD output."""
+            
+            pre_gain = 1
             inputs=inputs.flatten()
+            inputs = inputs * pre_gain
             if params.data['signal']['dc_removal']:
                 inputs = self.dc_remover.process(inputs)
             features,spec_update = self.feat_extractor(inputs)
+            
+            if params.train.feature.exp_complex != 1:
+                spec_update = get_compressed_complex(
+                    spec_update,
+                    exponent=params.train.feature.exp_complex)
+            
+            
             self.specs.append(spec_update)
             spec = self.specs.pop(0)
             if self.stats is not None:
@@ -394,12 +412,12 @@ def demo_pc(
                 features = np.stack(
                     (features.real, features.imag), axis=-1)
 
-            features =fakefix_tf(features, 32, 21).numpy()
+            # features =fakefix_tf(features, 32, 21).numpy()
 
             tfmask = self.model_tflite(features)
 
             pcm_out = self.post_procsessing(tfmask, spec)
-
+            pcm_out = pcm_out / pre_gain
             return pcm_out.reshape((-1,1))
 
         def post_procsessing(
@@ -417,15 +435,23 @@ def demo_pc(
 
             if params.train.feature.type == 'erb_complex':
                 tfmask = np.transpose(tfmask, axes=[0, 3, 1, 2]) # (B,T,F_erb,2) -> (B,2, T, F_erb)
-                tfmask = erb.bs(tfmask)
+                tfmask = self.erb.bs(tfmask)
                 tfmask = np.transpose(tfmask, axes=[0, 2, 3, 1])  # (B,2, T, F_erb) -> (B,T,F_erb,2)
                 tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
             elif params.train.feature.type == 'erb_mag':
-                tfmask = erb.bs(tfmask[..., 0])
+                tfmask = self.erb.bs(tfmask[..., 0])
 
             tfmask = tfmask.flatten()
 
-            pcm_out = self.istft.process(spec * tfmask)
+            spec_en = spec * tfmask
+            if params.train.feature.exp_complex != 1:
+                
+                spec_en = get_compressed_complex(
+                    spec_en,
+                    exponent=1/params.train.feature.exp_complex)
+
+
+            pcm_out = self.istft.process(spec_en)
 
             return pcm_out
 
@@ -434,11 +460,11 @@ def demo_pc(
             self.feat_extractor.reset()
             self.specs = []
             self.istft.reset()
-            if self.num_lookahead > 0:
-                _, z_spec = feat_extractor(
-                    np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
-                for i in range(self.num_lookahead):
-                    self.specs.append(z_spec.copy())
+            warmup_count = max(self.num_lookahead, 1)
+            _, z_spec = feat_extractor(
+                np.zeros(hop_size, dtype=np.float32))  # Warm up the feature extractor
+            for i in range(warmup_count):
+                self.specs.append(z_spec.copy())
             if hasattr(self, 'dc_remover'):
                 self.dc_remover.reset()
 

@@ -1,5 +1,4 @@
 import tensorflow as tf
-from . import UNetParams
 from . import UNetParams, get_unet_info
 from ..layers.SeparableConv2D import SeparableConv2D
 
@@ -16,25 +15,20 @@ class encoder_unet(tf.keras.layers.Layer):
 
         self.freq_bins,_ = get_unet_info(
             params.num_chs,
-            dim_feat=params.dim_feat)
+            dim_feat=params.dim_feat,
+            kernel_size_freq=params.kernel_size_freq)
         # self.freq_bins = [257, 128, 63, 31, 15]
         stages = len(params.num_chs) - 1
         self.states = self.make_states()
         for i , num_ch, num_ch_in in zip(range(stages), params.num_chs[1:], params.num_chs[:-1]):
 
             layer=tf.keras.Sequential(name=f"encoder_{i}")
-            if params.dropout > 0:
-                drop_rate=0.1 if i == 0 else params.dropout
-                layer.add(
-                    tf.keras.layers.Dropout(
-                        rate=drop_rate,
-                        name=f"dropout_{i}"
-                        ))
             if params.separable:
+
                 layer.add(
                     SeparableConv2D(
                         filters=num_ch,
-                        kernel_size=(params.kernel_size_time, 3),
+                        kernel_size=(params.kernel_size_time, params.kernel_size_freq),
                         strides=(1, 2),
                         activation=params.activation,
                         num_channels_in=num_ch_in,
@@ -43,10 +37,11 @@ class encoder_unet(tf.keras.layers.Layer):
                         name=f"conv_{i}"
                         ))
             else:
+
                 layer.add(
                     tf.keras.layers.Conv2D(
                         filters=num_ch,
-                        kernel_size=(params.kernel_size_time, 3),
+                        kernel_size=(params.kernel_size_time, params.kernel_size_freq),
                         strides=(1, 2),
                         padding='valid',
                         activation=params.activation,
@@ -64,6 +59,7 @@ class encoder_unet(tf.keras.layers.Layer):
 
         for i, da in enumerate(zip(self.params.num_chs[:-1], self.freq_bins[:-1])):
             num_ch, freq_bin = da
+
             shape = (self.params.batchsize, len_pad, freq_bin, num_ch)
 
             state=tf.zeros(shape)
@@ -80,11 +76,18 @@ class encoder_unet(tf.keras.layers.Layer):
 
         for i, da in enumerate(zip(self.params.num_chs[:-1], self.freq_bins[:-1])):
             num_ch, freq_bin = da
+
             shape = (self.params.batchsize, len_pad, freq_bin, num_ch)
 
             state=tf.zeros(shape)
             state = tf.Variable(state, trainable=False) # for eager mode
             self.states[i].assign(state)
+
+    def shuffle(self, x1, x2):
+        """Channel shuffle. x1, x2: (B,T,F,C). Output: (B,T,F,2C) interleaved."""
+        x = tf.stack([x1, x2], axis=-1)   # (B,T,F,C,2)
+        shape = tf.shape(x)
+        return tf.reshape(x, [shape[0], shape[1], shape[2], -1])
 
     def call(
             self,
@@ -98,9 +101,10 @@ class encoder_unet(tf.keras.layers.Layer):
 
         for i, layer_info in enumerate(zip(self.states, self.convs)):
             state, net = layer_info
+
             x = tf.concat([state, x], axis=1)
             state_update=tf.identity(x[:,-(self.params.kernel_size_time-1):,:,:])
-            x = net(x)
+            x = net(x, training=training)
             self.states[i].assign(state_update)
             outputs+= [x]
 

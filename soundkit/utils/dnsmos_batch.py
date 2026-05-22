@@ -42,11 +42,16 @@ class DNSMOS_Batch:
         except:
             return ort.InferenceSession(self.FILENAME, providers=['CPUExecutionProvider'])
 
-    def run_folder(self, folder_path):
+    def run_folder(self, folder_path, exclude_suffixes=None):
         """Process all WAV files in the specified folder and print DNSMOS scores."""
         t_start_total = time.time()
+        exclude_suffixes = exclude_suffixes or []
 
-        files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.wav')]
+        files = [
+            os.path.join(folder_path, f)
+            for f in os.listdir(folder_path)
+            if f.endswith('.wav') and not any(f.endswith(suffix) for suffix in exclude_suffixes)
+        ]
         if not files:
             print("No wav files found.")
             return
@@ -129,11 +134,22 @@ class DNSMOS_Batch:
             print("-" * 65)
             print(f"{'AVERAGE SCORE':<30} | {final_avgs[0]:.4f}   | {final_avgs[1]:.4f}   | {final_avgs[2]:.4f}")
 
-if __name__ == "__main__":
+def main():
+    """Command-line interface for batch processing DNSMOS scores."""
     parser = argparse.ArgumentParser()
     parser.add_argument("folder", help="Path to folder containing WAV files")
     parser.add_argument("--bs", type=int, default=32, help="Batch Size")
+    parser.add_argument(
+        "--exclude-suffix",
+        action="append",
+        default=["_sn.wav"],
+        help="Exclude wav files whose names end with this suffix. Can be used multiple times. Default: _sn.wav.",
+    )
     args = parser.parse_args()
 
     runner = DNSMOS_Batch(use_gpu=True, batch_size=args.bs)
-    runner.run_folder(args.folder)
+    runner.run_folder(args.folder, exclude_suffixes=args.exclude_suffix)
+
+
+if __name__ == "__main__":
+    main()

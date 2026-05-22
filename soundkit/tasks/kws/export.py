@@ -11,7 +11,8 @@ from soundkit.utils.feature_utils import FeatureExtractor
 from .datasets import create_dataset
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+    )
 log = logging.getLogger(__name__)
 
 def export(params: SKTaskParams):

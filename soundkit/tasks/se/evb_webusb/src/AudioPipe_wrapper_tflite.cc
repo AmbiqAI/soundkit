@@ -10,6 +10,13 @@
 
 #include "feature_module.h"
 #include "ns_ambiqsuite_harness.h"
+#define ENABLE_FEATURE_MCPS_MEASUREMENT 0
+
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+#include "ns_perf_profile.h"
+#include "ns_timer.h"
+#include "am_hal_clkgen.h"
+#endif
 #include "nn_speech.h"
 #include "iir.h"
 #include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
@@ -63,8 +70,56 @@ int8_t num_lookeahead = NUM_LOOKAHEAD;
 int32_t spec_buffer[514 * 4];
 int16_t nn_input_dim;
 int16_t nn_output_dim;
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+static volatile uint32_t g_feat_exec_cycles_last = 0;
+static volatile uint64_t g_feat_exec_cycles_acc = 0;
+static volatile uint32_t g_feat_exec_frames = 0;
+static uint32_t g_feat_sysclk_hz = 96000000;
+static bool g_feat_timer_ready = false;
+static ns_timer_config_t g_feat_tickTimer = {
+    .api = &ns_timer_V1_0_0,
+    .timer = NS_TIMER_COUNTER,
+    .enableInterrupt = false,
+};
+
+static void feature_exec_measurement_init(void)
+{
+    am_hal_clkgen_status_t sClkgenStatus;
+    if (am_hal_clkgen_status_get(&sClkgenStatus) == AM_HAL_STATUS_SUCCESS &&
+        sClkgenStatus.ui32SysclkFreq > 0)
+    {
+        g_feat_sysclk_hz = sClkgenStatus.ui32SysclkFreq;
+    }
+
+    if (ns_timer_init(&g_feat_tickTimer) == NS_STATUS_SUCCESS)
+    {
+        g_feat_timer_ready = true;
+    }
+}
+
+static float feature_exec_cycles_to_mcps(uint32_t cycles)
+{
+    int32_t hop = params_nn3_se.hopsize_stft;
+    int32_t sr = params_nn3_se.samplingRate;
+    if (hop <= 0)
+    {
+        hop = 160;
+    }
+    if (sr <= 0)
+    {
+        sr = 16000;
+    }
+
+    return ((float) cycles * (float) sr) / ((float) hop * 1000000.0f);
+}
+#endif
+
 int AudioPipe_wrapper_init(void)
 { 
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    feature_exec_measurement_init();
+#endif
+
     FeatureClass_construct(
         &FEAT_INST,
         (const int32_t*) feature_mean_se,
@@ -154,6 +209,11 @@ int AudioPipe_wrapper_reset(void)
     }
     FeatureClass_setDefault(&FEAT_INST);
     IIR_CLASS_reset(&dcrm_inst);
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    g_feat_exec_cycles_last = 0;
+    g_feat_exec_cycles_acc = 0;
+    g_feat_exec_frames = 0;
+#endif
     ns_model_state_t *pt_tflm = &tflm;
     pt_tflm->interpreter->Reset();
     return 0;
@@ -177,19 +237,53 @@ int AudioPipe_wrapper_frameProc(
     // static int16_t tmp_16s[514]; // max output dim
     float scalar_norm;
     if (params_nn3_se.feature_type == feat_spec_erb)
-        scalar_norm = 1.0 / (float) (1 << 21); // Q21, because erb feature is in Q21 x
+        if (feature_mean_se==NULL)
+        {
+            scalar_norm = 1.0 / (float) (1 << 21); // Q21, because erb feature is in Q21 x
+        }
+        else
+            scalar_norm = 1.0 / (float) (1 << FEATURE_QBIT); // Q21, because erb feature is in Q21 x
     else
         scalar_norm = 1.0 / (float) (1 << FEATURE_QBIT);
     ns_model_state_t *pt_tflm = &tflm;
     int32_t gain= (int32_t) params_nn3_se.pre_gain_q1;
     for (int i = 0; i < params_nn3_se.hopsize_stft; i++)
     {
-        int32_t tmp = (int32_t) pcm_input[i] * gain;
-        pcm_input[i] = (int16_t) MIN(MAX((tmp >> 1), -32768), 32767); // Q1
+        // int32_t tmp = (int32_t) pcm_input[i] * gain;
+        // pcm_input[i] = (int16_t) MIN(MAX((tmp >> 1), -32768), 32767); // Q1
+        pcm_input[i] = pcm_input[i] >> 3; // Q1
     }
 
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    ns_perf_counters_t perf_start;
+    ns_perf_counters_t perf_end;
+    uint32_t us_start = 0;
+    if (g_feat_timer_ready)
+    {
+        us_start = ns_us_ticker_read(&g_feat_tickTimer);
+    }
+    ns_capture_perf_profiler(&perf_start);
+#endif
     IIR_CLASS_exec(&dcrm_inst, pt_tmp16, pcm_input, params_nn3_se.hopsize_stft);
     FeatureClass_execute(&FEAT_INST, pt_tmp16);
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    ns_capture_perf_profiler(&perf_end);
+    uint32_t feat_exec_cycles = perf_end.cyccnt - perf_start.cyccnt;
+    if (feat_exec_cycles == 0 && g_feat_timer_ready)
+    {
+        uint32_t us_end = ns_us_ticker_read(&g_feat_tickTimer);
+        uint32_t us_delta = us_end - us_start;
+        if (us_delta == 0)
+        {
+            us_delta = 1;
+        }
+        uint64_t est_cycles = ((uint64_t) us_delta * (uint64_t) g_feat_sysclk_hz) / 1000000ULL;
+        feat_exec_cycles = (uint32_t) est_cycles;
+    }
+    g_feat_exec_cycles_last = feat_exec_cycles;
+    g_feat_exec_cycles_acc += feat_exec_cycles;
+    g_feat_exec_frames++;
+#endif
 
     int fft_bins_double = 514;
     // take out the oldest spec & cyclic insert the new one  at the end
@@ -321,7 +415,11 @@ int AudioPipe_wrapper_frameProc(
             pt_out,
             pcm_output,
             0,
-            NN_DIM_OUT);     
+            NN_DIM_OUT);
+        for (int i = 0; i < params_nn3_se.hopsize_stft; i++)
+        {
+            pcm_output[i] = pcm_output[i] << 3; // Q1
+        }
     }
     else
     {
@@ -334,5 +432,36 @@ int AudioPipe_wrapper_frameProc(
     }
     
     return 0;
+}
+
+uint32_t AudioPipe_wrapper_get_feature_exec_cycles(void)
+{
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    return g_feat_exec_cycles_last;
+#else
+    return 0;
+#endif
+}
+
+float AudioPipe_wrapper_get_feature_exec_mcps(void)
+{
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    return feature_exec_cycles_to_mcps(g_feat_exec_cycles_last);
+#else
+    return 0.0f;
+#endif
+}
+
+float AudioPipe_wrapper_get_feature_exec_avg_mcps(void)
+{
+#if ENABLE_FEATURE_MCPS_MEASUREMENT
+    if (g_feat_exec_frames == 0)
+    {
+        return 0.0f;
+    }
+    return feature_exec_cycles_to_mcps((uint32_t) (g_feat_exec_cycles_acc / g_feat_exec_frames));
+#else
+    return 0.0f;
+#endif
 }
 

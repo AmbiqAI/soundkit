@@ -9,6 +9,7 @@ class UNetParams(BaseModel):
     dim_feat: int = 257
     dim_out: int = 257
     kernel_size_time: int = 3
+    kernel_size_freq: int = 3
     num_chs: List[int] = [1, 16, 16, 16, 16]
     separable: bool = False
     depthwise_activation: str = "linear"
@@ -17,14 +18,17 @@ class UNetParams(BaseModel):
     unroll_rnn: bool = False
     normalization_layer: str | None = None
     dropout: float = 0.0
+    scale_rnn_out: float = 1.0
     bypass_last_fc: bool = False
+    is_df: bool = False
     output_scaling: float = 1.0
+    skip_connection: str = 'concat'  # options: 'concat', 'add'
     bottleneck: str = 'lstm'  # options: 'dpgrnn', 'lstm', 'none'
     dilations: List[int] = [1, 2, 4, 8, 16, 32]
     filters_tcn: int = 64
     kernel_size_tcn: int = 2
-    max_cstate: float = 8.0
-    min_cstate: float = -8.0
+    max_cstate: float = 64.0
+    min_cstate: float = -64.0
 
 def get_unet_info(
         num_chs: list = [1, 2, 4, 8, 16],

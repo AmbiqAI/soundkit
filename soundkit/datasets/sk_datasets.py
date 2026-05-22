@@ -11,6 +11,8 @@ corpus2path_map= {
     "dev-clean": "wavs/LibriSpeech/dev-clean",
     "test-clean": "wavs/LibriSpeech/test-clean",
     "thchs30": "wavs/data_thchs30",
+    "magicdata-train": "wavs/MAGICDATA/train",
+    "magicdata-val": "wavs/MAGICDATA/dev",
     "train-galaxy": "metadata/galaxy_train.csv",
     "val-galaxy": "metadata/galaxy_val.csv",
     "train-coros": "metadata/coros_train.csv",
@@ -79,6 +81,35 @@ def get_wavefiles(
     return lst
 
 # === Train/Val Corpora ===
+
+def load_magicdata_train(corpus: str) -> list:
+    """
+    Load MagicData train corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        list: List of wave file paths.
+    """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
+    return get_wavefiles(path)
+
+def load_magicdata_val(corpus: str) -> list:
+    """
+    Load MagicData validation corpus.
+    Args:
+        corpus (str): Path to the corpus.
+    Returns:
+        list: List of wave file paths.
+    """
+    path = corpus2path_map[corpus['name']]
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
+    return get_wavefiles(path)
+
 def load_train_clean_100(corpus: str) -> list:
     """
     Load LibriSpeech train-clean-100 corpus.
@@ -106,7 +137,11 @@ def load_train_clean_360(corpus: str) -> list:
     if not os.path.exists(path):
         raise FileNotFoundError(
             f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
-    return get_wavefiles("wavs/LibriSpeech/train-clean-360")
+
+    lst = get_wavefiles("wavs/LibriSpeech/train-clean-360")
+    len0 = int(len(lst) * 0.25)
+
+    return {"train": lst[len0:], "val": lst[:len0]} # 10% for val, 90% for train
 
 
 def load_dev_clean(corpus: str) -> list:
@@ -137,7 +172,7 @@ def load_test_clean(corpus: str) -> list:
     if not os.path.exists(path):
         raise FileNotFoundError(
             f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
-
+    
     return get_wavefiles("wavs/LibriSpeech/test-clean")
 
 def load_thchs30(corpus: str) -> dict:
@@ -347,6 +382,13 @@ def load_dns_challenge_noise(corpus: str) -> dict:
     files['val'] = wavs[:split]
     return files
 
+DNS_CLEAN_EXCLUDE = [
+    'emotional_speech/crema_d',
+    'singing_voice/VocalSet11',
+    'mandarin_speech/SLR18_THCHS00',
+    'german_speech/CC_4.0_International_german-speechdata_148hrs_16k',
+]
+
 def load_dns_challenge_train(corpus: str) -> dict:
     """
     Load DNS-Challenge train (clean) corpus.
@@ -362,7 +404,7 @@ def load_dns_challenge_train(corpus: str) -> dict:
             f"Corpus path does not exist: {path}. {ERROR_CORPUS_NOT_FOUND}")
 
     wavs = get_wavefiles('wavs/noise/DNS-Challenge/datasets/clean')
-    # wavs_wind_train = get_wavefiles('wavs/noise/wind_noise')
+    wavs = [w for w in wavs if not any(ex in w for ex in DNS_CLEAN_EXCLUDE)]
 
     random.shuffle(wavs)
 

@@ -17,13 +17,16 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "arm_math.h"
+#include "third_party/ns_cmsis_nn/Include/arm_nnsupportfunctions.h"
 
 #include "AudioPipe_wrapper.h"
 #include "def_AudioSystem.h"
 
 #define RECORD_10S 1
 #define AUDIO_ON 1
-#define PERF_TEST 1
+#define PERF_TEST 0
+#define ENABLE_FFT_IFFT_MCPS_MEASUREMENT 0
+#define FORCE_MAX_CPU_PERF 1
 
 // --- CHANGED: Increased to hold 20ms of 16kHz Stereo PCM (640 samples * 2 bytes = 1280 bytes) ---
 #define MAX_ENCODED_LEN 1280 
@@ -33,6 +36,12 @@ alignas(16) unsigned char static encodedDataBuffer[MAX_ENCODED_LEN];
 bool enableSE = true; // Default to sending both, flag used for processing
 uint32_t seLatency = 0;
 uint32_t opusLatency = 0;
+#if ENABLE_FFT_IFFT_MCPS_MEASUREMENT
+static volatile uint32_t g_fft_ifft_512_cycles_avg = 0;
+static volatile float g_fft_ifft_512_mcps = 0.0f;
+static volatile uint32_t g_fft_ifft_512_f32_cycles_avg = 0;
+static volatile float g_fft_ifft_512_f32_mcps = 0.0f;
+#endif
 
 typedef enum {
     SET_SE_MODE = 0x1,
@@ -207,7 +216,7 @@ void send_se_latency(uint32_t latency) {
     memcpy(data.data, &latency, sizeof(latency));
     webusb_send_data((uint8_t *)&data, 7);
 }
-
+int16_t g_in16AudioDataBuffer1[LEN_STFT_HOP << 1]; // 320 samples for mono, 640 for stereo (interleaved)
 // --- MODIFIED: Audio Task to Interleave Stereo ---
 void audioTask(void *pvParameters) {
     while (1) {
@@ -218,7 +227,9 @@ void audioTask(void *pvParameters) {
         }
 
         if (g_audioReady) { // 160 samples, 10ms mono incoming
+#if !FORCE_MAX_CPU_PERF
             NS_TRY(ns_set_performance_mode(NS_MAXIMUM_PERF), "Set CPU Perf mode failed. ");
+#endif
             
             if (currentSESample == seLatencyCapturePeriod) {
                 seStart = ns_us_ticker_read(&basic_tickTimer);
@@ -226,12 +237,25 @@ void audioTask(void *pvParameters) {
 
             // 1. Run SE Model - Output to tempSEBuffer
             // We always run this to keep the model state valid
-            AudioPipe_wrapper_frameProc(g_in16AudioDataBuffer, tempSEBuffer);
+
+            arm_memcpy_s8(
+                (int8_t*) g_in16AudioDataBuffer1,
+                (int8_t*) g_in16AudioDataBuffer,
+                LEN_STFT_HOP * sizeof(int16_t)); // Copy to a separate buffer for SE processing
+
+            AudioPipe_wrapper_frameProc(g_in16AudioDataBuffer1, tempSEBuffer);
 
             if (currentSESample == seLatencyCapturePeriod) {
                 seEnd = ns_us_ticker_read(&basic_tickTimer);
                 seLatency = seEnd - seStart;
                 send_se_latency(seLatency);
+#if ENABLE_FFT_IFFT_MCPS_MEASUREMENT
+                ns_lp_printf("FFT+IFFT(512) q31: cycles=%lu mcps=%.3f | f32: cycles=%lu mcps=%.3f\n",
+                             g_fft_ifft_512_cycles_avg,
+                             g_fft_ifft_512_mcps,
+                             g_fft_ifft_512_f32_cycles_avg,
+                             g_fft_ifft_512_f32_mcps);
+#endif
                 currentSESample = 0;
             } else {
                 currentSESample++;
@@ -249,7 +273,9 @@ void audioTask(void *pvParameters) {
                 xmitWritePtr = (xmitWritePtr + 1) % XBUFSIZE;
             }
 
+#if !FORCE_MAX_CPU_PERF
             NS_TRY(ns_set_performance_mode(NS_MINIMUM_PERF), "Set CPU Perf mode failed. ");
+#endif
 
             // We added 160 * 2 = 320 samples to the buffer
             xmitAvailable += (LEN_STFT_HOP * 2); 
@@ -317,7 +343,12 @@ int main(void) {
     NS_TRY(ns_core_init(&ns_core_cfg), "Core init failed.\b");
 
     ns_power_config(&ns_power_usb);
+
+#if FORCE_MAX_CPU_PERF
+    NS_TRY(ns_set_performance_mode(NS_MAXIMUM_PERF), "Set CPU Perf mode failed. ");
+#else
     NS_TRY(ns_set_performance_mode(NS_MINIMUM_PERF), "Set CPU Perf mode failed. ");
+#endif
 
     ns_itm_printf_enable();
     ns_interrupt_master_enable();
@@ -350,6 +381,61 @@ int main(void) {
     ns_lp_printf("USB Init Success\n");
 
     NS_TRY(ns_timer_init(&basic_tickTimer), "Timer init failed.\n");
+
+    // CMSIS-DSP benchmark: combined 512-point complex FFT+IFFT (Q31)
+#if ENABLE_FFT_IFFT_MCPS_MEASUREMENT
+    {
+        const uint32_t fft_len = 512;
+        const uint32_t fft_bench_iters = 100;
+        alignas(16) static q31_t fft_work[2 * 512];
+        alignas(16) static float32_t fft_work_f32[2 * 512];
+        arm_cfft_instance_q31 cfft_q31_512;
+        arm_cfft_instance_f32 cfft_f32_512;
+        ns_perf_counters_t pair_start;
+        ns_perf_counters_t pair_end;
+        uint64_t pair_cycles_acc = 0;
+        uint64_t pair_f32_cycles_acc = 0;
+
+        if (arm_cfft_init_512_q31(&cfft_q31_512) != ARM_MATH_SUCCESS)
+        {
+            while (1)
+                ;
+        }
+
+        if (arm_cfft_init_512_f32(&cfft_f32_512) != ARM_MATH_SUCCESS)
+        {
+            while (1)
+                ;
+        }
+
+        for (uint32_t it = 0; it < fft_bench_iters; it++) {
+            ns_capture_perf_profiler(&pair_start);
+            arm_cfft_q31(&cfft_q31_512, fft_work, 0, 1);
+            arm_cfft_q31(&cfft_q31_512, fft_work, 1, 1);
+            ns_capture_perf_profiler(&pair_end);
+            pair_cycles_acc += (uint32_t) (pair_end.cyccnt - pair_start.cyccnt);
+
+            ns_capture_perf_profiler(&pair_start);
+            arm_cfft_f32(&cfft_f32_512, fft_work_f32, 0, 1);
+            arm_cfft_f32(&cfft_f32_512, fft_work_f32, 1, 1);
+            ns_capture_perf_profiler(&pair_end);
+            pair_f32_cycles_acc += (uint32_t) (pair_end.cyccnt - pair_start.cyccnt);
+        }
+
+        g_fft_ifft_512_cycles_avg = (uint32_t) (pair_cycles_acc / fft_bench_iters);
+        g_fft_ifft_512_mcps = ((float) g_fft_ifft_512_cycles_avg * (float) SAMPLING_RATE) /
+                              ((float) fft_len * 1000000.0f);
+        g_fft_ifft_512_f32_cycles_avg = (uint32_t) (pair_f32_cycles_acc / fft_bench_iters);
+        g_fft_ifft_512_f32_mcps = ((float) g_fft_ifft_512_f32_cycles_avg * (float) SAMPLING_RATE) /
+                                  ((float) fft_len * 1000000.0f);
+
+        ns_lp_printf("FFT+IFFT(512) q31: cycles=%lu mcps=%.3f | f32: cycles=%lu mcps=%.3f\n",
+                 g_fft_ifft_512_cycles_avg,
+                 g_fft_ifft_512_mcps,
+                 g_fft_ifft_512_f32_cycles_avg,
+                 g_fft_ifft_512_f32_mcps);
+    }
+    #endif
    
     // Generate a 400hz sin wave (for debugging)
     for (int i = 0; i < 320; i++) {

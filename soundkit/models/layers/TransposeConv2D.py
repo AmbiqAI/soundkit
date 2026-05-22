@@ -43,7 +43,7 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             kernel_size=kernel_size,
             padding='valid',
             groups=num_channels_in,
-            use_bias=False,
+            use_bias=use_bias,
             kernel_initializer=kernel_initializer)
         self.pointwise = tf.keras.layers.Conv2D(
             filters=filters,
@@ -53,8 +53,8 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
             use_bias=use_bias,
             kernel_initializer=kernel_initializer)
 
-        self.norm = NormalizationFactory(normalization_layer)
-
+        self.norm_dw = NormalizationFactory(normalization_layer)
+        self.norm_pw = NormalizationFactory(normalization_layer)
         self.activation = ActivationFactory(activation)
 
         self.zeros=tf.zeros(
@@ -64,7 +64,8 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
              num_channels_in))
         # self.depthwise_activation = depthwise_activation
         self.depthwise_activation = ActivationFactory(depthwise_activation)
-    def call(self, inputs):
+
+    def call(self, inputs, training=False):
         """ Forward pass """
         # input shape = (B, T, F, C)
         # inputs_up = updsampling_by_2(inputs)
@@ -75,12 +76,16 @@ class SeparableTransposeConv2D(tf.keras.layers.Layer):
 
         # inputs_up = self.padding(inputs_up)
         outputs = self.depthwise(inputs_up)
-        outputs = self.depthwise_activation(outputs)
-        outputs = self.pointwise(outputs)
-        outputs = self.norm(outputs)
-        outputs = self.activation(outputs)
+        outputs = self.norm_dw(outputs, training=training)
         # tf.print("activation min:", tf.reduce_min(outputs))
         # tf.print("activation max:", tf.reduce_max(outputs))
+        outputs = self.depthwise_activation(outputs) # scale down the output of depthwise convolution to avoid overflow
+
+        outputs = self.pointwise(outputs)
+        outputs = self.norm_pw(outputs, training=training)
+        # tf.print("activation min:", tf.reduce_min(outputs))
+        # tf.print("activation max:", tf.reduce_max(outputs))
+        outputs = self.activation(outputs) # scale down the output of pointwise convolution to avoid overflow
         return outputs
 
 class TransposeConv2D(tf.keras.layers.Layer):
@@ -122,7 +127,7 @@ class TransposeConv2D(tf.keras.layers.Layer):
             len_filter_freq-1,
             num_channels_in))
 
-    def call(self, inputs):
+    def call(self, inputs, training=False):
         """ Forward pass """
         # input shape = (B, T, F, C)
         # inputs_up = updsampling_by_2(inputs)

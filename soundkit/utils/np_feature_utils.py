@@ -5,6 +5,14 @@ from soundkit.utils.mel import gen_mel_bank
 from soundkit.utils.mel_spec_gen import melspec_gen
 from soundkit.utils.erb import ERB
 from soundkit.utils.converter_fix_point import fakefix
+
+from soundkit.utils.np_complex_utils import (
+    complex_magnitude,
+    complex_angle,
+    polar_to_complex,
+    get_compressed_complex,
+)
+
 def log10_eps(val, eps = 2.0**-15):
     """
     log10 with minimum eps
@@ -23,12 +31,15 @@ class FeatureExtractor_np:
             hop_len=160,
             fft_len=512,
             exp_complex=1.0,
+            eps=1e-7,
             scale=1,
             sampling_rate=16000,
             mel_bins=72,
             thresh_mel=50,
             stream=True,
-            platform="tensorflow"):
+            platform="tensorflow",
+            erb_subband_1=65,
+            erb_subband_2=64):
         bypass_stft=False
         if feat_type =="time":
             bypass_stft=True
@@ -43,6 +54,7 @@ class FeatureExtractor_np:
         self.scale = scale
         self.sampling_rate = sampling_rate
         self.feat_type=feat_type
+        self.eps = eps
         self._extractors = {
             "spec": self._extract_spec,
             "pspec": self._extract_pspec,
@@ -80,16 +92,18 @@ class FeatureExtractor_np:
             self.dim_feat = frame_len
         elif feat_type== "erb_complex":
             self.erb = ERB(
-                erb_subband_1=65,
-                erb_subband_2=64,
+                erb_subband_1=erb_subband_1,
+                erb_subband_2=erb_subband_2,
+                nfft=fft_len,
                 platform=platform)
-            self.dim_feat = 129
+            self.dim_feat = erb_subband_1 + erb_subband_2
         elif feat_type == "erb_mag":
             self.erb = ERB(
-                erb_subband_1=65,
-                erb_subband_2=64,
+                erb_subband_1=erb_subband_1,
+                erb_subband_2=erb_subband_2,
+                nfft=fft_len,
                 platform=platform)
-            self.dim_feat = 129
+            self.dim_feat = erb_subband_1 + erb_subband_2
         else:
             dim_feat = (fft_len // 2) + 1
 
@@ -130,6 +144,14 @@ class FeatureExtractor_np:
 
         # 2. Prepare for ERB bank (matching your TF stack axis)
         spec_combined = np.stack([spec_real, spec_imag], axis=0)
+
+        # 4. Apply Power Compression (if exp_complex != 1.0)
+        
+        if 1:
+            if self.exp_complex != 1.0:
+
+                spec_combined = np.sign(spec_combined) * (np.abs(spec_combined)**self.exp_complex)
+
         erb_spec = self.erb.bm(spec_combined)
 
         # 3. Reconstruct complex ERB from the BM output
@@ -138,13 +160,16 @@ class FeatureExtractor_np:
         real = erb_spec[0]
         imag = erb_spec[1]
         erb_complex = real + 1j * imag
+        if 0:
+            if self.exp_complex != 1.0:
+                erb_complex = get_compressed_complex(
+                    erb_complex, self.exp_complex, self.eps)
 
-        # 4. Apply Power Compression (if exp_complex != 1.0)
-        if self.exp_complex != 1.0:
-            mag = np.abs(erb_complex)
-            # Using 2**-15 to match your TF epsilon/small constant
-            scale = (mag**self.exp_complex) / (mag + 2**-15) * self.scale
-            erb_complex = erb_complex * scale
+            # eps = 1e-8
+            # mag = np.sqrt(np.abs(erb_complex)**2 + eps**2)**self.exp_complex
+            # # Using 2**-15 to match your TF epsilon/small constant
+            # phase = np.angle(erb_complex + eps)
+            # erb_complex = mag * np.exp(1j * phase)
 
         return erb_complex, spec.copy()
     

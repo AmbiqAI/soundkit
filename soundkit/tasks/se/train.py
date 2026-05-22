@@ -21,6 +21,8 @@ import time
 
 # === Third-Party Imports ===
 import tensorflow as tf
+from tqdm import tqdm
+
 try:
     import pynvml
     _NVML_AVAILABLE = True
@@ -33,6 +35,7 @@ from soundkit.utils.download_tf_model import (
     save_train_log,
     load_train_log,
     build_model,
+    get_model_config,
     load_model_checkpoint,
 )
 from soundkit.utils.feature_utils import FeatureExtractor
@@ -51,6 +54,7 @@ from soundkit.utils.tf_complex_utils import (
     polar_to_complex,
     complex_magnitude,
     complex_angle,
+    get_compressed_complex,
 )
 
 from .datasets import create_dataset
@@ -60,7 +64,10 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 log = logging.getLogger(__name__)
 
-erb = ERB(erb_subband_1=65, erb_subband_2=64)
+
+def is_deepfilter_enabled(params: SKTaskParams) -> bool:
+    """Return whether DeepFilter is enabled for the current model config."""
+    return bool(get_model_config(params).get("is_df", False))
 
 @tf.function
 def train_step(
@@ -68,8 +75,12 @@ def train_step(
         optimizer: tf.keras.optimizers.Optimizer,
         loss_fn: Any,
         batch: dict[str, tf.Tensor],
+        is_df: bool = False,
         training: bool = True,
         feat_type: str = "mel",
+        exp_features :float = 1.0,
+        num_lookahead: int = 2,
+        erb: ERB = None,
         ) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     """throughput_
     Executes a single training or validation step for the SE model.
@@ -89,6 +100,7 @@ def train_step(
     """
 
     feat_sn = batch["feat_sn"]
+    lengths = batch["lengths"]
 
     if feat_sn.dtype == tf.complex64:
         inputs = tf.stack(
@@ -97,6 +109,33 @@ def train_step(
             axis=-1)
     else:
         inputs = feat_sn
+
+    if exp_features != 1.0:
+        spec_sn = get_compressed_complex(
+                batch["spec_sn"],
+                exp_features)
+        spec_s = get_compressed_complex(
+            batch["spec_s"],
+            exp_features)
+    else:
+        spec_sn = batch["spec_sn"]
+        spec_s = batch["spec_s"]
+
+    if num_lookahead > 0:
+        spec_s_delay = tf.pad(
+            spec_s,
+            [[0, 0], [num_lookahead, 0], [0, 0]],
+            mode='CONSTANT',
+            constant_values=0.0)[:, :-num_lookahead]
+        spec_sn_delay = tf.pad(
+                        spec_sn,
+                        [[0, 0], [num_lookahead, 0], [0, 0]],
+                        mode='CONSTANT',
+                        constant_values=0.0)[:, :-num_lookahead]
+    else:
+        spec_s_delay = spec_s
+        spec_sn_delay = spec_sn
+
     with tf.GradientTape() as tape:
         est = net(inputs, training=training)
         if feat_sn.dtype == tf.complex64:
@@ -104,30 +143,66 @@ def train_step(
             if feat_type == "erb_complex":
                 est = tf.transpose(est, perm=[0, 3, 1, 2])  # (B,T,F_erb,2) -> (B,2, F_erb,T)
                 est = erb.bs(est)
+
                 est = tf.transpose(est, perm=[0, 2, 3, 1])  # (B,2, F_erb,T) -> (B,T,F_erb,2)
-            est_real = est[..., 0]
-            est_imag = est[..., 1]
-            est = tf.complex(
-                est_real,
-                est_imag,
-            )
-            spec_en_delay = est * batch["spec_sn_delay"]
+
+            if not is_df: # no deep filter
+                est_real = est[..., 0]
+                est_imag = est[..., 1]
+                est = tf.complex(
+                    est_real,
+                    est_imag,
+                )
+
+                spec_en_delay = est * spec_sn_delay
+                clean = batch["clean"]
+            else:
+                spec_sn_ext = tf.pad(
+                    spec_sn,
+                    [[0, 0], [4, 0], [0, 0]],
+                    mode='CONSTANT',
+                    constant_values=0.0)
+                lst = []
+                for i in range(5):
+                    est_real = est[..., i*2]
+                    est_imag = est[..., i*2+1]
+                    est1 = tf.complex(
+                        est_real,
+                        est_imag,
+                    )
+
+                    tmp = est1 * spec_sn_ext[:, i:i+est.shape[1]]
+                    lst.append(tmp)
+
+                spec_en_delay = tf.reduce_sum(tf.stack(lst, axis=0), axis=0)
+
+                clean = batch["clean"]
+
+                idx_loc=2
+                est_real = est[..., 2 * idx_loc]
+                est_imag = est[..., 2 * idx_loc + 1]
+                est = tf.complex(
+                    est_real,
+                    est_imag,
+                )
+
             spec_en = spec_en_delay
 
             loss = loss_fn(
-                batch["spec_s_delay"],
+                spec_s_delay,
                 spec_en_delay,
-                clean=batch["clean"])
+                clean=clean,
+                lengths=lengths,)
         else:
 
             if feat_type == "erb_mag":
                 est = erb.bs(est[..., 0])
             est = tf.complex(est, 0.0)
-            spec_en_delay = est * batch["spec_sn_delay"]
+            spec_en_delay = est * spec_sn_delay
 
             spec_s_delay = polar_to_complex(
-                complex_magnitude(batch["spec_s_delay"]),
-                complex_angle(batch["spec_s_delay"]),
+                complex_magnitude(spec_s_delay),
+                complex_angle(spec_s_delay),
             )
 
             spec_en = spec_en_delay
@@ -136,6 +211,7 @@ def train_step(
                 spec_en_delay,
                 clean=batch["clean"],)
 
+    grad_norms = {}
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
         gradients_clips = [ tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
@@ -145,7 +221,111 @@ def train_step(
                     zip(gradients_clips,
                         net.trainable_variables))
 
-    return loss, est, spec_en
+        for var, grad in zip(net.trainable_variables, gradients):
+            if grad is not None:
+                grad_norms[var.name] = tf.norm(grad)
+    if exp_features != 1.0:
+
+        spec_en = get_compressed_complex(
+            spec_en,
+            1.0/exp_features)
+    return loss, est, spec_en, grad_norms
+
+
+def simulate_aec_distortion(audio_sn, audio_s, sr=16000):
+    """Simulate AEC-induced speech distortions on mixture and target.
+
+    Both audio_sn (mixture) and audio_s (clean target) receive the SAME
+    distortion so the model sees realistic artefacts without an impossible
+    learning target.
+
+    Distortions (applied identically to both signals):
+      1. Soft clipping  — nonlinear RES artefact (tanh drive).
+         A multiplicative mask cannot remove added harmonics, so target
+         must also be clipped.
+      2. Random segment gain drop — partial near-end cancellation.
+         Both signals get the same gain so the model only denoises.
+
+    Args:
+        audio_sn: (B, T) float32 noisy mixture tensor.
+        audio_s:  (B, T) float32 clean speech tensor (target).
+        sr:       sampling rate (default 16000).
+
+    Returns:
+        (distorted_sn, distorted_s) — both (B, T) float32.
+    """
+    B = tf.shape(audio_sn)[0]
+    T = tf.shape(audio_sn)[1]
+
+    # ---- 1. Soft clipping (nonlinear AEC artifact) ----
+    apply_clip = tf.cast(
+        tf.random.uniform([B, 1]) < 0.3, tf.float32)
+    drive = tf.random.uniform([B, 1], 2.0, 8.0)
+
+    clipped_sn = tf.math.tanh(audio_sn * drive) / tf.math.tanh(drive)
+    audio_sn = audio_sn * (1.0 - apply_clip) + clipped_sn * apply_clip
+
+    clipped_s = tf.math.tanh(audio_s * drive) / tf.math.tanh(drive)
+    audio_s = audio_s * (1.0 - apply_clip) + clipped_s * apply_clip
+
+    # ---- 2. Random segment gain reduction (partial cancellation) ----
+    for _ in range(3):
+        seg_len = tf.random.uniform(
+            [], minval=int(0.1 * sr), maxval=int(0.5 * sr), dtype=tf.int32)
+        seg_start = tf.random.uniform(
+            [], minval=0, maxval=tf.maximum(T - seg_len, 1), dtype=tf.int32)
+        indices = tf.range(T)
+        in_seg = tf.cast(
+            tf.logical_and(indices >= seg_start, indices < seg_start + seg_len),
+            tf.float32)                                       # (T,)
+        apply_gain = tf.cast(
+            tf.random.uniform([B, 1]) < 0.4, tf.float32)
+        gain_db = tf.random.uniform([B, 1], -15.0, -3.0)
+        gain_linear = tf.pow(10.0, gain_db / 20.0)
+        seg_gain = 1.0 - in_seg + in_seg * gain_linear       # (B, T)
+        seg_gain = 1.0 - apply_gain + apply_gain * seg_gain
+        audio_sn = audio_sn * seg_gain
+        audio_s  = audio_s  * seg_gain
+
+    return audio_sn, audio_s
+
+def remix_snr(
+        audio_s: tf.Tensor,
+        noise: tf.Tensor,
+        snr_min_db: float = -5.0,
+        snr_max_db: float = 40.0,
+        eps: float = 1e-8) -> tuple[tf.Tensor, tf.Tensor]:
+    """Remix clean speech and noise to a random SNR per sample.
+
+    Args:
+        audio_s: Clean speech tensor of shape (B, T).
+        noise: Noise tensor of shape (B, T).
+        snr_min_db: Minimum target SNR in dB.
+        snr_max_db: Maximum target SNR in dB.
+        eps: Small constant for numerical stability.
+
+    Returns:
+        Tuple of remixed noisy speech and scaled noise.
+    """
+    speech_rms = tf.sqrt(tf.reduce_mean(tf.square(audio_s), axis=1, keepdims=True) + eps)
+    noise_rms = tf.sqrt(tf.reduce_mean(tf.square(noise), axis=1, keepdims=True) + eps)
+
+    target_snr_db = tf.random.uniform(
+        [tf.shape(audio_s)[0], 1],
+        minval=snr_min_db,
+        maxval=snr_max_db,
+        dtype=audio_s.dtype)
+    target_ratio = tf.pow(10.0, target_snr_db / 20.0)
+
+    target_noise_rms = speech_rms / target_ratio
+    noise_scale = tf.where(
+        noise_rms > eps,
+        target_noise_rms / noise_rms,
+        tf.zeros_like(noise_rms))
+
+    noise_remixed = noise * noise_scale
+    audio_sn = audio_s + noise_remixed
+    return audio_sn, noise_remixed
 
 
 def run_epoch(
@@ -171,12 +351,15 @@ def run_epoch(
     loss_fn = config["loss_fn"]
     params  = config["params"]
     stats = config["feat_stats"]
+    is_df = config["is_df"]
 
     stft_feat = params.train['feature']
     batchsize = params.train["batchsize"]
     feat_extractor = config["feat_extractor"]
     num_lookahead = params.train['num_lookahead']
     total_batches = config["total_batches"]['train'] if training else config["total_batches"]['val']
+    aec_distort_prob = getattr(params.train, 'aec_distort_prob', 0.0)
+    sr = params.data.signal.sampling_rate
 
     total_steps=total_batches * epoch
 
@@ -199,7 +382,7 @@ def run_epoch(
         batchsize=batchsize)
 
     if params.train['spec_aug']:
-        specAug_inst = SpecAug()
+        specAug_inst = SpecAug(prob=0.3)
 
     def reset_states():
         states_audio_sn = tf.zeros(
@@ -249,33 +432,57 @@ def run_epoch(
         return final_scale, unit_scale
 
     states_audio_sn, states_audio_s = reset_states()
-    for step, batch in enumerate(dataset):
+    pbar = tqdm(
+        enumerate(dataset),
+        total=total_batches,
+        desc=f"  [{train_tag}]",
+        unit=" batch", ncols=120)
+    for step, batch in pbar:
         if params.train['reset_states_every_batch']:
-            rn = tf.random.uniform([], 0, 1.0)
-            if rn < 0.5:
-                states_audio_sn, states_audio_s = reset_states()
+            # Random reset: 30% hard reset (cold start), 70% carry-over (streaming)
+            # if training and tf.random.uniform([]) > 0.3:
+            #     pass  # keep states from previous batch
+            # else:
+            #     states_audio_sn, states_audio_s = reset_states()
+            states_audio_sn, states_audio_s = reset_states()
+        audio_sn, audio_s, lengths = batch
 
-        audio_sn, audio_s, _ = batch
         # deep copy of clean for VAD computation
         clean = tf.identity(audio_s)
+        
+        # # remix snr
+        # if training:
+        #     noise = audio_sn - audio_s
+        #     audio_sn, noise = remix_snr(
+        #         audio_s,
+        #         noise,
+        #         snr_min_db=-10.0,
+        #         snr_max_db=40.0)
 
-        if 1:
+        if 1: # add some residue noise to the target
             noise = audio_sn - audio_s
 
-            ns_db=-30
+            # AEC distortion: distort mixture and target with the same artefacts
+            if training and aec_distort_prob > 0:
+                if tf.random.uniform([]) < aec_distort_prob:
+                    audio_sn, audio_s = simulate_aec_distortion(audio_sn, audio_s, sr=sr)
+                    clean = audio_s
+                    noise = audio_sn - audio_s
+
+            ns_db = tf.random.uniform(
+                [audio_sn.shape[0], 1],
+                -50.0, -45.0)
             factor = tf.pow(10.0, ns_db / 20.0)
+            audio_s = audio_s + noise * 0
+        if 1:
+            gain, unit_gain = random_peak_normalize(
+                audio_sn,
+                min_val = params.data.min_amp,
+                max_val = params.data.max_amp)
 
-            audio_s = audio_s + noise * factor
-
-        gain, unit_gain = random_peak_normalize(
-            audio_sn,
-            min_val = params.data.min_amp,
-            max_val = params.data.max_amp)
-
-        audio_sn = audio_sn * gain
-        audio_s = audio_s * gain
-
-        
+            audio_sn = audio_sn * gain
+            audio_s = audio_s * gain
+            clean = clean * gain
         step_start = time.perf_counter()
 
         # Extract features using streaming state
@@ -283,14 +490,19 @@ def run_epoch(
             audio_sn, states=states_audio_sn)
         _, spec_s, states_audio_s = feat_extractor(
             audio_s, states=states_audio_s)
-
-        # Apply lookahead
-        spec_sn_delay = buffer_sn.apply(spec_sn)
-        spec_s_delay = buffer_s.apply(spec_s)
-
+        # if params.train.feature.exp_complex != 1.0:
+        #     spec_sn = get_compressed_complex(
+        #         spec_sn,
+        #         params.train.feature.exp_complex,
+        #         params.train.feature.eps)
+        #     spec_s = get_compressed_complex(
+        #         spec_s,
+        #         params.train.feature.exp_complex,
+        #         params.train.feature.eps)
         if params.train['spec_aug'] and training:
-            feat_sn = specAug_inst(
+            feat_sn, _ = specAug_inst(
                 feat_sn,
+                feat_sn   # dummy y — only feat_sn matters
             )
 
 
@@ -311,26 +523,65 @@ def run_epoch(
 
 
         batch_data = {
-            "spec_sn_delay": spec_sn_delay,
-            "spec_s_delay":  spec_s_delay,
+            "spec_sn": spec_sn,
+            "spec_s":  spec_s,
             "clean": clean,
             "feat_sn": feat_sn_norm,
             "mask": 1.0,
             "hop_size": stft_feat['hop_size'],
             "frame_size": stft_feat['frame_size'],
             "fft_size": stft_feat['fft_size'],
+            "lengths": lengths,
         }
 
-        loss, logits, spec_en = train_step(
+        loss, logits, spec_en, grad_norms = train_step(
             model,
             optimizer,
             loss_fn,
             batch_data,
+            is_df=is_df,
             feat_type=stft_feat['type'],
             training=training,
+            exp_features = params.train.feature.exp_complex,
+            num_lookahead = num_lookahead,
+            erb = getattr(feat_extractor, 'erb', None),
             )
 
         loss_metric.update_state(loss)
+
+        # Gradient flow diagnostics: detect vanishing/exploding gradients
+        if training and grad_norms and step % 50 == 0:
+            vanishing_layers = []
+            exploding_layers = []
+            healthy_min, healthy_max = 1e-7, 1e3
+            total_norm = 0.0
+            for var_name, norm_val in grad_norms.items():
+                nv = float(norm_val.numpy())
+                total_norm += nv ** 2
+                if nv < healthy_min:
+                    vanishing_layers.append((var_name, nv))
+                elif nv > healthy_max:
+                    exploding_layers.append((var_name, nv))
+            total_norm = total_norm ** 0.5
+
+            if vanishing_layers or exploding_layers:
+                log.warning(f"[Step {step}] Gradient flow issues detected!")
+                if vanishing_layers:
+                    log.warning(f"  VANISHING ({len(vanishing_layers)} layers):")
+                    for name, nv in vanishing_layers[:5]:
+                        log.warning(f"    {name}: {nv:.2e}")
+                if exploding_layers:
+                    log.warning(f"  EXPLODING ({len(exploding_layers)} layers):")
+                    for name, nv in exploding_layers[:5]:
+                        log.warning(f"    {name}: {nv:.2e}")
+
+            if train_summary_writer is not None:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('grad_flow/total_norm', total_norm, step=total_steps)
+                    tf.summary.scalar('grad_flow/num_vanishing', len(vanishing_layers), step=total_steps)
+                    tf.summary.scalar('grad_flow/num_exploding', len(exploding_layers), step=total_steps)
+                    for var_name, norm_val in grad_norms.items():
+                        tf.summary.scalar(f'grad_norm/{var_name}', norm_val, step=total_steps)
         # acc_metric.update_state(y_batch, logits)  # accuracy not computed yet
 
         if training:
@@ -366,16 +617,11 @@ def run_epoch(
                 pass
 
         total_steps += 1
-        # Print inline batch progress
-        print(
-            f"  [{train_tag}] | {step + 1}/{total_batches} | "
-            f"    Loss: {loss_metric.result()} | ",
-            end="\r",
-            flush=True
-        )
+        # Update progress bar
+        pbar.set_postfix(loss=f"{loss_metric.result():.5f}", step_ms=f"{step_time_metric.result():.1f}")
 
         if step % 100 == 0:
-
+ 
             spec_en = tf.abs(spec_en)
             pspec_en = 20*tf_log10_eps( tf.abs(spec_en[0])).numpy()
 
@@ -398,9 +644,11 @@ def run_epoch(
             if params.train['feature']['type'] in ('mel', 'logpspec', 'hybrid'):
                 feat_sn = 10* feat_sn[0].numpy()
                 feat_sn_norm_d = 10* feat_sn_norm[0].numpy()
-            elif params.train['feature']['type'] in ('pspec', 'spec', "erb_complex", "hybrid_mag", "erb_mag"):
+            elif params.train['feature']['type'] in ('pspec', 'spec', "hybrid_mag", "erb_mag"):
                 feat_sn = 20*tf_log10_eps( tf.abs(feat_sn[0])).numpy()
                 feat_sn_norm_d = 20*tf_log10_eps( tf.abs(feat_sn_norm[0])).numpy()
+            elif params.train['feature']['type'] in ("erb_complex"):
+                feat_sn_norm_d = tf.abs(feat_sn_norm[0]).numpy()**params.train['feature']['exp_complex']
             if feat_sn_norm.dtype == tf.complex64:
                 fig, axes = plot_spectrograms(
                     images=[pspec_s.T, pspec_sn.T, feat_sn_norm_d.T, pspec_en.T, mask_real.T, mask_imag.T],
@@ -419,6 +667,14 @@ def run_epoch(
                     show_fig=False       # set False if only saving
                 )
 
+            valid_frames = int((lengths[0] // stft_feat['hop_size']).numpy())
+            for ax in axes:
+                num_frames = ax.images[0].get_array().shape[1]
+                valid_x = min(max(valid_frames, 0), num_frames)
+                ax.axvline(valid_x - 0.5, color="cyan", linewidth=1.2)
+                if valid_x < num_frames:
+                    ax.axvspan(valid_x - 0.5, num_frames - 0.5, color="black", alpha=0.18)
+
             # Convert fig to image
             tf_image = fig_to_image(fig)
 
@@ -427,9 +683,7 @@ def run_epoch(
                 with train_summary_writer.as_default():
                     tf.summary.image("spectrograms", tf_image, step=epoch)
     # Final summary for the epoch
-    print(
-        f"  [{train_tag}] |\n"
-    )
+    pbar.close()
 
     return loss_metric
 
@@ -465,7 +719,7 @@ def train(params: SKTaskParams):
 
     # Load from YAML file
 
-    if params.train["truncate_time"] >= params.data["target_length_in_secs"]:
+    if params.train["truncate_time"] > params.data["target_length_in_secs"]:
         raise ValueError(
             f"truncate_time {params.train['truncate_time']} cannot be greater than target_length_in_secs {params.data['target_length_in_secs']}"
         )
@@ -540,10 +794,13 @@ def train(params: SKTaskParams):
         raise ValueError(f"Unknown lr_schedule: {params_train['lr_schedule']}")
 
     # 6. Define optimizer
-    optimizer = tf.keras.optimizers.Adam(
+    optimizer = tf.keras.optimizers.AdamW(
         learning_rate=lr_schedule,
-        weight_decay=0.1
+        weight_decay=1e-5,
+        beta_1=0.9,
+        beta_2=0.98,
         )
+    is_df = is_deepfilter_enabled(params)
 
     # 7. Training loop
     # Load previous log if it exists
@@ -560,6 +817,7 @@ def train(params: SKTaskParams):
             'model': model,
             'optimizer': optimizer,
             'loss_fn': loss_fn,
+            'is_df': is_df,
             'total_batches': {
                 'train': batches_train,
                 'val': batches_val,

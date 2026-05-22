@@ -206,28 +206,6 @@ class FeatMultiProcsClass(multiprocessing.Process):
             if self.params.data.debug:
                 import sounddevice as sd
                 sd.play(audio_sn, samplerate=target_sample_rate)
-            # vad = np.zeros_like(audio_sn, dtype=np.float32)
-            # vad[start:end] = 1.0  # Mark the valid region
-            
-            # import matplotlib.pyplot as plt
-            # plt.figure(figsize=(10, 4))
-            # plt.subplot(3, 1, 1)
-            # plt.plot(audio_sn, label='Clean Speech')
-            # plt.plot(vad)
-            # plt.title(f"Clean Speech Waveform - {wavname}")
-            # plt.ylim(-1.1, 1.1)
-            
-            # plt.subplot(3, 1, 2)
-            # plt.plot(audio_s, label='Clean Speech')
-            # plt.plot(vad)
-            # plt.title(f"Clean Speech Waveform - {wavname}")
-
-            
-            # plt.subplot(3, 1, 3)
-            # plt.plot(audio_reverb, label='Noisy Speech')
-            # plt.plot(vad)
-            # plt.show()
-
             if is_dc_removal:
                 audio_sn = dc_remove(audio_sn)
                 audio_s = dc_remove(audio_s)
@@ -318,7 +296,7 @@ def data(params: SKTaskParams) -> None:
                 # Check for "NONE"
                 if qual_downloaded is True:
                     continue  # Already downloaded
-                
+
                 if qualcomm_status != "ACCEPTED":
                     print(f"\n{'='*60}\n[LICENSE ERROR] You must accept the Qualcomm license.\nSet 'qualcomm_kws: ACCEPTED' in kws.yaml\n{'='*60}")
                     sys.exit(1)

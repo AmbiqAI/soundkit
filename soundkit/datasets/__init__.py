@@ -26,6 +26,8 @@ from .sk_datasets import (
     load_musan,
     load_rirs_noises,
     load_all_noises,
+    load_magicdata_train,
+    load_magicdata_val,
 )
 
 
@@ -60,6 +62,9 @@ SKDatasetFactory.register("vad_train-clean-360", load_vad_train_clean_360)
 SKDatasetFactory.register("vad_train-other-500", load_vad_train_other_500)
 SKDatasetFactory.register("vad_dev-clean", load_vad_dev_clean)
 SKDatasetFactory.register("vad_thchs30", load_vad_thchs30)
+
+SKDatasetFactory.register("magicdata-train", load_magicdata_train)
+SKDatasetFactory.register("magicdata-val", load_magicdata_val)
 
 SKDatasetFactory.register("train-clean-360", load_train_clean_360)
 SKDatasetFactory.register("dev-clean", load_dev_clean)

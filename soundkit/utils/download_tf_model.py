@@ -113,6 +113,21 @@ def load_train_log(
     return train_log
 
 
+def get_model_config(params: SKTaskParams) -> Dict[str, Any]:
+    """Load the model arch config and merge task-level overrides."""
+    model_config = "model"
+    config_path = f"{params.train[model_config]['config_dir']}/{params.train[model_config]['config_file']}"
+
+    config_dict = OmegaConf.load(config_path)
+
+    if "override" in params.train[model_config] and params.train[model_config]["override"] is not None:
+        override_cfg = OmegaConf.create(params.train[model_config]["override"])
+        config_dict = OmegaConf.merge(config_dict, override_cfg)
+
+    OmegaConf.resolve(config_dict)
+    return OmegaConf.to_container(config_dict, resolve=True)
+
+
 def build_model(
         params: SKTaskParams,
         batchsize: int = 32,
@@ -127,27 +142,18 @@ def build_model(
         params (SKTaskParams): Task parameters
     """
     print(f"Downloading model weights for {params.name} to {params.job_dir}")
-    model_config="model"
 
     # 1.1. Build the model
 
     # Load from YAML file
 
-    config_path = f"{params.train[model_config]['config_dir']}/{params.train[model_config]['config_file']}"
-
-    config_dict = OmegaConf.load(config_path)
-    
-    # Apply model override
-    if "override" in params.train[model_config] and params.train[model_config]["override"] is not None:
-        override_cfg = OmegaConf.create(params.train[model_config]["override"])
-        config_dict = OmegaConf.merge(config_dict, override_cfg)
-
-    OmegaConf.resolve(config_dict)
+    config_dict = get_model_config(params)
 
     model_name=config_dict['name']
 
     if export:
         config_dict['unroll_rnn'] = True
+        
 
     Params_Cls = ModelParamFactory.get(model_name)
 

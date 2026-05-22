@@ -69,23 +69,34 @@ void FeatureClass_setDefault(FeatureClass *ps) {
     int16_t tmp;
 
     stftModule_setDefault(&ps->state_stftModule);
-
-    if (ps->feature_type == feat_spec_erb)
+    if (ps->pt_norm_mean != NULL)
     {
-        for (i = 0; i < ps->dim_feat; i++) {
-            ps->normFeatContext[i] = 0;
+    
+        if (ps->feature_type == feat_spec_erb)
+        {
+            for (i = 0; i < (ps->dim_feat >> 1); i++) {
+                tmp64 = (int64_t)((int32_t)LOG10_2POW_N15_Q15 - ps->pt_norm_mean[i]);
+                tmp64 = (tmp64 * (int64_t)ps->pt_norm_stdR[i]) >> (30 - ps->qbit_output);
+                tmp64 = MIN(MAX(tmp64, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+                tmp = (int16_t)tmp64;
+
+                for (j = 0; j < (ps->num_context - 1); j++) {
+                    ps->normFeatContext[2 * i + j * ps->dim_feat] = tmp;
+                    ps->normFeatContext[2 * i + 1 + j * ps->dim_feat] = tmp;
+                }
+            }
         }
-    }
-    else
-    {
-        for (i = 0; i < ps->dim_feat; i++) {
-            tmp64 = (int64_t)((int32_t)LOG10_2POW_N15_Q15 - ps->pt_norm_mean[i]);
-            tmp64 = (tmp64 * (int64_t)ps->pt_norm_stdR[i]) >> (30 - ps->qbit_output);
-            tmp64 = MIN(MAX(tmp64, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
-            tmp = (int16_t)tmp64;
+        else
+        {
+            for (i = 0; i < ps->dim_feat; i++) {
+                tmp64 = (int64_t)((int32_t)LOG10_2POW_N15_Q15 - ps->pt_norm_mean[i]);
+                tmp64 = (tmp64 * (int64_t)ps->pt_norm_stdR[i]) >> (30 - ps->qbit_output);
+                tmp64 = MIN(MAX(tmp64, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+                tmp = (int16_t)tmp64;
 
-            for (j = 0; j < (ps->num_context - 1); j++) {
-                ps->normFeatContext[i + j * ps->dim_feat] = tmp;
+                for (j = 0; j < (ps->num_context - 1); j++) {
+                    ps->normFeatContext[i + j * ps->dim_feat] = tmp;
+                }
             }
         }
     }
@@ -204,7 +215,8 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
     {
         // ns_printf("Spec real:\n");
         for (i = 0; i < 257; i++) {
-            spec_blk[i] = spec[2*i]; // qbit_out
+            spec_blk[i] = spec[2*i] >> 6;  // Q21 -> Q15
+             // ns_printf("%d, ", spec_blk[i]);
             // ns_printf("%d, ", spec_blk[i]);
         }
         // ns_printf("\n");
@@ -216,7 +228,7 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
         
         // ns_printf("Spec imag:\n");
         for (i = 0; i < 257; i++) {
-            spec_blk[i] = spec[2*i+1];
+            spec_blk[i] = spec[2*i+1] >> 6;  // Q21 -> Q15
             // ns_printf("%d, ", spec_blk[i]);
         }
         // ns_printf("\n");
@@ -255,12 +267,32 @@ void FeatureClass_execute(FeatureClass *ps, int16_t *input) {
     }
     else
     {
-        for (i = 0; i < ps->dim_feat; i++) {
-            tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
-            tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
-                (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
-            // tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
-            ps->normFeatContext[i + shift] = (int32_t)tmp;
+        if (ps->feature_type == feat_spec_erb)
+        {
+            for (i = 0; i < (ps->dim_feat >> 1); i++) {
+                tmp = (int64_t)ps->feature[2*i] - (int64_t)ps->pt_norm_mean[i];
+                tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+                    (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
+                // tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+                ps->normFeatContext[2*i + shift] = (int32_t)tmp;
+
+
+                tmp = (int64_t)ps->feature[2*i + 1] - (int64_t)ps->pt_norm_mean[i];
+                tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+                    (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
+                // tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+                ps->normFeatContext[2*i + 1 + shift] = (int32_t)tmp;
+            }
+        }    
+        else
+        {
+            for (i = 0; i < ps->dim_feat; i++) {
+                tmp = (int64_t)ps->feature[i] - (int64_t)ps->pt_norm_mean[i];
+                tmp = (tmp * ((int64_t)ps->pt_norm_stdR[i])) >>
+                    (30 - ps->qbit_output); // Bit_frac_out = 30-22 = 8
+                // tmp = MIN(MAX(tmp, (int64_t)MIN_INT16_T), (int64_t)MAX_INT16_T);
+                ps->normFeatContext[i + shift] = (int32_t)tmp;
+            }
         }
     }
     

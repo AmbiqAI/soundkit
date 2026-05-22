@@ -24,9 +24,12 @@ class ERB(tf.keras.layers.Layer):
         self.erb_subband_2 = erb_subband_2
         self.platform = platform
         # Create filterbank: shape (erb_subband_2, F_high)
-        erb_filters = self.erb_filter_banks(
-            erb_subband_1, erb_subband_2, nfft, high_lim, fs
-        ).astype(np.float32)
+        if erb_subband_2 > 0:
+            erb_filters = self.erb_filter_banks(
+                erb_subband_1, erb_subband_2, nfft, high_lim, fs
+            ).astype(np.float32)
+        else:
+            erb_filters = np.zeros((0, nfft // 2 + 1 - erb_subband_1), dtype=np.float32)
         
         nfreqs = nfft // 2 + 1
         # f_high = nfreqs - erb_subband_1
@@ -70,13 +73,13 @@ class ERB(tf.keras.layers.Layer):
         tmp = np.stack(lst, axis=-1)
         mat_whole = tf.constant(tmp, dtype=tf.float32)
 
-        self.filter_map = mat_whole / tf.sqrt(
-            tf.reduce_sum(mat_whole**2, axis=0, keepdims=True))
+        self.filter_map = mat_whole / tf.maximum(
+            tf.sqrt(tf.reduce_sum(mat_whole**2, axis=0, keepdims=True)), 1e-12)
         self.filter_map = fakefix_tf(self.filter_map, 16, 15)
         
         self.filter_inv_map = tf.transpose(mat_whole, perm=[1,0])
-        self.filter_inv_map = self.filter_inv_map / tf.sqrt(
-            tf.reduce_sum(self.filter_inv_map**2, axis=0, keepdims=True))
+        self.filter_inv_map = self.filter_inv_map / tf.maximum(
+            tf.sqrt(tf.reduce_sum(self.filter_inv_map**2, axis=0, keepdims=True)), 1e-12)
         self.filter_inv_map = fakefix_tf(self.filter_inv_map, 16, 15)
 
         if self.platform == "numpy":

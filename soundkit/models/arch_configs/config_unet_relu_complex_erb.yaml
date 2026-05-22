@@ -7,6 +7,7 @@ activation_final: tanh
 unroll_rnn: false
 normalization_layer:
 bypass_last_fc: true
+is_df: false
 use_erb: true
 dropout: 0.0
 output_scaling: 6.0

@@ -73,6 +73,9 @@ def export(params: SKTaskParams):
         export=True)
 
     copy_model_weights(model_dst=model, model_src=model_train)
+    if hasattr(model, "reset_states"):
+        # Export clean runtime state so TFLite resource variables start from zero.
+        model.reset_states(zero_state=True)
     if 0:
         def apply_fake_quant(v, num_bits=8):
             # 1. Determine the range (Symmetric)
@@ -134,6 +137,7 @@ def export(params: SKTaskParams):
             tfrecord_list['train'],
             batchsize=params.train['batchsize'],
             is_shuffle=True,
+            seed=98, # 45
             num_per_epoch_files=params.train.num_per_epoch_files.train,
             truncate_samples=truncate_samples,
         )
@@ -149,7 +153,7 @@ def export(params: SKTaskParams):
         # into memory as a TensorFlow constant.
         audio_sn_tf = next(iter(ds_collected))
         # random scale for calibration
-
+        tf.random.set_seed(1014)  # for reproducibility
         scales = tf.random.uniform(
             shape=(audio_sn_tf.shape[0], 1),
             minval=params.data['min_amp'],
@@ -172,8 +176,9 @@ def export(params: SKTaskParams):
         # NumPy array only at the final step for downstream compatibility.
         data_calibration = feat_extractor(audio_sn_tf)[0].numpy()
         if stats is not None:
-                data_calibration = (data_calibration - stats['nMean_feat']) * stats['nInvStd']
+            data_calibration = (data_calibration - stats['nMean_feat']) * stats['nInvStd']
         if params.train['standardization']:
+
             # Standardize features
             if params.train['standardization_type'] in ["mve", "mean", "std"]:
                 mean_stats = stats['nMean_feat']

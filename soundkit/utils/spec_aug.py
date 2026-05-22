@@ -23,10 +23,10 @@ class SpecAug:
         self.time_mask_width = time_mask_width
         self.num_time_mask = num_time_mask
 
-    def _apply_freq_mask(self, x):
+    def _apply_freq_mask(self, x, y):
         v = tf.random.uniform([])
         if v > self.prob:
-            return x
+            return x, y
             
         batch_size = tf.shape(x)[0]
         time = tf.shape(x)[1]
@@ -47,14 +47,17 @@ class SpecAug:
         mask = tf.tile(mask, [1, time, 1])                      # (batch, time, freq)
 
         noise = tf.ones_like(x) * 10
-        
+        gain = tf.random.uniform((batch_size, 1, 1), minval=0.1, maxval=0.5)
         if x.dtype == tf.complex64:
             mask = tf.complex(mask, tf.zeros_like(mask))
-        x = mask * x + (1 - mask) * noise
+            gain = tf.cast(gain, tf.complex64)
+        x = mask * x + (1 - mask) * x * gain
+        y = mask * y + (1 - mask) * y * gain
 
-        return x
 
-    def _apply_time_mask(self, x):
+        return x, y
+
+    def _apply_time_mask(self, x, y):
         batch_size = tf.shape(x)[0]
         time = tf.shape(x)[1]
         freq = tf.shape(x)[2]
@@ -74,11 +77,18 @@ class SpecAug:
         mask = tf.expand_dims(mask, 2)                          # (batch, time, 1)
         mask = tf.tile(mask, [1, 1, freq])                      # (batch, time, freq)
 
-        return x * mask
+        gain = tf.random.uniform((batch_size, 1, 1), minval=0.1, maxval=0.5)
+        if x.dtype == tf.complex64:
+            mask = tf.complex(mask, tf.zeros_like(mask))
+            gain = tf.cast(gain, tf.complex64)
+        x = mask * x + (1 - mask) * x * gain
+        y = mask * y + (1 - mask) * y * gain
 
-    def __call__(self, x):
+        return x, y
+
+    def __call__(self, x, y):
         for _ in range(self.num_freq_mask):
-            x = self._apply_freq_mask(x)
+            x, y = self._apply_freq_mask(x, y)
         for _ in range(self.num_time_mask):
-            x = self._apply_time_mask(x)
-        return x
+            x, y = self._apply_time_mask(x, y)
+        return x, y

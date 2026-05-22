@@ -8,6 +8,7 @@ from .unet_sublayers.encoder import encoder_unet
 from .unet_sublayers.decoder import decoder_unet
 from .layers.dpgrnn import DPGRNN
 from .layers.tcn import tcn
+from .layers.normalization_layer_factory import NormalizationFactory
 from soundkit.utils.converter_fix_point import fakefix_tf
 
 class unet(tf.keras.Model):
@@ -18,6 +19,7 @@ class unet(tf.keras.Model):
             **kwargs):
         super(unet,self).__init__(**kwargs)
         self.params = params
+        self.is_df = params.is_df
         self.output_scaling = params.output_scaling
         self.encoder = encoder_unet(
             params=params,)
@@ -26,7 +28,8 @@ class unet(tf.keras.Model):
 
         self.freq_bins, self.pad_freq_bins = get_unet_info(
             params.num_chs,
-            dim_feat=params.dim_feat)
+            dim_feat=params.dim_feat,
+            kernel_size_freq=params.kernel_size_freq)
         
         # import pdb; pdb.set_trace()
         # params.dim_out = params.dim_feat
@@ -36,7 +39,19 @@ class unet(tf.keras.Model):
         self.max_cstate = params.max_cstate  # for clipping
         self.min_cstate = params.min_cstate
         self.states = self.make_states()
-
+        # self.norm_input = NormalizationFactory(params.normalization_layer)
+        # self.norm_rnn = NormalizationFactory(params.normalization_layer)
+        if self.is_df:
+            self.final_projection = tf.keras.layers.Conv2D(
+                kernel_size=(3,3),
+                filters =10,
+                activation='tanh',
+                name='final_projection')
+            self.state_final = tf.Variable(
+                tf.zeros((self.params.batchsize, 2,  self.freq_bins[0], params.num_chs[0])),
+                trainable=False,
+                name='state_final')
+        
         if params.bottleneck == 'lstm':
             self.rnn = tf.keras.layers.LSTM(
                 self.F * self.chs,
@@ -51,11 +66,17 @@ class unet(tf.keras.Model):
                 return_state=True,
                 stateful=False,
                 unroll=params.unroll_rnn,
-                return_sequences=True)
+                return_sequences=True,
+                # activation="relu",
+                # recurrent_activation="relu",
+                )
         elif params.bottleneck == 'dpgrnn':
             self.rnn = DPGRNN(
                 num_chs=self.chs,
-                num_freqs=self.F)
+                num_freqs=self.F,
+                batchsize=params.batchsize,
+                unroll=params.unroll_rnn)
+
         elif params.bottleneck == "tcn":
             self.rnn = tcn(
                 filters         = self.F * self.chs,
@@ -139,6 +160,8 @@ class unet(tf.keras.Model):
             
         elif self.params.bottleneck == "tcn":
             self.rnn.reset_states()
+        elif self.params.bottleneck == "dpgrnn":
+            self.rnn.reset_states(zero_state=zero_state)
         self.encoder.reset_states()
         self.decoder.reset_states()
 
@@ -175,6 +198,12 @@ class unet(tf.keras.Model):
             if zero_state:
                 h_states.assign(h_states * 0)
             c_states = None
+        elif self.params.bottleneck in ("dpgrnn", "tcn"):
+            h_states = None
+            c_states = None
+        else:
+            h_states = None
+            c_states = None
         return h_states, c_states
 
     def call(
@@ -185,11 +214,11 @@ class unet(tf.keras.Model):
         if not self.complex:
             inputs = tf.expand_dims(inputs, axis=-1)
         x = inputs
-
+        # x = self.norm_input(x, training=training)
         # states_de = states
 
         # encoder
-        outputs = self.encoder(x)
+        outputs = self.encoder(x, training=training)
 
         # bottleneck rnn
 
@@ -200,39 +229,10 @@ class unet(tf.keras.Model):
                 (self.params.batchsize, timesteps, -1))
             if self.params.dropout > 0:
                 out = self.dropout(out, training=training)
+            # out = self.norm_rnn(out, training=training)
+            out, h_state, c_state = self.rnn(out, training=training, initial_state=self.states)
 
-            out, h_state, c_state = self.rnn(out, initial_state=self.states)
-            # Use tf.print instead of python print
-            # tf.print("C-state min:", tf.reduce_min(c_state))
-            # tf.print("C-state max:", tf.reduce_max(c_state))
-            
-            # Only plot if we are in 'inference' or if the tensor is actually populated
-            # if c_state is not None and hasattr(c_state, 'numpy'):
-            #     try:
-            #         # Convert to numpy and ensure it's not a symbolic placeholder
-
-            #         val = c_state.numpy()
-                    
-            #         # Check if it has actual data (not just empty initialization)
-            #         if val.size > 0:
-            #             import matplotlib.pyplot as plt
-            #             plt.figure(figsize=(10, 4))
-                        
-            #             # Use flatten() to handle [batch, units] shape
-            #             plt.plot(val.flatten()) 
-                        
-            #             plt.title(f"LSTM Cell State (Min: {val.min():.2f}, Max: {val.max():.2f})")
-            #             plt.xlabel("Cell Unit Index")
-            #             plt.ylabel("Value")
-            #             plt.grid(True)
-            #             plt.show()
-                        
-            #     except Exception:
-            #         # Silently skip if it's still in a symbolic state
-            #         pass
             # import pdb; pdb.set_trace()
-            # h_state = tf.clip_by_value(h_state, -1, 1)  # assume 8 bit quantization
-            # c_state = tf.clip_by_value(c_state, -128, 128 - 2**-8)  # assume 8 bit quantization
             self.states[0].assign(h_state)
         
             c_state = tf.maximum(
@@ -247,21 +247,33 @@ class unet(tf.keras.Model):
             out = tf.reshape(
                 outputs[-1],
                 (self.params.batchsize, timesteps, -1))
+            out = out * self.params.scale_rnn_out
             if self.params.dropout > 0:
                 out = self.dropout(out, training=training)
-
-            out, h_state = self.rnn(out, initial_state=self.states[0])
-            # h_state = tf.clip_by_value(h_state, -1, 1 - 2**-8)  # assume 8 bit quantization
-            self.states[0].assign(h_state)
+            # scale = 16.0
+            # out = out / scale # scale down the input to GRU to avoid overflow
+            # out = self.norm_rnn(out, training=training)
+            if 1:
+                out, h_state = self.rnn(
+                    out,
+                    training=training,
+                    initial_state=self.states[0])
+                # out = out * scale # scale up the output of GRU to restore the scale
+                # h_state = tf.clip_by_value(h_state, -1, 1 - 2**-8)  # assume 8 bit quantization
+                self.states[0].assign(h_state)
+            if self.params.dropout > 0:
+                out = self.dropout(out, training=training)
             input_dec = tf.reshape(
                 out,
                 (self.params.batchsize, timesteps, self.F, self.chs))
         elif self.params.bottleneck == 'dpgrnn':
 
-            out = outputs[-1]  # (B, F, T, C)
+            out = outputs[-1]  # (B, T, F, C)
+
             if self.params.dropout > 0:
                 out = self.dropout(out, training=training)
-            out = self.rnn(out)  # (B, F, T, C)
+            out = self.rnn(out, training=training)  # (B, T, F, C)
+            # out = self.norm_rnn(out, training=training)
             input_dec = out
         elif self.params.bottleneck == 'tcn':
             timesteps = tf.shape(outputs[-1])[1]
@@ -269,6 +281,7 @@ class unet(tf.keras.Model):
                 outputs[-1],
                 (self.params.batchsize, timesteps, -1))
             out = self.rnn(out)
+            # out = self.norm_rnn(out, training=training)
             input_dec = tf.reshape(
                 out,
                 (self.params.batchsize, timesteps, self.F, self.chs))
@@ -278,7 +291,20 @@ class unet(tf.keras.Model):
         # decoder
         output = self.decoder(
             input_dec,
-            outputs)
+            outputs,
+            training=training)
+
+        if self.is_df:
+            output = tf.concat(
+                [self.state_final, output], axis=1)
+            self.state_final.assign(output[:, -2:])
+
+            output = tf.pad(
+                output,
+                paddings=[[0, 0], [0, 0], [1, 1], [0, 0]])
+
+            output = self.final_projection(
+                output, training=training)
 
         # final projection
         if not self.params.bypass_last_fc:
