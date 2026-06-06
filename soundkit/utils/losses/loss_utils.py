@@ -113,25 +113,80 @@ class CompressedMSE(tf.keras.losses.Loss):
             self,
             exp: float = 0.6,
             eps: float =1e-8,
+            oa_alpha: float = 1.0,
+            oa_k: float = 4.0,
+            hop_size: int = 160,
+            num_lookahead: int = 2,
+            fft_size: int = 512,
+            frame_size: int = 320,
+            group_smooth: bool = True,
             name="compressed_mse",
             **kwargs):
         """
         Args:
             exp (float): Compression exponent, typically 0.3–0.6
             eps (float): Small value the non-singularity
+            oa_alpha (float): Max over-attenuation penalty (1.0 = disabled)
+            oa_k (float): Steepness of over-attenuation penalty
+            hop_size (int): Hop size in samples (for length masking)
+            num_lookahead (int): Number of lookahead frames
+            fft_size (int): FFT size for iSTFT normalization
+            frame_size (int): Frame size for iSTFT normalization
+            group_smooth (bool): Apply 3x3 group smoothing filter (default True)
             name (str): Optional loss name
         """
         super().__init__(name=name)
         self.exp = float(exp)
         self.eps = float(eps)
+        self.oa_alpha = float(oa_alpha)
+        self.oa_k = float(oa_k)
+        self.hop_size = hop_size
+        self.num_lookahead = num_lookahead
+        self.fft_size = fft_size
+        self.frame_size = frame_size
+        self.group_smooth = group_smooth
+        if self.group_smooth:
+            self.group_shape = (3, 3)
+            self.group_filter = tf.keras.layers.Conv2D(
+                filters=1,
+                kernel_size=self.group_shape,
+                trainable=False,
+                use_bias=False,
+                padding='SAME',
+                kernel_initializer=tf.keras.initializers.Constant(
+                    1.0 / (self.group_shape[0] * self.group_shape[1]))
+            )
 
-    def call(self, x, y, scale=None):
+    def _smooth_asymmetric_weight_mask(self, y_true, y_pred):
+        """
+        Smoothly penalizes over-attenuation (where |true| > |pred|).
+        Returns weight tensor >= 1.0.
+        """
+        mag_true = tf.abs(y_true)
+        mag_pred = tf.abs(y_pred)
+
+        diff = mag_true - mag_pred
+        diff = (diff - 0.01) / (mag_true + self.eps)
+        relu_diff = tf.nn.relu(diff)
+
+        max_penalty = self.oa_alpha - 1.0
+        penalty = tf.minimum(relu_diff * self.oa_k, max_penalty)
+        weights = 1.0 + penalty
+        return weights
+
+    def __call__(self, x, y, scale=None, lengths=None, **kwargs):
+        """Override __call__ to accept extra kwargs (clean, lengths, etc.)."""
+        return self.call(x, y, scale=scale, lengths=lengths)
+
+    def call(self, x, y, scale=None, lengths=None, **kwargs):
         """
         Compute compressed MSE over all elements.
 
         Args:
-            x: Predicted tensor (real or complex)
-            y: Ground truth tensor (real or complex)
+            x: Ground truth tensor (real or complex)
+            y: Predicted tensor (real or complex)
+            
+            lengths: Sample lengths per utterance [B] for masking padding
 
         Returns:
             Scalar tensor loss
@@ -141,6 +196,20 @@ class CompressedMSE(tf.keras.losses.Loss):
         if y.dtype is not tf.complex64:
             raise ValueError("Input tensors must be of complex dtype.")
         
+        # Per-utterance amplitude normalization (like MRL loss)
+        wav_true = tf_istft(
+            x,
+            frame_length=self.frame_size,
+            frame_step=self.hop_size,
+            fft_length=self.fft_size,
+        )
+        max_val = tf.reduce_max(tf.abs(wav_true), axis=1, keepdims=True)
+        scale_norm = tf.where(max_val > 1e-3, 1.0 / max_val, 1.0)
+        # Cast to complex and apply to STFT domain (linear operation)
+        scale_norm_c = tf.cast(scale_norm[:, :, tf.newaxis], tf.complex64)
+        x = x * scale_norm_c
+        y = y * scale_norm_c
+
         if scale is not None:
             x = x * scale
             y = y * scale
@@ -151,18 +220,33 @@ class CompressedMSE(tf.keras.losses.Loss):
         mag_y = tf.pow(
             complex_magnitude(y, self.eps),
             self.exp)
-        angle_x = complex_angle(x, self.eps)
-        angle_y = complex_angle(y, self.eps)
-        x_comp = complex_to_realarray(
-            polar_to_complex(mag_x, angle_x)
-        )
-        y_comp = complex_to_realarray(
-            polar_to_complex(mag_y, angle_y)
-        )
 
-        steps = tf.shape(x)[0] * tf.shape(x)[1]
-        err = tf.abs(x_comp - y_comp)
-        loss = tf.reduce_sum(tf.square(err)) / tf.cast(steps, tf.float32)
+        # Magnitude squared error [B, T, F]
+        err_sq_mag = tf.square(mag_x - mag_y)
+
+        if self.group_smooth:
+            # Smooth with group filter then sqrt → smooth L1
+            smoothed = self.group_filter(
+                tf.expand_dims(err_sq_mag, axis=-1))[..., 0]
+            err_l1_mag = tf.sqrt(smoothed + self.eps)
+        else:
+            err_l1_mag = tf.sqrt(err_sq_mag + self.eps)
+
+        if self.oa_alpha > 1.0:
+            mask_oa = self._smooth_asymmetric_weight_mask(x, y)
+            err_l1_mag = err_l1_mag * mask_oa
+
+        if lengths is not None:
+            lookahead_samples = self.num_lookahead * self.hop_size
+            frame_lengths = (lengths - lookahead_samples) // self.hop_size
+            frame_lengths = tf.maximum(frame_lengths, 0)
+            mask = tf.sequence_mask(
+                frame_lengths, maxlen=tf.shape(x)[1])
+            err_l1_mag = tf.boolean_mask(err_l1_mag, mask)
+
+        valid_elements = tf.cast(
+            tf.maximum(tf.size(err_l1_mag), 1), tf.float32)
+        loss = tf.reduce_sum(err_l1_mag) / valid_elements
         return loss
 
 class SISDRLoss(tf.keras.losses.Loss):

@@ -168,14 +168,15 @@ def create_dataset(
                         en = []
                         ch = []
                         for line in lines:
-                            if re.search(r'(LibriSpeech|german_speech|spanish_speech|italian_speech|french_data)', line):
+                            # if re.search(r'(LibriSpeech|german_speech|spanish_speech|italian_speech|french_data)', line):
+                            if re.search(r'(train-clean-100)', line):
                                 en.append(line)
                             elif re.search(r'(mandarin|MAGICDATA)', line):
                                 ch.append(line)
-                        # import pdb; pdb.set_trace()
                         random.seed(0)
                         random.shuffle(en)
                         random.shuffle(ch)
+                        print(f"Shuffled {len(en)} English files and {len(ch)} Mandarin files.")
                         lines = ch+en
 
             except:# pylint: disable=bare-except

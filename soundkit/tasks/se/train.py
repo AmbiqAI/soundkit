@@ -102,6 +102,23 @@ def train_step(
     feat_sn = batch["feat_sn"]
     lengths = batch["lengths"]
 
+    # --- NaN diagnostics ---
+    def _nan_check(tensor, name):
+        """Print warning if tensor contains NaN/Inf."""
+        if tensor.dtype == tf.complex64 or tensor.dtype == tf.complex128:
+            has_bad = tf.logical_or(
+                tf.reduce_any(tf.math.is_nan(tf.math.real(tensor))),
+                tf.reduce_any(tf.math.is_nan(tf.math.imag(tensor))))
+            has_inf = tf.logical_or(
+                tf.reduce_any(tf.math.is_inf(tf.math.real(tensor))),
+                tf.reduce_any(tf.math.is_inf(tf.math.imag(tensor))))
+        else:
+            has_bad = tf.reduce_any(tf.math.is_nan(tensor))
+            has_inf = tf.reduce_any(tf.math.is_inf(tensor))
+        tf.cond(has_bad, lambda: tf.print("NaN FOUND in:", name), lambda: tf.no_op())
+        tf.cond(has_inf, lambda: tf.print("Inf FOUND in:", name), lambda: tf.no_op())
+    # --- end diagnostics ---
+
     if feat_sn.dtype == tf.complex64:
         inputs = tf.stack(
             [tf.math.real(feat_sn),
@@ -109,6 +126,10 @@ def train_step(
             axis=-1)
     else:
         inputs = feat_sn
+
+    _nan_check(inputs, "inputs (feat_sn)")
+    _nan_check(batch["spec_sn"], "batch[spec_sn]")
+    _nan_check(batch["spec_s"], "batch[spec_s]")
 
     if exp_features != 1.0:
         spec_sn = get_compressed_complex(
@@ -138,6 +159,7 @@ def train_step(
 
     with tf.GradientTape() as tape:
         est = net(inputs, training=training)
+        _nan_check(est, "model_output (est)")
         if feat_sn.dtype == tf.complex64:
 
             if feat_type == "erb_complex":
@@ -200,26 +222,35 @@ def train_step(
             est = tf.complex(est, 0.0)
             spec_en_delay = est * spec_sn_delay
 
-            spec_s_delay = polar_to_complex(
-                complex_magnitude(spec_s_delay),
-                complex_angle(spec_s_delay),
-            )
-
             spec_en = spec_en_delay
             loss = loss_fn(
                 spec_s_delay,
                 spec_en_delay,
-                clean=batch["clean"],)
+                clean=batch["clean"],
+                lengths=lengths,)
 
+    _nan_check(loss, "loss")
     grad_norms = {}
     if training:
         gradients = tape.gradient(loss, net.trainable_variables)
-        gradients_clips = [ tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
-                            for grad in gradients ]
 
-        optimizer.apply_gradients(
-                    zip(gradients_clips,
-                        net.trainable_variables))
+        # Skip update if loss or any gradient is NaN
+        has_nan = tf.math.is_nan(loss)
+        for grad in gradients:
+            if grad is not None:
+                has_nan = tf.logical_or(has_nan, tf.reduce_any(tf.math.is_nan(grad)))
+
+        def apply_grads():
+            gradients_clips = [ tf.clip_by_norm(grad, clip_norm=1.0) if grad is not None else None
+                                for grad in gradients ]
+            optimizer.apply_gradients(
+                        zip(gradients_clips,
+                            net.trainable_variables))
+
+        def skip_grads():
+            tf.print("WARNING: NaN detected in loss/gradients, skipping update")
+
+        tf.cond(tf.logical_not(has_nan), apply_grads, skip_grads)
 
         for var, grad in zip(net.trainable_variables, gradients):
             if grad is not None:
@@ -547,7 +578,8 @@ def run_epoch(
             erb = getattr(feat_extractor, 'erb', None),
             )
 
-        loss_metric.update_state(loss)
+        if not tf.math.is_nan(loss):
+            loss_metric.update_state(loss)
 
         # Gradient flow diagnostics: detect vanishing/exploding gradients
         if training and grad_norms and step % 50 == 0:

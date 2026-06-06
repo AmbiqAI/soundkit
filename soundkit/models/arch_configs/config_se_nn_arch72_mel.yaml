@@ -1,18 +1,16 @@
 name: crnn
 layer_configs:
-  - type: dropout
-    rate: 0.1
 
   - type: conv2d
     filters: 72
     kernel_size: [6, 72]
     strides: [1, 1]
-    activation: tanh
+    activation: prelu
 
   - type: dropout
     rate: 0.2
 
-  - type: lstm
+  - type: gru
     units: 72
 
   - type: dropout
@@ -20,18 +18,18 @@ layer_configs:
 
   - type: fc
     units: 72
-    activation: tanh
+    activation: prelu
 
   - type: dropout
     rate: 0.25
 
   - type: fc
     units: 72
-    activation: tanh
+    activation: prelu
 
   - type: dropout
     rate: 0.25
 
   - type: fc
     units: 257
-    activation: sigmoid
+    activation: dys

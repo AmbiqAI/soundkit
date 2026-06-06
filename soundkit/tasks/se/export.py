@@ -76,6 +76,16 @@ def export(params: SKTaskParams):
     if hasattr(model, "reset_states"):
         # Export clean runtime state so TFLite resource variables start from zero.
         model.reset_states(zero_state=True)
+
+    # Fuse activations (DyT/DyS softplus, PReLU→leaky_relu) for TFLite inference
+    def _fuse_recursive(layer):
+        if hasattr(layer, 'fuse'):
+            layer.fuse()
+        if hasattr(layer, 'layers'):
+            for sublayer in layer.layers:
+                _fuse_recursive(sublayer)
+    for layer in model.layers:
+        _fuse_recursive(layer)
     if 0:
         def apply_fake_quant(v, num_bits=8):
             # 1. Determine the range (Symmetric)

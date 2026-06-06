@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import tensorflow as tf
 from ..utils.tf_basic_math import tf_log10_eps
+from .layers.activation_factory import ActivationFactory
 import numpy as np
 class CRNNParams(BaseModel):
 
@@ -41,13 +42,16 @@ class CRNN(tf.keras.Model):
             # import pdb; pdb.set_trace()
             if layer_def['type'] == 'conv2d':
                 self.output_dims.append(layer_def['filters'])
-                self.layers_list.append(tf.keras.layers.Conv2D(
-                    filters=layer_def['filters'],
-                    kernel_size=layer_def['kernel_size'],
-                    strides=layer_def['strides'],
-                    activation=layer_def['activation'],
-                    padding='valid',
-                ))
+                self.layers_list.append(tf.keras.Sequential([
+                    tf.keras.layers.Conv2D(
+                        filters=layer_def['filters'],
+                        kernel_size=layer_def['kernel_size'],
+                        strides=layer_def['strides'],
+                        activation=None,
+                        padding='valid',
+                    ),
+                    ActivationFactory(layer_def.get('activation')),
+                ]))
 
                 self.stride_time = layer_def['strides'][0]
             elif layer_def['type'] == 'lstm':
@@ -78,10 +82,13 @@ class CRNN(tf.keras.Model):
 
             elif layer_def['type'] == 'fc':
                 self.output_dims.append(layer_def['units'])
-                self.layers_list.append(tf.keras.layers.Dense(
-                    units=layer_def['units'],
-                    activation=layer_def['activation'],
-                ))
+                self.layers_list.append(tf.keras.Sequential([
+                    tf.keras.layers.Dense(
+                        units=layer_def['units'],
+                        activation=None,
+                    ),
+                    ActivationFactory(layer_def.get('activation')),
+                ]))
             elif layer_def['type'] == 'batchnorm':
                 self.output_dims.append(self.output_dims[-1])  # Keep the same output dimension as the previous layer
 
@@ -96,6 +103,14 @@ class CRNN(tf.keras.Model):
                     tf.keras.layers.LayerNormalization(
                     epsilon=float(layer_def['epsilon'])
                 ))
+            elif layer_def['type'] == 'dyt':
+                self.output_dims.append(self.output_dims[-1])
+                from .layers.activation_factory import DyT
+                self.layers_list.append(
+                    DyT(
+                        alpha_init=layer_def.get('alpha_init', 0.5),
+                        trainable_beta=layer_def.get('trainable_beta', True),
+                    ))
             elif layer_def['type'] == 'dropout':
                 self.output_dims.append(self.output_dims[-1])
                 self.layers_list.append(tf.keras.layers.Dropout(rate=layer_def['rate']))

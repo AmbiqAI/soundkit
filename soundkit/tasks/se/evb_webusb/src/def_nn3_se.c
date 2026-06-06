@@ -12,21 +12,21 @@
 extern const int16_t stft_win_coeff[];
 
 extern const int16_t filter_banks[];
-extern const int16_t filter_banks_inv[];
+
 
 PARAMS_NNSP params_nn3_se = {
     .samplingRate = 16000,
     .fftsize = 512,
     .winsize_stft = 320,
     .hopsize_stft = 160,
-    .num_mfltrBank = 129,
+    .num_mfltrBank = 72,
     .num_dnsmpl = 1,
     .pt_stft_win_coeff = stft_win_coeff,
     .p_melBanks = filter_banks,
     .start_bin = 0,
     .is_dcrm = 1,
     .pre_gain_q1 = 2, // q1
-    .feature_type = feat_spec_erb,
+    .feature_type = feat_mel,
 };
 
 

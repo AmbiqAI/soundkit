@@ -175,9 +175,9 @@ def evaluate(params: SKTaskParams):
                     (features_t.real, features_t.imag), axis=-1)
 
             # features =fakefix_tf(features, 32, 21).numpy()
-
-            tfmask = self.model_tflite(features_t)
             
+            tfmask = self.model_tflite(features_t)
+    
             pcm_out, spec_en = self.post_procsessing(tfmask, self.specs)
 
             # if params.train.feature.exp_complex != 1.0:
@@ -217,7 +217,11 @@ def evaluate(params: SKTaskParams):
             exp_features = params.train.feature.exp_complex
             eps = params.train.feature.eps
             if not is_df:
-                tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
+                if tfmask.ndim == 4:
+                    tfmask = tfmask[:, :, :, 0] + 1j * tfmask[:, :, :, 1]
+                else:
+                    # Real-only mask (e.g. mel features) — treat as magnitude mask
+                    tfmask = tfmask + 0j
 
                 if exp_features == 1.0:
                     spec_sn = specs[0]
@@ -326,10 +330,11 @@ def evaluate(params: SKTaskParams):
             outs_tfmsk = outs_tfmsk[:,0]
             real_mask = outs_tfmsk[...,0]
             imag_mask = outs_tfmsk[...,1]
-            features = np.abs(out_features)
+            features = np.abs(out_features).squeeze()
         elif outs_tfmsk.ndim ==3:
-            real_mask = outs_tfmsk
+            real_mask = outs_tfmsk.squeeze()
             imag_mask = None
+            features = np.abs(out_features).squeeze()
 
         logpspec_sn = 20.0 * np.log10(
             np.maximum(
@@ -344,10 +349,18 @@ def evaluate(params: SKTaskParams):
         filename = filename + f"_dtype{params.evaluate['dtype']}"
         save_path = os.path.join(params.evaluate.data.result_folder, f"spectrograms_{filename}.pdf")
 
+        plot_images = [logpspec_sn.T, logpspec_en.T, features.T, real_mask.T]
+        plot_titles = ['Noisy Spectrogram', 'Enhanced Spectrogram', 'Features', 'Real Mask']
+        plot_vmin_vmax = [(-80, 10), (-80, 10), (np.min(features), np.max(features)), (np.min(real_mask), np.max(real_mask))]
+        if imag_mask is not None:
+            plot_images.append(imag_mask.T)
+            plot_titles.append('Imag Mask')
+            plot_vmin_vmax.append((np.min(imag_mask), np.max(imag_mask)))
+
         plot_spectrograms(
-            [logpspec_sn.T, logpspec_en.T, features.T, real_mask.T, imag_mask.T if imag_mask is not None else None],
-            titles=['Noisy Spectrogram', 'Enhanced Spectrogram', 'Features', 'Real Mask', 'Imag Mask' if imag_mask is not None else None],
-            vmin_vmax=[(-80, 10), (-80, 10), (np.min(features), np.max(features)), (np.min(real_mask), np.max(real_mask)), (np.min(imag_mask), np.max(imag_mask)) if imag_mask is not None else None],
+            plot_images,
+            titles=plot_titles,
+            vmin_vmax=plot_vmin_vmax,
             save_path=save_path,
             show_fig=False
         )

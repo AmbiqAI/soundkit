@@ -35,11 +35,18 @@ if ! command -v uv >/dev/null 2>&1; then
     echo "Installing uv (Universal Virtualenv)..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     # make sure ~/.local/bin is on PATH for this session
-    export PATH="$HOME/.local/bin:$PATH"
+    # (also check snap-specific path when running from VS Code snap terminal)
+    export PATH="$HOME/.local/bin:$HOME/snap/code/common/.local/bin:$PATH"
+    # source the env file created by the uv installer if it exists
+    [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 fi
 
-# verify
-uv --version
+# verify (non-fatal — uv is optional, venv creation uses python3 -m venv)
+if command -v uv >/dev/null 2>&1; then
+    uv --version
+else
+    echo "⚠️  uv not found in PATH (will use python3 -m venv instead)"
+fi
 
 # enable Bash completions
 if command -v uv >/dev/null 2>&1; then

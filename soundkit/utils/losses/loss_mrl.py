@@ -358,7 +358,7 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
             mask_oa = smooth_asymmetric_weight_mask(
                     tf.abs(spec_true),
                     tf.abs(spec_pred),
-                    alpha=1.2, # 2
+                    alpha=2, # 2
                     k=4.0)
 
             # Scaling

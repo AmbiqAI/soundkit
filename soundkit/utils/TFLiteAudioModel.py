@@ -43,7 +43,9 @@ class TFLiteAudioModel:
         """
         super().__init__(*args, **kwargs)
         self.interpreter_path = interpreter_path
-        self.interpreter = tf.lite.Interpreter(model_path=interpreter_path)
+        self.interpreter = tf.lite.Interpreter(
+            model_path=interpreter_path,
+            experimental_op_resolver_type=tf.lite.experimental.OpResolverType.BUILTIN_WITHOUT_DEFAULT_DELEGATES)
         self.interpreter.allocate_tensors()  # Needed before execution!
         self.dtype = dtype
 
@@ -93,6 +95,8 @@ class TFLiteAudioModel:
     def reset(self):
         """Reset the TFLite model state."""
         # self.interpreter.reset_all_variables() # doesn't work
-        self.interpreter = tf.lite.Interpreter(model_path=self.interpreter_path)
+        self.interpreter = tf.lite.Interpreter(
+            model_path=self.interpreter_path,
+            experimental_op_resolver_type=tf.lite.experimental.OpResolverType.BUILTIN_WITHOUT_DEFAULT_DELEGATES)
         self.interpreter.allocate_tensors()  # Reallocate tensors to reset state
 

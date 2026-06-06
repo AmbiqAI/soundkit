@@ -201,7 +201,20 @@ def demo_evb(
     os.chdir(neuralspot_root)
     (neuralspot_root / "projects/autodeploy").mkdir(parents=True, exist_ok=True)
     # Ensure uv is on PATH for subprocess calls
-    os.environ["PATH"] = f"{Path.home()}/.local/bin:" + os.environ.get("PATH", "")
+    uv_search_dirs = [
+        Path.home() / ".local" / "bin",
+        Path.home() / "snap" / "code" / "current" / ".local" / "bin",
+        Path.home() / ".cargo" / "bin",
+    ]
+    # Also check versioned snap dirs
+    snap_code = Path.home() / "snap" / "code"
+    if snap_code.exists():
+        for d in sorted(snap_code.iterdir(), reverse=True):
+            candidate = d / ".local" / "bin"
+            if candidate.exists():
+                uv_search_dirs.insert(0, candidate)
+    extra_paths = ":".join(str(d) for d in uv_search_dirs if d.exists())
+    os.environ["PATH"] = f"{extra_paths}:" + os.environ.get("PATH", "")
 
     # Try to locate or download helios-aot
     aot_candidates = [

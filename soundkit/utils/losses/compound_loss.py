@@ -51,7 +51,7 @@ class CompoundLoss(tf.keras.losses.Loss):
         if len(self.losses) != len(self.weights):
             raise ValueError("Length of losses and weights must be the same.")
 
-    def call(self, y_true, y_pred):
+    def call(self, y_true, y_pred, **kwargs):
         """
         Compute the weighted sum of the individual losses.
 
@@ -64,7 +64,7 @@ class CompoundLoss(tf.keras.losses.Loss):
         """
         total_loss = 0.0
         for loss_fn, weight in zip(self.losses, self.weights):
-            total_loss += weight * loss_fn(y_true, y_pred)
+            total_loss += weight * loss_fn(y_true, y_pred, **kwargs)
         return total_loss
 
 # --- Factory for CompoundLoss from config ---

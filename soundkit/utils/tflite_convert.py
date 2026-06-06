@@ -1,5 +1,7 @@
 """ Convert the model to tflite format """
 import os
+import tempfile
+import shutil
 from pathlib import Path
 from typing import Callable
 import tensorflow as tf
@@ -19,8 +21,13 @@ def convert_model(
     Returns:
         bytes: _description_
     """
-    converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    
+    # Use SavedModel path to work around a TFLite from_keras_model bug that
+    # corrupts weights when Sequential layers with custom sublayers coexist
+    # with resource-variable assign ops (e.g. stateful CRNN models).
+    saved_model_dir = tempfile.mkdtemp()
+    model.save(saved_model_dir)
+    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+
     converter.experimental_new_converter = True
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.experimental_enable_resource_variables = True
@@ -54,7 +61,9 @@ def convert_model(
             ]
         converter.inference_input_type = tf.float32
 
-    return converter.convert()
+    result = converter.convert()
+    shutil.rmtree(saved_model_dir, ignore_errors=True)
+    return result
 
 def test_and_export_c(tflite_model_bytes, dtype="int8", output_dir="tflite_data"):
     """
@@ -62,8 +71,11 @@ def test_and_export_c(tflite_model_bytes, dtype="int8", output_dir="tflite_data"
     """
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. Initialize Interpreter
-    interpreter = tf.lite.Interpreter(model_content=tflite_model_bytes)
+    # 1. Initialize Interpreter (disable XNNPACK to avoid weight corruption
+    #    with large Conv2D kernels)
+    interpreter = tf.lite.Interpreter(
+        model_content=tflite_model_bytes,
+        experimental_op_resolver_type=tf.lite.experimental.OpResolverType.BUILTIN_WITHOUT_DEFAULT_DELEGATES)
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()[0]
