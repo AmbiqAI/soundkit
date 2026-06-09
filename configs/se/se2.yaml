@@ -1,0 +1,105 @@
+name: se_nn_arch72_mel_se2
+project: se
+job_dir: ./soundkit/tasks/se
+
+data:
+  path_tfrecord: ./soundkit/tasks/se/tfrecords
+  tfrecord_datalist_name: # list of saved tfrecords
+    train: train_tfrecord_all_uniform.csv 
+    val: val_tfrecord_all_uniform.csv
+  num_samples_per_noise:
+    train: 1000
+    val: 200
+  force_download: false
+  reverb_prob: 0.2
+  num_processes: 2
+  corpora:
+    # - {name: train-clean-360, type: speech, split: train}
+    - {name: train-clean-100, type: speech, split: train}
+    - {name: dev-clean, type: speech, split: val}
+    # - {name: thchs30, type: speech, split: train-val}
+    - {name: ESC-50-master, type: noise, split: train-val}
+    # - {name: FSD50K, type: noise, split: train-val}
+    # - {name: musan, type: noise, split: train-val}
+    # - {name: wham_noise, type: noise, split: train-val}
+    # - {name: dns_challenge, type: noise, split: train-val}
+    # - {name: wind_noise, type: noise, split: train-val}
+    - {name: rirs_noises, type: reverb, split: train-val}
+    
+  snr_dbs: [-6, -3, 0, 3, 6, 9, 12, 15, 30] # mixture of signal-to-noise ratios
+  target_length_in_secs: 10
+  min_amp: 0.03
+  max_amp: 0.95
+
+  signal:
+    sampling_rate: 16000
+    dc_removal: true
+
+  debug: false
+
+train:
+  num_per_epoch_files: 
+    train: 100000
+  truncate_time: 9.5  # in seconds, set to null to use full length
+  initial_lr: 4e-4
+  batchsize: 64
+  epochs: 300
+  warmup_epochs: 5
+  epoch_loaded: random
+  loss_function:
+
+    type: compressed_mse
+    params: 
+      exp: 0.6
+      eps: 1e-6
+      oa_alpha: 2   # max penalty for over-attenuation (1.0 = disabled)
+      oa_k: 4.0       # steepness of the penalty ramp
+      hop_size: ${train.feature.hop_size}
+      num_lookahead: 2
+      fft_size: ${train.feature.fft_size}
+      frame_size: ${train.feature.frame_size}
+      group_smooth: true
+  
+  path:
+    checkpoint_dir: ./soundkit/tasks/se/models_trained/${name}
+    tensorboard_dir: ./soundkit/tasks/se/tensorboard/${name}
+  num_lookahead: 2
+
+  feature: 
+    frame_size: 320
+    hop_size: 160
+    fft_size: 512
+    type: mel
+    bins: 72
+  standardization: false
+  standardization_type: mean
+  model:
+    config_dir: ./soundkit/models/arch_configs
+    config_file: config_se_nn_arch72_mel.yaml
+  
+  debug: false
+
+evaluate:
+  epoch_loaded: best
+  dtype: float32
+  calibration_samples: 20
+  data: 
+    dir: "./wavs/se/test_wavs"
+    # files: [keyboard_steak.wav, i_like_steak.wav, steak_hairdryer.wav]
+    # files: [test1_aecOnly.wav, test2_aecOnly.wav, test3_aecOnly.wav, test4_aecOnly.wav, test5_aecOnly.wav]
+    files: [test4_aecOnly.wav]
+    result_folder: ${job_dir}/test_results/${name}
+
+export:
+  dtype: int16
+  calibration_samples: 20
+  epoch_loaded: best
+  tflite_dir: ./soundkit/tasks/se/tflite
+
+demo:
+  epoch_loaded: best
+  dtype: int16
+  platform: evb # or pc
+  tflite_dir: ./soundkit/tasks/se/tflite
+  evb_dir: ./soundkit/tasks/se/evb_webusb
+  pre_gain: 1

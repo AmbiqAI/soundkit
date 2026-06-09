@@ -9,6 +9,7 @@ from .unet_sublayers.decoder import decoder_unet
 from .layers.dpgrnn import DPGRNN
 from .layers.tcn import tcn
 from .layers.normalization_layer_factory import NormalizationFactory
+from .layers.activation_factory import AffineScale
 from soundkit.utils.converter_fix_point import fakefix_tf
 
 class unet(tf.keras.Model):
@@ -119,6 +120,15 @@ class unet(tf.keras.Model):
             self.dropout = tf.keras.layers.Dropout(
                 rate=params.dropout,
                 name='dropout')
+
+        # Trainable affine (softplus(gamma)*x + beta) on the GRU output so its
+        # bounded [-1, 1] range can be rescaled to match the encoder/decoder
+        # activations before concatenation.
+        if params.bottleneck == 'gru' and params.gru_out_affine:
+            self.gru_affine = AffineScale(name='gru_out_affine')
+        else:
+            self.gru_affine = None
+
 
     def reset_states(self, zero_state=False):
         """ Reset states"""
@@ -261,6 +271,8 @@ class unet(tf.keras.Model):
                 # out = out * scale # scale up the output of GRU to restore the scale
                 # h_state = tf.clip_by_value(h_state, -1, 1 - 2**-8)  # assume 8 bit quantization
                 self.states[0].assign(h_state)
+            if self.gru_affine is not None:
+                out = self.gru_affine(out)
             if self.params.dropout > 0:
                 out = self.dropout(out, training=training)
             input_dec = tf.reshape(

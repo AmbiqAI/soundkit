@@ -1,3 +1,5 @@
+import math
+
 import tensorflow as tf
 
 
@@ -87,6 +89,45 @@ class DyS(tf.keras.layers.Layer):
         alpha = tf.nn.softplus(self.alpha)
         gamma = tf.nn.softplus(self.gamma)
         return gamma * tf.math.sigmoid(alpha * x) + self.beta
+
+
+class AffineScale(tf.keras.layers.Layer):
+    """Trainable affine: softplus(gamma) * x + beta with a non-negative scale.
+
+    Useful to rescale a bounded signal (e.g. a GRU output in [-1, 1]) so its
+    magnitude can match unbounded encoder/decoder activations before concat.
+    The scale is parameterized through softplus so it stays >= 0, and beta is a
+    free per-channel bias. Applied on the last dimension.
+
+    Args:
+        gamma_init: Initial value for the (post-softplus) scale.
+    """
+    def __init__(self, gamma_init=1.0, **kwargs):
+        super().__init__(**kwargs)
+        self.gamma_init = gamma_init
+        self._fused = False
+
+    def build(self, input_shape):
+        dim = input_shape[-1]
+        # inverse-softplus so that softplus(raw_init) == gamma_init
+        raw_init = float(math.log(math.expm1(self.gamma_init)))
+        self.gamma = self.add_weight(
+            "gamma", shape=(dim,),
+            initializer=tf.constant_initializer(raw_init),
+            trainable=True)
+        self.beta = self.add_weight(
+            "beta", shape=(dim,),
+            initializer="zeros",
+            trainable=True)
+
+    def fuse(self):
+        """Precompute softplus(gamma) into a constant for inference."""
+        self.gamma.assign(tf.nn.softplus(self.gamma))
+        self._fused = True
+
+    def call(self, x):
+        gamma = self.gamma if self._fused else tf.nn.softplus(self.gamma)
+        return gamma * x + self.beta
 
 
 class DecomposablePReLU(tf.keras.layers.Layer):

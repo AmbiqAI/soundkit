@@ -168,8 +168,8 @@ def create_dataset(
                         en = []
                         ch = []
                         for line in lines:
-                            # if re.search(r'(LibriSpeech|german_speech|spanish_speech|italian_speech|french_data)', line):
-                            if re.search(r'(train-clean-100)', line):
+                            if re.search(r'(LibriSpeech|german_speech|spanish_speech|italian_speech|french_data)', line):
+                            # if re.search(r'(train-clean-100)', line):
                                 en.append(line)
                             elif re.search(r'(mandarin|MAGICDATA)', line):
                                 ch.append(line)

@@ -35,6 +35,8 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
                  hop_size=None,
                  exp_features = 0.5,
                  num_lookahead=0,
+                 oa_alpha=2.0,
+                 oa_k=4.0,
                  eps=1e-8,
                  name="multi_resolution_stft_loss",
                  **kwargs):
@@ -53,6 +55,8 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
             ]
         self.exp_features = exp_features
         self.num_lookahead = num_lookahead
+        self.oa_alpha = oa_alpha
+        self.oa_k = oa_k
         self.eps = eps  # Small value to avoid log/zero issues
         self.stft_configs = stft_configs
         self.fft_size = fft_size
@@ -358,8 +362,8 @@ class MultiResolutionSTFTLossFromSTFT(tf.keras.losses.Loss):
             mask_oa = smooth_asymmetric_weight_mask(
                     tf.abs(spec_true),
                     tf.abs(spec_pred),
-                    alpha=2, # 2
-                    k=4.0)
+                    alpha=self.oa_alpha,
+                    k=self.oa_k)
 
             # Scaling
             norm = tf.reduce_max(tf.abs(wav_true), axis=-1, keepdims=True)

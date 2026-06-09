@@ -19,6 +19,7 @@ class UNetParams(BaseModel):
     normalization_layer: str | None = None
     dropout: float = 0.0
     scale_rnn_out: float = 1.0
+    gru_out_affine: bool = False  # add trainable per-unit affine (softplus(gamma)*x+beta) on GRU output
     bypass_last_fc: bool = False
     is_df: bool = False
     output_scaling: float = 1.0
