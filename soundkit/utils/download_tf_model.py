@@ -11,6 +11,77 @@ import tensorflow as tf
 from soundkit.defines import SKTaskParams
 from soundkit.models import ModelFactory, ModelParamFactory
 
+
+def _load_weights_tolerant(model: tf.keras.Model, checkpoint_path: str) -> None:
+    """Load weights, tolerating DyT/DyS param-shape changes.
+
+    A normal ``model.load_weights`` is attempted first. If it fails because a
+    variable shape changed (e.g. switching ``dyt`` -> ``dyt_freq``, turning
+    per-channel ``(C,)`` params into per-(freq, channel) ``(F, C)``), the
+    weights are restored manually through the checkpoint object graph. Any
+    variable whose stored shape differs is broadcast into the new shape, which
+    is mathematically identical to the trained model, so no retraining is
+    required.
+    """
+    try:
+        model.load_weights(checkpoint_path)
+        return
+    except (ValueError, tf.errors.InvalidArgumentError) as err:
+        print(f"[load] direct restore failed ({err}); "
+              "retrying with broadcast warm-start.")
+
+    from tensorflow.core.protobuf import trackable_object_graph_pb2
+
+    reader = tf.train.load_checkpoint(checkpoint_path)
+    object_graph = trackable_object_graph_pb2.TrackableObjectGraph()
+    object_graph.ParseFromString(
+        reader.get_tensor("_CHECKPOINTABLE_OBJECT_GRAPH"))
+    view = tf.train.TrackableView(model)
+
+    # Walk the checkpoint object graph in parallel with the live model so each
+    # variable is matched to its exact checkpoint_key (no name guessing).
+    node_to_obj = {0: model}
+    queue = [0]
+    visited = set()
+    assigned = bcast = missing = 0
+    while queue:
+        nid = queue.pop()
+        if nid in visited:
+            continue
+        visited.add(nid)
+        obj = node_to_obj.get(nid)
+        if obj is None:
+            continue
+        node = object_graph.nodes[nid]
+
+        children_map = view.children(obj)
+        for child in node.children:
+            cobj = children_map.get(child.local_name)
+            if cobj is not None:
+                node_to_obj.setdefault(child.node_id, cobj)
+                queue.append(child.node_id)
+
+        if isinstance(obj, tf.Variable):
+            for attr in node.attributes:
+                if attr.name != "VARIABLE_VALUE":
+                    continue
+                value = reader.get_tensor(attr.checkpoint_key)
+                if tuple(value.shape) == tuple(obj.shape):
+                    obj.assign(value)
+                    assigned += 1
+                else:
+                    obj.assign(tf.broadcast_to(value, obj.shape))
+                    bcast += 1
+                    print(f"[load] broadcast {attr.checkpoint_key}: "
+                          f"{tuple(value.shape)} -> {tuple(obj.shape)}")
+
+    # Report any model variables that were never reached by the walk.
+    reached = {id(o) for o in node_to_obj.values()}
+    missing = sum(1 for v in model.variables if id(v) not in reached)
+    print(f"[load] warm-start done: {assigned} exact, {bcast} broadcast, "
+          f"{missing} not found in checkpoint.")
+
+
 def load_model_checkpoint(
     model: tf.keras.Model,
     epoch_loaded: Union[str, int],
@@ -43,7 +114,7 @@ def load_model_checkpoint(
         if latest_checkpoint is None:
             raise FileNotFoundError(f"No checkpoint found in {checkpoint_dir}")
 
-        model.load_weights(latest_checkpoint)
+        _load_weights_tolerant(model, latest_checkpoint)
 
         match = re.search(r'_ep(\d+)', latest_checkpoint)
         if not match:
@@ -69,14 +140,14 @@ def load_model_checkpoint(
         epoch_loaded = best_epoch_entry['epoch']
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
 
-        model.load_weights(checkpoint_path)
+        _load_weights_tolerant(model, checkpoint_path)
         print(f"Loaded best model from epoch {epoch_loaded} amoung {criterion_epoch}")
 
     else:
         # Load a specific epoch number
         epoch_loaded = int(epoch_loaded)
         checkpoint_path = f'{checkpoint_dir}/model_checkpoint_ep{epoch_loaded}'
-        model.load_weights(checkpoint_path)
+        _load_weights_tolerant(model, checkpoint_path)
 
     return epoch_loaded, epoch_loaded + 1
 

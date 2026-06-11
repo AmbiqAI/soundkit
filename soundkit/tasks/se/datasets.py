@@ -177,7 +177,7 @@ def create_dataset(
                         random.shuffle(en)
                         random.shuffle(ch)
                         print(f"Shuffled {len(en)} English files and {len(ch)} Mandarin files.")
-                        lines = ch+en
+                        lines = ch
 
             except:# pylint: disable=bare-except
                 log.warning('Can not find the list %s', tfrecords)

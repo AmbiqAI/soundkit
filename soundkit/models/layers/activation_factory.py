@@ -9,25 +9,28 @@ class DyT(tf.keras.layers.Layer):
     Args:
         alpha_init: Initial value for the learnable alpha scalar.
         trainable_beta: If True, beta is a trainable parameter; if False, beta is fixed at zero.
+        param_ndims: Number of trailing dims to give independent gamma/beta.
+            1 -> per-channel (C,). 2 -> per (freq, channel) (F, C).
     """
-    def __init__(self, alpha_init=0.5, trainable_beta=False, **kwargs):
+    def __init__(self, alpha_init=0.5, trainable_beta=False, param_ndims=1, **kwargs):
         super().__init__(**kwargs)
         self.alpha_init = alpha_init
         self.trainable_beta = trainable_beta
+        self.param_ndims = param_ndims
         self._fused = False
 
     def build(self, input_shape):
-        dim = input_shape[-1]
+        param_shape = tuple(input_shape[-self.param_ndims:])
         self.alpha = self.add_weight(
             "alpha", shape=(),
             initializer=tf.constant_initializer(self.alpha_init),
             trainable=True)
         self.gamma = self.add_weight(
-            "gamma", shape=(dim,),
+            "gamma", shape=param_shape,
             initializer="ones",
             trainable=True)
         self.beta = self.add_weight(
-            "beta", shape=(dim,),
+            "beta", shape=param_shape,
             initializer="zeros",
             trainable=self.trainable_beta)
 
@@ -228,6 +231,9 @@ class ActivationFactory(tf.keras.layers.Layer):
             self.fn = None
         elif act_name == "dyt":
             self._sublayer = DyT(alpha_init=0.5, trainable_beta=False)
+            self.fn = None
+        elif act_name == "dyt_freq":
+            self._sublayer = DyT(alpha_init=0.5, trainable_beta=False, param_ndims=2)
             self.fn = None
         elif act_name == "dys":
             self._sublayer = DyS(alpha_init=0.5, trainable_beta=False)
