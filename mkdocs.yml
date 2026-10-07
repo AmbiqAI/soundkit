@@ -5,7 +5,7 @@ copyright: Copyright &copy; 2025 Ambiq
 
 theme:
   name: material
-  logo: assets/logo-white.png
+  logo: assets/ambiq-logo-blue.svg
   favicon: assets/favicon.png
   palette:
     - media: "(prefers-color-scheme: light)"
